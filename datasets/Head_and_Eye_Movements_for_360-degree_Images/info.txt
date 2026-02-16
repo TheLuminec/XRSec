@@ -1,0 +1,13 @@
+Name: Head and Eye Movements for 360-degree Images
+Citation: Yashas Rai, Jesús Gutiérrez, and Patrick Le Callet. A dataset of head and eye movements for 360-degree images. In Proceedings of the 8th ACM on Multimedia Systems Conference (MMSys), pages 205–210, 2017.
+
+Sources:
+ - https://drive.google.com/open?id=0ByRLJyAo2RFWaDFOZTlHRl9PdlU
+ - https://dl.acm.org/doi/10.1145/3083187.3083205
+
+Notes:
+Includes raw head and eye tracking data and processed saliency maps for omnidirectional images.
+
+Download Instructions:
+Open the Google Drive link and download the zip file containing 60 omnidirectional images with head and eye tracking data.
+

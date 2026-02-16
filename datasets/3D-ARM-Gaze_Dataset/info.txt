@@ -1,0 +1,13 @@
+Name: 3D-ARM-Gaze Dataset
+Citation: E. J. David, M. Da Silva, J. Gutiérrez, et al. A dataset of head and eye movements for 360 videos. In Proceedings of the 9th ACM Multimedia Systems Conference, 2018.
+
+Sources:
+ - https://zenodo.org/record/10567366
+ - https://doi.org/10.1038/s41597-023-02676-5
+
+Notes:
+Includes head, neck and trunk positions and quaternions as well as gaze vectors; comes with code and standalone viewer.
+
+Download Instructions:
+Download the zip files from the Zenodo record. The data package contains time, positions and orientations of trunk, neck and head along with gaze data.
+

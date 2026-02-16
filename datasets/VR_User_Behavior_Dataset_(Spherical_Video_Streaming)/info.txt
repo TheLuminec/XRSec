@@ -1,0 +1,13 @@
+Name: VR User Behavior Dataset (Spherical Video Streaming)
+Citation: Chenglei Wu, Zhihao Tan, Zhi Wang, and Shiqiang Yang. A dataset for exploring user behaviors in VR spherical video streaming. In Proceedings of the 8th International Conference on Multimedia Systems, MMSys’17, Taipei, Taiwan, 2017. ACM.
+
+Sources:
+ - https://wuchlei-thu.github.io/
+ - https://doi.org/10.1145/3083187.3083210
+
+Notes:
+Head tracking dataset with 48 participants (24 male and 24 female) watching 18 spherical videos across five categories. Records head movement, viewing direction and memory recall for each session. Useful for studying user behavior patterns in VR video streaming.
+
+Download Instructions:
+Use the Dropbox link to download the full dataset zip or the Baidu Pan link (code: npmz). Some links require sign-in or access codes; consult the dataset page for details. The Video 9 link provides a corrected video for Experiments 2.
+

@@ -1,0 +1,13 @@
+Name: mmWave XR Mobility Dataset
+Citation: R. Calderon, M. Johansson, T. R. Walters, et al. MmWave for extended reality: Open user mobility dataset. arXiv preprint arXiv:2407.00073, 2024.
+
+Sources:
+ - https://doi.org/10.48550/arXiv.2407.00073
+ - https://dis.cwi.nl/multimedia/
+
+Notes:
+Contains high-frequency head, hand and body tracking data for high-mobility VR games (Half-Life: Alyx, Wrench, Pistol Whip).
+
+Download Instructions:
+Refer to the authors' paper or contact the corresponding authors for access. The dataset provides 45 hours of 6DoF tracking for head, hands and body captured using HTC Vive Pro 2 at 500 Hz.
+

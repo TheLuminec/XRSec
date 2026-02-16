@@ -1,0 +1,13 @@
+Name: Non-Laboratory Gait Dataset
+Citation: Z. P. Shiri, H. Pierce, et al. A non-laboratory gait dataset of full body kinematics and egocentric vision. Scientific Data 10, 2023.
+
+Sources:
+ - https://doi.org/10.6084/m9.figshare.c.6987746.v1
+ - https://doi.org/10.1038/s41597-023-02374-2
+
+Notes:
+Processed CSVs list timestamps, vision frame names, and joint kinematics; includes head segment orientation and position.
+
+Download Instructions:
+Access the Figshare collection via the DOI (https://doi.org/10.6084/m9.figshare.c.6076607). Download the raw .mvn/.mvnx files and processed .csv files containing head segment orientation and position. Manual registration on Figshare may be required.
+

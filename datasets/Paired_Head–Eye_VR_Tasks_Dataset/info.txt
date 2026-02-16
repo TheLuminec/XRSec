@@ -1,0 +1,13 @@
+Name: Paired Head–Eye VR Tasks Dataset
+Citation: Q. Guan, F. Liu, Y. Wang, et al. A dataset of paired head and eye movements during visual tasks in virtual environments. Scientific Data 10, 2024.
+
+Sources:
+ - https://doi.org/10.6084/m9.figshare.25749378.v5
+ - https://www.nature.com/articles/s41597-023-02588-4
+
+Notes:
+25 participants performed smooth pursuit and visual search tasks; ~129k samples per participant with head direction vectors.
+
+Download Instructions:
+Use the Figshare DOI link to download the dataset (CSV files per trial); each contains timestamp, left/right eye vectors and head direction (x,y,z) at ≈120 Hz.
+

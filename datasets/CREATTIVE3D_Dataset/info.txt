@@ -1,0 +1,14 @@
+Name: CREATTIVE3D Dataset
+Citation: R. Martins, M. Mestre, et al. CREATTIVE3D: A dataset of VR road-crossing interactions under normal and low-vision conditions. Scientific Data 11, 2024.
+
+Sources:
+ - https://zenodo.org/records/14514163
+ - https://zenodo.org/record/8269108
+ - https://doi.org/10.1038/s41597-024-03382-2
+
+Notes:
+40 participants explore road crossings in VR; dataset includes head position and rotation at 125 Hz and gaze orientation.
+
+Download Instructions:
+Download the Data.zip and related archives (Scenarios.zip, Tools.zip, Usage examples.zip, questionnaire_translation_EN.csv) from the Zenodo record. Data.zip contains the main dataset with head position, head rotation, gaze vectors, physiological signals and event markers recorded at 125 Hz.
+

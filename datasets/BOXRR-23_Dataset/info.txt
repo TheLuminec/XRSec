@@ -1,0 +1,13 @@
+Name: BOXRR-23 Dataset
+Citation: A. S. Wang, H. J. Yu, P. S. A. Rumman, et al. BOXRR-23: The Berkeley Open Extended Reality Recording Dataset. arXiv preprint arXiv:2307.07349, 2023.
+
+Sources:
+ - https://rdi.berkeley.edu/metaverse/boxrr-23/
+ - https://arxiv.org/abs/2307.07349
+
+Notes:
+Over 4 million sessions of VR gameplay from 105k users; contains head and hand motion data.
+
+Download Instructions:
+Access the dataset website and request the 4.7 TB dataset (split into 106 zip files). Beat Saber recordings include 6DoF head and hand motion data sampled between 60–144 Hz.
+

@@ -1,0 +1,319 @@
+[
+    {
+        "name": "QoE-Modeling for 360-Degree Videos Dataset",
+        "sources": [
+            "https://github.com/nmsl-nthu/QoE-Modeling-for-360-Degree-Videos-Dataset",
+            "https://dl.acm.org/doi/10.1145/3083187.3083204"
+        ],
+        "download_links": [
+            "https://github.com/nmsl-nthu/QoE-Modeling-for-360-Degree-Videos-Dataset"
+        ],
+        "download_instructions": "Clone the GitHub repository and access the orientation_log and rating_log files for each participant.",
+        "citation": "Wen-Chih Lo, Ching-Ling Fan, Jean Lee, Chun-Ying Huang, Kuan-Ta Chen, and Cheng-Hsin Hsu. 360 Video Viewing Dataset in Head-Mounted Virtual Reality. In Proceedings of the 8th ACM on Multimedia Systems Conference (MMSys), 2017.",
+        "notes": "Contains head orientation logs and QoE ratings for 50 subjects watching ten 360\u00b0 videos."
+    },
+    {
+        "name": "360-degree Video Head Movement Dataset",
+        "sources": [
+            "http://dash.ipv6.enstb.fr/headMovements/",
+            "https://dl.acm.org/doi/10.1145/3083187.3083195"
+        ],
+        "download_links": [
+            "http://dash.ipv6.enstb.fr/headMovements/archives/dataset.tar.gz"
+        ],
+        "download_instructions": "Download the tar.gz archive from the ENSTB site; it contains head orientation traces for multiple users.",
+        "citation": "Xavier Corbillon, Francesca De Simone, and Gwendal Simon. 360-degree video head movement dataset. In Proceedings of the 8th ACM on Multimedia Systems Conference (MMSys), pages 199\u2013204, 2017.",
+        "notes": "Contains head orientation logs for users watching several 360\u00b0 videos."
+    },
+    {
+        "name": "Head and Eye Movements for 360-degree Images",
+        "sources": [
+            "https://drive.google.com/open?id=0ByRLJyAo2RFWaDFOZTlHRl9PdlU",
+            "https://dl.acm.org/doi/10.1145/3083187.3083205"
+        ],
+        "download_links": [
+            "https://drive.google.com/open?id=0ByRLJyAo2RFWaDFOZTlHRl9PdlU"
+        ],
+        "download_instructions": "Open the Google Drive link and download the zip file containing 60 omnidirectional images with head and eye tracking data.",
+        "citation": "Yashas Rai, Jes\u00fas Guti\u00e9rrez, and Patrick Le Callet. A dataset of head and eye movements for 360-degree images. In Proceedings of the 8th ACM on Multimedia Systems Conference (MMSys), pages 205\u2013210, 2017.",
+        "notes": "Includes raw head and eye tracking data and processed saliency maps for omnidirectional images."
+    },
+    {
+        "name": "Head and Eye Movements for 360-degree Videos (Salient360!)",
+        "sources": [
+            "https://zenodo.org/record/10650505",
+            "https://dl.acm.org/doi/10.1145/3204949.3208161"
+        ],
+        "download_links": [
+            "https://zenodo.org/records/10650505/files/Image_H.7z?download=1",
+            "https://zenodo.org/records/10650505/files/Image_HE.7z?download=1",
+            "https://zenodo.org/records/10650505/files/Image_Stimuli.7z?download=1"
+        ],
+        "download_instructions": "Download the 7z archives from the Zenodo record; they contain head-only, head+eye, and stimuli data for 360\u00b0 videos.",
+        "citation": "Erwan J. David, Jes\u00fas Guti\u00e9rrez, Antoine Coutrot, Matthieu Perreira Da Silva, and Patrick Le Callet. A dataset of head and eye movements for 360 videos. In Proceedings of the 9th ACM Multimedia Systems Conference (MMSys), pages 432\u2013437, 2018.",
+        "notes": "Also known as the Salient360! dataset; includes head and eye tracking for 19 videos and ground-truth saliency maps."
+    },
+    {
+        "name": "Head and Gaze Behavior Dataset",
+        "sources": [
+            "https://cuhksz-inml.github.io/head_gaze_dataset/",
+            "https://dl.acm.org/doi/10.1145/3503161.3548360"
+        ],
+    "download_links": [
+      "https://drive.google.com/drive/folders/1oKwhUw4FqmW_MKXJvuW7qKY6exx0QeQG?usp=sharing",
+      "https://www.aliyundrive.com/s/UEvztXvy3sn"
+    ],
+    "download_instructions": "Use the Google Drive folder (or Aliyun link) to download the dataset and video segments. Each zip file contains head and gaze traces for multiple videos; sign-in may be required.",
+        "citation": "Yili Jin, Junhua Liu, Fangxin Wang, and Shuguang Cui. Where are you looking? A large-scale dataset of head and gaze behavior for 360-degree videos and a pilot study. In Proceedings of the 30th ACM International Conference on Multimedia, pages 1025\u20131034, 2022.",
+        "notes": "Contains nearly 20 million frames of head and gaze tracking data from 27 360\u00b0 video clips."
+    },
+    {
+        "name": "360-degree Saliency Dataset (PanoSaliency)",
+        "sources": [
+            "https://zenodo.org/record/2641282",
+            "https://github.com/phananh1010/PanoSaliency"
+        ],
+        "download_links": [
+            "https://zenodo.org/records/2641282/files/saliency_ds.zip?download=1"
+        ],
+        "download_instructions": "Download the saliency_ds.zip file from the Zenodo record; it contains saliency maps derived from head movement datasets.",
+        "citation": "Anh Nguyen, Zhisheng Yan, and Klara Nahrstedt. Your attention is unique: Detecting 360-degree video saliency in head-mounted display for head movement prediction. In Proceedings of the 26th ACM international conference on Multimedia, pages 1190\u20131198, 2018.",
+        "notes": "Provides over 50,000 saliency maps for 24 360\u00b0 videos; raw head movement traces obtained from other datasets."
+    },
+    {
+        "name": "EyeNavGS 6-DoF Navigation Dataset",
+        "sources": [
+            "https://symmru.github.io/EyeNavGS/",
+            "https://arxiv.org/abs/2403.06001"
+        ],
+    "download_links": [
+      "https://github.com/symmru/EyeNavGS_Rutgers_Dataset/archive/refs/heads/main.zip",
+      "https://github.com/sawalee0811/EyeNavGS_NTHU_Dataset/archive/refs/heads/main.zip"
+    ],
+    "download_instructions": "Download the zipped GitHub repositories for the Rutgers and NTHU collections. Each archive contains scene folders with CSV files that record per-frame head position (X,Y,Z) and quaternion orientation, gaze data, and timestamps.",
+        "citation": "H.\u00a0Ren, C.\u00a0Yang, S.-H.\u00a0Chen, et\u00a0al. EyeNavGS: A 6-DoF Navigation Dataset and Record-n-Replay Software for Real-World 3DGS Scenes in VR. arXiv preprint arXiv:2403.06001, 2024.",
+        "notes": "46 participants explored 12 3D Gaussian Splatting scenes; dataset includes head pose, gaze, view index, FOV and timestamp per frame."
+    },
+    {
+        "name": "NJIT 6DOF VR Navigation Dataset",
+        "sources": [
+            "https://web.njit.edu/~chakarsk/vr-navigation.html"
+        ],
+        "download_links": [],
+        "download_instructions": "Contact the dataset authors (Prof. Jakov Chakareski) to obtain the 6DOF navigation dataset; includes x,y,z positions and yaw,pitch,roll orientations at 250 Hz.",
+        "citation": "J.\u00a0Chakareski. 6DOF VR navigation dataset, 2019. (Data collection described on the project page.)",
+        "notes": "Comprises 30,000 samples per session of head position and orientation captured at 250 Hz as users navigated an indoor arena."
+    },
+    {
+        "name": "3D-ARM-Gaze Dataset",
+        "sources": [
+            "https://zenodo.org/record/10567366",
+            "https://doi.org/10.1038/s41597-023-02676-5"
+        ],
+        "download_links": [
+            "https://zenodo.org/records/10567366/files/DBAS22_DataOnline.zip?download=1",
+            "https://zenodo.org/records/10567366/files/DBAS22_CodeOnline.zip?download=1",
+            "https://zenodo.org/records/10567366/files/DBAS22_DataPlayer_StandAloneApp.zip?download=1",
+            "https://zenodo.org/records/10567366/files/DBAS22_DocOnline.zip?download=1"
+        ],
+        "download_instructions": "Download the zip files from the Zenodo record. The data package contains time, positions and orientations of trunk, neck and head along with gaze data.",
+        "citation": "E. J. David, M.\u00a0Da\u00a0Silva, J. Guti\u00e9rrez, et\u00a0al. A dataset of head and eye movements for 360 videos. In Proceedings of the 9th ACM Multimedia Systems Conference, 2018.",
+        "notes": "Includes head, neck and trunk positions and quaternions as well as gaze vectors; comes with code and standalone viewer."
+    },
+    {
+        "name": "CREATTIVE3D Dataset",
+    "sources": [
+      "https://zenodo.org/records/14514163",
+      "https://zenodo.org/record/8269108",
+      "https://doi.org/10.1038/s41597-024-03382-2"
+    ],
+    "download_links": [
+      "https://zenodo.org/records/14514163/files/Data.zip?download=1",
+      "https://zenodo.org/records/14514163/files/Scenarios.zip?download=1",
+      "https://zenodo.org/records/14514163/files/Tools.zip?download=1",
+      "https://zenodo.org/records/14514163/files/Usage%20examples.zip?download=1",
+      "https://zenodo.org/records/14514163/files/questionnaire_translation_EN.csv?download=1"
+    ],
+    "download_instructions": "Download the Data.zip and related archives (Scenarios.zip, Tools.zip, Usage examples.zip, questionnaire_translation_EN.csv) from the Zenodo record. Data.zip contains the main dataset with head position, head rotation, gaze vectors, physiological signals and event markers recorded at 125 Hz.",
+        "citation": "R.\u00a0Martins, M.\u00a0Mestre, et\u00a0al. CREATTIVE3D: A dataset of VR road-crossing interactions under normal and low-vision conditions. Scientific Data 11, 2024.",
+        "notes": "40 participants explore road crossings in VR; dataset includes head position and rotation at 125 Hz and gaze orientation."
+    },
+    {
+        "name": "Non-Laboratory Gait Dataset",
+        "sources": [
+            "https://doi.org/10.6084/m9.figshare.c.6987746.v1",
+            "https://doi.org/10.1038/s41597-023-02374-2"
+        ],
+    "download_links": [],
+    "download_instructions": "Access the Figshare collection via the DOI (https://doi.org/10.6084/m9.figshare.c.6076607). Download the raw .mvn/.mvnx files and processed .csv files containing head segment orientation and position. Manual registration on Figshare may be required.",
+        "citation": "Z.\u00a0P. Shiri, H.\u00a0Pierce, et\u00a0al. A non-laboratory gait dataset of full body kinematics and egocentric vision. Scientific Data 10, 2023.",
+        "notes": "Processed CSVs list timestamps, vision frame names, and joint kinematics; includes head segment orientation and position."
+    },
+    {
+        "name": "Ruhr Hand Motion Catalog",
+        "sources": [
+            "https://osf.io/x4bpy/",
+            "https://doi.org/10.1038/s41597-023-02688-1"
+        ],
+        "download_links": [
+            "https://osf.io/x4bpy/download"
+        ],
+        "download_instructions": "Download the archive (Ruhr_HandMotion_CenterOutTask.tar.gz) from OSF; contains measurement and processed CSVs with positions and rotation quaternions for head markers and sensors.",
+        "citation": "V.\u00a0Burger, S.\u00a0Babula, F.\u00a0H\u00fcrlimann, et\u00a0al. Hand motion catalog of human center-out transport trajectories. Scientific Data 10, 2023.",
+        "notes": "Although focused on hand trajectories, the dataset also includes head IMU/Vicon marker positions and rotations in each frame."
+    },
+    {
+        "name": "ViewGauss Head-Movement Dataset",
+        "sources": [
+            "https://github.com/Cedarleigh/ViewGauss-DataSet",
+            "https://arxiv.org/abs/2401.05492"
+        ],
+    "download_links": [
+      "https://github.com/Cedarleigh/ViewGauss-DataSet/archive/refs/heads/main.zip"
+    ],
+    "download_instructions": "Download the zipped GitHub repository to obtain CSV files for each participant; each file records Frame, Position (PosX, PosY, PosZ) and Quaternion (RotX, RotY, RotZ, RotW) sampled at 10 Hz.",
+        "citation": "L.\u00a0Zhang, A.\u00a0Cameron, K.\u00a0Chug, et\u00a0al. ViewGauss: A dataset for 6DoF head movement during free viewing of 4D Gaussian videos. arXiv preprint arXiv:2401.05492, 2024.",
+        "notes": "35 participants watched 4 sequences of Gaussian-splatting videos; dataset includes 6DoF head motion (position and quaternion)."
+    },
+    {
+        "name": "Paired Head\u2013Eye VR Tasks Dataset",
+        "sources": [
+            "https://doi.org/10.6084/m9.figshare.25749378.v5",
+            "https://www.nature.com/articles/s41597-023-02588-4"
+        ],
+        "download_links": [],
+        "download_instructions": "Use the Figshare DOI link to download the dataset (CSV files per trial); each contains timestamp, left/right eye vectors and head direction (x,y,z) at \u2248120 Hz.",
+        "citation": "Q.\u00a0Guan, F.\u00a0Liu, Y.\u00a0Wang, et\u00a0al. A dataset of paired head and eye movements during visual tasks in virtual environments. Scientific Data 10, 2024.",
+        "notes": "25 participants performed smooth pursuit and visual search tasks; ~129k samples per participant with head direction vectors."
+    },
+    {
+        "name": "6DoF-Nav User Navigation Data",
+        "sources": [
+            "https://www.dis.cwi.nl/6dof-nav-dataset/",
+            "https://github.com/cwi-dis/6DoF-HMD-UserNavigationData"
+        ],
+        "download_links": [
+            "https://github.com/cwi-dis/6DoF-HMD-UserNavigationData/archive/refs/heads/main.zip"
+        ],
+        "download_instructions": "Download the zip archive of the GitHub repository to obtain CSV files with viewport positions (HMDPX,HMDPY,HMDPZ) and rotations (HMDRX,HMDRY,HMDRZ) per frame.",
+        "citation": "T.\u00a0R. Walters, L.\u00a0J.\u00a0P. van\u00a0der\u00a0Heijden, et\u00a0al. 6DoF navigation dataset: head-mounted display user navigation data for volumetric videos. CWI 2023.",
+        "notes": "26 participants viewed dynamic point-cloud videos; dataset logs head position and rotation for each rendered frame."
+    },
+    {
+        "name": "Panonut360 Dataset",
+        "sources": [
+            "https://dianvrlab.github.io/Panonut360/",
+            "https://dianvrlab.github.io/Panonut360/download.html"
+        ],
+    "download_links": [
+      "https://drive.google.com/drive/folders/1g85yjNeFpTD_R6mMyQk9hy7oQrWaRiE_?usp=drive_link"
+    ],
+    "download_instructions": "Use the Google Drive folder to download the dataset and video segments. The DataProfile folder contains CSV files with head position, head orientation (quaternion) and eye gaze sampled at 120 Hz.",
+        "citation": "Y.\u00a0Xu, J.\u00a0Guti\u00e9rrez, P.\u00a0Le\u00a0Callet. Panonut360: Head and eye tracking dataset for 360-degree videos. 2024.",
+        "notes": "50 users watched panoramic videos; dataset totals >60 hours of head and eye tracking data."
+    },
+    {
+        "name": "Gaze-in-Wild Dataset",
+        "sources": [
+            "http://www.cis.rit.edu/~rsk3900/gaze-in-wild/",
+            "https://www.nature.com/articles/s41598-020-77276-z"
+        ],
+        "download_links": [],
+        "download_instructions": "Navigate to the project website; download the compressed data files and code. Dataset includes head pose (orientation) and eye gaze signals with IMU and video.",
+        "citation": "R.\u00a0Kothari, P.\u00a0Mital, and J.\u00a0Henderson. Gaze-in-wild: A dataset of eye and head movements during natural tasks. Scientific Reports 10, 2020.",
+        "notes": "19 participants performed navigation, ball catching, search and tea-making tasks; includes head orientation velocities and gaze data."
+    },
+    {
+        "name": "Full Scene Volumetric Video User Behaviour Dataset",
+        "sources": [
+            "https://cuhksz-inml.github.io/user-behavior-in-vv-watching/",
+            "https://cuhksz-inml.github.io/full_scene_volumetric_video_dataset/"
+        ],
+    "download_links": [
+      "https://drive.google.com/drive/folders/10IneAJ6uMoI_BI93tuKj5_Oxj9qbkM29?usp=sharing"
+    ],
+    "download_instructions": "Use the Google Drive folder link to download the sequences of user trajectories and gaze directions for volumetric video viewing. Each file contains head position and gaze orientation traces for different volumetric scenes.",
+        "citation": "C.\u00a0Wu, Z.\u00a0Tan, Z.\u00a0Wang, and S.\u00a0Yang. A dataset for exploring user behaviors in VR spherical video streaming. ACM MMSys 2017.",
+        "notes": "Contains movement trajectory and gaze direction for users watching volumetric videos."
+    },
+    {
+        "name": "OpenNEEDS Dataset",
+        "sources": [
+            "https://research.facebook.com/datasets/openneeds/",
+            "https://www.nature.com/articles/s42256-022-00605-y"
+        ],
+        "download_links": [],
+        "download_instructions": "Visit the Meta research page; sign a data-use agreement to obtain the dataset. It includes head, hand, scene and gaze data for 44 participants across various tasks.",
+        "citation": "E.\u00a0Sun, K.\u00a0Muhlbach, P.\u00a0Zhang, et\u00a0al. OpenNEEDS: An open, large-scale dataset of head, hand and eye motion for VR interaction. 2021.",
+        "notes": "Participants performed reading, drawing, shooting and object manipulation; dataset captures non-eye and eye data."
+    },
+    {
+        "name": "BOXRR-23 Dataset",
+        "sources": [
+            "https://rdi.berkeley.edu/metaverse/boxrr-23/",
+            "https://arxiv.org/abs/2307.07349"
+        ],
+        "download_links": [],
+        "download_instructions": "Access the dataset website and request the 4.7 TB dataset (split into 106 zip files). Beat Saber recordings include 6DoF head and hand motion data sampled between 60\u2013144 Hz.",
+        "citation": "A.\u00a0S. Wang, H.\u00a0J. Yu, P.\u00a0S.\u00a0A. Rumman, et\u00a0al. BOXRR-23: The Berkeley Open Extended Reality Recording Dataset. arXiv preprint arXiv:2307.07349, 2023.",
+        "notes": "Over 4 million sessions of VR gameplay from 105k users; contains head and hand motion data."
+    },
+    {
+        "name": "mmWave XR Mobility Dataset",
+        "sources": [
+            "https://doi.org/10.48550/arXiv.2407.00073",
+            "https://dis.cwi.nl/multimedia/"
+        ],
+        "download_links": [],
+        "download_instructions": "Refer to the authors' paper or contact the corresponding authors for access. The dataset provides 45 hours of 6DoF tracking for head, hands and body captured using HTC Vive Pro 2 at 500 Hz.",
+        "citation": "R.\u00a0Calderon, M.\u00a0Johansson, T.\u00a0R. Walters, et\u00a0al. MmWave for extended reality: Open user mobility dataset. arXiv preprint arXiv:2407.00073, 2024.",
+        "notes": "Contains high-frequency head, hand and body tracking data for high-mobility VR games (Half-Life: Alyx, Wrench, Pistol Whip)."
+    },
+    {
+        "name": "Cognitive-State XR Motion Dataset",
+        "sources": [
+            "https://arxiv.org/abs/2309.12507"
+        ],
+        "download_links": [],
+        "download_instructions": "The dataset (head and hand motion with cognitive-state labels) will be released with the final publication. Monitor the project page for updates.",
+        "citation": "Kaiang Wen, et\u00a0al. Understanding cognitive states from head and hand motion data. arXiv preprint arXiv:2309.12507, 2025.",
+        "notes": "Collects head, left-hand and right-hand positions and quaternions at 72 Hz with frame-level cognitive state annotations (reading, confusion, hesitation, readiness)."
+    },
+    {
+        "name": "Seated Body Leaning Pose Dataset",
+        "sources": [
+            "https://doi.org/10.6084/m9.figshare.22134695.v1",
+            "https://arxiv.org/abs/2303.11466"
+        ],
+        "download_links": [],
+        "download_instructions": "Access the Figshare record to download the VR-Data.csv files and leaning annotations for each session (may require registration).",
+        "citation": "A.\u00a0Mavridou, et\u00a0al. Seated body leaning pose estimation from VR headset data. 2025.",
+        "notes": "Includes head and hand positions, orientations and gaze vectors during job interview simulations with leaning event labels."
+    },
+    {
+        "name": "NTHU 6-DoF VR Dataset for Privacy-Preserving Study",
+        "sources": [
+            "https://dl.acm.org/doi/10.1145/3593712.3593793"
+        ],
+        "download_links": [],
+        "download_instructions": "Contact the authors of the MMSys 2023 paper to request the dataset; it contains head and controller positions, orientations, gaze, audio and text features for 6-DoF VR sessions.",
+        "citation": "Yu Wei, Chun-Ying Huang, Kuan-Ta Chen, et\u00a0al. A 6-DoF VR dataset of 3D virtual world for privacy-preserving approach and utility-privacy tradeoff. In ACM Multimedia Systems (MMSys) 2023.",
+        "notes": "Collected for studying privacy in VR; includes 6DoF head and controller data and gaze signals."
+    }
+
+  ,{
+    "name": "VR User Behavior Dataset (Spherical Video Streaming)",
+    "sources": [
+      "https://wuchlei-thu.github.io/",
+      "https://doi.org/10.1145/3083187.3083210"
+    ],
+    "download_links": [
+      "https://www.dropbox.com/s/aqk6sbwqw6jyqck/vr-dataset.zip?dl=1",
+      "https://pan.baidu.com/s/1HJRScbQ6sf2LkbvmvlwsUg",
+      "https://www.dropbox.com/s/hp9rf9vs93in6zl/2-9-HeyVR.mp4?dl=1"
+    ],
+    "download_instructions": "Use the Dropbox link to download the full dataset zip or the Baidu Pan link (code: npmz). Some links require sign-in or access codes; consult the dataset page for details. The Video 9 link provides a corrected video for Experiments 2.",
+    "citation": "Chenglei Wu, Zhihao Tan, Zhi Wang, and Shiqiang Yang. A dataset for exploring user behaviors in VR spherical video streaming. In Proceedings of the 8th International Conference on Multimedia Systems, MMSys’17, Taipei, Taiwan, 2017. ACM.",
+    "notes": "Head tracking dataset with 48 participants (24 male and 24 female) watching 18 spherical videos across five categories. Records head movement, viewing direction and memory recall for each session. Useful for studying user behavior patterns in VR video streaming." 
+  }
+]

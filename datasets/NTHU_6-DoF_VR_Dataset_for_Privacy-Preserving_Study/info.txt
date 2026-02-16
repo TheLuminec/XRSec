@@ -1,0 +1,12 @@
+Name: NTHU 6-DoF VR Dataset for Privacy-Preserving Study
+Citation: Yu Wei, Chun-Ying Huang, Kuan-Ta Chen, et al. A 6-DoF VR dataset of 3D virtual world for privacy-preserving approach and utility-privacy tradeoff. In ACM Multimedia Systems (MMSys) 2023.
+
+Sources:
+ - https://dl.acm.org/doi/10.1145/3593712.3593793
+
+Notes:
+Collected for studying privacy in VR; includes 6DoF head and controller data and gaze signals.
+
+Download Instructions:
+Contact the authors of the MMSys 2023 paper to request the dataset; it contains head and controller positions, orientations, gaze, audio and text features for 6-DoF VR sessions.
+

@@ -1,0 +1,13 @@
+Name: Full Scene Volumetric Video User Behaviour Dataset
+Citation: C. Wu, Z. Tan, Z. Wang, and S. Yang. A dataset for exploring user behaviors in VR spherical video streaming. ACM MMSys 2017.
+
+Sources:
+ - https://cuhksz-inml.github.io/user-behavior-in-vv-watching/
+ - https://cuhksz-inml.github.io/full_scene_volumetric_video_dataset/
+
+Notes:
+Contains movement trajectory and gaze direction for users watching volumetric videos.
+
+Download Instructions:
+Use the Google Drive folder link to download the sequences of user trajectories and gaze directions for volumetric video viewing. Each file contains head position and gaze orientation traces for different volumetric scenes.
+
