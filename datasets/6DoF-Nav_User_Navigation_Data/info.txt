@@ -11,3 +11,5 @@ Notes:
 Download Instructions:
 Download the zip archive of the GitHub repository to obtain CSV files with viewport positions (HMDPX,HMDPY,HMDPZ) and rotations (HMDRX,HMDRY,HMDRZ) per frame.
 
+Download Errors / Manual Actions Required:
+ - Failed to download https://github.com/cwi-dis/6DoF-HMD-UserNavigationData/archive/refs/heads/main.zip: 404 Client Error: Not Found for url: https://codeload.github.com/cwi-dis/6DoF-HMD-UserNavigationData/zip/refs/heads/main

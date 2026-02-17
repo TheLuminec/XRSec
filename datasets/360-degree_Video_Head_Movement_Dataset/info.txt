@@ -11,3 +11,5 @@ Contains head orientation logs for users watching several 360° videos.
 Download Instructions:
 Download the tar.gz archive from the ENSTB site; it contains head orientation traces for multiple users.
 
+Download Errors / Manual Actions Required:
+ - Failed to download http://dash.ipv6.enstb.fr/headMovements/archives/dataset.tar.gz: 403 Client Error: Forbidden for url: http://dash.ipv6.enstb.fr/headMovements/archives/dataset.tar.gz

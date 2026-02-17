@@ -11,3 +11,5 @@ Includes raw head and eye tracking data and processed saliency maps for omnidire
 Download Instructions:
 Open the Google Drive link and download the zip file containing 60 omnidirectional images with head and eye tracking data.
 
+Download Errors / Manual Actions Required:
+ - Failed to download https://drive.google.com/open?id=0ByRLJyAo2RFWaDFOZTlHRl9PdlU: 404 Client Error: Not Found for url: https://drive.google.com/open?id=0ByRLJyAo2RFWaDFOZTlHRl9PdlU
