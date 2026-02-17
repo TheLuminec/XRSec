@@ -1,3 +1,6 @@
-datasets/**
-!datasets/*/info.txt
-nsf_ERI_2023_ARVRsecurity (1).pdf
+/datasets/*
+!/datasets/*/
+/datasets/*/*
+
+!/datasets/*/info.txt
+!/datasets/*/parser.py
