@@ -5,12 +5,13 @@ timestep_between_samples = 0.1s
 for now output full data resolution (time offset for more points per data sample in training)
 
 data_source:
-- users
-- sessions
-    - task in session / metadata for each session
+-processed_data:
+    - users
+        - data for each user
     - user info, if avaliable
+    - tasks meta data
 - notes about data collected and methodologies (info.txt works)
-
+- parser.py
 
 siamese model for secure detection
 smaller model to decide if user switch?

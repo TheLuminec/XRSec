@@ -115,6 +115,10 @@ def main() -> None:
         dataset_dir = output_dir / folder_name
         dataset_dir.mkdir(parents=True, exist_ok=True)
         errors: list[str] = []
+        was_processed = dataset_dir / "processed_data"
+        if was_processed.exists():
+            print(f"[SKIP] {dataset_name} already processed.")
+            continue
 
         if not skip_full:
             # Attempt to download each link
