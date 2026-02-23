@@ -11,3 +11,5 @@ Notes:
 Download Instructions:
 Use the Google Drive folder to download the dataset and video segments. The DataProfile folder contains CSV files with head position, head orientation (quaternion) and eye gaze sampled at 120 Hz.
 
+Download Errors / Manual Actions Required:
+ - Failed to download https://drive.google.com/drive/folders/1g85yjNeFpTD_R6mMyQk9hy7oQrWaRiE_?usp=drive_link: HTTPSConnectionPool(host='drive.google.com', port=443): Max retries exceeded with url: /drive/folders/1g85yjNeFpTD_R6mMyQk9hy7oQrWaRiE_?usp=drive_link (Caused by NameResolutionError("HTTPSConnection(host='drive.google.com', port=443): Failed to resolve 'drive.google.com' ([Errno 11001] getaddrinfo failed)"))

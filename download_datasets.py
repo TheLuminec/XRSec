@@ -117,7 +117,7 @@ def main() -> None:
         errors: list[str] = []
         was_processed = dataset_dir / "processed_data"
         if was_processed.exists():
-            print(f"[SKIP] {dataset_name} already processed.")
+            print(f"[SKIP] {dataset_dir} already processed.")
             continue
 
         if not skip_full:

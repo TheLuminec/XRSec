@@ -11,3 +11,4 @@ Contains head orientation logs and QoE ratings for 50 subjects watching ten 360Â
 Download Instructions:
 Clone the GitHub repository and access the orientation_log and rating_log files for each participant.
 
+INCOMPATIBLE

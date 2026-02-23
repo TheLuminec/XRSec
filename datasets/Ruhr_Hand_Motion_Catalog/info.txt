@@ -11,3 +11,5 @@ Although focused on hand trajectories, the dataset also includes head IMU/Vicon 
 Download Instructions:
 Download the archive (Ruhr_HandMotion_CenterOutTask.tar.gz) from OSF; contains measurement and processed CSVs with positions and rotation quaternions for head markers and sensors.
 
+Download Errors / Manual Actions Required:
+ - Failed to download https://osf.io/x4bpy/download: HTTPSConnectionPool(host='osf.io', port=443): Max retries exceeded with url: /x4bpy/download (Caused by NameResolutionError("HTTPSConnection(host='osf.io', port=443): Failed to resolve 'osf.io' ([Errno 11001] getaddrinfo failed)"))
