@@ -1,12 +1,7 @@
 """
 Test script for XR biometric identification model.
 
-Loads a trained model checkpoint and evaluates accuracy on a held-out
-test split of the dataset, mirroring the same 80/20 split used in train.py.
-
-Usage:
-    python model/test_model.py --data-dir datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/
-    python model/test_model.py --data-dir <path> --model-path model/trained_model.pth --train-split 0.8
+Loads a trained model checkpoint and evaluates accuracy on the dataset.
 """
 
 import sys
@@ -23,12 +18,6 @@ from dataset import XRSecDataset
 
 
 def evaluate(model, loader, criterion, device):
-    """
-    Runs a full evaluation pass on the test dataset.
-    
-    Returns:
-        tuple: (avg_loss, overall_accuracy, all_predictions, all_labels)
-    """
     model.eval()
     total_loss = 0.0
     correct = 0
@@ -57,7 +46,6 @@ def evaluate(model, loader, criterion, device):
 
 
 def per_user_accuracy(preds, labels, num_users):
-    """Compute per-user accuracy from flat prediction/label lists."""
     user_correct = [0] * num_users
     user_total = [0] * num_users
     for p, l in zip(preds, labels):
@@ -69,41 +57,32 @@ def per_user_accuracy(preds, labels, num_users):
 
 
 def main():
-    """
-    Main evaluation pipeline.
-    
-    Loads a saved model checkpoint, reconstructs the test split using
-    the same random seed as training, and reports both overall and
-    per-user accuracy metrics.
-    """
     parser = argparse.ArgumentParser(description="Evaluate a trained XR biometric model")
     parser.add_argument("--data-dir", type=str, required=True,
                         help="Path to processed_data/users/ directory")
     parser.add_argument("--model-path", type=str, default="model/trained_model.pth",
                         help="Path to the saved model checkpoint (.pth)")
     parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Random seed — must match the one used during training for a valid split")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # ── Dataset (same split logic as train.py) ──────────────────────────────
-    print("Loading dataset...")
-    dataset = XRSecDataset(args.data_dir)
-
-    test_size = len(dataset)
-    print(f"Test: {test_size} samples")
-
-    test_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
-
-    # ── Model ────────────────────────────────────────────────────────────────
     if not os.path.exists(args.model_path):
         print(f"ERROR: checkpoint not found at '{args.model_path}'")
         sys.exit(1)
 
     checkpoint = torch.load(args.model_path, map_location=device)
+
+    print("Loading dataset...")
+    dataset = XRSecDataset(args.data_dir, canonicalize=checkpoint.get('canonicalize', True))
+    if checkpoint.get('norm_mean') is not None and checkpoint.get('norm_std') is not None:
+        dataset.apply_normalization(checkpoint['norm_mean'], checkpoint['norm_std'])
+
+    test_size = len(dataset)
+    print(f"Test: {test_size} samples")
+    test_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
+
     model = Model(
         num_users=checkpoint['num_users'],
         seq_len=checkpoint['seq_len'],
@@ -116,7 +95,6 @@ def main():
     print(f"Loaded checkpoint: {args.model_path}")
     print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
-    # ── Evaluation ───────────────────────────────────────────────────────────
     criterion = nn.CrossEntropyLoss()
     loss, accuracy, preds, labels = evaluate(model, test_loader, criterion, device)
 
@@ -125,7 +103,6 @@ def main():
     print(f"  Test Accuracy: {accuracy:.2%}  ({int(accuracy * test_size)}/{test_size} correct)")
     print(f"{'─' * 40}")
 
-    # Per-user breakdown
     per_user = per_user_accuracy(preds, labels, dataset.num_users)
     print(f"\nPer-user accuracy ({dataset.num_users} users):")
     for label_idx, acc in enumerate(per_user):
