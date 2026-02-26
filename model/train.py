@@ -83,7 +83,7 @@ def main():
     print(f"Using device: {device}")
 
     print("Loading dataset...")
-    dataset = XRSecDataset(args.data_dir, canonicalize=True)
+    dataset = XRSecDataset(args.data_dir, index_load=(0, -1), canonicalize=True)
 
     train_size = int(args.train_split * len(dataset))
     test_size = len(dataset) - train_size
