@@ -26,9 +26,10 @@ class XRSecDataset(Dataset):
     Args:
         data_dir: Path to processed_data/users/ directory
     """
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, index_load: tuple= (0, None)):
         self.samples = []
         self.labels = []
+        self.index_load = index_load
 
         users = Users(data_dir)
         user_ids = sorted(users.user_profiles.keys())
@@ -38,7 +39,9 @@ class XRSecDataset(Dataset):
 
         for uid, profile in users.user_profiles.items():
             label = self.user_id_to_label[uid]
-            for sampler in profile.data_samplers:
+            # leave one out, skip last sampler
+            used_samplers = profile.data_samplers[self.index_load[0]:self.index_load[1]]
+            for sampler in used_samplers:
                 all_samples = sampler.get_all_samples()  # (num_windows, 10, 8)
                 for i in range(sampler.sample_count):
                     sample = all_samples[i]              # (10, 8)

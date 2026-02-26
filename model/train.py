@@ -99,16 +99,16 @@ def main():
 
     # Load dataset
     print("Loading dataset...")
-    dataset = XRSecDataset(args.data_dir)
+    dataset = XRSecDataset(args.data_dir, leave_one_out=True, leave_out_size=1)
 
     # Case A: random train/test split
-    train_size = int(args.train_split * len(dataset))
-    test_size = len(dataset) - train_size
-    train_set, test_set = random_split(dataset, [train_size, test_size])
-    print(f"Train: {train_size} samples, Test: {test_size} samples")
+    # train_size = int(args.train_split * len(dataset))
+    # test_size = len(dataset) - train_size
+    # train_set, test_set = random_split(dataset, [train_size, test_size])
+    # print(f"Train: {train_size} samples, Test: {test_size} samples")
 
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
+    # test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
     # Initialize model
     model = Model(
@@ -124,18 +124,18 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     # Training loop
-    print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9} | {'Test Loss':>9} | {'Test Acc':>8}")
+    print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9}")# | {'Test Loss':>9} | {'Test Acc':>8}")
     print("-" * 60)
 
-    best_test_acc = 0.0
+    best_train_acc = 0.0
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
-        test_loss, test_acc = evaluate(model, test_loader, criterion, device)
+        # test_loss, test_acc = evaluate(model, test_loader, criterion, device)
 
-        print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | {test_acc:7.2%}")
+        print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%}")# | {test_loss:9.4f} | {test_acc:7.2%}")
 
-        if test_acc > best_test_acc:
-            best_test_acc = test_acc
+        if train_acc > best_train_acc:
+            best_train_acc = train_acc
             torch.save({
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
@@ -148,7 +148,7 @@ def main():
                 'gat_heads': model.gat_heads,
                 }, args.save_path)
 
-    print(f"\nBest test accuracy: {best_test_acc:.2%}")
+    print(f"\nBest train accuracy: {best_train_acc:.2%}")
     print(f"Model saved to: {args.save_path}")
 
 
