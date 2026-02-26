@@ -14,4 +14,7 @@ data_source:
 - parser.py
 
 siamese model for secure detection
-smaller model to decide if user switch?
+add noise to data to increase robustness
+- scalar increase to set of values
+- small random noise
+- randomness to which datapoint is selected

@@ -71,6 +71,9 @@ class Model(nn.Module):
         self.num_users = num_users
         self.seq_len = seq_len
         self.num_channels = num_channels
+        self.gnn_hidden = gnn_hidden
+        self.lstm_hidden = lstm_hidden
+        self.gat_heads = gat_heads
         self.num_nodes = num_channels + 3  # 7 data + orientation + position + root
 
         # Fixed graph structure (§3.1.2 Figure 6)

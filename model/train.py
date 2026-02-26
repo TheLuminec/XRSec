@@ -22,6 +22,9 @@ from dataset import XRSecDataset
 
 
 def train_epoch(model, loader, criterion, optimizer, device):
+    """
+    Trains the model for a single epoch over the provided data loader.
+    """
     model.train()
     total_loss = 0
     correct = 0
@@ -47,6 +50,9 @@ def train_epoch(model, loader, criterion, optimizer, device):
 
 
 def evaluate(model, loader, criterion, device):
+    """
+    Evaluates the model's accuracy and loss on a validation/test set.
+    """
     model.eval()
     total_loss = 0
     correct = 0
@@ -69,6 +75,13 @@ def evaluate(model, loader, criterion, device):
 
 
 def main():
+    """
+    Main training pipeline.
+    
+    Initializes the dataset, splits it into training and testing sets,
+    instantiates the GNN+BiLSTM model, and runs the training loop.
+    Saves the best model checkpoint based on test accuracy.
+    """
     parser = argparse.ArgumentParser(description="Train XR biometric model")
     parser.add_argument("--data-dir", type=str, required=True,
                         help="Path to processed_data/users/ directory")
@@ -123,7 +136,17 @@ def main():
 
         if test_acc > best_test_acc:
             best_test_acc = test_acc
-            torch.save(model.state_dict(), args.save_path)
+            torch.save({
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'epoch': epoch,
+                'num_users': model.num_users,
+                'seq_len': model.seq_len,
+                'num_channels': model.num_channels,
+                'gnn_hidden': model.gnn_hidden,
+                'lstm_hidden': model.lstm_hidden,
+                'gat_heads': model.gat_heads,
+                }, args.save_path)
 
     print(f"\nBest test accuracy: {best_test_acc:.2%}")
     print(f"Model saved to: {args.save_path}")

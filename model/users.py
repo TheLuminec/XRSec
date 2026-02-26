@@ -1,8 +1,16 @@
+"""
+Entry point for dataset loading.
+
+Traverses the dataset directory structure to discover users
+and initialize their associated UserProfile instances.
+"""
+
 from user_profile import UserProfile
 import numpy as np
 import os
 
 class Users:
+    """Container managing all loaded user profiles in the dataset."""
     def __init__(self, user_dir: str):
         self.user_dir = user_dir
         self.user_profiles = {}
@@ -10,6 +18,7 @@ class Users:
         self._load_user_profiles()
 
     def _load_user_profiles(self):
+        """Iterates through subdirectories, treating each as a user ID."""
         for file in os.listdir(self.user_dir):
             user_dir = os.path.join(self.user_dir, file)
             if os.path.isdir(user_dir):
