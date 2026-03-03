@@ -19,7 +19,7 @@ class Users:
 
     def _load_user_profiles(self):
         """Iterates through subdirectories, treating each as a user ID."""
-        for file in os.listdir(self.user_dir):
+        for file in sorted(os.listdir(self.user_dir)):
             user_dir = os.path.join(self.user_dir, file)
             if os.path.isdir(user_dir):
                 self._load_user_profile(int(file), user_dir)

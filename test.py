@@ -1,2 +1,3 @@
-l = [1, 2, 3, 4, 5]
-print(l[0:None])
+import torch
+
+print(torch.cuda.get_device_name(0))

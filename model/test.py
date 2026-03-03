@@ -56,16 +56,7 @@ def per_user_accuracy(preds, labels, num_users):
             for i in range(num_users)]
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Evaluate a trained XR biometric model")
-    parser.add_argument("--data-dir", type=str, required=True,
-                        help="Path to processed_data/users/ directory")
-    parser.add_argument("--model-path", type=str, default="model/trained_model.pth",
-                        help="Path to the saved model checkpoint (.pth)")
-    parser.add_argument("--batch-size", type=int, default=32)
-    args = parser.parse_args()
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def evaluate_model(args, device):
     print(f"Using device: {device}")
 
     if not os.path.exists(args.model_path):
@@ -75,7 +66,15 @@ def main():
     checkpoint = torch.load(args.model_path, map_location=device)
 
     print("Loading dataset...")
-    dataset = XRSecDataset(args.data_dir, canonicalize=checkpoint.get('canonicalize', True))
+    # For testing, if leave-last-out was used during training, we test on the left-out (last) session.
+    # We allow the test mode to specify the split method to ensure it evaluates on the right data.
+    if args.split_method == "leave-last-out":
+        dataset = XRSecDataset(args.data_dir, index_load=(-1, None), canonicalize=checkpoint.get('canonicalize', True))
+    else:
+        # Standard testing evaluates on the whole dataset or a specific fold (depending on the caller). 
+        # Here we just load everything if not specified.
+        dataset = XRSecDataset(args.data_dir, index_load=(0, None), canonicalize=checkpoint.get('canonicalize', True))
+        
     if checkpoint.get('norm_mean') is not None and checkpoint.get('norm_std') is not None:
         dataset.apply_normalization(checkpoint['norm_mean'], checkpoint['norm_std'])
 
@@ -89,7 +88,7 @@ def main():
         num_channels=checkpoint['num_channels'],
         gnn_hidden=checkpoint['gnn_hidden'],
         lstm_hidden=checkpoint['lstm_hidden'],
-        gat_heads=checkpoint['gat_heads'],
+        gat_heads=checkpoint.get('gat_heads', 4),
     ).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
     print(f"Loaded checkpoint: {args.model_path}")
@@ -108,7 +107,9 @@ def main():
     for label_idx, acc in enumerate(per_user):
         uid = dataset.label_to_user_id[label_idx]
         print(f"  User {uid} (label {label_idx}): {acc:.2%}")
-
+        
+    return loss, accuracy, per_user, dataset.num_users, dataset.label_to_user_id
 
 if __name__ == "__main__":
-    main()
+    print("Please run this via main.py")
+

@@ -65,34 +65,34 @@ def evaluate(model, loader, criterion, device):
     return avg_loss, accuracy
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Train XR biometric model")
-    parser.add_argument("--data-dir", type=str, required=True,
-                        help="Path to processed_data/users/ directory")
-    parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch-size", type=int, default=32)
-    parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--lstm-hidden", type=int, default=64)
-    parser.add_argument("--gnn-hidden", type=int, default=32)
-    parser.add_argument("--train-split", type=float, default=0.8)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--save-path", type=str, default="model/trained_model.pth")
-    args = parser.parse_args()
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def run_training(args, device):
     print(f"Using device: {device}")
 
     print("Loading dataset...")
-    dataset = XRSecDataset(args.data_dir, index_load=(0, -1), canonicalize=True)
-
-    train_size = int(args.train_split * len(dataset))
-    test_size = len(dataset) - train_size
-    generator = torch.Generator().manual_seed(args.seed)
-    train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
-    print(f"Train: {train_size} samples, Test: {test_size} samples")
-
-    norm_mean, norm_std = dataset.fit_normalization(train_set.indices)
-
+    if args.split_method == "leave-last-out":
+        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1), canonicalize=True)
+        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None), canonicalize=True)
+        train_size = len(train_dataset)
+        test_size = len(test_dataset)
+        print(f"Train (Leave-last-out): {train_size} samples, Test: {test_size} samples")
+        
+        norm_mean, norm_std = train_dataset.fit_normalization(range(train_size))
+        test_dataset.apply_normalization(norm_mean, norm_std)
+        
+        train_set = train_dataset
+        test_set = test_dataset
+        dataset = train_dataset
+    else:
+        # Random split
+        dataset = XRSecDataset(args.data_dir, index_load=(0, None), canonicalize=False)
+        train_size = int(args.train_split * len(dataset))
+        test_size = len(dataset) - train_size
+        generator = torch.Generator().manual_seed(args.seed)
+        train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
+        print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
+        
+        norm_mean, norm_std = dataset.fit_normalization(train_set.indices)
+    
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
@@ -100,6 +100,7 @@ def main():
         num_users=dataset.num_users,
         lstm_hidden=args.lstm_hidden,
         gnn_hidden=args.gnn_hidden,
+        gat_heads=args.gat_heads,
     ).to(device)
 
     param_count = sum(p.numel() for p in model.parameters())
@@ -112,9 +113,16 @@ def main():
     print("-" * 64)
 
     best_test_acc = 0.0
+    history = {'train_loss': [], 'train_acc': [], 'test_loss': [], 'test_acc': []}
+    
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
+        
+        history['train_loss'].append(train_loss)
+        history['train_acc'].append(train_acc)
+        history['test_loss'].append(test_loss)
+        history['test_acc'].append(test_acc)
 
         print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | {test_acc:7.2%}")
 
@@ -135,11 +143,14 @@ def main():
                 'norm_std': norm_std,
                 'seed': args.seed,
                 'train_split': args.train_split,
+                'split_method': args.split_method,
                 }, args.save_path)
 
     print(f"\nBest test accuracy: {best_test_acc:.2%}")
     print(f"Model saved to: {args.save_path}")
-
+    
+    return history, dataset.num_users, dataset.label_to_user_id
 
 if __name__ == "__main__":
-    main()
+    print("Please run this via main.py")
+

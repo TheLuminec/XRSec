@@ -86,9 +86,6 @@ class Sampler:
         last_range_end = 0
         for i in range(self.sample_count):
             self.samples[i], last_range_end = self._get_sample_slice(i, last_range_end)
-            if self.scalar_randomness > 0:
-                noise = np.random.normal(0.0, self.scalar_randomness, size=self.samples[i, :, 1:].shape)
-                self.samples[i, :, 1:] += noise
 
     def get_sample(self, index: int) -> np.ndarray:
         if index < 0 or index >= self.sample_count:

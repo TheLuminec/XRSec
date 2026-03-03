@@ -20,7 +20,7 @@ class UserProfile:
 
     def _load_data(self):
         """Loads all CSV experiment files found in the user's directory."""
-        for file in os.listdir(self.user_dir):
+        for file in sorted(os.listdir(self.user_dir)):
             if file.endswith(".csv"):
                 self._load_data_sample(os.path.join(self.user_dir, file))
 
