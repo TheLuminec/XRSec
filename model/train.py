@@ -95,8 +95,6 @@ def run_training(args, device):
         generator = torch.Generator().manual_seed(args.seed)
         train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
         print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
-        
-        norm_mean, norm_std = dataset.fit_normalization(train_set.indices)
     
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
@@ -147,8 +145,6 @@ def run_training(args, device):
                 'gnn_hidden': model.feature_extractor.gnn_hidden,
                 'lstm_hidden': model.feature_extractor.lstm_hidden,
                 'gat_heads': model.feature_extractor.gat_heads,
-                'norm_mean': norm_mean,
-                'norm_std': norm_std,
                 'seed': args.seed,
                 'train_split': args.train_split,
                 'split_method': args.split_method,
