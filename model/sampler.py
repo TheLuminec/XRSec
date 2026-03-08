@@ -16,15 +16,14 @@ class Sampler:
 
     Handles variable framerate data by finding the closest data point
     to each target temporal step. Supports data augmentation via index
-    jitter and additive noise.
+    randomness.
     """
 
-    def __init__(self, data: np.ndarray, sample_rate=10, variance=0.01, index_randomness=0, scalar_randomness=0):
+    def __init__(self, data: np.ndarray, sample_rate=10, variance=0.01, index_randomness=0):
         self.data = data
         self.sample_rate = sample_rate
         self.variance = variance
         self.index_randomness = index_randomness
-        self.scalar_randomness = scalar_randomness
         self.data_len = data.shape[0]
         self.time_start = data[0, 0]
         self.time_end = data[-1, 0]
@@ -78,9 +77,6 @@ class Sampler:
     def _preprocess(self):
         """
         Pre-computes and caches all fixed-rate data slices from the raw timeline.
-
-        Applies optional additive gaussian noise to feature columns only
-        (keeps time column untouched).
         """
         self.samples = np.zeros((self.sample_count, self.sample_rate, self.data.shape[1]))
         last_range_end = 0

@@ -69,11 +69,11 @@ def evaluate_model(args, device):
     # For testing, if leave-last-out was used during training, we test on the left-out (last) session.
     # We allow the test mode to specify the split method to ensure it evaluates on the right data.
     if args.split_method == "leave-last-out":
-        dataset = XRSecDataset(args.data_dir, index_load=(-1, None), canonicalize=checkpoint.get('canonicalize', True))
+        dataset = XRSecDataset(args.data_dir, index_load=(-1, None))
     else:
         # Standard testing evaluates on the whole dataset or a specific fold (depending on the caller). 
         # Here we just load everything if not specified.
-        dataset = XRSecDataset(args.data_dir, index_load=(0, None), canonicalize=checkpoint.get('canonicalize', True))
+        dataset = XRSecDataset(args.data_dir, index_load=(0, None))
         
     if checkpoint.get('norm_mean') is not None and checkpoint.get('norm_std') is not None:
         dataset.apply_normalization(checkpoint['norm_mean'], checkpoint['norm_std'])

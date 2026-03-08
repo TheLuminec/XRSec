@@ -93,15 +93,14 @@ def _parse_scanpath_file(file_path: str, is_eye_tracking: bool, user_id: str, ta
         parsed_df["HmdPosition.z"] = z
         parsed_df["IsEyeTrackingSample"] = 0
 
-    parsed_df["User"] = user_id
-    parsed_df["Task"] = task_name
-
     return parsed_df
 
-def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
+def parse(dataset_path) -> Generator[tuple[str, str, pd.DataFrame], None, None]:
     """
     Parses all relevant text files in the dataset.
+    Yields (user_id, task_id, dataframe)
     """
+    dataset_path = str(dataset_path)
     
     # 1. Parse Image_H (Head tracking only)
     h_scanpaths_dir = os.path.join(dataset_path, "Image_H", "H", "Scanpaths")
@@ -118,7 +117,7 @@ def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
             
             parsed_df = _parse_scanpath_file(file_path, is_eye_tracking=False, user_id=user_id, task_name=task_name)
             if not parsed_df.empty:
-                yield parsed_df
+                yield user_id, task_id, parsed_df
                 
     # 2. Parse Image_HE (Head and Eye tracking) - Both L and R if they exist
     he_base_dir = os.path.join(dataset_path, "Image_HE", "HE", "Scanpaths")
@@ -136,8 +135,8 @@ def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
                 
                 # Extract User from filename
                 user_id = file_name.replace("HEscanpath_", "").replace(".txt", "")
-                task_name = f"Image_HE_{eye}"
+                task_id = f"Image_HE_{eye}"
                 
-                parsed_df = _parse_scanpath_file(file_path, is_eye_tracking=True, user_id=user_id, task_name=task_name)
+                parsed_df = _parse_scanpath_file(file_path, is_eye_tracking=True, user_id=user_id, task_name=task_id)
                 if not parsed_df.empty:
-                    yield parsed_df
+                    yield user_id, task_id, parsed_df

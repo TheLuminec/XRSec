@@ -24,10 +24,11 @@ def parse_metadata(dataset_dir):
         "tasks": list(tasks)
     }
 
-def parse_dataset(dataset_dir):
+def parse(dataset_dir):
     """
     Yields dataframes processed for each user and structured properly.
     """
+    dataset_dir = str(dataset_dir)
     data_dir = os.path.join(dataset_dir, '25749378')
     
     if not os.path.exists(data_dir):
@@ -81,13 +82,10 @@ def parse_dataset(dataset_dir):
             df['GazeRay.y'] = (df['eye_in_head_left_y'] + df['eye_in_head_right_y']) / 2.0
             df['GazeRay.z'] = (df['eye_in_head_left_z'] + df['eye_in_head_right_z']) / 2.0
             
-            # Adding Formatter Identifier Requirements
-            df['User'] = user_id
-            df['Task'] = task_id
             df['IsEyeTrackingSample'] = 1  # Contains eye tracking data from the dataset
             
             # Ensure sorting by chronological timestamp metrics
             df.sort_values(by='time_stamp(ms)', inplace=True)
             
             # Yield the dataframe for the core formatting operation 
-            yield df
+            yield user_id, task_id, df

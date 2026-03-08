@@ -70,8 +70,8 @@ def run_training(args, device):
 
     print("Loading dataset...")
     if args.split_method == "leave-last-out":
-        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1), canonicalize=True)
-        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None), canonicalize=True)
+        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1))
+        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None))
         train_size = len(train_dataset)
         test_size = len(test_dataset)
         print(f"Train (Leave-last-out): {train_size} samples, Test: {test_size} samples")
@@ -84,7 +84,7 @@ def run_training(args, device):
         dataset = train_dataset
     else:
         # Random split
-        dataset = XRSecDataset(args.data_dir, index_load=(0, None), canonicalize=False)
+        dataset = XRSecDataset(args.data_dir, index_load=(0, None))
         train_size = int(args.train_split * len(dataset))
         test_size = len(dataset) - train_size
         generator = torch.Generator().manual_seed(args.seed)
@@ -138,7 +138,6 @@ def run_training(args, device):
                 'gnn_hidden': model.gnn_hidden,
                 'lstm_hidden': model.lstm_hidden,
                 'gat_heads': model.gat_heads,
-                'canonicalize': dataset.canonicalize,
                 'norm_mean': norm_mean,
                 'norm_std': norm_std,
                 'seed': args.seed,

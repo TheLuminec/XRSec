@@ -25,11 +25,12 @@ def extract_mat_frame(mat_path):
                 return matrix
     return None
 
-def parse_dataset(dataset_dir):
+def parse(dataset_dir):
     """
     Yields dataframes for each user inside the VR traces folder.
     Maps .mat sequences representing coordinates into formatted columns.
     """
+    dataset_dir = str(dataset_dir)
     traces_dir = os.path.join(dataset_dir, 'Traces_6DOF_VR_NJIT')
     
     if not os.path.exists(traces_dir):
@@ -56,9 +57,6 @@ def parse_dataset(dataset_dir):
             df = pd.DataFrame(matrix, columns=['x', 'y', 'z', 'yaw', 'pitch', 'roll'])
             
             # Formulating output parameters according to expected structure
-            df['User'] = user_id
-            df['Task'] = task_id
-            
             # Map SessionTime relying on standard 250 Hz increment rate
             df['SessionTime'] = df.index / 250.0
             
@@ -83,9 +81,8 @@ def parse_dataset(dataset_dir):
             # Eye tracking dataset feature false flag
             df['IsEyeTrackingSample'] = 0
             
-            # Purge the original euler dimensions safely retaining standard Hmd attributes
             df.drop(columns=['yaw', 'pitch', 'roll'], inplace=True)
-            yield df
+            yield user_id, task_id, df
             
         except Exception as e:
             print(f"Error reading {file_path}: {e}")

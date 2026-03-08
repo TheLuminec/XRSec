@@ -22,11 +22,12 @@ def parse_metadata(dataset_dir):
         "tasks": list(tasks)
     }
 
-def parse_dataset(dataset_dir):
+def parse(dataset_dir):
     """
     Yields dataframes processed for each user and task in the Panonut360 Dataset.
     Each dataframe conforms to formatting requirements (SessionTime, HmdPosition, etc.)
     """
+    dataset_dir = str(dataset_dir)
     logs_dir = os.path.join(dataset_dir, 'Panonut360', 'Logs')
     
     if not os.path.exists(logs_dir):
@@ -76,12 +77,10 @@ def parse_dataset(dataset_dir):
                 'eye_z_t': 'GazeRay.z',
             }, inplace=True)
             
-            df['User'] = user_id
-            df['Task'] = task_id
             df['IsEyeTrackingSample'] = 1  # Contains eye tracking data from the dataset
             
             # Ensure sorting by time
             df.sort_values(by='SessionTime', inplace=True)
             
             # Yield the dataframe for the core formatter to pick up
-            yield df
+            yield user_id, task_id, df

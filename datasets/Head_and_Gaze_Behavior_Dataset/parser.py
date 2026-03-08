@@ -15,11 +15,12 @@ def parse_metadata(dataset_path: str) -> dict:
         "Description": "Dataset containing head tracking and gaze tracking data for 360-degree videos."
     }
 
-def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
+def parse(dataset_path) -> Generator[tuple[str, str, pd.DataFrame], None, None]:
     """
     Parses all CSV files in the Head_and_Gaze_Behavior_Dataset.
     Maps data appropriately based on Version (V1 or V2).
     """
+    dataset_path = str(dataset_path)
     # Version 1 parsing
     v1_path = os.path.join(dataset_path, "Version1")
     if os.path.exists(v1_path):
@@ -87,10 +88,7 @@ def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
                 parsed_df["GazeRay.y"] = np.sin(gaze_pitch)
                 parsed_df["GazeRay.z"] = np.cos(gaze_yaw) * np.cos(gaze_pitch)
                 
-                parsed_df["User"] = user_folder
-                parsed_df["Task"] = f"V1_{task}"
-                
-                yield parsed_df
+                yield user_folder, f"V1_{task}", parsed_df
                 
     # Version 2 parsing
     v2_path = os.path.join(dataset_path, "Version2")
@@ -172,7 +170,4 @@ def parse_dataset(dataset_path: str) -> Generator[pd.DataFrame, None, None]:
                 parsed_df["GazeRay.y"] = combined_gaze[:, 1]
                 parsed_df["GazeRay.z"] = combined_gaze[:, 2]
                 
-                parsed_df["User"] = clean_user
-                parsed_df["Task"] = f"V2_{task}"
-                
-                yield parsed_df
+                yield clean_user, f"V2_{task}", parsed_df

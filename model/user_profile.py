@@ -25,9 +25,9 @@ class UserProfile:
                 self._load_data_sample(os.path.join(self.user_dir, file))
 
     def _load_data_sample(self, path: str):
-        """Loads a single CSV file and instantiates a Sampler with data augmentation."""
+        """Loads a single CSV file and instantiates a Sampler."""
         data = np.loadtxt(path, delimiter=",", skiprows=1)
-        self.data_samplers.append(Sampler(data, index_randomness=1, scalar_randomness=0.002))
+        self.data_samplers.append(Sampler(data, index_randomness=1))
 
 
 if __name__ == "__main__":
