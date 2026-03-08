@@ -11,3 +11,4 @@ Provides over 50,000 saliency maps for 24 360° videos; raw head movement traces
 Download Instructions:
 Download the saliency_ds.zip file from the Zenodo record; it contains saliency maps derived from head movement datasets.
 
+Not Compatible with XR-SEC

@@ -2,6 +2,7 @@ import os
 import importlib.util
 import pandas as pd
 from pathlib import Path
+import argparse
 
 def load_parser(dataset_path):
     """Dynamically loads the parser module from the dataset directory."""
@@ -14,7 +15,7 @@ def load_parser(dataset_path):
     spec.loader.exec_module(module)
     return module
 
-def process_datasets(base_path, output_path):
+def process_datasets(base_path, force=False):
     """
     Scans for datasets, loads their parsers, and formats the data.
     """
@@ -29,6 +30,11 @@ def process_datasets(base_path, output_path):
         if not dataset_path.is_dir():
             continue
 
+        output_dir = dataset_path / "processed_data"
+        if output_dir.exists() and not force:
+            print(f"Skipping dataset: {dataset_name} (already processed. Use --force to overwrite)")
+            continue
+
         print(f"Processing dataset: {dataset_name}")
         parser = load_parser(dataset_path)
         
@@ -37,7 +43,6 @@ def process_datasets(base_path, output_path):
             continue
 
         # Create processed_data directory inside the dataset folder
-        output_dir = dataset_path / "processed_data"
         output_dir.mkdir(exist_ok=True)
         
         # 1. Process Metadata if available
@@ -69,6 +74,9 @@ def process_datasets(base_path, output_path):
             print(f"  Error processing {dataset_name}: {e}")
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Format datasets.")
+    parser.add_argument("--force", action="store_true", help="Force re-processing of datasets that already have a processed_data folder")
+    args = parser.parse_args()
+
     BASE_DIR = Path(__file__).parent
-    # Output path is now determined per-dataset inside the loop
-    process_datasets(BASE_DIR, None)
+    process_datasets(BASE_DIR, force=args.force)
