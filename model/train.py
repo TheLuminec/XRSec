@@ -14,7 +14,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
 
 sys.path.insert(0, os.path.dirname(__file__))
-from model import Model
+from model import Model, SiameseModel
 from dataset import XRSecDataset
 
 
@@ -25,16 +25,20 @@ def train_epoch(model, loader, criterion, optimizer, device):
     total = 0
 
     for batch_x, batch_y in loader:
-        batch_x, batch_y = batch_x.to(device), batch_y.to(device)
+        batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
+        batch_y = batch_y.to(device)
 
         optimizer.zero_grad()
-        output = model(batch_x)
+        output = model(batch_x1, batch_x2)
         loss = criterion(output, batch_y)
         loss.backward()
         optimizer.step()
 
-        total_loss += loss.item() * batch_x.size(0)
-        _, predicted = torch.max(output, 1)
+        total_loss += loss.item() * batch_x1.size(0)
+        
+        # Binary prediction accuracy threshold: exp(output) > 25% corresponds to output > -1.09
+        # Assuming output > -1.0 corresponding to ~distance < 1.0
+        predicted = (output > -1.0).float()
         correct += (predicted == batch_y).sum().item()
         total += batch_y.size(0)
 
@@ -51,12 +55,13 @@ def evaluate(model, loader, criterion, device):
 
     with torch.no_grad():
         for batch_x, batch_y in loader:
-            batch_x, batch_y = batch_x.to(device), batch_y.to(device)
-            output = model(batch_x)
+            batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
+            batch_y = batch_y.to(device)
+            output = model(batch_x1, batch_x2)
             loss = criterion(output, batch_y)
 
-            total_loss += loss.item() * batch_x.size(0)
-            _, predicted = torch.max(output, 1)
+            total_loss += loss.item() * batch_x1.size(0)
+            predicted = (output > -1.0).float()
             correct += (predicted == batch_y).sum().item()
             total += batch_y.size(0)
 
@@ -70,8 +75,8 @@ def run_training(args, device):
 
     print("Loading dataset...")
     if args.split_method == "leave-last-out":
-        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1))
-        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None))
+        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1), siamese=True)
+        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None), siamese=True)
         train_size = len(train_dataset)
         test_size = len(test_dataset)
         print(f"Train (Leave-last-out): {train_size} samples, Test: {test_size} samples")
@@ -84,7 +89,7 @@ def run_training(args, device):
         dataset = train_dataset
     else:
         # Random split
-        dataset = XRSecDataset(args.data_dir, index_load=(0, None))
+        dataset = XRSecDataset(args.data_dir, index_load=(0, None), siamese=True)
         train_size = int(args.train_split * len(dataset))
         test_size = len(dataset) - train_size
         generator = torch.Generator().manual_seed(args.seed)
@@ -96,17 +101,20 @@ def run_training(args, device):
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
-    model = Model(
-        num_users=dataset.num_users,
+    embedding_dim = getattr(args, 'embedding_dim', 128)
+    feature_extractor = Model(
+        embedding_dim=embedding_dim,
         lstm_hidden=args.lstm_hidden,
         gnn_hidden=args.gnn_hidden,
         gat_heads=args.gat_heads,
     ).to(device)
+    
+    model = SiameseModel(feature_extractor).to(device)
 
     param_count = sum(p.numel() for p in model.parameters())
     print(f"Model parameters: {param_count:,}")
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9} | {'Test Loss':>9} | {'Test Acc':>8}")
@@ -132,12 +140,13 @@ def run_training(args, device):
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
                 'epoch': epoch,
-                'num_users': model.num_users,
-                'seq_len': model.seq_len,
-                'num_channels': model.num_channels,
-                'gnn_hidden': model.gnn_hidden,
-                'lstm_hidden': model.lstm_hidden,
-                'gat_heads': model.gat_heads,
+                'embedding_dim': getattr(args, 'embedding_dim', 128),
+                'num_users': model.feature_extractor.num_users if hasattr(model.feature_extractor, 'num_users') else dataset.num_users,
+                'seq_len': model.feature_extractor.seq_len,
+                'num_channels': model.feature_extractor.num_channels,
+                'gnn_hidden': model.feature_extractor.gnn_hidden,
+                'lstm_hidden': model.feature_extractor.lstm_hidden,
+                'gat_heads': model.feature_extractor.gat_heads,
                 'norm_mean': norm_mean,
                 'norm_std': norm_std,
                 'seed': args.seed,

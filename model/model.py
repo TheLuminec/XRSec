@@ -65,8 +65,8 @@ class Model(nn.Module):
         lstm_hidden:  Hidden dimension for LSTM layers
         gat_heads:    Number of attention heads in GATConv
     """
-    def __init__(self, num_users, seq_len=10, num_channels=7,
-                 gnn_hidden=32, lstm_hidden=64, gat_heads=4):
+    def __init__(self, num_users=None, seq_len=10, num_channels=7,
+                 gnn_hidden=32, lstm_hidden=64, gat_heads=4, embedding_dim=None):
         super().__init__()
         self.num_users = num_users
         self.seq_len = seq_len
@@ -100,8 +100,13 @@ class Model(nn.Module):
         self.attn1 = SelfAttention(lstm_hidden * 2)
         self.attn2 = SelfAttention(lstm_hidden * 2)
 
-        # --- Dense classification layer ---
-        self.fc = nn.Linear(lstm_hidden * 2, num_users)
+        # --- Dense classification/embedding layer ---
+        if num_users is not None:
+            self.fc = nn.Linear(lstm_hidden * 2, num_users)
+        elif embedding_dim is not None:
+            self.fc = nn.Linear(lstm_hidden * 2, embedding_dim)
+        else:
+            self.fc = nn.Identity()
 
     def _build_edge_index(self):
         """
@@ -203,16 +208,50 @@ class Model(nn.Module):
         # Pool over time dimension -> fixed-size vector
         x = x.mean(dim=1)                  # (batch, 2*lstm_hidden)
 
-        # === Dense Classification ===
-        x = self.fc(x)                     # (batch, num_users)
+        # === Dense Classification/Embedding ===
+        x = self.fc(x)                     # (batch, num_users) or (batch, embedding_dim)
         return x
 
 
+class SiameseModel(nn.Module):
+    """
+    Siamese wrapper around the Model feature extractor.
+    Given two sequences, it computes their distance following Eq (6):
+        D(Vs, Vi) = 1 / (1 + exp(||Vs - Vi||_2))
+    
+    This outputs the negative distance as a logit, which can be directly
+    used with BCEWithLogitsLoss to optimize Eq (7).
+    """
+    def __init__(self, feature_extractor):
+        super().__init__()
+        self.feature_extractor = feature_extractor
+
+    def forward(self, x1, x2):
+        # Extract features (embeddings)
+        e1 = self.feature_extractor(x1)
+        e2 = self.feature_extractor(x2)
+        
+        # Compute L2 distance ||Vs - Vi||_2
+        # keepdim=True ensures shape (batch, 1) to match with target labels
+        dist = torch.norm(e1 - e2, p=2, dim=1, keepdim=True)
+        
+        # We return the logit which is the negative distance.
+        # This way, sigmoid(-dist) = 1 / (1 + exp(dist)) matches Eq (6)
+        return -dist
+
+
 if __name__ == "__main__":
-    # Quick smoke test
+    # Quick smoke test for Model
     model = Model(num_users=48)
     dummy_input = torch.randn(4, 7, 10)   # batch of 4, 7 channels, 10 time steps
     output = model(dummy_input)
-    print(f"Input shape:  {dummy_input.shape}")
-    print(f"Output shape: {output.shape}")
-    print(f"Num params:   {sum(p.numel() for p in model.parameters()):,}")
+    print(f"Base Model Output shape: {output.shape}")
+
+    # Quick smoke test for SiameseModel
+    feature_extractor = Model(embedding_dim=128)
+    siamese_model = SiameseModel(feature_extractor)
+    dummy_input2 = torch.randn(4, 7, 10)
+    output_siamese = siamese_model(dummy_input, dummy_input2)
+    print(f"Siamese Output shape:  {output_siamese.shape}")
+    print(f"Siamese probabilities: {torch.sigmoid(output_siamese).squeeze().detach().cpu().numpy()}")
+    print(f"Num params:   {sum(p.numel() for p in siamese_model.parameters()):,}")
