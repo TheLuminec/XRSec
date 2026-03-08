@@ -20,14 +20,14 @@ class UserProfile:
 
     def _load_data(self):
         """Loads all CSV experiment files found in the user's directory."""
-        for file in os.listdir(self.user_dir):
+        for file in sorted(os.listdir(self.user_dir)):
             if file.endswith(".csv"):
                 self._load_data_sample(os.path.join(self.user_dir, file))
 
     def _load_data_sample(self, path: str):
-        """Loads a single CSV file and instantiates a Sampler with data augmentation."""
+        """Loads a single CSV file and instantiates a Sampler."""
         data = np.loadtxt(path, delimiter=",", skiprows=1)
-        self.data_samplers.append(Sampler(data, index_randomness=1, scalar_randomness=2))
+        self.data_samplers.append(Sampler(data, index_randomness=1))
 
 
 if __name__ == "__main__":

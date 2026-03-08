@@ -12,6 +12,7 @@ Each sample is a (7, 10) tensor representing one second of data:
 
 import sys
 import os
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 
@@ -25,10 +26,13 @@ class XRSecDataset(Dataset):
 
     Args:
         data_dir: Path to processed_data/users/ directory
+        index_load: Tuple slice over each user's samplers, e.g. (0, None)
     """
-    def __init__(self, data_dir: str):
+
+    def __init__(self, data_dir: str, index_load: tuple = (0, None)):
         self.samples = []
         self.labels = []
+        self.index_load = index_load
 
         users = Users(data_dir)
         user_ids = sorted(users.user_profiles.keys())
@@ -38,16 +42,19 @@ class XRSecDataset(Dataset):
 
         for uid, profile in users.user_profiles.items():
             label = self.user_id_to_label[uid]
-            for sampler in profile.data_samplers:
+            used_samplers = profile.data_samplers[self.index_load[0]:self.index_load[1]]
+            for sampler in used_samplers:
                 all_samples = sampler.get_all_samples()  # (num_windows, 10, 8)
                 for i in range(sampler.sample_count):
-                    sample = all_samples[i]              # (10, 8)
-                    features = sample[:, 1:]             # (10, 7) - strip time col
-                    M = features.T                       # (7, 10) - channels x time
+                    sample = all_samples[i]                          # (10, 8)
+                    features = sample[:, 1:].astype(np.float32)      # (10, 7) - strip time col
+                    M = features.T                                   # (7, 10)
                     self.samples.append(torch.tensor(M, dtype=torch.float32))
                     self.labels.append(label)
 
         self.labels = torch.tensor(self.labels, dtype=torch.long)
+        self.norm_mean = None
+        self.norm_std = None
         print(f"Loaded {len(self.samples)} samples from {self.num_users} users")
 
     def __len__(self):

@@ -15,6 +15,5 @@ data_source:
 
 siamese model for secure detection
 add noise to data to increase robustness
-- scalar increase to set of values
 - small random noise
 - randomness to which datapoint is selected

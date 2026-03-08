@@ -1,0 +1,10 @@
+name,users,sessions,valid
+360-degree_Saliency_Dataset_(PanoSaliency),99,27,True
+360_em_dataset,13,6,False
+EyeNavGS_6-DoF_Navigation_Dataset,22,12,True
+Head_and_Gaze_Behavior_Dataset,100,54,False
+NJIT_6DOF_VR_Navigation_Dataset,18,1,True
+Paired_Head–Eye_VR_Tasks_Dataset,13,12,False
+Panonut360_Dataset,21,15,True
+ViewGauss_Head-Movement_Dataset,35,4,True
+VR_User_Behavior_Dataset_(Spherical_Video_Streaming),48,18,True

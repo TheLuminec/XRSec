@@ -4,3 +4,6 @@
 
 !/datasets/*/info.txt
 !/datasets/*/parser.py
+
+__pycache__/
+model/__pycache__/*
