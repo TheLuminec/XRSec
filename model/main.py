@@ -68,7 +68,8 @@ def main():
 
     # Hyperparameters
     parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--batch-size", type=int, default=1024,
+                        help="Increased default batch size to 1024 to prevent CUDA launch overhead on tiny graphs")
     parser.add_argument("--lr", type=float, default=0.001)
     parser.add_argument("--lstm-hidden", type=int, default=64)
     parser.add_argument("--gnn-hidden", type=int, default=32)

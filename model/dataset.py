@@ -55,6 +55,7 @@ class XRSecDataset(Dataset):
                     self.samples.append(torch.tensor(M, dtype=torch.float32))
                     self.labels.append(label)
 
+        self.samples = torch.stack(self.samples)
         self.labels = torch.tensor(self.labels, dtype=torch.long)
         self.norm_mean = None
         self.norm_std = None

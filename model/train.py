@@ -96,8 +96,12 @@ def run_training(args, device):
         train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
         print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
     
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False)
+    num_workers = 0  # Disabled on Windows due to TorchScript JIT locks during spawn
+    pin_memory = device.type == 'cuda'
+    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, 
+                              num_workers=num_workers, pin_memory=pin_memory)
+    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, 
+                             num_workers=num_workers, pin_memory=pin_memory)
 
     embedding_dim = getattr(args, 'embedding_dim', 128)
     feature_extractor = Model(

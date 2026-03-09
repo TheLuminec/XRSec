@@ -151,17 +151,27 @@ class Model(nn.Module):
         pad = torch.zeros(batch_size, 3, self.seq_len, device=device)
         node_features = torch.cat([M, pad], dim=1)
 
-        # Create PyG batch (all graphs share the same edge structure)
-        data_list = [
-            Data(x=node_features[i], edge_index=self.edge_index)
-            for i in range(batch_size)
-        ]
-        batch = Batch.from_data_list(data_list)
-        batch = batch.to(device)
+        # Flatten batch and nodes dimension -> (batch * 10, seq_len)
+        x = node_features.view(batch_size * self.num_nodes, self.seq_len)
+
+        # Dynamically constructing PyG data objects in the forward pass causes massive CPU bottleneck.
+        # Since all graphs have the identical structure, we construct the batched edge_index manually:
+        if not hasattr(self, '_cached_batch_size') or self._cached_batch_size != batch_size:
+            # Create offset tensor: (batch_size, 1, 1)
+            offsets = (torch.arange(batch_size, device=device) * self.num_nodes).view(-1, 1, 1)
+            
+            # self.edge_index is (2, E). We tile it across the batch and add offsets
+            batched_edge_index = self.edge_index.unsqueeze(0) + offsets
+            
+            # Reshape from (batch_size, 2, E) to (2, batch_size * E)
+            self._cached_edge_index = batched_edge_index.transpose(0, 1).reshape(2, -1)
+            self._cached_batch_size = batch_size
+
+        edge_index = self._cached_edge_index
 
         # Two-layer GNN forward pass
-        h = F.relu(conv1(batch.x, batch.edge_index))
-        h = conv2(h, batch.edge_index)
+        h = F.relu(conv1(x, edge_index))
+        h = conv2(h, edge_index)
 
         # Reshape and extract only the 7 data node features
         h = h.view(batch_size, self.num_nodes, -1)
