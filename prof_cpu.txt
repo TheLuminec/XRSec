@@ -1,0 +1,31 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                        model_iteration         8.60%      34.504ms        68.35%     274.325ms     274.325ms       0.000us         0.00%      83.887ms      83.887ms             1  
+enumerate(DataLoader)#_SingleProcessDataLoaderIter._...        22.00%      88.306ms        44.25%     177.591ms     177.591ms       0.000us         0.00%       0.000us       0.000us             1  
+                                  cudaDeviceSynchronize        25.49%     102.330ms        25.49%     102.330ms     102.330ms       0.000us         0.00%       0.000us       0.000us             1  
+                                           aten::select        15.43%      61.938ms        17.82%      71.539ms       2.907us       0.000us         0.00%       0.000us       0.000us         24612  
+                                            aten::index         0.04%     147.000us        11.15%      44.751ms      11.188ms     173.058us         0.08%     218.372us      54.593us             4  
+                                          aten::nonzero         0.07%     282.900us        11.08%      44.480ms      11.120ms      45.314us         0.02%      45.314us      11.328us             4  
+                                  cudaStreamSynchronize        11.06%      44.397ms        11.06%      44.397ms       6.342ms       0.000us         0.00%       0.000us       0.000us             7  
+                                            aten::stack         1.91%       7.678ms         3.69%      14.808ms       4.936ms       0.000us         0.00%       0.000us       0.000us             3  
+                                       cudaLaunchKernel         2.98%      11.975ms         2.98%      11.975ms      20.400us       0.000us         0.00%       0.000us       0.000us           587  
+                                       aten::as_strided         2.48%       9.952ms         2.48%       9.952ms       0.398us       0.000us         0.00%       0.000us       0.000us         25000  
+autograd::engine::evaluate_function: CudnnRnnBackwar...         0.05%     198.400us         1.94%       7.784ms       1.946ms       0.000us         0.00%      66.582ms      16.646ms             4  
+                                              aten::cat         1.83%       7.338ms         1.90%       7.632ms     448.941us     568.746us         0.26%     568.746us      33.456us            17  
+                                      CudnnRnnBackward0         0.06%     228.400us         1.75%       7.022ms       1.755ms       0.000us         0.00%      66.557ms      16.639ms             4  
+                              aten::_cudnn_rnn_backward         0.87%       3.496ms         1.69%       6.794ms       1.698ms      62.388ms        28.66%      66.557ms      16.639ms             4  
+                                       aten::pin_memory         0.01%      60.000us         0.78%       3.148ms       1.049ms       0.000us         0.00%       0.000us       0.000us             3  
+                                               aten::mm         0.35%       1.408ms         0.69%       2.754ms      65.579us      11.105ms         5.10%      11.105ms     264.413us            42  
+                                            aten::copy_         0.26%       1.049ms         0.66%       2.652ms      78.003us       7.777ms         3.57%       7.777ms     228.737us            34  
+                                      aten::_pin_memory         0.11%     431.500us         0.54%       2.172ms     724.133us       0.000us         0.00%       0.000us       0.000us             3  
+      autograd::engine::evaluate_function: MulBackward0         0.08%     314.700us         0.54%       2.154ms     179.475us       0.000us         0.00%      17.448ms       1.454ms            12  
+                                            aten::zero_         0.07%     287.700us         0.52%       2.104ms      33.942us       0.000us         0.00%       1.712ms      27.607us            62  
+autograd::engine::evaluate_function: IndexSelectBack...         0.06%     222.600us         0.51%       2.055ms     114.189us       0.000us         0.00%       5.859ms     325.515us            18  
+                                     aten::index_select         0.15%     583.200us         0.51%       2.031ms      84.629us       0.000us         0.00%       9.123ms     380.138us            24  
+                                           aten::linear         0.03%     131.600us         0.48%       1.929ms     107.150us       0.000us         0.00%       7.756ms     430.911us            18  
+                               Optimizer.step#Adam.step         0.19%     771.600us         0.47%       1.888ms       1.888ms       0.000us         0.00%      69.312us      69.312us             1  
+       autograd::engine::evaluate_function: MmBackward0         0.03%     138.700us         0.47%       1.886ms     157.192us       0.000us         0.00%       6.863ms     571.946us            12  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 401.376ms
+Self CUDA time total: 217.647ms

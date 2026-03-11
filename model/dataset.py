@@ -54,10 +54,13 @@ class SampleDataset():
                     for sample in all_samples:  
                         features = sample[:, 1:].astype(np.float32)      # (10, 7) - strip time col
                         M = features.T                                   # (7, 10)
-                        samples.append(torch.tensor(M, dtype=torch.float32))
+                        samples.append(M)
                         self.sample_count += 1
                         
-                self.dataset.append(samples)
+                if samples:
+                    self.dataset.append(torch.tensor(np.array(samples), dtype=torch.float32))
+                else:
+                    self.dataset.append(torch.empty((0, 7, 10), dtype=torch.float32))
 
         print(f"Loaded {self.sample_count} samples from {self.num_users} users")
 
@@ -75,22 +78,60 @@ class SiameseDataset(Dataset):
     Args:
         data_dir: Path to processed_data/users/ directory
     """
-    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10):
+    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate)
         self.num_users = self.sample_dataset.num_users
         self.num_samples = self.sample_dataset.sample_count
-        self.siamese_count = self.num_samples * self.num_samples
+        self.samples_per_user = samples_per_user
+
+        # Optimal amount of samples, but is too large to fit in memory
+        # self.siamese_count = self.num_samples * self.num_samples
+        self.siamese_count = self.num_users * self.samples_per_user
+
+        self.dataset = []
+        self._generate_dataset()
 
         print(f"Created {self.siamese_count} siamese samples")
+
+    def _generate_dataset(self, seed = 67):
+        np.random.seed(seed)
+        
+        x1_list = []
+        x2_list = []
+        y_list = []
+
+        for u in range(self.num_users):
+            n_u = len(self.sample_dataset[u])
+            if n_u == 0:
+                continue
+
+            # Randomly select self.samples_per_user from u
+            x_indices = np.random.randint(0, n_u, size=self.samples_per_user)
+            x1_list.append(self.sample_dataset[u][x_indices])
+
+            # Pre-select matching/non-matching
+            is_match = np.random.rand(self.samples_per_user) < 0.5
+            r_users = np.where(is_match, u, np.random.randint(0, self.num_users, size=self.samples_per_user))
+
+            x2_tensors = []
+            for i in range(self.samples_per_user):
+                r = r_users[i]
+                n_r = len(self.sample_dataset[r])
+                y = np.random.randint(0, n_r) if n_r > 0 else 0
+                x2_tensors.append(self.sample_dataset[r][y])
+            
+            x2_list.append(torch.stack(x2_tensors))
+            y_list.append(torch.tensor(is_match, dtype=torch.float32).unsqueeze(1))
+
+        self.x1 = torch.cat(x1_list, dim=0)
+        self.x2 = torch.cat(x2_list, dim=0)
+        self.y = torch.cat(y_list, dim=0)
 
     def __len__(self):
         return self.siamese_count
 
     def __getitem__(self, idx):
-        x = idx // self.num_samples
-        y = idx % self.num_samples
-        label = 1 if x == y else 0
-        return (self.sample_dataset[x], self.sample_dataset[y], torch.tensor(label, dtype=torch.long))
+        return (self.x1[idx], self.x2[idx]), self.y[idx]
 

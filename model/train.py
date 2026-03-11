@@ -17,6 +17,29 @@ sys.path.insert(0, os.path.dirname(__file__))
 from model import Model, SiameseModel
 from dataset import SiameseDataset
 
+class FastDataLoader:
+    def __init__(self, dataset, batch_size, shuffle=True):
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.length = len(dataset)
+        
+        if hasattr(dataset, 'indices'):
+            self.indices = torch.tensor(dataset.indices)
+            self.base_dataset = dataset.dataset
+        else:
+            self.indices = torch.arange(self.length)
+            self.base_dataset = dataset
+            
+    def __iter__(self):
+        if self.shuffle:
+            order = torch.randperm(self.length)
+            ordered_indices = self.indices[order]
+        else:
+            ordered_indices = self.indices
+            
+        for i in range(0, self.length, self.batch_size):
+            batch_idx = ordered_indices[i:i + self.batch_size]
+            yield self.base_dataset[batch_idx]
 
 def train_epoch(model, loader, criterion, optimizer, device):
     model.train()
@@ -82,12 +105,8 @@ def run_training(args, device):
     train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
     print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
     
-    num_workers = 0  # Disabled on Windows due to TorchScript JIT locks during spawn
-    pin_memory = device.type == 'cuda'
-    train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True, 
-                              num_workers=num_workers, pin_memory=pin_memory)
-    test_loader = DataLoader(test_set, batch_size=args.batch_size, shuffle=False, 
-                             num_workers=num_workers, pin_memory=pin_memory)
+    train_loader = FastDataLoader(train_set, batch_size=args.batch_size, shuffle=True)
+    test_loader = FastDataLoader(test_set, batch_size=args.batch_size, shuffle=False)
 
     embedding_dim = getattr(args, 'embedding_dim', 128)
     feature_extractor = Model(
@@ -111,6 +130,41 @@ def run_training(args, device):
     best_test_acc = 0.0
     history = {'train_loss': [], 'train_acc': [], 'test_loss': [], 'test_acc': []}
     
+    if getattr(args, 'profile', False):
+        from torch.profiler import profile, record_function, ProfilerActivity
+        print("Starting profiler warm-up for 1 batch...")
+        model.train()
+        iter_loader = iter(train_loader)
+        
+        batch_x, batch_y = next(iter_loader)
+        batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
+        batch_y = batch_y.to(device)
+        optimizer.zero_grad()
+        output = model(batch_x1, batch_x2)
+        loss = criterion(output, batch_y)
+        loss.backward()
+        optimizer.step()
+
+        print("Profiling next batch...")
+        with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
+            with record_function("model_iteration"):
+                batch_x, batch_y = next(iter_loader)
+                batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
+                batch_y = batch_y.to(device)
+                optimizer.zero_grad()
+                output = model(batch_x1, batch_x2)
+                loss = criterion(output, batch_y)
+                loss.backward()
+                optimizer.step()
+        
+        with open("prof_cuda.txt", "w") as f:
+            f.write(prof.key_averages().table(sort_by="cuda_time_total", row_limit=25))
+        with open("prof_cpu.txt", "w") as f:
+            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=25))
+        
+        print(f"Profiler tables saved to prof_cuda.txt and prof_cpu.txt")
+        sys.exit(0)
+
     for epoch in range(1, args.epochs + 1):
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
@@ -143,7 +197,7 @@ def run_training(args, device):
     print(f"\nBest test accuracy: {best_test_acc:.2%}")
     print(f"Model saved to: {args.save_path}")
     
-    return history, dataset.num_users, dataset.label_to_user_id
+    return history, dataset.num_users
 
 if __name__ == "__main__":
     print("Please run this via main.py")

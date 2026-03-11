@@ -1,0 +1,31 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+                                        model_iteration         0.00%       0.000us         0.00%       0.000us       0.000us     158.853ms        72.99%     158.853ms      79.427ms             2  
+                                        model_iteration         8.60%      34.504ms        68.35%     274.325ms     274.325ms       0.000us         0.00%      83.887ms      83.887ms             1  
+autograd::engine::evaluate_function: CudnnRnnBackwar...         0.05%     198.400us         1.94%       7.784ms       1.946ms       0.000us         0.00%      66.582ms      16.646ms             4  
+                                      CudnnRnnBackward0         0.06%     228.400us         1.75%       7.022ms       1.755ms       0.000us         0.00%      66.557ms      16.639ms             4  
+                              aten::_cudnn_rnn_backward         0.87%       3.496ms         1.69%       6.794ms       1.698ms      62.388ms        28.66%      66.557ms      16.639ms             4  
+                                             aten::lstm         0.03%     135.300us         0.47%       1.883ms     470.625us       0.000us         0.00%      42.187ms      10.547ms             4  
+                                       aten::_cudnn_rnn         0.24%     960.800us         0.43%       1.706ms     426.500us      41.103ms        18.89%      42.187ms      10.547ms             4  
+_Z24RNN_blockPersist_fp_LSTMIfffLi64EEvPKT_PT0_S2_PS...         0.00%       0.000us         0.00%       0.000us       0.000us      35.715ms        16.41%      35.715ms       4.464ms             8  
+                                              aten::bmm         0.16%     638.100us         0.31%       1.240ms      51.658us      21.875ms        10.05%      21.875ms     911.441us            24  
+      autograd::engine::evaluate_function: MulBackward0         0.08%     314.700us         0.54%       2.154ms     179.475us       0.000us         0.00%      17.448ms       1.454ms            12  
+      autograd::engine::evaluate_function: BmmBackward0         0.03%     102.800us         0.29%       1.169ms     146.113us       0.000us         0.00%      16.896ms       2.112ms             8  
+                                           BmmBackward0         0.03%     112.500us         0.27%       1.066ms     133.263us       0.000us         0.00%      16.896ms       2.112ms             8  
+_Z23GENERIC_elementWise_bp2IfffLi4EL18cudnnRNNBiasMo...         0.00%       0.000us         0.00%       0.000us       0.000us      15.921ms         7.31%      15.921ms       1.990ms             8  
+                                              aten::mul         0.19%     745.200us         0.43%       1.743ms      35.567us      15.839ms         7.28%      15.839ms     323.252us            49  
+_Z28RNN_blockPersist_bp_LSTM_FMAIfffLi64EEv18block_b...         0.00%       0.000us         0.00%       0.000us       0.000us      14.365ms         6.60%      14.365ms       1.796ms             8  
+                                           aten::gather         0.16%     633.700us         0.35%       1.408ms      41.403us      14.109ms         6.48%      14.109ms     414.963us            34  
+_ZN2at6native24vectorized_gather_kernelILi16ExEEvPcS...         0.00%       0.000us         0.00%       0.000us       0.000us      13.384ms         6.15%      13.384ms     743.569us            18  
+                                ampere_sgemm_128x128_nt         0.00%       0.000us         0.00%       0.000us       0.000us      11.813ms         5.43%      11.813ms       1.477ms             8  
+                                               aten::mm         0.35%       1.408ms         0.69%       2.754ms      65.579us      11.105ms         5.10%      11.105ms     264.413us            42  
+_ZN2at6native18elementwise_kernelILi128ELi2EZNS0_22g...         0.00%       0.000us         0.00%       0.000us       0.000us      10.936ms         5.02%      10.936ms     321.651us            34  
+                                             aten::add_         0.10%     400.400us         0.25%       1.020ms      15.001us      10.646ms         4.89%      10.646ms     156.553us            68  
+                                           MulBackward0         0.03%     107.600us         0.24%     944.000us      78.667us       0.000us         0.00%      10.390ms     865.859us            12  
+_ZN7cutlass7Kernel2I52cutlass_80_tensorop_s1688gemm_...         0.00%       0.000us         0.00%       0.000us       0.000us      10.092ms         4.64%      10.092ms       2.523ms             4  
+                                     aten::index_select         0.15%     583.200us         0.51%       2.031ms      84.629us       0.000us         0.00%       9.123ms     380.138us            24  
+                                              aten::sum         0.19%     766.900us         0.45%       1.809ms      53.212us       7.886ms         3.62%       7.886ms     231.940us            34  
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  
+Self CPU time total: 401.376ms
+Self CUDA time total: 217.647ms

@@ -74,11 +74,13 @@ def main():
     parser.add_argument("--gat-heads", type=int, default=4)
     parser.add_argument("--seed", type=int, default=42)
 
-    # Visualization
+    # Visualization & Profiling
     parser.add_argument("--graph", action="store_true",
                         help="Generate a graph of training/testing metrics (train mode only)")
     parser.add_argument("--graph-path", type=str, default="training_history.png",
                         help="Path to save the generated graph")
+    parser.add_argument("--profile", action="store_true",
+                        help="Run a quick 5-batch PyTorch profiler internally instead of a full epoch.")
 
     args = parser.parse_args()
 
@@ -86,7 +88,7 @@ def main():
 
     if args.mode == "train":
         print("=== Starting Training Mode ===")
-        history, num_users, label_map = run_training(args, device)
+        history, num_users = run_training(args, device)
         
         if args.graph:
             print("Generating training graph...")
@@ -94,7 +96,7 @@ def main():
             
     elif args.mode == "test":
         print("=== Starting Testing Mode ===")
-        loss, accuracy, per_user, num_users, label_map = evaluate_model(args, device)
+        loss, accuracy, per_user, num_users = evaluate_model(args, device)
         # test mode already prints per-user accuracy inside evaluate_model
 
 if __name__ == "__main__":

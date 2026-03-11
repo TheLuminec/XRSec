@@ -1,7 +1,7 @@
 @echo off
 set DATA_DIR="datasets\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)"
 set EPOCHS=20
-set BATCH_SIZE=2048
+set BATCH_SIZE=8192
 set LR=0.001
 set SEED=42
 
