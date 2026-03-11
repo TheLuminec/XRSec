@@ -8,11 +8,11 @@ associated experiment data streams into Sampler instances.
 from sampler import Sampler
 import numpy as np
 import os
+import pandas as pd
 
 class UserProfile:
     """Holds a collection of data samplers for a specific user ID."""
-    def __init__(self, user_id: int, user_dir: str):
-        self.user_id = user_id
+    def __init__(self, user_dir: str):
         self.user_dir = user_dir
         self.data_samplers = []
 
@@ -26,13 +26,19 @@ class UserProfile:
 
     def _load_data_sample(self, path: str):
         """Loads a single CSV file and instantiates a Sampler."""
-        data = np.loadtxt(path, delimiter=",", skiprows=1)
-        self.data_samplers.append(Sampler(data, index_randomness=1))
+        df = pd.read_csv(path)
+
+        # Data is in the form of (time, qx, qy, qz, qw, Hx, Hy, Hz)
+        data = np.array(df[['SessionTime',
+                            'UnitQuaternion.x', 'UnitQuaternion.y', 'UnitQuaternion.z', 'UnitQuaternion.w',
+                            'HmdPosition.x', 'HmdPosition.y', 'HmdPosition.z']])
+
+        self.data_samplers.append(Sampler(data))
 
 
 if __name__ == "__main__":
     PATH = "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/1/"
-    user_profile = UserProfile(1, PATH)
+    user_profile = UserProfile(PATH)
     print(user_profile.data_samplers[0].get_sample(0))
     
 

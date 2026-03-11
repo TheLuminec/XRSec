@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, random_split
 
 sys.path.insert(0, os.path.dirname(__file__))
 from model import Model, SiameseModel
-from dataset import XRSecDataset
+from dataset import SiameseDataset
 
 
 def train_epoch(model, loader, criterion, optimizer, device):
@@ -74,27 +74,13 @@ def run_training(args, device):
     print(f"Using device: {device}")
 
     print("Loading dataset...")
-    if args.split_method == "leave-last-out":
-        train_dataset = XRSecDataset(args.data_dir, index_load=(0, -1), siamese=True)
-        test_dataset = XRSecDataset(args.data_dir, index_load=(-1, None), siamese=True)
-        train_size = len(train_dataset)
-        test_size = len(test_dataset)
-        print(f"Train (Leave-last-out): {train_size} samples, Test: {test_size} samples")
-        
-        norm_mean, norm_std = train_dataset.fit_normalization(range(train_size))
-        test_dataset.apply_normalization(norm_mean, norm_std)
-        
-        train_set = train_dataset
-        test_set = test_dataset
-        dataset = train_dataset
-    else:
-        # Random split
-        dataset = XRSecDataset(args.data_dir, index_load=(0, None), siamese=True)
-        train_size = int(args.train_split * len(dataset))
-        test_size = len(dataset) - train_size
-        generator = torch.Generator().manual_seed(args.seed)
-        train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
-        print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
+
+    dataset = SiameseDataset(args.data_dir)
+    train_size = int(args.train_split * len(dataset))
+    test_size = len(dataset) - train_size
+    generator = torch.Generator().manual_seed(args.seed)
+    train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
+    print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
     
     num_workers = 0  # Disabled on Windows due to TorchScript JIT locks during spawn
     pin_memory = device.type == 'cuda'

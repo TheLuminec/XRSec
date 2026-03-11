@@ -14,7 +14,7 @@ from torch.utils.data import DataLoader
 
 sys.path.insert(0, os.path.dirname(__file__))
 from model import Model, SiameseModel
-from dataset import XRSecDataset
+from dataset import SiameseDataset
 
 
 def evaluate(model, loader, criterion, device):
@@ -86,10 +86,7 @@ def evaluate_model(args, device):
     num_workers = 0  # Disabled on Windows due to TorchScript JIT locks during spawn
     pin_memory = device.type == 'cuda'
 
-    if args.split_method == "leave-last-out":
-        dataset = XRSecDataset(args.data_dir, index_load=(-1, None), siamese=True)
-    else:
-        dataset = XRSecDataset(args.data_dir, index_load=(0, None), siamese=True)
+    dataset = SiameseDataset(args.data_dir)
         
     if checkpoint.get('norm_mean') is not None and checkpoint.get('norm_std') is not None:
         dataset.apply_normalization(checkpoint['norm_mean'], checkpoint['norm_std'])
