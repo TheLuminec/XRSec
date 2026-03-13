@@ -18,6 +18,15 @@ from dataset import SiameseDataset
 
 
 def evaluate(model, loader, criterion, device):
+    """
+    Evaluate the model.
+    
+    Args:
+        model: Model to evaluate
+        loader: DataLoader for evaluation data
+        criterion: Loss function
+        device: Device to evaluate on
+    """
     model.eval()
     total_loss = 0.0
     correct = 0
@@ -47,72 +56,113 @@ def evaluate(model, loader, criterion, device):
     return avg_loss, accuracy, all_preds, all_labels
 
 
-def per_user_accuracy(preds, labels, anchor_labels, num_users):
-    user_correct = [0] * num_users
-    user_total = [0] * num_users
-    for p, l, anchor in zip(preds, labels, anchor_labels):
-        user_total[anchor] += 1
-        if p == l:
-            user_correct[anchor] += 1
-    return [(user_correct[i] / user_total[i]) if user_total[i] > 0 else 0.0
-            for i in range(num_users)]
-
-
-def evaluate_model(args, device):
-    print(f"Using device: {device}")
-
-    if not os.path.exists(args.model_path):
-        print(f"ERROR: checkpoint not found at '{args.model_path}'")
+def load_checkpoint(checkpoint_path, device):
+    """
+    Load the model checkpoint.
+    
+    Args:
+        checkpoint_path: Path to the checkpoint
+        device: Device to load the model on
+    """
+    if not os.path.exists(checkpoint_path):
+        print(f"ERROR: checkpoint not found at '{checkpoint_path}'")
         sys.exit(1)
 
-    checkpoint = torch.load(args.model_path, map_location=device)
-
-    print(f"Loading checkpoint: {args.model_path}")
-    checkpoint = torch.load(args.model_path, map_location=device)
+    print(f"Loading checkpoint: {checkpoint_path}")
+    checkpoint = torch.load(checkpoint_path, map_location=device)
 
     # Initialize model using checkpoint params before touching the dataset
     embedding_dim = checkpoint.get('embedding_dim', 128)
     feature_extractor = Model(
-        embedding_dim=embedding_dim,
-        lstm_hidden=checkpoint['lstm_hidden'],
-        gnn_hidden=checkpoint['gnn_hidden'],
-        gat_heads=checkpoint.get('gat_heads', 4),
+        embedding_dim=embedding_dim
     ).to(device)
     model = SiameseModel(feature_extractor).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
+    
     print(f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
+    return model, checkpoint
 
+def create_dataloader_from_path(data_dir: str, batch_size: int, device, checkpoint: dict = None):
+    """
+    Create DataLoader for testing data.
+    
+    Args:
+        data_dir: Path to testing data
+        batch_size: Batch size
+        device: Device to evaluate on
+        checkpoint: Loaded checkpoint dictionary specifying normalization parameters
+    """
     print("Loading dataset...")
     num_workers = 0  # Disabled on Windows due to TorchScript JIT locks during spawn
     pin_memory = device.type == 'cuda'
 
-    dataset = SiameseDataset(args.data_dir)
-        
-    if checkpoint.get('norm_mean') is not None and checkpoint.get('norm_std') is not None:
-        dataset.apply_normalization(checkpoint['norm_mean'], checkpoint['norm_std'])
+    dataset = SiameseDataset(data_dir)
 
     test_size = len(dataset)
     print(f"Test: {test_size} samples")
-    test_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False,
+    test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                              num_workers=num_workers, pin_memory=pin_memory)
+    
+    return test_loader, test_size
 
-    criterion = nn.BCEWithLogitsLoss()
+def run_evaluation(model, test_loader, criterion, test_size, device):
+    """
+    Run the evaluation process.
+    
+    Args:
+        model: Model to evaluate
+        test_loader: DataLoader for testing data
+        criterion: Loss function
+        test_size: Number of samples in the test dataset
+        device: Device to evaluate on
+    """
     loss, accuracy, preds, labels = evaluate(model, test_loader, criterion, device)
 
     print(f"\n{'─' * 40}")
     print(f"  Test Loss    : {loss:.4f}")
     print(f"  Test Accuracy: {accuracy:.2%}  ({int(accuracy * test_size)}/{test_size} correct)")
     print(f"{'─' * 40}")
-
-    anchor_labels = dataset.labels.tolist()
-    per_user = per_user_accuracy(preds, labels, anchor_labels, dataset.num_users)
-    print(f"\nPer-user verification accuracy ({dataset.num_users} users):")
-    for label_idx, acc in enumerate(per_user):
-        uid = dataset.label_to_user_id[label_idx]
-        print(f"  User {uid} (label {label_idx}): {acc:.2%}")
         
-    return loss, accuracy, per_user, dataset.num_users, dataset.label_to_user_id
+    return loss, accuracy
+
+def evaluate_model(args, device):
+    """
+    Evaluate the model pipeline.
+    
+    Args:
+        args: Arguments for testing
+        device: Device to evaluate on
+    """
+    print(f"Using device: {device}")
+
+    model, checkpoint = load_checkpoint(args.model_path, device)
+    
+    test_loader, test_size = create_dataloader_from_path(args.data_dir, args.batch_size, device, checkpoint)
+
+    criterion = nn.BCEWithLogitsLoss()
+    
+    loss, accuracy = run_evaluation(model, test_loader, criterion, test_size, device)
+    
+    return loss, accuracy
+
+def main():
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    model, checkpoint = load_checkpoint('saved_tests/trained_model.pth', device)
+    
+    test_loader, test_size = create_dataloader_from_path(
+        'datasets/ViewGauss_Head-Movement_Dataset/processed_data/users',
+        2048,
+        device,
+        checkpoint
+    )
+
+    criterion = nn.BCEWithLogitsLoss()
+    
+    loss, accuracy = run_evaluation(model, test_loader, criterion, test_size, device)
+    
+    return loss, accuracy
 
 if __name__ == "__main__":
-    print("Please run this via main.py")
+    main()
 

@@ -1,0 +1,42 @@
+python .\model\train.py
+Using device: cuda
+Loading dataset...
+Loaded 253339 samples from 48 users
+Created 480000 siamese samples
+Loaded 2519 samples from 35 users
+Created 350000 siamese samples
+Dataset loaded.
+Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)
+Dataset loaded.
+Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)
+Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)
+Testing dataset is ViewGauss_Head-Movement_Dataset
+Testing dataset is ViewGauss_Head-Movement_Dataset
+Model parameters: 197,704
+Model parameters: 197,704
+
+Epoch | Train Loss | Train Acc | Test Loss | Test Acc
+----------------------------------------------------------------
+    1 |     0.6691 |   51.98% |    0.6288 |  53.01%
+    2 |     0.6590 |   53.97% |    0.6422 |  50.08%
+    3 |     0.6509 |   57.47% |    0.6508 |  50.06%
+    4 |     0.6402 |   62.00% |    0.6297 |  52.49%
+    5 |     0.6308 |   64.43% |    0.6019 |  65.73%
+    6 |     0.6185 |   68.35% |    0.6240 |  64.65%
+    7 |     0.6015 |   73.82% |    0.6218 |  66.15%
+    8 |     0.5890 |   76.53% |    0.6212 |  64.76%
+    9 |     0.5808 |   78.13% |    0.6218 |  66.62%
+   10 |     0.5741 |   79.28% |    0.6182 |  68.20%
+   11 |     0.5690 |   80.02% |    0.6108 |  66.88%
+   12 |     0.5618 |   80.91% |    0.6076 |  68.83%
+   13 |     0.5599 |   81.40% |    0.6112 |  67.51%
+   14 |     0.5543 |   82.30% |    0.6150 |  66.94%
+   15 |     0.5510 |   82.88% |    0.6172 |  63.76%
+   16 |     0.5455 |   83.69% |    0.6083 |  70.47%
+   17 |     0.5460 |   83.68% |    0.6160 |  70.48%
+   18 |     0.5403 |   84.46% |    0.6055 |  72.15%
+   19 |     0.5373 |   84.80% |    0.6124 |  67.17%
+   20 |     0.5347 |   85.09% |    0.6139 |  70.88%
+
+Best test accuracy: 72.15%
+Model saved to: saved_tests/trained_model.pth

@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from train import run_training
+from train import train
 from test import evaluate_model
 
 def plot_training_history(history, save_path="training_history.png"):
@@ -53,10 +53,6 @@ def main():
     # Data paths & splits
     parser.add_argument("--data-dir", type=str, required=True,
                         help="Path to processed_data/users/ directory")
-    parser.add_argument("--split-method", type=str, choices=["random", "leave-last-out"], default="random",
-                        help="Data split method (random standard vs leave-last-out)")
-    parser.add_argument("--train-split", type=float, default=0.8,
-                        help="Ratio of data for training if split-method is 'random'")
     
     # Model saving / loading
     parser.add_argument("--save-path", type=str, default="model/trained_model.pth",
@@ -69,9 +65,7 @@ def main():
     parser.add_argument("--batch-size", type=int, default=1024,
                         help="Increased default batch size to 1024 to prevent CUDA launch overhead on tiny graphs")
     parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--lstm-hidden", type=int, default=64)
-    parser.add_argument("--gnn-hidden", type=int, default=32)
-    parser.add_argument("--gat-heads", type=int, default=4)
+    parser.add_argument("--embedding-dim", type=int, default=128)
     parser.add_argument("--seed", type=int, default=42)
 
     # Visualization & Profiling
@@ -84,11 +78,9 @@ def main():
 
     args = parser.parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     if args.mode == "train":
         print("=== Starting Training Mode ===")
-        history, num_users = run_training(args, device)
+        history = train(args)
         
         if args.graph:
             print("Generating training graph...")
@@ -96,7 +88,7 @@ def main():
             
     elif args.mode == "test":
         print("=== Starting Testing Mode ===")
-        loss, accuracy, per_user, num_users = evaluate_model(args, device)
+        loss, accuracy = evaluate_model(args)
         # test mode already prints per-user accuracy inside evaluate_model
 
 if __name__ == "__main__":

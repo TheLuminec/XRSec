@@ -1,13 +1,10 @@
 """
-Training script for XR biometric identification model (Section 3.1).
+Training script for XR biometric identification model.
 
-Usage:
-    python model/train.py --epochs 20 --data-dir datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/
 """
 
 import sys
 import os
-import argparse
 
 import torch
 import torch.nn as nn
@@ -17,31 +14,17 @@ sys.path.insert(0, os.path.dirname(__file__))
 from model import Model, SiameseModel
 from dataset import SiameseDataset
 
-class FastDataLoader:
-    def __init__(self, dataset, batch_size, shuffle=True):
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.length = len(dataset)
-        
-        if hasattr(dataset, 'indices'):
-            self.indices = torch.tensor(dataset.indices)
-            self.base_dataset = dataset.dataset
-        else:
-            self.indices = torch.arange(self.length)
-            self.base_dataset = dataset
-            
-    def __iter__(self):
-        if self.shuffle:
-            order = torch.randperm(self.length)
-            ordered_indices = self.indices[order]
-        else:
-            ordered_indices = self.indices
-            
-        for i in range(0, self.length, self.batch_size):
-            batch_idx = ordered_indices[i:i + self.batch_size]
-            yield self.base_dataset[batch_idx]
-
 def train_epoch(model, loader, criterion, optimizer, device):
+    """
+    Train the model for one epoch.
+    
+    Args:
+        model: Model to train
+        loader: DataLoader for training data
+        criterion: Loss function
+        optimizer: Optimizer
+        device: Device to train on
+    """
     model.train()
     total_loss = 0
     correct = 0
@@ -71,6 +54,15 @@ def train_epoch(model, loader, criterion, optimizer, device):
 
 
 def evaluate(model, loader, criterion, device):
+    """
+    Evaluate the model.
+    
+    Args:
+        model: Model to evaluate
+        loader: DataLoader for evaluation data
+        criterion: Loss function
+        device: Device to evaluate on
+    """
     model.eval()
     total_loss = 0
     correct = 0
@@ -92,28 +84,74 @@ def evaluate(model, loader, criterion, device):
     accuracy = correct / total
     return avg_loss, accuracy
 
-
-def run_training(args, device):
-    print(f"Using device: {device}")
-
-    print("Loading dataset...")
-
-    dataset = SiameseDataset(args.data_dir)
-    train_size = int(args.train_split * len(dataset))
-    test_size = len(dataset) - train_size
-    generator = torch.Generator().manual_seed(args.seed)
-    train_set, test_set = random_split(dataset, [train_size, test_size], generator=generator)
-    print(f"Train (Random): {train_size} samples, Test: {test_size} samples")
+def load_checkpoint(checkpoint_path):
+    """
+    Load the model checkpoint.
     
-    train_loader = FastDataLoader(train_set, batch_size=args.batch_size, shuffle=True)
-    test_loader = FastDataLoader(test_set, batch_size=args.batch_size, shuffle=False)
+    Args:
+        checkpoint_path: Path to the checkpoint
+    """
+    checkpoint = torch.load(checkpoint_path)
+    model = Model(
+        embedding_dim=checkpoint['embedding_dim']
+    )
+    siamese_model = SiameseModel(model)
+    siamese_model.load_state_dict(checkpoint['model_state_dict'])
+    return siamese_model
 
-    embedding_dim = getattr(args, 'embedding_dim', 128)
+def save_checkpoint(checkpoint_path, model, optimizer, epoch):
+    """
+    Save the model checkpoint.
+    
+    Args:
+        checkpoint_path: Path to save the checkpoint
+        model: Model to save
+        optimizer: Optimizer
+        epoch: Current epoch
+    """
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'epoch': epoch,
+        'embedding_dim': model.feature_extractor.embedding_dim
+    }, checkpoint_path)
+
+def create_dataloader_from_path(train_path, batch_size: int, device: str, test_path = None):
+    """
+    Create DataLoader for training and testing data.
+    
+    Args:
+        train_path: Path to training data
+        batch_size: Batch size
+        device: Device to train on
+        test_path: Path to testing data (if None, split train_dataset into train and test 80% train, 20% test)
+    """
+    train_dataset = SiameseDataset(train_path)
+    if test_path is None:
+        generator = torch.Generator().manual_seed(42)
+        train_dataset, test_dataset = random_split(
+            train_dataset,
+            [int(len(train_dataset) * 0.8), int(len(train_dataset) * 0.2)],
+            generator=generator
+        )
+    else:
+        test_dataset = SiameseDataset(test_path)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=device.type == 'cuda')
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=device.type == 'cuda')
+    return train_loader, test_loader
+
+def create_model(embedding_dim = 128, lr = 0.001, device = "cuda"):
+    """
+    Create the model.
+    
+    Args:
+        embedding_dim: Dimension of the embedding space
+        lr: Learning rate
+        device: Device to train on
+    """
     feature_extractor = Model(
-        embedding_dim=embedding_dim,
-        lstm_hidden=args.lstm_hidden,
-        gnn_hidden=args.gnn_hidden,
-        gat_heads=args.gat_heads,
+        embedding_dim=embedding_dim
     ).to(device)
     
     model = SiameseModel(feature_extractor).to(device)
@@ -122,50 +160,30 @@ def run_training(args, device):
     print(f"Model parameters: {param_count:,}")
 
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    return model, criterion, optimizer
 
+def run_training(epochs, save_path, model, criterion, optimizer, train_loader, test_loader, device):
+    """
+    Run the training process.
+    
+    Args:
+        epochs: Number of epochs to train
+        save_path: Path to save the trained model
+        model: Model to train
+        criterion: Loss function
+        optimizer: Optimizer
+        train_loader: DataLoader for training data
+        test_loader: DataLoader for testing data
+        device: Device to train on
+    """
     print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9} | {'Test Loss':>9} | {'Test Acc':>8}")
     print("-" * 64)
 
     best_test_acc = 0.0
     history = {'train_loss': [], 'train_acc': [], 'test_loss': [], 'test_acc': []}
-    
-    if getattr(args, 'profile', False):
-        from torch.profiler import profile, record_function, ProfilerActivity
-        print("Starting profiler warm-up for 1 batch...")
-        model.train()
-        iter_loader = iter(train_loader)
-        
-        batch_x, batch_y = next(iter_loader)
-        batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
-        batch_y = batch_y.to(device)
-        optimizer.zero_grad()
-        output = model(batch_x1, batch_x2)
-        loss = criterion(output, batch_y)
-        loss.backward()
-        optimizer.step()
 
-        print("Profiling next batch...")
-        with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA], record_shapes=True) as prof:
-            with record_function("model_iteration"):
-                batch_x, batch_y = next(iter_loader)
-                batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
-                batch_y = batch_y.to(device)
-                optimizer.zero_grad()
-                output = model(batch_x1, batch_x2)
-                loss = criterion(output, batch_y)
-                loss.backward()
-                optimizer.step()
-        
-        with open("prof_cuda.txt", "w") as f:
-            f.write(prof.key_averages().table(sort_by="cuda_time_total", row_limit=25))
-        with open("prof_cpu.txt", "w") as f:
-            f.write(prof.key_averages().table(sort_by="cpu_time_total", row_limit=25))
-        
-        print(f"Profiler tables saved to prof_cuda.txt and prof_cpu.txt")
-        sys.exit(0)
-
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(1, epochs + 1):
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
         
@@ -178,27 +196,55 @@ def run_training(args, device):
 
         if test_acc > best_test_acc:
             best_test_acc = test_acc
-            torch.save({
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-                'epoch': epoch,
-                'embedding_dim': getattr(args, 'embedding_dim', 128),
-                'num_users': model.feature_extractor.num_users if hasattr(model.feature_extractor, 'num_users') else dataset.num_users,
-                'seq_len': model.feature_extractor.seq_len,
-                'num_channels': model.feature_extractor.num_channels,
-                'gnn_hidden': model.feature_extractor.gnn_hidden,
-                'lstm_hidden': model.feature_extractor.lstm_hidden,
-                'gat_heads': model.feature_extractor.gat_heads,
-                'seed': args.seed,
-                'train_split': args.train_split,
-                'split_method': args.split_method,
-                }, args.save_path)
-
+            save_checkpoint(save_path, model, optimizer, epoch)
+            
     print(f"\nBest test accuracy: {best_test_acc:.2%}")
-    print(f"Model saved to: {args.save_path}")
+    print(f"Model saved to: {save_path}")
     
-    return history, dataset.num_users
+    return history
+
+def train(args):
+    """
+    Train the model.
+    
+    Args:
+        args: Arguments for training
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    print("Loading dataset...")
+    train_loader, test_loader = create_dataloader_from_path(args.data_dir, args.batch_size, device, args.test_dir)
+    
+    model, criterion, optimizer = create_model(args.embedding_dim, args.lr, device)
+    
+    run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
+
+def main():
+    """
+    Main function to train the model with pre-defined parameters.
+    """
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    print("Loading dataset...")
+    train_paths = [
+        "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users",
+        "datasets/ViewGauss_Head-Movement_Dataset/processed_data/users"
+    ]
+
+    train_loader, test_loader = create_dataloader_from_path(
+        train_paths,
+        2048,
+        device
+    )
+    print("Dataset loaded.")
+    print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming) and ViewGauss_Head-Movement_Dataset")
+    
+    model, criterion, optimizer = create_model(256, 0.001, device)
+    
+    run_training(20, "saved_tests/trained_model.pth", model, criterion, optimizer, train_loader, test_loader, device)
 
 if __name__ == "__main__":
-    print("Please run this via main.py")
+    main()
 

@@ -10,7 +10,6 @@ Each sample is a (7, 10) tensor representing one second of data:
     - Time column (col 0) is stripped
 """
 
-from torch import long
 import sys
 import os
 import numpy as np
@@ -96,6 +95,13 @@ class SiameseDataset(Dataset):
         print(f"Created {self.siamese_count} siamese samples")
 
     def _generate_dataset(self, seed = 67):
+        """
+        Generate siamese dataset.
+        To do this we need to select self.samples_per_user samples from each user.
+        Then we need to select matching/non-matching samples.
+        If is_match is True, select from the same user, otherwise select from a random user.
+        If the random user has no samples, select from the same user. (Giving slight preference to matching samples)
+        """
         np.random.seed(seed)
         
         x1_list = []
@@ -113,12 +119,14 @@ class SiameseDataset(Dataset):
 
             # Pre-select matching/non-matching
             is_match = np.random.rand(self.samples_per_user) < 0.5
+            # If is_match is True, select from the same user, otherwise select from a random user
             r_users = np.where(is_match, u, np.random.randint(0, self.num_users, size=self.samples_per_user))
 
             x2_tensors = []
             for i in range(self.samples_per_user):
                 r = r_users[i]
                 n_r = len(self.sample_dataset[r])
+                # If the random user has no samples, select from the same user
                 y = np.random.randint(0, n_r) if n_r > 0 else 0
                 x2_tensors.append(self.sample_dataset[r][y])
             

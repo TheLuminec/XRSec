@@ -13,7 +13,7 @@ Steps:
     - Attention 1: Self-attention (Eq 1-3) to re-weight sequence
     - BiLSTM 2: Second bidirectional LSTM layer
     - Attention 2: Self-attention followed by pooling
-    - Dense: Classification layer mapping to num_users classes
+    - Dense: Classification layer mapping to embedding space
 """
 
 import torch
@@ -58,23 +58,23 @@ class Model(nn.Module):
         - Preliminary (§3.1.1): BiLSTM backbone for temporal patterns
 
     Args:
-        num_users:    Number of users to classify
         seq_len:      Number of time samples per window (default: 10)
         num_channels: Number of data channels (default: 7 = qx,qy,qz,qw,Hx,Hy,Hz)
         gnn_hidden:   Hidden dimension for GNN layers
         lstm_hidden:  Hidden dimension for LSTM layers
         gat_heads:    Number of attention heads in GATConv
+        embedding_dim: Dimension of the embedding space
     """
-    def __init__(self, num_users=None, seq_len=10, num_channels=7,
-                 gnn_hidden=32, lstm_hidden=64, gat_heads=4, embedding_dim=None):
+    def __init__(self, seq_len=10, num_channels=7,
+                 gnn_hidden=32, lstm_hidden=64, gat_heads=4, embedding_dim=128):
         super().__init__()
-        self.num_users = num_users
         self.seq_len = seq_len
         self.num_channels = num_channels
         self.gnn_hidden = gnn_hidden
         self.lstm_hidden = lstm_hidden
         self.gat_heads = gat_heads
         self.num_nodes = num_channels + 3  # 7 data + orientation + position + root
+        self.embedding_dim = embedding_dim
 
         # Fixed graph structure (§3.1.2 Figure 6)
         self.register_buffer('edge_index', self._build_edge_index())
@@ -101,12 +101,7 @@ class Model(nn.Module):
         self.attn2 = SelfAttention(lstm_hidden * 2)
 
         # --- Dense classification/embedding layer ---
-        if num_users is not None:
-            self.fc = nn.Linear(lstm_hidden * 2, num_users)
-        elif embedding_dim is not None:
-            self.fc = nn.Linear(lstm_hidden * 2, embedding_dim)
-        else:
-            self.fc = nn.Identity()
+        self.fc = nn.Linear(lstm_hidden * 2, embedding_dim)
 
     def _build_edge_index(self):
         """
@@ -186,7 +181,7 @@ class Model(nn.Module):
                (qx, qy, qz, qw, Hx, Hy, Hz) and columns are 10 time samples
 
         Returns:
-            (batch, num_users) - classification logits
+            (batch, embedding_dim) - embedding vector
         """
         # === GNN Data Aggregation (§3.1.2) ===
         # M' = Ga(data) - graph attention augmented features
@@ -219,7 +214,7 @@ class Model(nn.Module):
         x = x.mean(dim=1)                  # (batch, 2*lstm_hidden)
 
         # === Dense Classification/Embedding ===
-        x = self.fc(x)                     # (batch, num_users) or (batch, embedding_dim)
+        x = self.fc(x)                     # (batch, embedding_dim)
         return x
 
 
@@ -252,7 +247,7 @@ class SiameseModel(nn.Module):
 
 if __name__ == "__main__":
     # Quick smoke test for Model
-    model = Model(num_users=48)
+    model = Model(embedding_dim=128)
     dummy_input = torch.randn(4, 7, 10)   # batch of 4, 7 channels, 10 time steps
     output = model(dummy_input)
     print(f"Base Model Output shape: {output.shape}")
