@@ -19,7 +19,7 @@ class Sampler:
     randomness.
     """
 
-    def __init__(self, data: np.ndarray, sample_rate=10, variance=0.01, index_randomness=0):
+    def __init__(self, data: np.ndarray, sample_rate=10, variance=0.01, index_randomness=1):
         self.data = data
         self.sample_rate = sample_rate
         self.variance = variance

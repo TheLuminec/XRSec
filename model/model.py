@@ -13,7 +13,7 @@ Steps:
     - Attention 1: Self-attention (Eq 1-3) to re-weight sequence
     - BiLSTM 2: Second bidirectional LSTM layer
     - Attention 2: Self-attention followed by pooling
-    - Dense: Classification layer mapping to num_users classes
+    - Dense: Classification layer mapping to embedding space
 """
 
 import torch
@@ -58,23 +58,23 @@ class Model(nn.Module):
         - Preliminary (§3.1.1): BiLSTM backbone for temporal patterns
 
     Args:
-        num_users:    Number of users to classify
         seq_len:      Number of time samples per window (default: 10)
         num_channels: Number of data channels (default: 7 = qx,qy,qz,qw,Hx,Hy,Hz)
         gnn_hidden:   Hidden dimension for GNN layers
         lstm_hidden:  Hidden dimension for LSTM layers
         gat_heads:    Number of attention heads in GATConv
+        embedding_dim: Dimension of the embedding space
     """
-    def __init__(self, num_users, seq_len=10, num_channels=7,
-                 gnn_hidden=32, lstm_hidden=64, gat_heads=4):
+    def __init__(self, seq_len=10, num_channels=7,
+                 gnn_hidden=32, lstm_hidden=64, gat_heads=4, embedding_dim=128):
         super().__init__()
-        self.num_users = num_users
         self.seq_len = seq_len
         self.num_channels = num_channels
         self.gnn_hidden = gnn_hidden
         self.lstm_hidden = lstm_hidden
         self.gat_heads = gat_heads
         self.num_nodes = num_channels + 3  # 7 data + orientation + position + root
+        self.embedding_dim = embedding_dim
 
         # Fixed graph structure (§3.1.2 Figure 6)
         self.register_buffer('edge_index', self._build_edge_index())
@@ -100,8 +100,8 @@ class Model(nn.Module):
         self.attn1 = SelfAttention(lstm_hidden * 2)
         self.attn2 = SelfAttention(lstm_hidden * 2)
 
-        # --- Dense classification layer ---
-        self.fc = nn.Linear(lstm_hidden * 2, num_users)
+        # --- Dense classification/embedding layer ---
+        self.fc = nn.Linear(lstm_hidden * 2, embedding_dim)
 
     def _build_edge_index(self):
         """
@@ -146,17 +146,27 @@ class Model(nn.Module):
         pad = torch.zeros(batch_size, 3, self.seq_len, device=device)
         node_features = torch.cat([M, pad], dim=1)
 
-        # Create PyG batch (all graphs share the same edge structure)
-        data_list = [
-            Data(x=node_features[i], edge_index=self.edge_index)
-            for i in range(batch_size)
-        ]
-        batch = Batch.from_data_list(data_list)
-        batch = batch.to(device)
+        # Flatten batch and nodes dimension -> (batch * 10, seq_len)
+        x = node_features.view(batch_size * self.num_nodes, self.seq_len)
+
+        # Dynamically constructing PyG data objects in the forward pass causes massive CPU bottleneck.
+        # Since all graphs have the identical structure, we construct the batched edge_index manually:
+        if not hasattr(self, '_cached_batch_size') or self._cached_batch_size != batch_size:
+            # Create offset tensor: (batch_size, 1, 1)
+            offsets = (torch.arange(batch_size, device=device) * self.num_nodes).view(-1, 1, 1)
+            
+            # self.edge_index is (2, E). We tile it across the batch and add offsets
+            batched_edge_index = self.edge_index.unsqueeze(0) + offsets
+            
+            # Reshape from (batch_size, 2, E) to (2, batch_size * E)
+            self._cached_edge_index = batched_edge_index.transpose(0, 1).reshape(2, -1)
+            self._cached_batch_size = batch_size
+
+        edge_index = self._cached_edge_index
 
         # Two-layer GNN forward pass
-        h = F.relu(conv1(batch.x, batch.edge_index))
-        h = conv2(h, batch.edge_index)
+        h = F.relu(conv1(x, edge_index))
+        h = conv2(h, edge_index)
 
         # Reshape and extract only the 7 data node features
         h = h.view(batch_size, self.num_nodes, -1)
@@ -171,7 +181,7 @@ class Model(nn.Module):
                (qx, qy, qz, qw, Hx, Hy, Hz) and columns are 10 time samples
 
         Returns:
-            (batch, num_users) - classification logits
+            (batch, embedding_dim) - embedding vector
         """
         # === GNN Data Aggregation (§3.1.2) ===
         # M' = Ga(data) - graph attention augmented features
@@ -203,16 +213,50 @@ class Model(nn.Module):
         # Pool over time dimension -> fixed-size vector
         x = x.mean(dim=1)                  # (batch, 2*lstm_hidden)
 
-        # === Dense Classification ===
-        x = self.fc(x)                     # (batch, num_users)
+        # === Dense Classification/Embedding ===
+        x = self.fc(x)                     # (batch, embedding_dim)
         return x
 
 
+class SiameseModel(nn.Module):
+    """
+    Siamese wrapper around the Model feature extractor.
+    Given two sequences, it computes their distance following Eq (6):
+        D(Vs, Vi) = 1 / (1 + exp(||Vs - Vi||_2))
+    
+    This outputs the negative distance as a logit, which can be directly
+    used with BCEWithLogitsLoss to optimize Eq (7).
+    """
+    def __init__(self, feature_extractor):
+        super().__init__()
+        self.feature_extractor = feature_extractor
+
+    def forward(self, x1, x2):
+        # Extract features (embeddings)
+        e1 = self.feature_extractor(x1)
+        e2 = self.feature_extractor(x2)
+        
+        # Compute L2 distance ||Vs - Vi||_2
+        # keepdim=True ensures shape (batch, 1) to match with target labels
+        dist = torch.norm(e1 - e2, p=2, dim=1, keepdim=True)
+        
+        # We return the logit which is the negative distance.
+        # This way, sigmoid(-dist) = 1 / (1 + exp(dist)) matches Eq (6)
+        return -dist
+
+
 if __name__ == "__main__":
-    # Quick smoke test
-    model = Model(num_users=48)
+    # Quick smoke test for Model
+    model = Model(embedding_dim=128)
     dummy_input = torch.randn(4, 7, 10)   # batch of 4, 7 channels, 10 time steps
     output = model(dummy_input)
-    print(f"Input shape:  {dummy_input.shape}")
-    print(f"Output shape: {output.shape}")
-    print(f"Num params:   {sum(p.numel() for p in model.parameters()):,}")
+    print(f"Base Model Output shape: {output.shape}")
+
+    # Quick smoke test for SiameseModel
+    feature_extractor = Model(embedding_dim=128)
+    siamese_model = SiameseModel(feature_extractor)
+    dummy_input2 = torch.randn(4, 7, 10)
+    output_siamese = siamese_model(dummy_input, dummy_input2)
+    print(f"Siamese Output shape:  {output_siamese.shape}")
+    print(f"Siamese probabilities: {torch.sigmoid(output_siamese).squeeze().detach().cpu().numpy()}")
+    print(f"Num params:   {sum(p.numel() for p in siamese_model.parameters()):,}")

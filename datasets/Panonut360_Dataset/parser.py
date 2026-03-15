@@ -70,14 +70,21 @@ def parse(dataset_dir):
                 'head_quaternion_y': 'UnitQuaternion.y',
                 'head_quaternion_z': 'UnitQuaternion.z',
                 'head_quaternion_w': 'UnitQuaternion.w',
-                
-                # Optional eye tracking mapping
-                'eye_x_t': 'GazeRay.x',
-                'eye_y_t': 'GazeRay.y',
-                'eye_z_t': 'GazeRay.z',
             }, inplace=True)
+                
+            # Filter to required columns explicitly
+            required_cols = [
+                'SessionTime',
+                'UnitQuaternion.x',
+                'UnitQuaternion.y',
+                'UnitQuaternion.z',
+                'UnitQuaternion.w',
+                'HmdPosition.x',
+                'HmdPosition.y',
+                'HmdPosition.z'
+            ]
             
-            df['IsEyeTrackingSample'] = 1  # Contains eye tracking data from the dataset
+            df = df[required_cols]
             
             # Ensure sorting by time
             df.sort_values(by='SessionTime', inplace=True)

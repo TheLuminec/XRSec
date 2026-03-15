@@ -4,7 +4,7 @@ name,users,sessions,valid
 EyeNavGS_6-DoF_Navigation_Dataset,22,12,True
 Head_and_Gaze_Behavior_Dataset,100,54,False
 NJIT_6DOF_VR_Navigation_Dataset,18,1,True
-Paired_Head–Eye_VR_Tasks_Dataset,13,12,False
+Paired_Head–Eye_VR_Tasks_Dataset,13,12,True
 Panonut360_Dataset,21,15,True
 ViewGauss_Head-Movement_Dataset,35,4,True
 VR_User_Behavior_Dataset_(Spherical_Video_Streaming),48,18,True

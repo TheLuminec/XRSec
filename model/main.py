@@ -13,9 +13,8 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from train import run_training
+from train import train
 from test import evaluate_model
-
 
 def plot_training_history(history, save_path="training_history.png"):
     """Graphs training and testing loss and accuracy over epochs."""
@@ -44,7 +43,6 @@ def plot_training_history(history, save_path="training_history.png"):
     print(f"Graph saved to {save_path}")
     plt.close()
 
-
 def main():
     parser = argparse.ArgumentParser(description="XR Biometric Model Entry Point")
     
@@ -55,10 +53,6 @@ def main():
     # Data paths & splits
     parser.add_argument("--data-dir", type=str, required=True,
                         help="Path to processed_data/users/ directory")
-    parser.add_argument("--split-method", type=str, choices=["random", "leave-last-out"], default="random",
-                        help="Data split method (random standard vs leave-last-out)")
-    parser.add_argument("--train-split", type=float, default=0.8,
-                        help="Ratio of data for training if split-method is 'random'")
     
     # Model saving / loading
     parser.add_argument("--save-path", type=str, default="model/trained_model.pth",
@@ -68,26 +62,25 @@ def main():
 
     # Hyperparameters
     parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--batch-size", type=int, default=1024,
+                        help="Increased default batch size to 1024 to prevent CUDA launch overhead on tiny graphs")
     parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--lstm-hidden", type=int, default=64)
-    parser.add_argument("--gnn-hidden", type=int, default=32)
-    parser.add_argument("--gat-heads", type=int, default=4)
+    parser.add_argument("--embedding-dim", type=int, default=128)
     parser.add_argument("--seed", type=int, default=42)
 
-    # Visualization
+    # Visualization & Profiling
     parser.add_argument("--graph", action="store_true",
                         help="Generate a graph of training/testing metrics (train mode only)")
     parser.add_argument("--graph-path", type=str, default="training_history.png",
                         help="Path to save the generated graph")
+    parser.add_argument("--profile", action="store_true",
+                        help="Run a quick 5-batch PyTorch profiler internally instead of a full epoch.")
 
     args = parser.parse_args()
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     if args.mode == "train":
         print("=== Starting Training Mode ===")
-        history, num_users, label_map = run_training(args, device)
+        history = train(args)
         
         if args.graph:
             print("Generating training graph...")
@@ -95,7 +88,7 @@ def main():
             
     elif args.mode == "test":
         print("=== Starting Testing Mode ===")
-        loss, accuracy, per_user, num_users, label_map = evaluate_model(args, device)
+        loss, accuracy = evaluate_model(args)
         # test mode already prints per-user accuracy inside evaluate_model
 
 if __name__ == "__main__":
