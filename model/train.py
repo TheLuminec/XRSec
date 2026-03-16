@@ -9,10 +9,39 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, random_split
+from types import SimpleNamespace
 
 sys.path.insert(0, os.path.dirname(__file__))
 from model import Model, SiameseModel
 from dataset import SiameseDataset
+
+
+def plot_training_history(history, save_path="training_history.png"):
+    """Graphs training and testing loss and accuracy over epochs."""
+    epochs = range(1, len(history['train_loss']) + 1)
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Loss plot
+    ax1.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
+    ax1.plot(epochs, history['test_loss'], 'r-', label='Test Loss')
+    ax1.set_title('Training and Testing Loss')
+    ax1.set_xlabel('Epochs')
+    ax1.set_ylabel('Loss')
+    ax1.legend()
+
+    # Accuracy plot
+    ax2.plot(epochs, history['train_acc'], 'b-', label='Train Accuracy')
+    ax2.plot(epochs, history['test_acc'], 'r-', label='Test Accuracy')
+    ax2.set_title('Training and Testing Accuracy')
+    ax2.set_xlabel('Epochs')
+    ax2.set_ylabel('Accuracy')
+    ax2.legend()
+
+    plt.tight_layout()
+    plt.savefig(save_path)
+    print(f"Graph saved to {save_path}")
+    plt.close()
 
 def train_epoch(model, loader, criterion, optimizer, device):
     """
@@ -208,8 +237,18 @@ def train(args):
     Train the model.
     
     Args:
-        args: Arguments for training
+        args: Arguments for training:
+            data_dir: Path to training data
+            batch_size: Batch size
+            test_dir: Path to testing data (if None, split train_dataset into train and test 80% train, 20% test)
+            epochs: Number of epochs to train
+            save_path: Path to save the trained model
+            embedding_dim: Dimension of the embedding space
+            lr: Learning rate
     """
+    if isinstance(args, dict):
+        args = SimpleNamespace(**args)
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -218,7 +257,8 @@ def train(args):
     
     model, criterion, optimizer = create_model(args.embedding_dim, args.lr, device)
     
-    run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
+    history = run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
+    return history
 
 def main():
     """
@@ -241,7 +281,7 @@ def main():
     print("Dataset loaded.")
     print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming) and ViewGauss_Head-Movement_Dataset")
     
-    model, criterion, optimizer = create_model(256, 0.001, device)
+    model, criterion, optimizer = create_model(128, 0.001, device)
     
     run_training(20, "saved_tests/trained_model.pth", model, criterion, optimizer, train_loader, test_loader, device)
 

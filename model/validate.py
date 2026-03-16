@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from train import train, plot_training_history
 
 def validate_dataset(data_dir):
     """
@@ -81,7 +82,8 @@ def validate_all_datasets(dataset_dir):
         "name": [],
         "users": [],
         "sessions": [],
-        "valid": []
+        "valid": [],
+        "learning_acc": []
     }
 
     # Get all datasets
@@ -94,12 +96,41 @@ def validate_all_datasets(dataset_dir):
         users = os.path.join(dataset_path, "processed_data", "users")
         if not os.path.isdir(users):
             continue
+        valid = validate_dataset(users)
+        if valid:
+            try:
+                learning_acc = learning_check(dataset_path)
+            except:
+                learning_acc = "Error"
+        else:
+            learning_acc = "Invalid"
+
         dataset_profile["name"].append(dataset)
         dataset_profile["users"].append(len(os.listdir(users)))
         dataset_profile["sessions"].append(len(os.listdir(os.path.join(users, os.listdir(users)[0]))))
-        dataset_profile["valid"].append(validate_dataset(users))
+        dataset_profile["valid"].append(valid)
+        dataset_profile["learning_acc"].append(learning_acc)
     
     return dataset_profile
+
+def learning_check(data_dir):
+    """
+    Loads and runs the dataset through the model to check for learning.
+    Returns the increase in accuracy over the 5 epochs.
+    """
+    args = {
+        "data_dir": os.path.join(data_dir, "processed_data", "users"),
+        "batch_size": 2048,
+        "test_dir": None,
+        "epochs": 5,
+        "save_path": os.path.join(data_dir, "processed_data", "model.pth"),
+        "embedding_dim": 128,
+        "lr": 0.001
+    }
+    history = train(args)
+    plot_training_history(history, os.path.join(data_dir, "processed_data", "training_history.png"))
+    learning_acc = (history["test_acc"][-1] - history["test_acc"][0]) / history["test_acc"][0]
+    return learning_acc
 
 if __name__ == "__main__":
     dataset_profile = validate_all_datasets("datasets")

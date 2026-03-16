@@ -16,33 +16,6 @@ sys.path.insert(0, os.path.dirname(__file__))
 from train import train
 from test import evaluate_model
 
-def plot_training_history(history, save_path="training_history.png"):
-    """Graphs training and testing loss and accuracy over epochs."""
-    epochs = range(1, len(history['train_loss']) + 1)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-
-    # Loss plot
-    ax1.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
-    ax1.plot(epochs, history['test_loss'], 'r-', label='Test Loss')
-    ax1.set_title('Training and Testing Loss')
-    ax1.set_xlabel('Epochs')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
-
-    # Accuracy plot
-    ax2.plot(epochs, history['train_acc'], 'b-', label='Train Accuracy')
-    ax2.plot(epochs, history['test_acc'], 'r-', label='Test Accuracy')
-    ax2.set_title('Training and Testing Accuracy')
-    ax2.set_xlabel('Epochs')
-    ax2.set_ylabel('Accuracy')
-    ax2.legend()
-
-    plt.tight_layout()
-    plt.savefig(save_path)
-    print(f"Graph saved to {save_path}")
-    plt.close()
-
 def main():
     parser = argparse.ArgumentParser(description="XR Biometric Model Entry Point")
     
