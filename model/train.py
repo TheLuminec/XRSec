@@ -8,6 +8,7 @@ import os
 
 import torch
 import torch.nn as nn
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader, random_split
 from types import SimpleNamespace
 
@@ -138,6 +139,10 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         optimizer: Optimizer
         epoch: Current epoch
     """
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+    if checkpoint_dir:
+        os.makedirs(checkpoint_dir, exist_ok=True)
+
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
@@ -145,7 +150,7 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         'embedding_dim': model.feature_extractor.embedding_dim
     }, checkpoint_path)
 
-def create_dataloader_from_path(train_path, batch_size: int, device: str, sample_time: int = 1, sample_rate: int = 10, test_path = None):
+def create_dataloader_from_path(train_path, batch_size: int, device: torch.device, sample_time: int = 1, sample_rate: int = 10, test_path=None):
     """
     Create DataLoader for training and testing data.
     
@@ -172,7 +177,7 @@ def create_dataloader_from_path(train_path, batch_size: int, device: str, sample
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=device.type == 'cuda')
     return train_loader, test_loader
 
-def create_model(embedding_dim = 128, input_dim = 10, lr = 0.001, device = "cuda"):
+def create_model(embedding_dim=128, input_dim=10, lr=0.001, device="cuda"):
     """
     Create the model.
     
@@ -256,10 +261,25 @@ def train(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
+    train_paths = getattr(args, "data_dirs", getattr(args, "data_dir", None))
+    test_paths = getattr(args, "test_dirs", getattr(args, "test_dir", None))
+
     print("Loading dataset...")
-    train_loader, test_loader = create_dataloader_from_path(args.data_dir, args.batch_size, device, args.test_dir)
-    
-    model, criterion, optimizer = create_model(args.embedding_dim, args.lr, device)
+    train_loader, test_loader = create_dataloader_from_path(
+        train_paths,
+        args.batch_size,
+        device,
+        sample_time=getattr(args, "sample_time", 1),
+        sample_rate=getattr(args, "sample_rate", 10),
+        test_path=test_paths if test_paths else None,
+    )
+
+    model, criterion, optimizer = create_model(
+        embedding_dim=args.embedding_dim,
+        input_dim=getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10),
+        lr=args.lr,
+        device=device,
+    )
     
     history = run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
     return history
@@ -286,10 +306,14 @@ def main():
     print("Dataset loaded.")
     print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)")
     
-    model, criterion, optimizer = create_model(128, 0.001, 50, device)
+    model, criterion, optimizer = create_model(
+        embedding_dim=128,
+        input_dim=50,
+        lr=0.001,
+        device=device,
+    )
     
     run_training(20, "saved_tests/trained_model.pth", model, criterion, optimizer, train_loader, test_loader, device)
 
 if __name__ == "__main__":
     main()
-

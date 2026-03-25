@@ -1,68 +1,95 @@
 """
-Main entry point for XR biometric identification project.
+Hydra entry point for XR biometric identification project.
 
-Provides a unified CLI for training, testing, hyperparameter tuning,
-and visualization (graphing).
+Usage examples:
+    python model/main.py mode=train
+    python model/main.py mode=train data_dirs=[/abs/path/users_a,/abs/path/users_b]
+    python model/main.py mode=test test_dirs=[/abs/path/users_eval]
 """
 
-import argparse
-import sys
 import os
-import torch
-import matplotlib.pyplot as plt
+import re
+import sys
+from pathlib import Path
+
+import hydra
+from hydra.utils import to_absolute_path
+from omegaconf import DictConfig
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from train import train
+from train import train, plot_training_history
 from test import evaluate_model
 
-def main():
-    parser = argparse.ArgumentParser(description="XR Biometric Model Entry Point")
-    
-    # Mode selection
-    parser.add_argument("--mode", type=str, choices=["train", "test"], required=True,
-                        help="Mode to run: 'train' or 'test'")
-    
-    # Data paths & splits
-    parser.add_argument("--data-dir", type=str, required=True,
-                        help="Path to processed_data/users/ directory")
-    
-    # Model saving / loading
-    parser.add_argument("--save-path", type=str, default="model/trained_model.pth",
-                        help="Path to save the trained model (train mode)")
-    parser.add_argument("--model-path", type=str, default="model/trained_model.pth",
-                        help="Path to load the trained model (test mode)")
 
-    # Hyperparameters
-    parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch-size", type=int, default=1024,
-                        help="Increased default batch size to 1024 to prevent CUDA launch overhead on tiny graphs")
-    parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--embedding-dim", type=int, default=128)
-    parser.add_argument("--seed", type=int, default=42)
+def _as_list(value):
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return [value]
 
-    # Visualization & Profiling
-    parser.add_argument("--graph", action="store_true",
-                        help="Generate a graph of training/testing metrics (train mode only)")
-    parser.add_argument("--graph-path", type=str, default="training_history.png",
-                        help="Path to save the generated graph")
-    parser.add_argument("--profile", action="store_true",
-                        help="Run a quick 5-batch PyTorch profiler internally instead of a full epoch.")
 
-    args = parser.parse_args()
+def _slug(text: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9]+", "-", text.strip()).strip("-").lower() or "dataset"
 
-    if args.mode == "train":
+
+def _dataset_tag(paths) -> str:
+    names = [Path(p).name for p in _as_list(paths)]
+    if not names:
+        return "none"
+    if len(names) == 1:
+        return _slug(names[0])
+    return f"multi{len(names)}"
+
+
+def _normalize_paths(cfg: DictConfig) -> None:
+    """Convert configured filesystem paths to absolute paths for Hydra run dirs."""
+    cfg.data_dirs = [to_absolute_path(p) for p in _as_list(cfg.data_dirs)]
+    cfg.test_dirs = [to_absolute_path(p) for p in _as_list(cfg.test_dirs)]
+
+
+def _standardize_artifact_paths(cfg: DictConfig) -> None:
+    """
+    Standard naming convention for milestone A artifacts.
+
+    - checkpoints/{experiment}_{dataset}_{sample}s_{rate}hz_emb{dim}_{mode}.pth
+    - plots/{experiment}_{dataset}_{sample}s_{rate}hz_emb{dim}_{mode}.png
+    """
+    active_eval_dirs = cfg.test_dirs if cfg.test_dirs else cfg.data_dirs
+    tag = _dataset_tag(active_eval_dirs if cfg.mode == "test" else cfg.data_dirs)
+    stem = (
+        f"{_slug(cfg.experiment_name)}_{tag}_"
+        f"{cfg.sample_time}s_{cfg.sample_rate}hz_emb{cfg.embedding_dim}_{cfg.mode}"
+    )
+
+    if cfg.save_path == "auto":
+        cfg.save_path = str(Path("checkpoints") / f"{stem}.pth")
+    if cfg.model_path == "auto":
+        cfg.model_path = str(Path("checkpoints") / f"{stem}.pth")
+    if cfg.graph_path == "auto":
+        cfg.graph_path = str(Path("plots") / f"{stem}.png")
+
+
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
+def main(cfg: DictConfig) -> None:
+    _normalize_paths(cfg)
+    _standardize_artifact_paths(cfg)
+
+    if cfg.mode == "train":
         print("=== Starting Training Mode ===")
-        history = train(args)
-        
-        if args.graph:
+        history = train(cfg)
+        if cfg.graph:
             print("Generating training graph...")
-            plot_training_history(history, save_path=args.graph_path)
-            
-    elif args.mode == "test":
+            plot_training_history(history, save_path=cfg.graph_path)
+
+    elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")
-        loss, accuracy = evaluate_model(args)
-        # test mode already prints per-user accuracy inside evaluate_model
+        evaluate_model(cfg)
+
+    else:
+        raise ValueError(f"Unsupported mode: {cfg.mode}")
+
 
 if __name__ == "__main__":
     main()

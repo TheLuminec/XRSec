@@ -1,0 +1,7 @@
+torch
+torch-geometric
+numpy
+pandas
+matplotlib
+hydra-core
+omegaconf

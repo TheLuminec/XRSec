@@ -82,12 +82,12 @@ def load_checkpoint(checkpoint_path, device):
     print(f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
     return model, checkpoint
 
-def create_dataloader_from_path(data_dir: str, batch_size: int, device, checkpoint: dict = None):
+def create_dataloader_from_path(data_dir, batch_size: int, device, checkpoint: dict = None):
     """
     Create DataLoader for testing data.
     
     Args:
-        data_dir: Path to testing data
+        data_dir: Path(s) to testing data
         batch_size: Batch size
         device: Device to evaluate on
         checkpoint: Loaded checkpoint dictionary specifying normalization parameters
@@ -125,7 +125,7 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
         
     return loss, accuracy
 
-def evaluate_model(args, device):
+def evaluate_model(args, device=None):
     """
     Evaluate the model pipeline.
     
@@ -133,11 +133,17 @@ def evaluate_model(args, device):
         args: Arguments for testing
         device: Device to evaluate on
     """
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
     print(f"Using device: {device}")
 
     model, checkpoint = load_checkpoint(args.model_path, device)
     
-    test_loader, test_size = create_dataloader_from_path(args.data_dir, args.batch_size, device, checkpoint)
+    eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None) or getattr(args, "data_dir", None)
+    if eval_dirs is None:
+        raise ValueError("No evaluation directories were provided. Set test_dirs or data_dirs.")
+    test_loader, test_size = create_dataloader_from_path(eval_dirs, args.batch_size, device, checkpoint)
 
     criterion = nn.BCEWithLogitsLoss()
     
@@ -165,4 +171,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
