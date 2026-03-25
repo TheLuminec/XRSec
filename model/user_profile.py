@@ -12,9 +12,11 @@ import pandas as pd
 
 class UserProfile:
     """Holds a collection of data samplers for a specific user ID."""
-    def __init__(self, user_dir: str):
+    def __init__(self, user_dir: str, sample_time: int = 1, sample_rate: int = 10):
         self.user_dir = user_dir
         self.data_samplers = []
+        self.sample_time = sample_time
+        self.sample_rate = sample_rate
 
         self._load_data()
 
@@ -33,7 +35,7 @@ class UserProfile:
                             'UnitQuaternion.x', 'UnitQuaternion.y', 'UnitQuaternion.z', 'UnitQuaternion.w',
                             'HmdPosition.x', 'HmdPosition.y', 'HmdPosition.z']])
 
-        self.data_samplers.append(Sampler(data))
+        self.data_samplers.append(Sampler(data, self.sample_time, self.sample_rate))
 
 
 if __name__ == "__main__":

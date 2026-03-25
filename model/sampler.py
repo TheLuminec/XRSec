@@ -19,8 +19,9 @@ class Sampler:
     randomness.
     """
 
-    def __init__(self, data: np.ndarray, sample_rate=10, variance=0.01, index_randomness=1):
+    def __init__(self, data: np.ndarray, sample_time: int = 1, sample_rate: int = 10, variance=0.01, index_randomness=1):
         self.data = data
+        self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.variance = variance
         self.index_randomness = index_randomness
@@ -30,7 +31,7 @@ class Sampler:
         self.duration = self.time_end - self.time_start
         self.avg_hertz = data.shape[0] / self.duration
         self.current_index = 0
-        self.sample_count = math.floor(self.duration)
+        self.sample_count = math.floor(self.duration / self.sample_time)
 
         self._preprocess()
 
@@ -62,9 +63,9 @@ class Sampler:
 
     def _get_sample_slice(self, current_index: int, last_range_end: int = 0) -> tuple[np.ndarray, int]:
         """Extracts a 1-second window of data containing `sample_rate` uniformly spaced samples."""
-        result = np.zeros((self.sample_rate, self.data.shape[1]))
+        result = np.zeros((self.sample_rate * self.sample_time, self.data.shape[1]))
         end_range = int(self.avg_hertz * 2)
-        for i in range(self.sample_rate):
+        for i in range(self.sample_rate * self.sample_time):
             current_time = self.time_start + current_index + (i / self.sample_rate)
             data_index = self._get_data_point_closest_to_time(current_time, last_range_end, last_range_end + end_range)
             if self.index_randomness > 0:
@@ -78,7 +79,7 @@ class Sampler:
         """
         Pre-computes and caches all fixed-rate data slices from the raw timeline.
         """
-        self.samples = np.zeros((self.sample_count, self.sample_rate, self.data.shape[1]))
+        self.samples = np.zeros((self.sample_count, self.sample_rate * self.sample_time, self.data.shape[1]))
         last_range_end = 0
         for i in range(self.sample_count):
             self.samples[i], last_range_end = self._get_sample_slice(i, last_range_end)
@@ -95,5 +96,5 @@ class Sampler:
 if __name__ == "__main__":
     PATH = "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/1/experiment_1_video_0.csv"
     data = np.loadtxt(PATH, delimiter=",", skiprows=1)
-    sampler = Sampler(data)
+    sampler = Sampler(data, sample_time=5, sample_rate=10)
     print(sampler.get_sample(5))

@@ -35,10 +35,10 @@ class SampleDataset():
 
         users = []
         if isinstance(data_dir, str):
-            users = [Users(data_dir)]
+            users = [Users(data_dir, sample_time, sample_rate)]
         else:
             for d in data_dir:
-                users.append(Users(d))
+                users.append(Users(d, sample_time, sample_rate))
 
         self.sample_count = 0
         for u in users:

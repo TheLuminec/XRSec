@@ -145,7 +145,7 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         'embedding_dim': model.feature_extractor.embedding_dim
     }, checkpoint_path)
 
-def create_dataloader_from_path(train_path, batch_size: int, device: str, test_path = None):
+def create_dataloader_from_path(train_path, batch_size: int, device: str, sample_time: int = 1, sample_rate: int = 10, test_path = None):
     """
     Create DataLoader for training and testing data.
     
@@ -153,9 +153,11 @@ def create_dataloader_from_path(train_path, batch_size: int, device: str, test_p
         train_path: Path to training data
         batch_size: Batch size
         device: Device to train on
+        sample_time: Sample time for the dataset
+        sample_rate: Sample rate for the dataset
         test_path: Path to testing data (if None, split train_dataset into train and test 80% train, 20% test)
     """
-    train_dataset = SiameseDataset(train_path)
+    train_dataset = SiameseDataset(train_path, sample_time=sample_time, sample_rate=sample_rate)
     if test_path is None:
         generator = torch.Generator().manual_seed(42)
         train_dataset, test_dataset = random_split(
@@ -164,23 +166,25 @@ def create_dataloader_from_path(train_path, batch_size: int, device: str, test_p
             generator=generator
         )
     else:
-        test_dataset = SiameseDataset(test_path)
+        test_dataset = SiameseDataset(test_path, sample_time=sample_time, sample_rate=sample_rate)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=device.type == 'cuda')
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=device.type == 'cuda')
     return train_loader, test_loader
 
-def create_model(embedding_dim = 128, lr = 0.001, device = "cuda"):
+def create_model(embedding_dim = 128, input_dim = 10, lr = 0.001, device = "cuda"):
     """
     Create the model.
     
     Args:
         embedding_dim: Dimension of the embedding space
+        input_dim: Dimension of the input data
         lr: Learning rate
         device: Device to train on
     """
     feature_extractor = Model(
-        embedding_dim=embedding_dim
+        embedding_dim=embedding_dim,
+        seq_len=input_dim
     ).to(device)
     
     model = SiameseModel(feature_extractor).to(device)
@@ -269,19 +273,20 @@ def main():
 
     print("Loading dataset...")
     train_paths = [
-        "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users",
-        "datasets/ViewGauss_Head-Movement_Dataset/processed_data/users"
+        "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users"
     ]
 
     train_loader, test_loader = create_dataloader_from_path(
         train_paths,
         2048,
-        device
+        device,
+        sample_time=5,
+        sample_rate=10
     )
     print("Dataset loaded.")
-    print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming) and ViewGauss_Head-Movement_Dataset")
+    print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)")
     
-    model, criterion, optimizer = create_model(128, 0.001, device)
+    model, criterion, optimizer = create_model(128, 0.001, 50, device)
     
     run_training(20, "saved_tests/trained_model.pth", model, criterion, optimizer, train_loader, test_loader, device)
 
