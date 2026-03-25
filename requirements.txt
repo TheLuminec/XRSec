@@ -5,3 +5,5 @@ pandas
 matplotlib
 hydra-core
 omegaconf
+pytest
+pytest-cov
