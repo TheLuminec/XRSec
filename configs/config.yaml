@@ -1,0 +1,32 @@
+defaults:
+  - mode: train
+  - _self_
+
+# Shared settings
+seed: 42
+batch_size: 1024
+embedding_dim: 128
+sample_time: 1
+sample_rate: 10
+
+# Support one or many dataset roots.
+# Each entry should point to a processed_data/users directory.
+data_dirs:
+  - datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users
+test_dirs: []
+
+# Naming convention settings (Milestone A)
+experiment_name: xrsec
+
+# Use "auto" to enforce standardized names from naming conventions.
+save_path: auto
+model_path: auto
+
+graph: false
+graph_path: auto
+
+hydra:
+  run:
+    dir: runs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode.mode}
+  job:
+    chdir: true
