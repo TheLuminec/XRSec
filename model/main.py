@@ -14,7 +14,7 @@ from pathlib import Path
 
 import hydra
 from hydra.utils import to_absolute_path
-from omegaconf import DictConfig
+from omegaconf import DictConfig, ListConfig
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -25,7 +25,7 @@ from test import evaluate_model
 def _as_list(value):
     if value is None:
         return []
-    if isinstance(value, (list, tuple)):
+    if isinstance(value, (list, tuple, ListConfig)):
         return list(value)
     return [value]
 

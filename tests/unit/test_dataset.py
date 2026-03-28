@@ -1,9 +1,8 @@
 import pathlib
 import sys
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / 'model'))
-import sampler
-from dataset import SampleDataset, SiameseDataset
+from model import sampler
+from model.dataset import SampleDataset, SiameseDataset
 
 
 FIXTURE_USERS_DIR = pathlib.Path(__file__).resolve().parents[1] / 'fixtures' / 'users'

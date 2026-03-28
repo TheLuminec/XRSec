@@ -47,7 +47,7 @@ class SampleDataset():
                 self.num_users += 1
                 samples = []
                 for sampler in profile.data_samplers:
-                    if sampler.sample_count < self.sample_rate * self.sample_time:
+                    if sampler.sample_count == 0:
                         continue
                     all_samples = sampler.get_all_samples()  # (num_windows, 10, 8)
                     for sample in all_samples:  

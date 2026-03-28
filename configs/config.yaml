@@ -4,7 +4,7 @@ defaults:
 
 # Shared settings
 seed: 42
-batch_size: 1024
+batch_size: 2048
 embedding_dim: 128
 sample_time: 1
 sample_rate: 10
@@ -27,6 +27,6 @@ graph_path: auto
 
 hydra:
   run:
-    dir: runs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode.mode}
+    dir: runs/${now:%Y-%m-%d}/${now:%H-%M-%S}_${mode}
   job:
     chdir: true
