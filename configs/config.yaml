@@ -14,6 +14,7 @@ sample_rate: 10
 data_dirs:
   - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users
 test_dirs: []
+exclude_paths: []
 
 # Naming convention settings (Milestone A)
 experiment_name: xrsec

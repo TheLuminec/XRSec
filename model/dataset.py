@@ -10,14 +10,71 @@ Each sample is a (7, 10) tensor representing one second of data:
     - Time column (col 0) is stripped
 """
 
-import sys
 import os
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, random_split
 
-sys.path.insert(0, os.path.dirname(__file__))
 from users import Users
+
+
+def create_dataloader_from_path(
+    data_dir,
+    batch_size: int,
+    device: torch.device,
+    is_train: bool = True,
+    test_dir=None,
+    sample_time: int = 1,
+    sample_rate: int = 10,
+    val_split: float = 0.2,
+    num_workers: int = 0,
+    exclude_paths=None
+):
+    """
+    Create DataLoader(s) from dataset paths.
+    
+    Args:
+        data_dir: Path(s) to data. Training dataset if is_train=True, else evaluation dataset.
+        batch_size: Batch size
+        device: Device to use (for pin_memory)
+        is_train: If True, returns (train_loader, test_loader). If False, returns test_loader.
+        test_dir: Optional path to testing data for training. If None and is_train is True, data_dir is split.
+        sample_time: Sample time for dataset
+        sample_rate: Sample rate for dataset
+        val_split: Fraction of dataset to use for validation split if test_dir is None
+        num_workers: Number of DataLoader workers
+        exclude_paths: Path(s) to exclude from data loading
+        
+    Returns:
+        If is_train is True: tuple of (train_loader, test_loader)
+        If is_train is False: test_loader
+    """
+    pin_memory = device.type == 'cuda' if device else False
+
+    if not is_train:
+        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+        test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
+                                 num_workers=num_workers, pin_memory=pin_memory)
+        return test_loader
+
+    train_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+    if test_dir is None:
+        generator = torch.Generator().manual_seed(42)
+        test_size = int(len(train_dataset) * val_split)
+        train_size = len(train_dataset) - test_size
+        train_dataset, test_dataset = random_split(
+            train_dataset,
+            [train_size, test_size],
+            generator=generator
+        )
+    else:
+        test_dataset = SiameseDataset(test_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, 
+                              num_workers=num_workers, pin_memory=pin_memory)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, 
+                             num_workers=num_workers, pin_memory=pin_memory)
+    return train_loader, test_loader
 
 
 class SampleDataset():
@@ -26,12 +83,19 @@ class SampleDataset():
 
     Args:
         data_dir: Path to processed_data/users/ directory
+        exclude_paths: Optional path(s) to exclude
     """
-    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10):
+    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10, exclude_paths: [str | list] = None):
         self.dataset = []
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.num_users = 0
+
+        if exclude_paths is None:
+            exclude_paths = []
+        elif isinstance(exclude_paths, str):
+            exclude_paths = [exclude_paths]
+        exclude_paths = [os.path.abspath(os.path.normpath(p)) for p in exclude_paths]
 
         users = []
         if isinstance(data_dir, str):
@@ -44,6 +108,11 @@ class SampleDataset():
         for u in users:
             for i in range(len(u)):
                 profile = u.user_profiles[i]
+                
+                # Check exclude paths
+                if os.path.abspath(os.path.normpath(profile.user_dir)) in exclude_paths:
+                    continue
+                
                 self.num_users += 1
                 samples = []
                 for sampler in profile.data_samplers:
@@ -76,11 +145,12 @@ class SiameseDataset(Dataset):
 
     Args:
         data_dir: Path to processed_data/users/ directory
+        exclude_paths: Optional path(s) to exclude
     """
-    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10):
+    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10, exclude_paths: [str | list] = None):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
-        self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate)
+        self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate, exclude_paths)
         self.num_users = self.sample_dataset.num_users
         self.num_samples = self.sample_dataset.sample_count
         self.samples_per_user = samples_per_user
@@ -119,8 +189,11 @@ class SiameseDataset(Dataset):
 
             # Pre-select matching/non-matching
             is_match = np.random.rand(self.samples_per_user) < 0.5
-            # If is_match is True, select from the same user, otherwise select from a random user
-            r_users = np.where(is_match, u, np.random.randint(0, self.num_users, size=self.samples_per_user))
+            # If is_match is True, select from the same user, otherwise select from a random user (excluding the same user)
+            rng = np.random.default_rng(seed)
+            choices = np.arange(self.num_users)
+            choices = np.delete(choices, u)
+            r_users = np.where(is_match, u, rng.choice(choices))
 
             x2_tensors = []
             for i in range(self.samples_per_user):

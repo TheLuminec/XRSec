@@ -2,47 +2,13 @@
 Training script for XR biometric identification model.
 
 """
-
-import sys
-import os
-
 import torch
-import torch.nn as nn
-import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader, random_split
 from types import SimpleNamespace
 
-sys.path.insert(0, os.path.dirname(__file__))
-from model import Model, SiameseModel
-from dataset import SiameseDataset
-
-
-def plot_training_history(history, save_path="training_history.png"):
-    """Graphs training and testing loss and accuracy over epochs."""
-    epochs = range(1, len(history['train_loss']) + 1)
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-
-    # Loss plot
-    ax1.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
-    ax1.plot(epochs, history['test_loss'], 'r-', label='Test Loss')
-    ax1.set_title('Training and Testing Loss')
-    ax1.set_xlabel('Epochs')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
-
-    # Accuracy plot
-    ax2.plot(epochs, history['train_acc'], 'b-', label='Train Accuracy')
-    ax2.plot(epochs, history['test_acc'], 'r-', label='Test Accuracy')
-    ax2.set_title('Training and Testing Accuracy')
-    ax2.set_xlabel('Epochs')
-    ax2.set_ylabel('Accuracy')
-    ax2.legend()
-
-    plt.tight_layout()
-    plt.savefig(save_path)
-    print(f"Graph saved to {save_path}")
-    plt.close()
+from model import create_model
+from dataset import create_dataloader_from_path
+from eval import evaluate
+from utils import save_checkpoint
 
 def train_epoch(model, loader, criterion, optimizer, device):
     """
@@ -81,125 +47,6 @@ def train_epoch(model, loader, criterion, optimizer, device):
     avg_loss = total_loss / total
     accuracy = correct / total
     return avg_loss, accuracy
-
-
-def evaluate(model, loader, criterion, device):
-    """
-    Evaluate the model.
-    
-    Args:
-        model: Model to evaluate
-        loader: DataLoader for evaluation data
-        criterion: Loss function
-        device: Device to evaluate on
-    """
-    model.eval()
-    total_loss = 0
-    correct = 0
-    total = 0
-
-    with torch.no_grad():
-        for batch_x, batch_y in loader:
-            batch_x1, batch_x2 = batch_x[0].to(device), batch_x[1].to(device)
-            batch_y = batch_y.to(device)
-            output = model(batch_x1, batch_x2)
-            loss = criterion(output, batch_y)
-
-            total_loss += loss.item() * batch_x1.size(0)
-            predicted = (output > -1.0).float()
-            correct += (predicted == batch_y).sum().item()
-            total += batch_y.size(0)
-
-    avg_loss = total_loss / total
-    accuracy = correct / total
-    return avg_loss, accuracy
-
-def load_checkpoint(checkpoint_path):
-    """
-    Load the model checkpoint.
-    
-    Args:
-        checkpoint_path: Path to the checkpoint
-    """
-    checkpoint = torch.load(checkpoint_path)
-    model = Model(
-        embedding_dim=checkpoint['embedding_dim']
-    )
-    siamese_model = SiameseModel(model)
-    siamese_model.load_state_dict(checkpoint['model_state_dict'])
-    return siamese_model
-
-def save_checkpoint(checkpoint_path, model, optimizer, epoch):
-    """
-    Save the model checkpoint.
-    
-    Args:
-        checkpoint_path: Path to save the checkpoint
-        model: Model to save
-        optimizer: Optimizer
-        epoch: Current epoch
-    """
-    checkpoint_dir = os.path.dirname(checkpoint_path)
-    if checkpoint_dir:
-        os.makedirs(checkpoint_dir, exist_ok=True)
-
-    torch.save({
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'epoch': epoch,
-        'embedding_dim': model.feature_extractor.embedding_dim
-    }, checkpoint_path)
-
-def create_dataloader_from_path(train_path, batch_size: int, device: torch.device, sample_time: int = 1, sample_rate: int = 10, test_path=None):
-    """
-    Create DataLoader for training and testing data.
-    
-    Args:
-        train_path: Path to training data
-        batch_size: Batch size
-        device: Device to train on
-        sample_time: Sample time for the dataset
-        sample_rate: Sample rate for the dataset
-        test_path: Path to testing data (if None, split train_dataset into train and test 80% train, 20% test)
-    """
-    train_dataset = SiameseDataset(train_path, sample_time=sample_time, sample_rate=sample_rate)
-    if test_path is None:
-        generator = torch.Generator().manual_seed(42)
-        train_dataset, test_dataset = random_split(
-            train_dataset,
-            [int(len(train_dataset) * 0.8), int(len(train_dataset) * 0.2)],
-            generator=generator
-        )
-    else:
-        test_dataset = SiameseDataset(test_path, sample_time=sample_time, sample_rate=sample_rate)
-
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=device.type == 'cuda')
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, pin_memory=device.type == 'cuda')
-    return train_loader, test_loader
-
-def create_model(embedding_dim=128, input_dim=10, lr=0.001, device="cuda"):
-    """
-    Create the model.
-    
-    Args:
-        embedding_dim: Dimension of the embedding space
-        input_dim: Dimension of the input data
-        lr: Learning rate
-        device: Device to train on
-    """
-    feature_extractor = Model(
-        embedding_dim=embedding_dim,
-        seq_len=input_dim
-    ).to(device)
-    
-    model = SiameseModel(feature_extractor).to(device)
-
-    param_count = sum(p.numel() for p in model.parameters())
-    print(f"Model parameters: {param_count:,}")
-
-    criterion = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    return model, criterion, optimizer
 
 def run_training(epochs, save_path, model, criterion, optimizer, train_loader, test_loader, device):
     """
@@ -263,57 +110,26 @@ def train(args):
 
     train_paths = getattr(args, "data_dirs", getattr(args, "data_dir", None))
     test_paths = getattr(args, "test_dirs", getattr(args, "test_dir", None))
+    exclude_paths = getattr(args, "exclude_paths", getattr(args, "exclude_path", None))
 
     print("Loading dataset...")
     train_loader, test_loader = create_dataloader_from_path(
         train_paths,
         args.batch_size,
         device,
+        is_train=True,
+        test_dir=test_paths if test_paths else None,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
-        test_path=test_paths if test_paths else None,
+        exclude_paths=exclude_paths
     )
 
     model, criterion, optimizer = create_model(
         embedding_dim=args.embedding_dim,
-        input_dim=getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10),
+        seq_len=getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10),
         lr=args.lr,
         device=device,
     )
     
     history = run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
     return history
-
-def main():
-    """
-    Main function to train the model with pre-defined parameters.
-    """
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
-
-    print("Loading dataset...")
-    train_paths = [
-        "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users"
-    ]
-
-    train_loader, test_loader = create_dataloader_from_path(
-        train_paths,
-        2048,
-        device,
-        sample_time=5,
-        sample_rate=10
-    )
-    print("Dataset loaded.")
-    print("Training dataset is VR_User_Behavior_Dataset_(Spherical_Video_Streaming)")
-    
-    model, criterion, optimizer = create_model(
-        embedding_dim=128,
-        input_dim=50,
-        lr=0.001,
-        device=device,
-    )
-    
-    run_training(20, "saved_tests/trained_model.pth", model, criterion, optimizer, train_loader, test_loader, device)
-
-if __name__ == "__main__":
-    main()

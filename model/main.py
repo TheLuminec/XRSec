@@ -18,9 +18,9 @@ from omegaconf import DictConfig, ListConfig
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from train import train, plot_training_history
-from test import evaluate_model
-
+from train import train
+from eval import evaluate_model
+from utils import plot_training_history
 
 def _as_list(value):
     if value is None:

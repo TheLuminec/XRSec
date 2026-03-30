@@ -20,7 +20,30 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv, GraphConv
-from torch_geometric.data import Data, Batch
+
+def create_model(embedding_dim=128, seq_len=10, lr=0.001, device=torch.device):
+    """
+    Create the model.
+    
+    Args:
+        embedding_dim: Dimension of the embedding space
+        seq_len: Length of the input sequence
+        lr: Learning rate
+        device: Device to train on
+    """
+    feature_extractor = Model(
+        embedding_dim=embedding_dim,
+        seq_len=seq_len
+    ).to(device)
+    
+    model = SiameseModel(feature_extractor).to(device)
+
+    param_count = sum(p.numel() for p in model.parameters())
+    print(f"Model parameters: {param_count:,}")
+
+    criterion = nn.BCEWithLogitsLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    return model, criterion, optimizer
 
 
 class SelfAttention(nn.Module):
@@ -243,20 +266,3 @@ class SiameseModel(nn.Module):
         # We return the logit which is the negative distance.
         # This way, sigmoid(-dist) = 1 / (1 + exp(dist)) matches Eq (6)
         return -dist
-
-
-if __name__ == "__main__":
-    # Quick smoke test for Model
-    model = Model(embedding_dim=128)
-    dummy_input = torch.randn(4, 7, 10)   # batch of 4, 7 channels, 10 time steps
-    output = model(dummy_input)
-    print(f"Base Model Output shape: {output.shape}")
-
-    # Quick smoke test for SiameseModel
-    feature_extractor = Model(embedding_dim=128)
-    siamese_model = SiameseModel(feature_extractor)
-    dummy_input2 = torch.randn(4, 7, 10)
-    output_siamese = siamese_model(dummy_input, dummy_input2)
-    print(f"Siamese Output shape:  {output_siamese.shape}")
-    print(f"Siamese probabilities: {torch.sigmoid(output_siamese).squeeze().detach().cpu().numpy()}")
-    print(f"Num params:   {sum(p.numel() for p in siamese_model.parameters()):,}")
