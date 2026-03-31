@@ -74,6 +74,11 @@ def plot_training_history(history, save_path="training_history.png"):
     ax2.legend()
 
     plt.tight_layout()
+    
+    save_dir = os.path.dirname(save_path)
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        
     plt.savefig(save_path)
     print(f"Graph saved to {save_path}")
     plt.close()

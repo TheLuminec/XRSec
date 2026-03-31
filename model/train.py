@@ -110,7 +110,7 @@ def train(args):
 
     train_paths = getattr(args, "data_dirs", getattr(args, "data_dir", None))
     test_paths = getattr(args, "test_dirs", getattr(args, "test_dir", None))
-    exclude_paths = getattr(args, "exclude_paths", getattr(args, "exclude_path", None))
+    exclude_users = getattr(args, "exclude_users", getattr(args, "exclude_user", None))
 
     print("Loading dataset...")
     train_loader, test_loader = create_dataloader_from_path(
@@ -121,7 +121,9 @@ def train(args):
         test_dir=test_paths if test_paths else None,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
-        exclude_paths=exclude_paths
+        exclude_users=exclude_users,
+        swap_data=getattr(args, "swap_data", False),
+        test_on_excluded=getattr(args, "test_on_excluded", False)
     )
 
     model, criterion, optimizer = create_model(

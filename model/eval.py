@@ -94,7 +94,7 @@ def evaluate_model(args, device=None):
     if eval_dirs is None:
         raise ValueError("No evaluation directories were provided. Set test_dirs or data_dirs.")
         
-    exclude_paths = getattr(args, "exclude_paths", getattr(args, "exclude_path", None))
+    exclude_users = getattr(args, "exclude_users", getattr(args, "exclude_user", None))
     test_loader = create_dataloader_from_path(
         eval_dirs, 
         args.batch_size, 
@@ -102,7 +102,9 @@ def evaluate_model(args, device=None):
         is_train=False,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
-        exclude_paths=exclude_paths
+        exclude_users=exclude_users,
+        swap_data=getattr(args, "swap_data", False),
+        test_on_excluded=getattr(args, "test_on_excluded", False)
     )
     test_size = len(test_loader.dataset)
 

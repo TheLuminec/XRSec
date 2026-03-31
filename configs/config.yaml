@@ -14,7 +14,14 @@ sample_rate: 10
 data_dirs:
   - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users
 test_dirs: []
-exclude_paths: []
+exclude_users: 
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/1
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/2
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/3
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/4
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/5
+swap_data: false
+test_on_excluded: true
 
 # Naming convention settings (Milestone A)
 experiment_name: xrsec
@@ -23,7 +30,7 @@ experiment_name: xrsec
 save_path: auto
 model_path: auto
 
-graph: false
+graph: true
 graph_path: auto
 
 hydra:

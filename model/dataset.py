@@ -28,7 +28,9 @@ def create_dataloader_from_path(
     sample_rate: int = 10,
     val_split: float = 0.2,
     num_workers: int = 0,
-    exclude_paths=None
+    exclude_users=None,
+    swap_data = False,
+    test_on_excluded: bool = False
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -43,8 +45,9 @@ def create_dataloader_from_path(
         sample_rate: Sample rate for dataset
         val_split: Fraction of dataset to use for validation split if test_dir is None
         num_workers: Number of DataLoader workers
-        exclude_paths: Path(s) to exclude from data loading
-        
+        exclude_users: User paths to exclude from data loading
+        swap_data: Whether to swap what is included and excluded
+        test_on_excluded: If true, uses the excluded paths for the testing dataset instead of doing a random split
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
@@ -52,23 +55,28 @@ def create_dataloader_from_path(
     pin_memory = device.type == 'cuda' if device else False
 
     if not is_train:
-        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+        eval_swap_data = not swap_data if test_on_excluded else swap_data
+        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=eval_swap_data)
         test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                                  num_workers=num_workers, pin_memory=pin_memory)
         return test_loader
 
-    train_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+    train_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=swap_data)
     if test_dir is None:
-        generator = torch.Generator().manual_seed(42)
-        test_size = int(len(train_dataset) * val_split)
-        train_size = len(train_dataset) - test_size
-        train_dataset, test_dataset = random_split(
-            train_dataset,
-            [train_size, test_size],
-            generator=generator
-        )
+        if test_on_excluded:
+            test_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=not swap_data)
+        else:
+            generator = torch.Generator().manual_seed(42)
+            test_size = int(len(train_dataset) * val_split)
+            train_size = len(train_dataset) - test_size
+            train_dataset, test_dataset = random_split(
+                train_dataset,
+                [train_size, test_size],
+                generator=generator
+            )
     else:
-        test_dataset = SiameseDataset(test_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_paths=exclude_paths)
+        test_swap_data = not swap_data if test_on_excluded else swap_data
+        test_dataset = SiameseDataset(test_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=test_swap_data)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, 
                               num_workers=num_workers, pin_memory=pin_memory)
@@ -83,19 +91,20 @@ class SampleDataset():
 
     Args:
         data_dir: Path to processed_data/users/ directory
-        exclude_paths: Optional path(s) to exclude
+        exclude_users: Optional path(s) to exclude
+        swap_data: Whether to swap what is included and excluded
     """
-    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10, exclude_paths: [str | list] = None):
+    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10, exclude_users: [str | list] = None, swap_data = False):
         self.dataset = []
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.num_users = 0
+        self.swap_data = swap_data
 
-        if exclude_paths is None:
-            exclude_paths = []
-        elif isinstance(exclude_paths, str):
-            exclude_paths = [exclude_paths]
-        exclude_paths = [os.path.abspath(os.path.normpath(p)) for p in exclude_paths]
+        if exclude_users is None:
+            exclude_users = []
+        elif isinstance(exclude_users, str):
+            exclude_users = [exclude_users]
 
         users = []
         if isinstance(data_dir, str):
@@ -105,16 +114,22 @@ class SampleDataset():
                 users.append(Users(d, sample_time, sample_rate))
 
         self.sample_count = 0
+        # User directories
         for u in users:
-            for i in range(len(u)):
-                profile = u.user_profiles[i]
-                
-                # Check exclude paths
-                if os.path.abspath(os.path.normpath(profile.user_dir)) in exclude_paths:
-                    continue
+            # User profiles
+            for profile in u.user_profiles:
+                # Check exclude users
+
+                if self.swap_data:
+                    if profile.user_dir not in exclude_users:
+                        continue
+                else:
+                    if profile.user_dir in exclude_users:
+                        continue
                 
                 self.num_users += 1
                 samples = []
+                # Data samplers
                 for sampler in profile.data_samplers:
                     if sampler.sample_count == 0:
                         continue
@@ -145,12 +160,12 @@ class SiameseDataset(Dataset):
 
     Args:
         data_dir: Path to processed_data/users/ directory
-        exclude_paths: Optional path(s) to exclude
+        exclude_users: Optional path(s) to exclude
     """
-    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10, exclude_paths: [str | list] = None):
+    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10, exclude_users: [str | list] = None, swap_data = False):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
-        self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate, exclude_paths)
+        self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate, exclude_users, swap_data)
         self.num_users = self.sample_dataset.num_users
         self.num_samples = self.sample_dataset.sample_count
         self.samples_per_user = samples_per_user
@@ -163,6 +178,7 @@ class SiameseDataset(Dataset):
         self._generate_dataset()
 
         print(f"Created {self.siamese_count} siamese samples")
+        del self.sample_dataset
 
     def _generate_dataset(self, seed = 67):
         """

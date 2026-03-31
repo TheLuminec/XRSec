@@ -9,14 +9,11 @@ Usage examples:
 
 import os
 import re
-import sys
 from pathlib import Path
 
 import hydra
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig, ListConfig
-
-sys.path.insert(0, os.path.dirname(__file__))
 
 from train import train
 from eval import evaluate_model
@@ -47,6 +44,7 @@ def _normalize_paths(cfg: DictConfig) -> None:
     """Convert configured filesystem paths to absolute paths for Hydra run dirs."""
     cfg.data_dirs = [to_absolute_path(p) for p in _as_list(cfg.data_dirs)]
     cfg.test_dirs = [to_absolute_path(p) for p in _as_list(cfg.test_dirs)]
+    cfg.exclude_users = [to_absolute_path(p) for p in _as_list(cfg.exclude_users)]
 
 
 def _standardize_artifact_paths(cfg: DictConfig) -> None:
