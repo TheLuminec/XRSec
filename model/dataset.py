@@ -10,7 +10,6 @@ Each sample is a (7, 10) tensor representing one second of data:
     - Time column (col 0) is stripped
 """
 
-import os
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
@@ -29,12 +28,12 @@ def create_dataloader_from_path(
     val_split: float = 0.2,
     num_workers: int = 0,
     exclude_users=None,
-    swap_data = False,
+    swap_data=False,
     test_on_excluded: bool = False
 ):
     """
     Create DataLoader(s) from dataset paths.
-    
+
     Args:
         data_dir: Path(s) to data. Training dataset if is_train=True, else evaluation dataset.
         batch_size: Batch size
@@ -56,15 +55,18 @@ def create_dataloader_from_path(
 
     if not is_train:
         eval_swap_data = not swap_data if test_on_excluded else swap_data
-        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=eval_swap_data)
+        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate,
+                                 exclude_users=exclude_users, swap_data=eval_swap_data)
         test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                                  num_workers=num_workers, pin_memory=pin_memory)
         return test_loader
 
-    train_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=swap_data)
+    train_dataset = SiameseDataset(data_dir, sample_time=sample_time,
+                                   sample_rate=sample_rate, exclude_users=exclude_users, swap_data=swap_data)
     if test_dir is None:
         if test_on_excluded:
-            test_dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=not swap_data)
+            test_dataset = SiameseDataset(
+                data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=not swap_data)
         else:
             generator = torch.Generator().manual_seed(42)
             test_size = int(len(train_dataset) * val_split)
@@ -76,11 +78,12 @@ def create_dataloader_from_path(
             )
     else:
         test_swap_data = not swap_data if test_on_excluded else swap_data
-        test_dataset = SiameseDataset(test_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=test_swap_data)
+        test_dataset = SiameseDataset(test_dir, sample_time=sample_time,
+                                      sample_rate=sample_rate, exclude_users=exclude_users, swap_data=test_swap_data)
 
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, 
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,
                               num_workers=num_workers, pin_memory=pin_memory)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, 
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
                              num_workers=num_workers, pin_memory=pin_memory)
     return train_loader, test_loader
 
@@ -94,7 +97,8 @@ class SampleDataset():
         exclude_users: Optional path(s) to exclude
         swap_data: Whether to swap what is included and excluded
     """
-    def __init__(self, data_dir: [str | list], sample_time = 1, sample_rate=10, exclude_users: [str | list] = None, swap_data = False):
+
+    def __init__(self, data_dir: [str | list], sample_time=1, sample_rate=10, exclude_users: [str | list] = None, swap_data=False):
         self.dataset = []
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -126,7 +130,7 @@ class SampleDataset():
                 else:
                     if profile.user_dir in exclude_users:
                         continue
-                
+
                 self.num_users += 1
                 samples = []
                 # Data samplers
@@ -134,18 +138,23 @@ class SampleDataset():
                     if sampler.sample_count == 0:
                         continue
                     all_samples = sampler.get_all_samples()  # (num_windows, 10, 8)
-                    for sample in all_samples:  
-                        features = sample[:, 1:].astype(np.float32)      # (10, 7) - strip time col
-                        M = features.T                                   # (7, 10)
+                    for sample in all_samples:
+                        features = sample[:, 1:].astype(
+                            np.float32)      # (10, 7) - strip time col
+                        # (7, 10)
+                        M = features.T
                         samples.append(M)
                         self.sample_count += 1
-                        
-                if samples:
-                    self.dataset.append(torch.tensor(np.array(samples), dtype=torch.float32))
-                else:
-                    self.dataset.append(torch.empty((0, 7, 10), dtype=torch.float32))
 
-        print(f"Loaded {self.sample_count} samples from {self.num_users} users")
+                if samples:
+                    self.dataset.append(torch.tensor(
+                        np.array(samples), dtype=torch.float32))
+                else:
+                    self.dataset.append(torch.empty(
+                        (0, 7, 10), dtype=torch.float32))
+
+        print(
+            f"Loaded {self.sample_count} samples from {self.num_users} users")
 
     def __len__(self):
         return self.num_users
@@ -162,10 +171,12 @@ class SiameseDataset(Dataset):
         data_dir: Path to processed_data/users/ directory
         exclude_users: Optional path(s) to exclude
     """
-    def __init__(self, data_dir: [str | list], samples_per_user = 10000, sample_time = 1, sample_rate=10, exclude_users: [str | list] = None, swap_data = False):
+
+    def __init__(self, data_dir: [str | list], samples_per_user=10000, sample_time=1, sample_rate=10, exclude_users: [str | list] = None, swap_data=False):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
-        self.sample_dataset = SampleDataset(data_dir, sample_time, sample_rate, exclude_users, swap_data)
+        self.sample_dataset = SampleDataset(
+            data_dir, sample_time, sample_rate, exclude_users, swap_data)
         self.num_users = self.sample_dataset.num_users
         self.num_samples = self.sample_dataset.sample_count
         self.samples_per_user = samples_per_user
@@ -180,7 +191,7 @@ class SiameseDataset(Dataset):
         print(f"Created {self.siamese_count} siamese samples")
         del self.sample_dataset
 
-    def _generate_dataset(self, seed = 67):
+    def _generate_dataset(self, seed=67):
         """
         Generate siamese dataset.
         To do this we need to select self.samples_per_user samples from each user.
@@ -189,7 +200,7 @@ class SiameseDataset(Dataset):
         If the random user has no samples, select from the same user. (Giving slight preference to matching samples)
         """
         np.random.seed(seed)
-        
+
         x1_list = []
         x2_list = []
         y_list = []
@@ -209,26 +220,30 @@ class SiameseDataset(Dataset):
             rng = np.random.default_rng(seed)
             choices = np.arange(self.num_users)
             choices = np.delete(choices, u)
-            r_users = np.where(is_match, u, rng.choice(choices))
+            r_users = np.where(is_match, u, rng.choice(choices, size=self.samples_per_user))
 
             x2_tensors = []
             for i in range(self.samples_per_user):
                 r = r_users[i]
                 n_r = len(self.sample_dataset[r])
                 # If the random user has no samples, select from the same user
-                y = np.random.randint(0, n_r) if n_r > 0 else 0
+                if n_r == 0:
+                    r = u
+                    n_r = len(self.sample_dataset[r])
+                y = np.random.randint(0, n_r)
                 x2_tensors.append(self.sample_dataset[r][y])
-            
+
             x2_list.append(torch.stack(x2_tensors))
-            y_list.append(torch.tensor(is_match, dtype=torch.float32).unsqueeze(1))
+            y_list.append(torch.tensor(
+                is_match, dtype=torch.float32).unsqueeze(1))
 
         self.x1 = torch.cat(x1_list, dim=0)
         self.x2 = torch.cat(x2_list, dim=0)
         self.y = torch.cat(y_list, dim=0)
+        self.siamese_count = self.x1.shape[0]
 
     def __len__(self):
         return self.siamese_count
 
     def __getitem__(self, idx):
         return (self.x1[idx], self.x2[idx]), self.y[idx]
-

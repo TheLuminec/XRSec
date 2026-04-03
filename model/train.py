@@ -10,10 +10,11 @@ from dataset import create_dataloader_from_path
 from eval import evaluate
 from utils import save_checkpoint
 
+
 def train_epoch(model, loader, criterion, optimizer, device):
     """
     Train the model for one epoch.
-    
+
     Args:
         model: Model to train
         loader: DataLoader for training data
@@ -37,7 +38,7 @@ def train_epoch(model, loader, criterion, optimizer, device):
         optimizer.step()
 
         total_loss += loss.item() * batch_x1.size(0)
-        
+
         # Binary prediction accuracy threshold: exp(output) > 25% corresponds to output > -1.09
         # Assuming output > -1.0 corresponding to ~distance < 1.0
         predicted = (output > -1.0).float()
@@ -48,10 +49,11 @@ def train_epoch(model, loader, criterion, optimizer, device):
     accuracy = correct / total
     return avg_loss, accuracy
 
+
 def run_training(epochs, save_path, model, criterion, optimizer, train_loader, test_loader, device):
     """
     Run the training process.
-    
+
     Args:
         epochs: Number of epochs to train
         save_path: Path to save the trained model
@@ -66,32 +68,36 @@ def run_training(epochs, save_path, model, criterion, optimizer, train_loader, t
     print("-" * 64)
 
     best_test_acc = 0.0
-    history = {'train_loss': [], 'train_acc': [], 'test_loss': [], 'test_acc': []}
+    history = {'train_loss': [], 'train_acc': [],
+               'test_loss': [], 'test_acc': []}
 
     for epoch in range(1, epochs + 1):
-        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
+        train_loss, train_acc = train_epoch(
+            model, train_loader, criterion, optimizer, device)
         test_loss, test_acc = evaluate(model, test_loader, criterion, device)
-        
+
         history['train_loss'].append(train_loss)
         history['train_acc'].append(train_acc)
         history['test_loss'].append(test_loss)
         history['test_acc'].append(test_acc)
 
-        print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | {test_acc:7.2%}")
+        print(
+            f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | {test_acc:7.2%}")
 
         if test_acc > best_test_acc:
             best_test_acc = test_acc
             save_checkpoint(save_path, model, optimizer, epoch)
-            
+
     print(f"\nBest test accuracy: {best_test_acc:.2%}")
     print(f"Model saved to: {save_path}")
-    
+
     return history
+
 
 def train(args):
     """
     Train the model.
-    
+
     Args:
         args: Arguments for training:
             data_dir: Path to training data
@@ -110,7 +116,8 @@ def train(args):
 
     train_paths = getattr(args, "data_dirs", getattr(args, "data_dir", None))
     test_paths = getattr(args, "test_dirs", getattr(args, "test_dir", None))
-    exclude_users = getattr(args, "exclude_users", getattr(args, "exclude_user", None))
+    exclude_users = getattr(args, "exclude_users",
+                            getattr(args, "exclude_user", None))
 
     print("Loading dataset...")
     train_loader, test_loader = create_dataloader_from_path(
@@ -128,10 +135,12 @@ def train(args):
 
     model, criterion, optimizer = create_model(
         embedding_dim=args.embedding_dim,
-        seq_len=getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10),
+        seq_len=getattr(args, "sample_time", 1) *
+        getattr(args, "sample_rate", 10),
         lr=args.lr,
         device=device,
     )
-    
-    history = run_training(args.epochs, args.save_path, model, criterion, optimizer, train_loader, test_loader, device)
+
+    history = run_training(args.epochs, args.save_path, model,
+                           criterion, optimizer, train_loader, test_loader, device)
     return history

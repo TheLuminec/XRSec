@@ -59,7 +59,8 @@ def validate_dataset(data_dir):
                     return False
             
             # Check Hertz
-            if len(df) / df["SessionTime"].iloc[-1] < 10:
+            duration = df["SessionTime"].iloc[-1] - df["SessionTime"].iloc[0]
+            if duration == 0 or len(df) / duration < 10:
                 print(f"Low Hertz in {session_path}")
                 return False
     

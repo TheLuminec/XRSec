@@ -4,10 +4,11 @@ import os
 import matplotlib.pyplot as plt
 from model import Model, SiameseModel
 
+
 def load_checkpoint(checkpoint_path, device):
     """
     Load the model checkpoint.
-    
+
     Args:
         checkpoint_path: Path to the checkpoint
         device: Device to load the model on
@@ -26,14 +27,16 @@ def load_checkpoint(checkpoint_path, device):
     ).to(device)
     model = SiameseModel(feature_extractor).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
-    
-    print(f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    print(
+        f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
     return model
+
 
 def save_checkpoint(checkpoint_path, model, optimizer, epoch):
     """
     Save the model checkpoint.
-    
+
     Args:
         checkpoint_path: Path to save the checkpoint
         model: Model to save
@@ -50,6 +53,7 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         'epoch': epoch,
         'embedding_dim': model.feature_extractor.embedding_dim
     }, checkpoint_path)
+
 
 def plot_training_history(history, save_path="training_history.png"):
     """Graphs training and testing loss and accuracy over epochs."""
@@ -74,11 +78,11 @@ def plot_training_history(history, save_path="training_history.png"):
     ax2.legend()
 
     plt.tight_layout()
-    
+
     save_dir = os.path.dirname(save_path)
     if save_dir:
         os.makedirs(save_dir, exist_ok=True)
-        
+
     plt.savefig(save_path)
     print(f"Graph saved to {save_path}")
     plt.close()

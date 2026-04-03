@@ -6,8 +6,8 @@ defaults:
 seed: 42
 batch_size: 2048
 embedding_dim: 128
-sample_time: 1
-sample_rate: 10
+sample_time: 2
+sample_rate: 20
 
 # Support one or many dataset roots.
 # Each entry should point to a processed_data/users directory.

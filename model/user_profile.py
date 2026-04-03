@@ -10,8 +10,10 @@ import numpy as np
 import os
 import pandas as pd
 
+
 class UserProfile:
     """Holds a collection of data samplers for a specific user ID."""
+
     def __init__(self, user_dir: str, sample_time: int = 1, sample_rate: int = 10):
         self.user_dir = user_dir
         self.data_samplers = []
@@ -35,12 +37,11 @@ class UserProfile:
                             'UnitQuaternion.x', 'UnitQuaternion.y', 'UnitQuaternion.z', 'UnitQuaternion.w',
                             'HmdPosition.x', 'HmdPosition.y', 'HmdPosition.z']])
 
-        self.data_samplers.append(Sampler(data, self.sample_time, self.sample_rate))
+        self.data_samplers.append(
+            Sampler(data, self.sample_time, self.sample_rate))
 
 
 if __name__ == "__main__":
     PATH = "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/1/"
     user_profile = UserProfile(PATH)
     print(user_profile.data_samplers[0].get_sample(0))
-    
-

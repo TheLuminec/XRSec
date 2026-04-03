@@ -62,14 +62,18 @@ class Sampler:
         return closest_index
 
     def _get_sample_slice(self, current_index: int, last_range_end: int = 0) -> tuple[np.ndarray, int]:
-        """Extracts a 1-second window of data containing `sample_rate` uniformly spaced samples."""
-        result = np.zeros((self.sample_rate * self.sample_time, self.data.shape[1]))
+        """Extracts a 'sample_time'-second window of data containing 'sample_rate' uniformly spaced samples."""
+        result = np.zeros(
+            (self.sample_rate * self.sample_time, self.data.shape[1]))
         end_range = int(self.avg_hertz * 2)
         for i in range(self.sample_rate * self.sample_time):
-            current_time = self.time_start + current_index + (i / self.sample_rate)
-            data_index = self._get_data_point_closest_to_time(current_time, last_range_end, last_range_end + end_range)
+            current_time = self.time_start + \
+                (current_index * self.sample_time) + (i / self.sample_rate)
+            data_index = self._get_data_point_closest_to_time(
+                current_time, last_range_end, last_range_end + end_range)
             if self.index_randomness > 0:
-                data_index += random.randint(-self.index_randomness, self.index_randomness)
+                data_index += random.randint(-self.index_randomness,
+                                             self.index_randomness)
             data_index = max(0, min(self.data_len - 1, data_index))
             result[i] = self.data[data_index]
             last_range_end = data_index
@@ -79,10 +83,12 @@ class Sampler:
         """
         Pre-computes and caches all fixed-rate data slices from the raw timeline.
         """
-        self.samples = np.zeros((self.sample_count, self.sample_rate * self.sample_time, self.data.shape[1]))
+        self.samples = np.zeros(
+            (self.sample_count, self.sample_rate * self.sample_time, self.data.shape[1]))
         last_range_end = 0
         for i in range(self.sample_count):
-            self.samples[i], last_range_end = self._get_sample_slice(i, last_range_end)
+            self.samples[i], last_range_end = self._get_sample_slice(
+                i, last_range_end)
 
     def get_sample(self, index: int) -> np.ndarray:
         if index < 0 or index >= self.sample_count:

@@ -7,7 +7,6 @@ Usage examples:
     python model/main.py mode=test test_dirs=[/abs/path/users_eval]
 """
 
-import os
 import re
 from pathlib import Path
 
