@@ -5,13 +5,14 @@ import matplotlib.pyplot as plt
 from model import Model, SiameseModel
 
 
-def load_checkpoint(checkpoint_path, device):
+def load_checkpoint(checkpoint_path, device, seq_len=10):
     """
     Load the model checkpoint.
 
     Args:
         checkpoint_path: Path to the checkpoint
         device: Device to load the model on
+        seq_len: Sequence length parameter (fallback for old models)
     """
     if not os.path.exists(checkpoint_path):
         print(f"ERROR: checkpoint not found at '{checkpoint_path}'")
@@ -22,8 +23,10 @@ def load_checkpoint(checkpoint_path, device):
 
     # Initialize model using checkpoint params before touching the dataset
     embedding_dim = checkpoint.get('embedding_dim', 128)
+    seq_len = checkpoint.get('seq_len', seq_len)
     feature_extractor = Model(
-        embedding_dim=embedding_dim
+        embedding_dim=embedding_dim,
+        seq_len=seq_len
     ).to(device)
     model = SiameseModel(feature_extractor).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -51,7 +54,8 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch,
-        'embedding_dim': model.feature_extractor.embedding_dim
+        'embedding_dim': model.feature_extractor.embedding_dim,
+        'seq_len': model.feature_extractor.seq_len
     }, checkpoint_path)
 
 

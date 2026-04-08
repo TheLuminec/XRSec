@@ -128,6 +128,7 @@ def train(args):
         test_dir=test_paths if test_paths else None,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
+        samples_per_user=getattr(args, "samples_per_user", 1000),
         exclude_users=exclude_users,
         swap_data=getattr(args, "swap_data", False),
         test_on_excluded=getattr(args, "test_on_excluded", False)

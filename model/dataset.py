@@ -25,6 +25,7 @@ def create_dataloader_from_path(
     test_dir=None,
     sample_time: int = 1,
     sample_rate: int = 10,
+    samples_per_user: int = 1000,
     val_split: float = 0.2,
     num_workers: int = 0,
     exclude_users=None,
@@ -42,6 +43,7 @@ def create_dataloader_from_path(
         test_dir: Optional path to testing data for training. If None and is_train is True, data_dir is split.
         sample_time: Sample time for dataset
         sample_rate: Sample rate for dataset
+        samples_per_user: Number of samples to generate per user for the SiameseDataset (only applies if is_train is True)
         val_split: Fraction of dataset to use for validation split if test_dir is None
         num_workers: Number of DataLoader workers
         exclude_users: User paths to exclude from data loading
@@ -55,18 +57,18 @@ def create_dataloader_from_path(
 
     if not is_train:
         eval_swap_data = not swap_data if test_on_excluded else swap_data
-        dataset = SiameseDataset(data_dir, sample_time=sample_time, sample_rate=sample_rate,
+        dataset = SiameseDataset(data_dir, samples_per_user=samples_per_user, sample_time=sample_time, sample_rate=sample_rate,
                                  exclude_users=exclude_users, swap_data=eval_swap_data)
         test_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False,
                                  num_workers=num_workers, pin_memory=pin_memory)
         return test_loader
 
-    train_dataset = SiameseDataset(data_dir, sample_time=sample_time,
+    train_dataset = SiameseDataset(data_dir, samples_per_user=samples_per_user, sample_time=sample_time,
                                    sample_rate=sample_rate, exclude_users=exclude_users, swap_data=swap_data)
     if test_dir is None:
         if test_on_excluded:
             test_dataset = SiameseDataset(
-                data_dir, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=not swap_data)
+                data_dir, samples_per_user=samples_per_user, sample_time=sample_time, sample_rate=sample_rate, exclude_users=exclude_users, swap_data=not swap_data)
         else:
             generator = torch.Generator().manual_seed(42)
             test_size = int(len(train_dataset) * val_split)
@@ -78,7 +80,7 @@ def create_dataloader_from_path(
             )
     else:
         test_swap_data = not swap_data if test_on_excluded else swap_data
-        test_dataset = SiameseDataset(test_dir, sample_time=sample_time,
+        test_dataset = SiameseDataset(test_dir, samples_per_user=samples_per_user, sample_time=sample_time,
                                       sample_rate=sample_rate, exclude_users=exclude_users, swap_data=test_swap_data)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True,

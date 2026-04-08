@@ -88,7 +88,8 @@ def evaluate_model(args, device=None):
 
     print(f"Using device: {device}")
 
-    model = load_checkpoint(args.model_path, device)
+    seq_len = getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10)
+    model = load_checkpoint(args.model_path, device, seq_len)
     
     eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None) or getattr(args, "data_dir", None)
     if eval_dirs is None:

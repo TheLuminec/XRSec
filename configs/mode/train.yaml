@@ -1,5 +1,0 @@
-# @package _global_
-mode: train
-
-epochs: 20
-lr: 0.001
