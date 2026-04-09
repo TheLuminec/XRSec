@@ -1,7 +1,9 @@
-import sys
-import torch
 import os
+import sys
+
 import matplotlib.pyplot as plt
+import torch
+
 from model import Model, SiameseModel
 
 
@@ -36,7 +38,7 @@ def load_checkpoint(checkpoint_path, device, seq_len=10):
     return model
 
 
-def save_checkpoint(checkpoint_path, model, optimizer, epoch):
+def save_checkpoint(checkpoint_path, model, optimizer, epoch, extra=None):
     """
     Save the model checkpoint.
 
@@ -45,18 +47,23 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch):
         model: Model to save
         optimizer: Optimizer
         epoch: Current epoch
+        extra: Optional metadata to persist alongside the checkpoint
     """
     checkpoint_dir = os.path.dirname(checkpoint_path)
     if checkpoint_dir:
         os.makedirs(checkpoint_dir, exist_ok=True)
 
-    torch.save({
+    checkpoint = {
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch,
         'embedding_dim': model.feature_extractor.embedding_dim,
-        'seq_len': model.feature_extractor.seq_len
-    }, checkpoint_path)
+        'seq_len': model.feature_extractor.seq_len,
+    }
+    if extra:
+        checkpoint.update(extra)
+
+    torch.save(checkpoint, checkpoint_path)
 
 
 def plot_training_history(history, save_path="training_history.png"):

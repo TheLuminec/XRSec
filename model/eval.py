@@ -103,9 +103,11 @@ def evaluate_model(args, device=None):
         is_train=False,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
+        num_workers=getattr(args, "num_workers", 0),
         exclude_users=exclude_users,
         swap_data=getattr(args, "swap_data", False),
-        test_on_excluded=getattr(args, "test_on_excluded", False)
+        test_on_excluded=getattr(args, "test_on_excluded", False),
+        seed=getattr(args, "seed", 67),
     )
     test_size = len(test_loader.dataset)
 

@@ -1,8 +1,10 @@
 import pathlib
 import sys
 
-from model import sampler
-from model.dataset import SampleDataset, SiameseDataset
+import torch
+
+import sampler
+from dataset import SampleDataset, SiameseDataset, build_sample_index, generate_pair_manifest
 
 
 FIXTURE_USERS_DIR = pathlib.Path(__file__).resolve().parents[1] / 'fixtures' / 'users'
@@ -30,3 +32,26 @@ def test_siamese_dataset_getitem_returns_pair_and_label(monkeypatch):
     assert y.ndim == 1
     assert x1.shape == (7, 10)
     assert x2.shape == (7, 10)
+
+
+def test_generate_pair_manifest_is_deterministic(monkeypatch):
+    monkeypatch.setattr(sampler.random, 'randint', lambda a, b: 0)
+
+    sample_index = build_sample_index(str(FIXTURE_USERS_DIR), sample_time=1, sample_rate=10)
+    manifest_a = generate_pair_manifest(sample_index, pairs_per_user=3, match_ratio=0.5, seed=17)
+    manifest_b = generate_pair_manifest(sample_index, pairs_per_user=3, match_ratio=0.5, seed=17)
+
+    for key in manifest_a:
+        assert torch.equal(manifest_a[key], manifest_b[key])
+
+
+def test_generate_pair_manifest_changes_with_seed(monkeypatch):
+    monkeypatch.setattr(sampler.random, 'randint', lambda a, b: 0)
+
+    sample_index = build_sample_index(str(FIXTURE_USERS_DIR), sample_time=1, sample_rate=10)
+    manifest_a = generate_pair_manifest(sample_index, pairs_per_user=3, match_ratio=0.5, seed=17)
+    manifest_b = generate_pair_manifest(sample_index, pairs_per_user=3, match_ratio=0.5, seed=18)
+
+    assert not torch.equal(manifest_a["x1_indices"], manifest_b["x1_indices"]) or not torch.equal(
+        manifest_a["x2_indices"], manifest_b["x2_indices"]
+    )

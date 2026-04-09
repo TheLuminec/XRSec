@@ -4,6 +4,7 @@ seed: 67
 epochs: 2
 lr: 0.001
 batch_size: 2048
+num_workers: 0
 embedding_dim: 128
 sample_time: 2
 sample_rate: 20
@@ -36,6 +37,17 @@ model_path: auto
 
 graph: true
 graph_path: auto
+
+boosting:
+  enabled: true
+  rounds: 10
+  round_epochs: 30
+  hard_fraction: 0.6
+  refresh_fraction: 0.4
+  candidate_pairs_per_user: 1500
+  match_ratio: 0.5
+  artifact_root: boosting
+  resume: none
 
 hydra:
   run:

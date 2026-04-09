@@ -83,10 +83,12 @@ def main(cfg: DictConfig) -> None:
 
     if cfg.mode == "train":
         print("=== Starting Training Mode ===")
-        history = train(cfg)
-        if cfg.graph:
+        result = train(cfg)
+        if cfg.graph and isinstance(result, dict) and "train_loss" in result and "test_loss" in result:
             print("Generating training graph...")
-            plot_training_history(history, save_path=cfg.graph_path)
+            plot_training_history(result, save_path=cfg.graph_path)
+        elif cfg.graph and getattr(cfg, "boosting", None) and cfg.boosting.enabled:
+            print("Skipping training graph generation for boosted mode.")
 
     elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")

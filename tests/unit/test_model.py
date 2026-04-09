@@ -1,6 +1,6 @@
 import torch
 
-from model.model import Model, SiameseModel
+from model import Model, SiameseModel
 
 
 def test_model_forward_output_shape():
