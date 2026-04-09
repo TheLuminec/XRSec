@@ -20,7 +20,31 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch_geometric.nn import GATConv, GraphConv
-from torch_geometric.data import Data, Batch
+
+
+def create_model(embedding_dim=128, seq_len=10, lr=0.001, device=None):
+    """
+    Create the model.
+
+    Args:
+        embedding_dim: Dimension of the embedding space
+        seq_len: Length of the input sequence
+        lr: Learning rate
+        device: Device to train on
+    """
+    feature_extractor = Model(
+        embedding_dim=embedding_dim,
+        seq_len=seq_len
+    ).to(device)
+
+    model = SiameseModel(feature_extractor).to(device)
+
+    param_count = sum(p.numel() for p in model.parameters())
+    print(f"Model parameters: {param_count:,}")
+
+    criterion = nn.BCEWithLogitsLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    return model, criterion, optimizer
 
 
 class SelfAttention(nn.Module):
@@ -30,21 +54,23 @@ class SelfAttention(nn.Module):
         a  = softmax(Q * O^T)
         Oa = a * O
     """
+
     def __init__(self, hidden_size):
         super().__init__()
         self.Wa = nn.Linear(hidden_size, hidden_size)
 
-    def forward(self, O):
+    def forward(self, out_seq):
         """
         Args:
-            O: (batch, seq_len, hidden_size) - BiLSTM output
+            out_seq: (batch, seq_len, hidden_size) - BiLSTM output
         Returns:
             Oa: (batch, seq_len, hidden_size) - attention-weighted output
         """
-        Q = torch.tanh(self.Wa(O))                          # Eq 1
-        scores = torch.bmm(Q, O.transpose(1, 2))            # Eq 2 (pre-softmax)
+        Q = torch.tanh(self.Wa(out_seq))                          # Eq 1
+        scores = torch.bmm(Q, out_seq.transpose(
+            1, 2))            # Eq 2 (pre-softmax)
         a = F.softmax(scores, dim=-1)                        # Eq 2
-        Oa = torch.bmm(a, O)                                # Eq 3
+        Oa = torch.bmm(a, out_seq)                                # Eq 3
         return Oa
 
 
@@ -65,6 +91,7 @@ class Model(nn.Module):
         gat_heads:    Number of attention heads in GATConv
         embedding_dim: Dimension of the embedding space
     """
+
     def __init__(self, seq_len=10, num_channels=7,
                  gnn_hidden=32, lstm_hidden=64, gat_heads=4, embedding_dim=128):
         super().__init__()
@@ -81,8 +108,10 @@ class Model(nn.Module):
 
         # --- Ga: Graph Attention Network (concatenation aggregation) ---
         # GATConv with multi-head attention, concat=True concatenates head outputs
-        self.ga_conv1 = GATConv(seq_len, gnn_hidden, heads=gat_heads, concat=True)
-        self.ga_conv2 = GATConv(gnn_hidden * gat_heads, seq_len, heads=1, concat=False)
+        self.ga_conv1 = GATConv(seq_len, gnn_hidden,
+                                heads=gat_heads, concat=True)
+        self.ga_conv2 = GATConv(gnn_hidden * gat_heads,
+                                seq_len, heads=1, concat=False)
 
         # --- Gp: GNN with sum aggregation ---
         self.gp_conv1 = GraphConv(seq_len, gnn_hidden, aggr='add')
@@ -151,15 +180,17 @@ class Model(nn.Module):
 
         # Dynamically constructing PyG data objects in the forward pass causes massive CPU bottleneck.
         # Since all graphs have the identical structure, we construct the batched edge_index manually:
-        if not hasattr(self, '_cached_batch_size') or self._cached_batch_size != batch_size:
+        if not hasattr(self, '_cached_batch_size') or self._cached_batch_size != batch_size or self._cached_edge_index.device != device:
             # Create offset tensor: (batch_size, 1, 1)
-            offsets = (torch.arange(batch_size, device=device) * self.num_nodes).view(-1, 1, 1)
-            
+            offsets = (torch.arange(batch_size, device=device)
+                       * self.num_nodes).view(-1, 1, 1)
+
             # self.edge_index is (2, E). We tile it across the batch and add offsets
             batched_edge_index = self.edge_index.unsqueeze(0) + offsets
-            
+
             # Reshape from (batch_size, 2, E) to (2, batch_size * E)
-            self._cached_edge_index = batched_edge_index.transpose(0, 1).reshape(2, -1)
+            self._cached_edge_index = batched_edge_index.transpose(
+                0, 1).reshape(2, -1)
             self._cached_batch_size = batch_size
 
         edge_index = self._cached_edge_index
@@ -185,9 +216,11 @@ class Model(nn.Module):
         """
         # === GNN Data Aggregation (§3.1.2) ===
         # M' = Ga(data) - graph attention augmented features
-        M_prime = self._run_gnn(M, self.ga_conv1, self.ga_conv2)  # (batch, 7, 10)
+        M_prime = self._run_gnn(
+            M, self.ga_conv1, self.ga_conv2)  # (batch, 7, 10)
         # b = Gp(data) - sum-aggregated importance
-        b = self._run_gnn(M, self.gp_conv1, self.gp_conv2)       # (batch, 7, 10)
+        # (batch, 7, 10)
+        b = self._run_gnn(M, self.gp_conv1, self.gp_conv2)
 
         # Prepare LSTM input: <M, M', b> concatenated along channel dimension
         # Transpose each from (batch, 7, 10) to (batch, 10, 7) for time-step-major
@@ -223,10 +256,11 @@ class SiameseModel(nn.Module):
     Siamese wrapper around the Model feature extractor.
     Given two sequences, it computes their distance following Eq (6):
         D(Vs, Vi) = 1 / (1 + exp(||Vs - Vi||_2))
-    
+
     This outputs the negative distance as a logit, which can be directly
     used with BCEWithLogitsLoss to optimize Eq (7).
     """
+
     def __init__(self, feature_extractor):
         super().__init__()
         self.feature_extractor = feature_extractor
@@ -235,28 +269,11 @@ class SiameseModel(nn.Module):
         # Extract features (embeddings)
         e1 = self.feature_extractor(x1)
         e2 = self.feature_extractor(x2)
-        
+
         # Compute L2 distance ||Vs - Vi||_2
         # keepdim=True ensures shape (batch, 1) to match with target labels
         dist = torch.norm(e1 - e2, p=2, dim=1, keepdim=True)
-        
+
         # We return the logit which is the negative distance.
         # This way, sigmoid(-dist) = 1 / (1 + exp(dist)) matches Eq (6)
         return -dist
-
-
-if __name__ == "__main__":
-    # Quick smoke test for Model
-    model = Model(embedding_dim=128)
-    dummy_input = torch.randn(4, 7, 10)   # batch of 4, 7 channels, 10 time steps
-    output = model(dummy_input)
-    print(f"Base Model Output shape: {output.shape}")
-
-    # Quick smoke test for SiameseModel
-    feature_extractor = Model(embedding_dim=128)
-    siamese_model = SiameseModel(feature_extractor)
-    dummy_input2 = torch.randn(4, 7, 10)
-    output_siamese = siamese_model(dummy_input, dummy_input2)
-    print(f"Siamese Output shape:  {output_siamese.shape}")
-    print(f"Siamese probabilities: {torch.sigmoid(output_siamese).squeeze().detach().cpu().numpy()}")
-    print(f"Num params:   {sum(p.numel() for p in siamese_model.parameters()):,}")

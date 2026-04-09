@@ -1,9 +1,6 @@
-/datasets/*
-!/datasets/*/
-/datasets/*/*
-
-!/datasets/*/info.txt
-!/datasets/*/parser.py
+/raw_datasets/
+/processed_datasets/
+/runs/
 
 __pycache__/
 model/__pycache__/*

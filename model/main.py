@@ -1,95 +1,106 @@
 """
-Main entry point for XR biometric identification project.
+Hydra entry point for XR biometric identification project.
 
-Provides a unified CLI for training, testing, hyperparameter tuning,
-and visualization (graphing).
+Usage examples:
+    python model/main.py mode=train
+    python model/main.py mode=train data_dirs=[/abs/path/users_a,/abs/path/users_b]
+    python model/main.py mode=test test_dirs=[/abs/path/users_eval]
 """
 
-import argparse
-import sys
-import os
-import torch
-import matplotlib.pyplot as plt
+import re
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(__file__))
+import hydra
+from hydra.utils import get_original_cwd, to_absolute_path
+from omegaconf import DictConfig, ListConfig
 
 from train import train
-from test import evaluate_model
+from eval import evaluate_model
+from utils import plot_boosted_training_history, plot_training_history
 
-def plot_training_history(history, save_path="training_history.png"):
-    """Graphs training and testing loss and accuracy over epochs."""
-    epochs = range(1, len(history['train_loss']) + 1)
+def _as_list(value):
+    if value is None:
+        return []
+    if isinstance(value, (list, tuple, ListConfig)):
+        return list(value)
+    return [value]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Loss plot
-    ax1.plot(epochs, history['train_loss'], 'b-', label='Train Loss')
-    ax1.plot(epochs, history['test_loss'], 'r-', label='Test Loss')
-    ax1.set_title('Training and Testing Loss')
-    ax1.set_xlabel('Epochs')
-    ax1.set_ylabel('Loss')
-    ax1.legend()
+def _slug(text: str) -> str:
+    return re.sub(r"[^a-zA-Z0-9]+", "-", text.strip()).strip("-").lower() or "dataset"
 
-    # Accuracy plot
-    ax2.plot(epochs, history['train_acc'], 'b-', label='Train Accuracy')
-    ax2.plot(epochs, history['test_acc'], 'r-', label='Test Accuracy')
-    ax2.set_title('Training and Testing Accuracy')
-    ax2.set_xlabel('Epochs')
-    ax2.set_ylabel('Accuracy')
-    ax2.legend()
 
-    plt.tight_layout()
-    plt.savefig(save_path)
-    print(f"Graph saved to {save_path}")
-    plt.close()
+def _dataset_tag(paths) -> str:
+    names = [Path(p).name for p in _as_list(paths)]
+    if not names:
+        return "none"
+    if len(names) == 1:
+        return _slug(names[0])
+    return f"multi{len(names)}"
 
-def main():
-    parser = argparse.ArgumentParser(description="XR Biometric Model Entry Point")
-    
-    # Mode selection
-    parser.add_argument("--mode", type=str, choices=["train", "test"], required=True,
-                        help="Mode to run: 'train' or 'test'")
-    
-    # Data paths & splits
-    parser.add_argument("--data-dir", type=str, required=True,
-                        help="Path to processed_data/users/ directory")
-    
-    # Model saving / loading
-    parser.add_argument("--save-path", type=str, default="model/trained_model.pth",
-                        help="Path to save the trained model (train mode)")
-    parser.add_argument("--model-path", type=str, default="model/trained_model.pth",
-                        help="Path to load the trained model (test mode)")
 
-    # Hyperparameters
-    parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--batch-size", type=int, default=1024,
-                        help="Increased default batch size to 1024 to prevent CUDA launch overhead on tiny graphs")
-    parser.add_argument("--lr", type=float, default=0.001)
-    parser.add_argument("--embedding-dim", type=int, default=128)
-    parser.add_argument("--seed", type=int, default=42)
+def _normalize_paths(cfg: DictConfig) -> None:
+    """Convert configured filesystem paths to absolute paths for Hydra run dirs."""
+    cfg.data_dirs = [to_absolute_path(p) for p in _as_list(cfg.data_dirs)]
+    cfg.test_dirs = [to_absolute_path(p) for p in _as_list(cfg.test_dirs)]
+    cfg.exclude_users = [to_absolute_path(p) for p in _as_list(cfg.exclude_users)]
 
-    # Visualization & Profiling
-    parser.add_argument("--graph", action="store_true",
-                        help="Generate a graph of training/testing metrics (train mode only)")
-    parser.add_argument("--graph-path", type=str, default="training_history.png",
-                        help="Path to save the generated graph")
-    parser.add_argument("--profile", action="store_true",
-                        help="Run a quick 5-batch PyTorch profiler internally instead of a full epoch.")
 
-    args = parser.parse_args()
+def _artifact_stem(cfg: DictConfig) -> str:
+    active_dirs = cfg.test_dirs if cfg.mode == "test" and cfg.test_dirs else cfg.data_dirs
+    tag = _dataset_tag(active_dirs)
+    return (
+        f"{_slug(cfg.experiment_name)}_{tag}_"
+        f"{cfg.sample_time}s_{cfg.sample_rate}hz_emb{cfg.embedding_dim}_{cfg.mode}"
+    )
 
-    if args.mode == "train":
+
+def _resolve_output_path(path_value: str, default_path: Path) -> str:
+    if path_value == "auto":
+        return str(default_path)
+
+    path = Path(path_value)
+    if path.is_absolute():
+        return str(path)
+
+    return str(Path(get_original_cwd()) / path)
+
+
+def _resolve_artifact_paths(cfg: DictConfig) -> None:
+    stem = _artifact_stem(cfg)
+    checkpoint_path = Path("checkpoints") / f"{stem}.pth"
+    graph_path = Path("plots") / f"{stem}.png"
+
+    cfg.save_path = _resolve_output_path(cfg.save_path, checkpoint_path)
+    cfg.model_path = _resolve_output_path(cfg.model_path, checkpoint_path)
+    cfg.graph_path = _resolve_output_path(cfg.graph_path, graph_path)
+
+
+@hydra.main(version_base=None, config_path="../configs", config_name="config")
+def main(cfg: DictConfig) -> None:
+    _normalize_paths(cfg)
+    _resolve_artifact_paths(cfg)
+
+    if cfg.mode == "train":
         print("=== Starting Training Mode ===")
-        history = train(args)
-        
-        if args.graph:
+        result = train(cfg)
+        if cfg.graph and isinstance(result, dict) and "train_loss" in result and "test_loss" in result:
             print("Generating training graph...")
-            plot_training_history(history, save_path=args.graph_path)
-            
-    elif args.mode == "test":
+            plot_training_history(result, save_path=cfg.graph_path)
+        elif cfg.graph and getattr(cfg, "boosting", None) and cfg.boosting.enabled:
+            print("Generating boosted training graphs...")
+            plot_boosted_training_history(
+                result.get("round_histories", []),
+                save_path=cfg.graph_path,
+            )
+
+    elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")
-        loss, accuracy = evaluate_model(args)
-        # test mode already prints per-user accuracy inside evaluate_model
+        evaluate_model(cfg)
+
+    else:
+        raise ValueError(f"Unsupported mode: {cfg.mode}")
+
 
 if __name__ == "__main__":
     main()

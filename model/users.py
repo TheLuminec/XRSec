@@ -11,9 +11,11 @@ import os
 
 class Users:
     """Container managing all loaded user profiles in the dataset."""
-    def __init__(self, user_dir: str):
+    def __init__(self, user_dir: str, sample_time: int = 1, sample_rate: int = 10):
         self.user_dir = user_dir
         self.user_profiles = []
+        self.sample_time = sample_time
+        self.sample_rate = sample_rate
 
         self._load_user_profiles()
 
@@ -25,7 +27,7 @@ class Users:
                 self._load_user_profile(user_dir)
 
     def _load_user_profile(self, path: str):
-        user_profile = UserProfile(path)
+        user_profile = UserProfile(path, self.sample_time, self.sample_rate)
         self.user_profiles.append(user_profile)
 
     def __len__(self):
@@ -33,5 +35,5 @@ class Users:
 
 if __name__ == "__main__":
     PATH = "datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/processed_data/users/"
-    users = Users(PATH)
-    print(users.user_profiles)
+    users = Users(PATH, sample_time=5, sample_rate=10)
+    print(users.user_profiles[0].data_samplers[0].get_all_samples())
