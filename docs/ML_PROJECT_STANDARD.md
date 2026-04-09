@@ -1,85 +1,127 @@
 # ML Project Standard for Scaling Experiments (PyTorch)
 
-This repository has a strong modeling core, but scaling up training/data now needs a reproducible experiment workflow.
+This repository now has a reproducible training core for both standard Siamese training and deterministic boosted round training. The next step is to treat that workflow as the baseline operating standard for future experiments.
 
-## 1) Recommended project standard
+## 1) Current implemented standard
 
-Use this structure and process as the baseline standard:
+The codebase now has these foundations in place:
 
-- **Single source of truth for config** (YAML + CLI override).
-- **Deterministic run metadata** saved per run (seed, git SHA, dataset IDs, model args).
-- **Experiment tracker** (MLflow or Weights & Biases).
-- **Immutable dataset splits** (versioned train/val/test manifests).
-- **Checkpoint policy** (best metric + last + periodic).
-- **Evaluation protocol** with fixed metrics and threshold calibration.
+- **Single source of truth for config** through `configs/config.yaml` with Hydra overrides.
+- **Deterministic training seeds** across dataset generation, validation splits, DataLoader shuffling, and boosted rounds.
+- **Two supported training modes**:
+  - standard single-pass Siamese training
+  - boosted hard-round training with regenerated pair manifests
+- **Checkpoint policy**:
+  - standard mode saves the best checkpoint
+  - boosted mode saves `best` and `last` checkpoints for every round plus the best overall model
+- **Compact boosted state tracking** through `boost_state.json`
+- **Training plots** for both standard runs and boosted round summaries
 
-A practical stack for this codebase:
+## 2) What the boosted workflow standardizes
 
-- Configs: `OmegaConf`/`Hydra`.
-- Tracking: `MLflow` (local first) or `wandb`.
-- Metrics: `torchmetrics` for consistent metric computation.
+Boosted training is now the preferred structured workflow when we want iterative retraining on regenerated Siamese pairs without persisting raw training pairs.
 
-## 2) Immediate gaps found in current codebase
+The current contract is:
 
-- Training argument wiring had positional mismatches in `model/train.py`.
-- Test pipeline expected a device argument while CLI entrypoint did not pass one.
-- Reproducibility metadata (seed + run config + code version) is not persisted with checkpoints.
-- The repository root `README.md` is currently notes-only and not an operational runbook.
+- A root `seed` drives all stochastic decisions.
+- User/sample discovery is stable because filesystem traversal is sorted.
+- Siamese pair manifests are regenerated on demand instead of stored as tracked datasets.
+- Validation pairs are fixed for the full boosted run.
+- Each round warm-starts from the previous round's best checkpoint.
+- Hard examples are selected from a deterministic candidate pool.
+- The rest of the round is refreshed with newly generated pairs.
 
-## 3) Minimum operating standard (what to implement next)
+This gives us reproducibility without paying the storage/debugging cost of saving raw pair tensors for every round.
 
-1. **Config files first**
-   - Add `configs/train.yaml`, `configs/test.yaml`.
-   - Keep CLI only for overrides.
+## 3) Current artifact standard
 
-2. **Structured outputs**
-   - Save each run under `runs/<timestamp>_<short_sha>/`:
-     - `config.yaml`
-     - `metrics.csv`
-     - `best.ckpt`, `last.ckpt`
-     - `environment.txt` (PyTorch/CUDA versions)
+### Standard training
 
-3. **Versioned splits**
-   - Persist split manifests (`train_users.txt`, `val_users.txt`, `test_users.txt`) and reuse across runs.
+Expected artifacts:
 
-4. **Evaluation contract**
-   - Report at minimum: ROC-AUC, EER, FAR@FRR target, confusion matrix, threshold used.
+- final checkpoint at `save_path`
+- optional training graph at `graph_path`
+- Hydra run directory under `runs/YYYY-MM-DD/HH-MM-SS_<mode>/`
 
-5. **Hyperparameter sweeps**
-   - Start with grid/random search for:
-     - `embedding_dim`
-     - `lr`
-     - `batch_size`
-     - siamese pair sampling ratio
-   - Record all sweep runs in tracker.
+### Boosted training
 
-## 4) Scale-up checklist
+Expected artifacts:
 
-Before large runs:
+- final best-overall checkpoint copied to `save_path`
+- round checkpoints under `{boosting.artifact_root}/rounds/`
+  - `round_000_best.pth`
+  - `round_000_last.pth`
+  - etc.
+- run state under `{boosting.artifact_root}/boost_state.json`
+- optional boosted summary graph at `graph_path`
+- optional per-round graphs in a sibling directory such as `plots/<stem>_rounds/`
 
-- Confirm dataloader throughput (`num_workers`, `pin_memory`, prefetch).
-- Validate no train/test leakage by user/session identity.
-- Freeze a baseline run and tag it.
-- Define stop criteria and early stopping.
+### Checkpoint metadata
 
-## 5) Suggested milestone plan
+Checkpoints can now carry:
 
-- **Milestone A (1–2 days):** stable CLI/config + fixed wiring + deterministic seeds + better README.
-- **Milestone B (2–4 days):** experiment tracking + split manifests + richer metrics.
-- **Milestone C (ongoing):** automated sweeps + ablation table + weekly model card updates.
+- `checkpoint_kind`
+- `round_idx`
+- `history`
+- `warm_start_from`
+- seed/config metadata added by the training path
 
+## 4) Remaining gaps
 
-## Milestone A status (implemented)
+The project is in much better shape than before, but there are still important gaps before this becomes a full experiment platform:
 
-- Hydra config scaffolding added under `configs/` with mode-specific config group (`mode/train.yaml`, `mode/test.yaml`).
-- Main entrypoint migrated to Hydra (`model/main.py`) and now normalizes paths for Hydra run directories.
-- Timestamped run directories enabled in `runs/YYYY-MM-DD/HH-MM-SS_<mode>/`.
+- **Run metadata is still incomplete**
+  - we are not yet saving git SHA, package versions, or a frozen config snapshot beside every run
+- **Validation/evaluation metrics are still minimal**
+  - current evaluation is loss + accuracy only
+- **No external experiment tracker yet**
+  - MLflow or Weights & Biases would make comparison and sweep management much easier
+- **No split-manifest registry yet**
+  - boosted pair regeneration is deterministic, but we still do not persist user/session split manifests as first-class experiment assets
+- **No formal threshold calibration**
+  - the current same/different decision still uses a fixed threshold heuristic
 
+## 5) Updated minimum operating standard
 
-## Milestone A next actions (future-proofing)
+For new experiments in this repository, the minimum acceptable bar should now be:
 
-- Introduce `split_manifests/` and always train/test from manifest files to eliminate user/session leakage risk.
-- Save run metadata beside checkpoints (git commit, config snapshot, dataset list hash, seed, package versions).
-- Add a strict run-name registry (`runs/index.csv`) to prevent accidental overwrite and simplify comparison tables.
-- Add a compatibility layer for old `data_dir`/`test_dir` keys while migrating all scripts to `data_dirs`/`test_dirs`.
+1. Use Hydra config plus CLI overrides, not ad hoc script edits.
+2. Set and record a root `seed`.
+3. Choose explicitly between standard and boosted training.
+4. Keep `graph: true` for any meaningful training run so loss/accuracy history is preserved.
+5. Preserve boosted artifacts when using round training:
+   - `boost_state.json`
+   - round checkpoints
+   - summary and round plots
+6. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
 
+## 6) Suggested next milestones
+
+### Milestone B
+
+- Save a config snapshot beside every training run.
+- Save environment metadata beside every run.
+- Add richer evaluation metrics:
+  - ROC-AUC
+  - EER
+  - confusion matrix
+  - threshold used
+
+### Milestone C
+
+- Introduce explicit train/val/test split manifests at the user/session level.
+- Add experiment tracking.
+- Add sweep support for:
+  - `embedding_dim`
+  - `lr`
+  - `batch_size`
+  - `samples_per_user`
+  - `boosting.hard_fraction`
+  - `boosting.candidate_pairs_per_user`
+  - `boosting.match_ratio`
+
+### Milestone D
+
+- Add model cards / experiment summaries.
+- Add comparison tooling across standard vs boosted runs.
+- Add resume and recovery documentation for long-running boosted jobs.
