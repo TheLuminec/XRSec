@@ -16,7 +16,7 @@ from omegaconf import DictConfig, ListConfig
 
 from train import train
 from eval import evaluate_model
-from utils import plot_training_history
+from utils import plot_boosted_training_history, plot_training_history
 
 def _as_list(value):
     if value is None:
@@ -88,7 +88,11 @@ def main(cfg: DictConfig) -> None:
             print("Generating training graph...")
             plot_training_history(result, save_path=cfg.graph_path)
         elif cfg.graph and getattr(cfg, "boosting", None) and cfg.boosting.enabled:
-            print("Skipping training graph generation for boosted mode.")
+            print("Generating boosted training graphs...")
+            plot_boosted_training_history(
+                result.get("round_histories", []),
+                save_path=cfg.graph_path,
+            )
 
     elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")

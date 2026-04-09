@@ -51,6 +51,7 @@ def test_boosted_training_creates_round_artifacts(tmp_path):
 
     artifact_root = pathlib.Path(args.boosting.artifact_root)
     assert result["mode"] == "boosted"
+    assert len(result["round_histories"]) == 2
     assert (artifact_root / "rounds" / "round_000_best.pth").exists()
     assert (artifact_root / "rounds" / "round_000_last.pth").exists()
     assert (artifact_root / "rounds" / "round_001_best.pth").exists()

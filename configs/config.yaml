@@ -40,8 +40,8 @@ graph_path: auto
 
 boosting:
   enabled: true
-  rounds: 10
-  round_epochs: 30
+  rounds: 2
+  round_epochs: 5
   hard_fraction: 0.6
   refresh_fraction: 0.4
   candidate_pairs_per_user: 1500

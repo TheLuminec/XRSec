@@ -1,10 +1,15 @@
 import os
 import sys
+from pathlib import Path
 
-import matplotlib.pyplot as plt
+import matplotlib
 import torch
 
 from model import Model, SiameseModel
+
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 
 def load_checkpoint(checkpoint_path, device, seq_len=10):
@@ -97,3 +102,70 @@ def plot_training_history(history, save_path="training_history.png"):
     plt.savefig(save_path)
     print(f"Graph saved to {save_path}")
     plt.close()
+
+
+def plot_boosted_training_history(round_histories, save_path="boosted_training_history.png"):
+    """
+    Save one aggregate boosted-training plot plus one plot per round.
+
+    Args:
+        round_histories: Iterable of dicts shaped like plot_training_history inputs.
+        save_path: Path for the aggregate summary graph. Per-round graphs are saved
+            in a sibling directory named after this file stem.
+    Returns:
+        Dict with generated plot paths.
+    """
+    save_path = Path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    round_plot_dir = save_path.parent / f"{save_path.stem}_rounds"
+    round_plot_dir.mkdir(parents=True, exist_ok=True)
+
+    round_paths = []
+    best_accs = []
+    final_train_losses = []
+    final_test_losses = []
+    final_train_accs = []
+    final_test_accs = []
+    round_indices = []
+
+    for round_idx, history in enumerate(round_histories):
+        if not history or not history.get("train_loss"):
+            continue
+
+        round_path = round_plot_dir / f"round_{round_idx:03d}.png"
+        plot_training_history(history, save_path=str(round_path))
+        round_paths.append(str(round_path))
+        round_indices.append(round_idx)
+        best_accs.append(max(history["test_acc"]))
+        final_train_losses.append(history["train_loss"][-1])
+        final_test_losses.append(history["test_loss"][-1])
+        final_train_accs.append(history["train_acc"][-1])
+        final_test_accs.append(history["test_acc"][-1])
+
+    if round_indices:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+        axes[0].plot(round_indices, final_train_losses, "b-o", label="Final Train Loss")
+        axes[0].plot(round_indices, final_test_losses, "r-o", label="Final Val Loss")
+        axes[0].set_title("Boosted Training Loss by Round")
+        axes[0].set_xlabel("Round")
+        axes[0].set_ylabel("Loss")
+        axes[0].legend()
+
+        axes[1].plot(round_indices, final_train_accs, "b-o", label="Final Train Acc")
+        axes[1].plot(round_indices, final_test_accs, "r-o", label="Final Val Acc")
+        axes[1].plot(round_indices, best_accs, "g--o", label="Best Val Acc")
+        axes[1].set_title("Boosted Training Accuracy by Round")
+        axes[1].set_xlabel("Round")
+        axes[1].set_ylabel("Accuracy")
+        axes[1].legend()
+
+        plt.tight_layout()
+        plt.savefig(save_path)
+        print(f"Boosted summary graph saved to {save_path}")
+        plt.close()
+
+    return {
+        "summary_path": str(save_path),
+        "round_paths": round_paths,
+    }

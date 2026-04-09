@@ -491,6 +491,19 @@ def _load_boost_state(state_path: Path):
         return json.load(handle)
 
 
+def _load_checkpoint_payload(checkpoint_path, device):
+    return torch.load(checkpoint_path, map_location=device)
+
+
+def _load_round_histories(round_summaries, device):
+    round_histories = []
+    for round_summary in round_summaries:
+        checkpoint_path = round_summary.get("last_checkpoint") or round_summary.get("best_checkpoint")
+        checkpoint = _load_checkpoint_payload(checkpoint_path, device)
+        round_histories.append(_normalize_history(checkpoint.get("history")))
+    return round_histories
+
+
 def _boost_state_payload(args, round_summaries, mode, current_round=None, best_checkpoint=None):
     payload = {
         "mode": mode,
@@ -571,6 +584,7 @@ def _run_boosted_training(args, device):
     )
 
     round_summaries = []
+    round_histories = []
     best_checkpoint = None
     best_metric = float("-inf")
     start_round = 0
@@ -580,13 +594,16 @@ def _run_boosted_training(args, device):
     if getattr(boosting, "resume", "none") != "none":
         existing_state = _load_boost_state(state_path)
         if existing_state and existing_state.get("mode") == "complete":
+            round_summaries = existing_state.get("round_summaries", [])
             return {
                 "mode": "boosted",
                 "best_checkpoint": existing_state.get("best_checkpoint"),
-                "round_summaries": existing_state.get("round_summaries", []),
+                "round_summaries": round_summaries,
+                "round_histories": _load_round_histories(round_summaries, device),
             }
         if existing_state:
             round_summaries = existing_state.get("round_summaries", [])
+            round_histories = _load_round_histories(round_summaries, device)
             if round_summaries:
                 best_round = max(round_summaries, key=lambda summary: summary["best_test_acc"])
                 best_checkpoint = best_round["best_checkpoint"]
@@ -680,6 +697,12 @@ def _run_boosted_training(args, device):
         else:
             round_summaries.append(round_summary)
 
+        normalized_history = _normalize_history(history)
+        if round_idx < len(round_histories):
+            round_histories[round_idx] = normalized_history
+        else:
+            round_histories.append(normalized_history)
+
         if round_summary["best_test_acc"] > best_metric:
             best_metric = round_summary["best_test_acc"]
             best_checkpoint = round_summary["best_checkpoint"]
@@ -713,6 +736,7 @@ def _run_boosted_training(args, device):
         "mode": "boosted",
         "best_checkpoint": str(best_checkpoint),
         "round_summaries": round_summaries,
+        "round_histories": round_histories,
     }
 
 
