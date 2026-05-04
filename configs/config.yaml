@@ -1,4 +1,4 @@
-mode: test
+mode: train
 
 seed: 67
 epochs: 20
@@ -9,24 +9,24 @@ embedding_dim: 128
 sample_time: 5
 sample_rate: 10
 
-samples_per_user: 1000
+samples_per_user: 1024
 
 # Support one or many dataset roots.
 # Each entry should point to a processed_data/users directory.
 data_dirs:
-#  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users
+  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users
 #  - processed_datasets/ViewGauss_Head-Movement_Dataset/users
 #  - processed_datasets/Panonut360_Dataset/users
-  - processed_datasets/NJIT_6DOF_VR_Navigation_Dataset/users
+#  - processed_datasets/NJIT_6DOF_VR_Navigation_Dataset/users
 test_dirs: []
 exclude_users: 
-# - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/1
-# - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/2
-# - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/3
-# - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/4
-# - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/5
+ - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/1
+ - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/2
+ - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/3
+ - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/4
+ - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/5
 swap_data: false
-test_on_excluded: false
+test_on_excluded: true
 
 # Naming convention settings (Milestone A)
 experiment_name: xrsec
