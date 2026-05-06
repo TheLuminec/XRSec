@@ -37,7 +37,7 @@ def create_model(embedding_dim=128, seq_len=10, lr=0.001, device=None):
         seq_len=seq_len
     ).to(device)
 
-    model = SiameseModel(feature_extractor).to(device)
+    model = SiameseModel(feature_extractor, embedding_dim=embedding_dim).to(device)
 
     param_count = sum(p.numel() for p in model.parameters())
     print(f"Model parameters: {param_count:,}")
@@ -254,26 +254,22 @@ class Model(nn.Module):
 class SiameseModel(nn.Module):
     """
     Siamese wrapper around the Model feature extractor.
-    Given two sequences, it computes their distance following Eq (6):
-        D(Vs, Vi) = 1 / (1 + exp(||Vs - Vi||_2))
-
-    This outputs the negative distance as a logit, which can be directly
-    used with BCEWithLogitsLoss to optimize Eq (7).
+    Given two sequences, it computes their distance by learning
+    a linear layer over the absolute difference of their embeddings.
     """
 
-    def __init__(self, feature_extractor):
+    def __init__(self, feature_extractor, embedding_dim=128):
         super().__init__()
         self.feature_extractor = feature_extractor
+        self.classifier = nn.Linear(embedding_dim, 1)
 
     def forward(self, x1, x2):
         # Extract features (embeddings)
         e1 = self.feature_extractor(x1)
         e2 = self.feature_extractor(x2)
 
-        # Compute L2 distance ||Vs - Vi||_2
-        # keepdim=True ensures shape (batch, 1) to match with target labels
-        dist = torch.norm(e1 - e2, p=2, dim=1, keepdim=True)
+        # Compute absolute difference
+        diff = torch.abs(e1 - e2)
 
-        # We return the logit which is the negative distance.
-        # This way, sigmoid(-dist) = 1 / (1 + exp(dist)) matches Eq (6)
-        return -dist
+        # Return logit
+        return self.classifier(diff)

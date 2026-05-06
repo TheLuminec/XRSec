@@ -3,13 +3,13 @@ mode: train
 seed: 67
 epochs: 20
 lr: 0.001
-batch_size: 2048
+batch_size: 1024
 num_workers: 0
 embedding_dim: 128
-sample_time: 5
+sample_time: 2
 sample_rate: 10
 
-samples_per_user: 1024
+samples_per_user: 512
 
 # Support one or many dataset roots.
 # Each entry should point to a processed_data/users directory.
@@ -19,6 +19,7 @@ data_dirs:
 #  - processed_datasets/Panonut360_Dataset/users
 #  - processed_datasets/NJIT_6DOF_VR_Navigation_Dataset/users
 test_dirs: []
+# - processed_datasets/ViewGauss_Head-Movement_Dataset/users
 exclude_users: 
  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/1
  - processed_datasets/VR_User_Behavior_Dataset_(Spherical_Video_Streaming)/users/2
@@ -33,7 +34,7 @@ experiment_name: xrsec
 
 # Use "auto" to enforce standardized names from naming conventions.
 save_path: auto
-model_path: C:\Users\thelu\Downloads\22-44-58_train\checkpoints\xrsec_multi4_5s_10hz_emb128_train.pth
+model_path: auto
 
 graph: true
 graph_path: auto
@@ -41,13 +42,13 @@ graph_path: auto
 boosting:
   enabled: false
   rounds: 10
-  round_epochs: 30
+  round_epochs: 20
   hard_fraction: 0.6
   refresh_fraction: 0.4
-  candidate_pairs_per_user: 1000
+  candidate_pairs_per_user: 1024
   match_ratio: 0.5
   artifact_root: boosting
-  resume: none
+  resume: auto
 
 hydra:
   run:

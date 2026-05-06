@@ -35,7 +35,7 @@ def load_checkpoint(checkpoint_path, device, seq_len=10):
         embedding_dim=embedding_dim,
         seq_len=seq_len
     ).to(device)
-    model = SiameseModel(feature_extractor).to(device)
+    model = SiameseModel(feature_extractor, embedding_dim=embedding_dim).to(device)
     model.load_state_dict(checkpoint['model_state_dict'])
 
     print(

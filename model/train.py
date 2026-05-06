@@ -137,7 +137,7 @@ def train_epoch(model, loader, criterion, optimizer, device):
 
         total_loss += float(loss.item()) * batch_x1.size(0)
 
-        predicted = (output > -1.0).float()
+        predicted = (output > 0.0).float()
         correct += int((predicted == batch_y).sum().item())
         total += int(batch_y.size(0))
 

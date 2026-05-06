@@ -40,7 +40,7 @@ def evaluate(model, loader, criterion, device, return_preds=False):
 
             total_loss += loss.item() * batch_y.size(0)
 
-            predicted = (output > -1.0).float()   # if output is logits
+            predicted = (output > 0.0).float()   # if output is logits
             correct += (predicted == batch_y).sum().item()
             total += batch_y.size(0)
 
