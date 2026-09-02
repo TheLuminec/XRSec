@@ -166,6 +166,36 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 - `boosting.artifact_root: boosting` is likewise relative, so `boosting.resume` never finds prior state across runs. Resume requires an absolute `artifact_root`.
 - Stdout is still not captured: metrics are `print`ed, so Hydra's per-run `main.log` files remain empty. Per-run results are now appended to `results/runs.csv` instead (see below); per-epoch history still lives only in checkpoint `history` dicts and PNG plots. To recover a past result: `torch.load(ckpt, map_location='cpu', weights_only=False)['history']`.
 
+## Training objectives
+
+`objective` selects how the extractor is trained. Both save the same
+`forward(x1, x2) -> logit` interface, so evaluation, `mode=test` and the results table
+stay comparable.
+
+- **`pair_bce`** (default, original) — BCE over `Linear(|e1 - e2|)`. Every weight is
+  tied to an embedding dimension shaped by the training identities, which is a route
+  to memorising who is who; train 0.93 against held-out 0.68 is what that looks like.
+- **`identity_softmax`** (`model/identity_train.py`) — classify *which user* each
+  window belongs to with an additive angular margin (AM-Softmax), then compare
+  embeddings by cosine. Uses every **window** as an example rather than every pair
+  (~100k windows vs ~100k pairs, against a target with far more structure than one
+  bit), and learns no per-dimension weights. This is how speaker and face
+  verification are trained, for exactly this generalisation reason.
+
+The AM-Softmax classifier is discarded after training; only the extractor plus the
+cosine head is saved. `identity_softmax` forces `head=cosine` — scoring
+angular-margin embeddings with a learned linear layer over `|e1 - e2|` would throw
+away the structure the objective just created.
+
+**Calibration matters here.** Cosine ranks well but says nothing about where the
+accept threshold belongs, and accuracy is read at `logit > 0`. After every epoch the
+cosine head's two scalars are refitted on *training* pairs with the extractor frozen.
+Skip it and AUC looks fine while accuracy sits at chance for the wrong reason.
+
+`head` is independently selectable (`diff_linear` | `cosine`) for pairwise training.
+`diff_linear` keeps the original `classifier.*` parameter names so older checkpoints
+still load. Identity training is standard-mode only; boosting stays pairwise.
+
 ## Verification metrics
 
 `model/metrics.py`. Accuracy is measured at the fixed `logit > 0` threshold, which conflates ranking quality with operating-point placement — a model can sit at 0.50 accuracy while still ranking pairs usefully. `evaluate(..., return_metrics=True)` adds:
@@ -193,7 +223,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **121 passing, ~25s**.
+Current baseline: **136 passing, ~17s**.
 
 ## Performance notes
 

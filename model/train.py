@@ -162,10 +162,17 @@ def run_training(
     history=None,
     last_checkpoint_path=None,
     checkpoint_extra=None,
+    train_epoch_fn=None,
 ):
     """
     Run the training process.
+
+    Args:
+        train_epoch_fn: Alternative per-epoch training step, used by the identity
+            objective. Defaults to the pairwise step. Everything after the step -
+            evaluation, history, checkpointing, best-model selection - is shared.
     """
+    train_epoch_fn = train_epoch_fn or train_epoch
     history = _normalize_history(history)
     print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9} | {'Test Loss':>9} | {'Test Acc':>8}")
     print("-" * 64)
@@ -177,7 +184,7 @@ def run_training(
     best_epoch = history["best_epoch"]
 
     for epoch in range(start_epoch, epochs + 1):
-        train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
+        train_loss, train_acc = train_epoch_fn(model, train_loader, criterion, optimizer, device)
         test_loss, test_acc, metrics = evaluate(model, test_loader, criterion, device, return_metrics=True)
 
         history["train_loss"].append(train_loss)
@@ -230,6 +237,21 @@ def run_training(
     return history
 
 
+def _resolve_head(args) -> str:
+    """
+    The scoring head, forced to cosine for the identity objective.
+
+    Identity training shapes embeddings for angular comparison; scoring them with a
+    learned linear layer over |e1 - e2| would discard that structure.
+    """
+    head = str(getattr(args, "head", "diff_linear") or "diff_linear")
+    if str(getattr(args, "objective", "pair_bce")) == "identity_softmax" and head != "cosine":
+        if head != "diff_linear":
+            print(f"NOTE: objective=identity_softmax requires head=cosine; overriding head={head}.")
+        head = "cosine"
+    return head
+
+
 def prepare_training_round(args, device, round_idx, previous_best_path=None, resume_checkpoint_path=None):
     """
     Initialize a model, optimizer, and history for a standard or boosted round.
@@ -247,6 +269,7 @@ def prepare_training_round(args, device, round_idx, previous_best_path=None, res
         extractor=getattr(args, "extractor", DEFAULT_EXTRACTOR),
         extractor_params=extractor_params,
         weight_decay=float(getattr(args, "weight_decay", 0.0) or 0.0),
+        head=_resolve_head(args),
     )
 
     history = _default_history()
@@ -294,6 +317,21 @@ def _run_standard_training(args, device):
     )
 
     model, criterion, optimizer, start_epoch, history, _ = prepare_training_round(args, device, round_idx=0)
+
+    objective = str(getattr(args, "objective", "pair_bce") or "pair_bce")
+    train_epoch_fn = None
+    if objective == "identity_softmax":
+        from identity_train import build_identity_trainer
+
+        # The identity objective trains on windows, not pairs, and brings its own
+        # optimizer (it also optimises the AM-Softmax classifier, which is discarded
+        # afterwards and never saved).
+        source = train_loader.dataset
+        source = source.dataset if hasattr(source, "dataset") else source
+        train_epoch_fn, optimizer, _ = build_identity_trainer(
+            model, source.sample_index, source.manifest, device, args
+        )
+
     return run_training(
         args.epochs,
         args.save_path,
@@ -305,8 +343,11 @@ def _run_standard_training(args, device):
         device,
         start_epoch=start_epoch,
         history=history,
+        train_epoch_fn=train_epoch_fn,
         checkpoint_extra={
             "mode": "standard",
+            "objective": objective,
+            "head": _resolve_head(args),
             "seed": int(args.seed),
             # Carried so evaluation applies the training-time transform rather than
             # re-deriving statistics from held-out data.

@@ -215,6 +215,23 @@ trainability, determinism, and checkpoint round-trip.
 | `bilstm` | The same without the GNN branches - isolates what the graph layers add |
 | `random` | Ignores its input and emits noise - the chance-level floor (~50%) |
 
+## Training Objectives
+
+```powershell
+python model/main.py mode=train objective=identity_softmax extractor=motion_tdnn
+```
+
+- `pair_bce` (default) trains BCE over a linear layer on `|e1 - e2|`.
+- `identity_softmax` classifies which user each window belongs to with an additive
+  angular margin, then compares embeddings by cosine similarity. It uses every window
+  as a training example rather than every pair, and learns no per-dimension weights
+  tied to the training identities - the standard approach in speaker and face
+  verification, for the same generalisation reason.
+
+`identity_softmax` forces `head=cosine`, discards its classifier after training, and
+recalibrates the cosine threshold on training pairs each epoch so accuracy stays
+meaningful. `head` (`diff_linear` | `cosine`) is also selectable on its own.
+
 ## Sweep Mode
 
 Train many configurations in one command and rank them.

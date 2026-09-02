@@ -45,7 +45,8 @@ def load_checkpoint(checkpoint_path, device, seq_len=10, return_checkpoint=False
         embedding_dim=embedding_dim,
         hyperparams=extractor_params,
     ).to(device)
-    model = SiameseModel(backbone, embedding_dim=embedding_dim).to(device)
+    model = SiameseModel(backbone, embedding_dim=embedding_dim,
+                         head=checkpoint.get('head', 'diff_linear')).to(device)
 
     try:
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -91,6 +92,8 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch, extra=None):
         'extractor': fe.extractor_name(type(backbone)),
         'extractor_params': dict(getattr(backbone, 'hyperparams', {})),
         'num_channels': getattr(backbone, 'num_channels', 7),
+        # Which scoring head to rebuild; older checkpoints predate the choice.
+        'head': getattr(model, 'head', 'diff_linear'),
     }
     if extra:
         checkpoint.update(extra)

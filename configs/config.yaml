@@ -6,6 +6,20 @@ lr: 0.001
 # L2 penalty for Adam. Held-out accuracy peaks within a couple of epochs and then
 # declines, so this is the main regularisation knob alongside extractor dropout.
 weight_decay: 0.0
+
+# Training objective.
+#   pair_bce         the original: BCE over a linear layer on |e1 - e2|
+#   identity_softmax classify which user each window belongs to with an angular
+#                    margin (AM-Softmax), then compare embeddings by cosine. Uses
+#                    every window as an example rather than every pair, and does not
+#                    learn per-dimension weights tied to the training identities.
+# identity_softmax forces head=cosine. Standard training only; boosting stays pairwise.
+objective: pair_bce
+identity_margin: 0.35
+identity_scale: 30.0
+
+# Pair scoring head: diff_linear (original) or cosine.
+head: diff_linear
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128
