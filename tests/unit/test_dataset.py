@@ -255,3 +255,90 @@ def test_center_position_is_off_by_default():
         dataset_names=["DS"], user_dataset_ids=[0], session_ids=[torch.zeros(4, dtype=torch.long)],
     )
     assert torch.allclose(SampleIndex(fake).samples, samples)
+
+
+def _corpus(tmp_path, sizes):
+    roots = []
+    for name, count in sizes.items():
+        root = tmp_path / name / "users"
+        for user in range(count):
+            (root / str(user)).mkdir(parents=True)
+        roots.append(str(root))
+    return roots
+
+
+def test_user_subset_is_proportional_across_datasets(tmp_path):
+    """
+    Disambiguating identity count from data diversity requires the subsample to mirror
+    the corpus, not over-represent whichever dataset sorts first.
+    """
+    from dataset import select_user_subset
+
+    roots = _corpus(tmp_path, {"Big": 100, "Mid": 50, "Small": 10})
+    kept = select_user_subset(roots, max_users=32, seed=7)
+
+    assert len(kept) == 32
+    counts = {name: sum(1 for u in kept if name in u) for name in ("Big", "Mid", "Small")}
+    # 100/50/10 of 160, scaled to 32 -> 20 / 10 / 2
+    assert counts == {"Big": 20, "Mid": 10, "Small": 2}
+
+
+def test_user_subset_totals_exactly_the_requested_count(tmp_path):
+    """Largest-remainder apportionment must not lose or gain users to rounding."""
+    from dataset import select_user_subset
+
+    roots = _corpus(tmp_path, {"A": 7, "B": 7, "C": 7})
+    for target in (5, 11, 13, 20):
+        assert len(select_user_subset(roots, max_users=target, seed=1)) == target
+
+
+def test_user_subset_is_deterministic_and_seed_dependent(tmp_path):
+    from dataset import select_user_subset
+
+    roots = _corpus(tmp_path, {"A": 20, "B": 20})
+    assert select_user_subset(roots, 10, seed=3) == select_user_subset(roots, 10, seed=3)
+    assert select_user_subset(roots, 10, seed=3) != select_user_subset(roots, 10, seed=4)
+
+
+def test_no_subsampling_when_not_needed(tmp_path):
+    from dataset import select_user_subset
+
+    roots = _corpus(tmp_path, {"A": 5})
+    assert select_user_subset(roots, None, seed=1) is None
+    assert select_user_subset(roots, 0, seed=1) is None
+    assert select_user_subset(roots, 99, seed=1) is None, "asking for more than exist is a no-op"
+
+
+def test_keep_users_filters_independently_of_swap_data(tmp_path):
+    """
+    A subsampled corpus must stay subsampled in the TEST split too, not just training,
+    or the held-out group would quietly come from the full corpus.
+    """
+    import types
+    from dataset import SampleDataset
+
+    root = tmp_path / "DS" / "users"
+    import numpy as np
+    import pandas as pd
+    for user in range(4):
+        d = root / str(user)
+        d.mkdir(parents=True)
+        rows = 60
+        pd.DataFrame({
+            "SessionTime": np.arange(rows) * 0.1,
+            "UnitQuaternion.x": np.zeros(rows), "UnitQuaternion.y": np.zeros(rows),
+            "UnitQuaternion.z": np.zeros(rows), "UnitQuaternion.w": np.ones(rows),
+            "HmdPosition.x": np.random.randn(rows), "HmdPosition.y": np.random.randn(rows),
+            "HmdPosition.z": np.random.randn(rows),
+        }).to_csv(d / "s.csv", index=False)
+
+    keep = [str(root / "0"), str(root / "1"), str(root / "2")]
+    excluded = [str(root / "0")]
+
+    train = SampleDataset(str(root), sample_time=1, sample_rate=10,
+                          exclude_users=excluded, swap_data=False, keep_users=keep)
+    test = SampleDataset(str(root), sample_time=1, sample_rate=10,
+                         exclude_users=excluded, swap_data=True, keep_users=keep)
+
+    assert train.num_users == 2, "kept minus excluded"
+    assert test.num_users == 1, "the excluded user, still inside the subsample"

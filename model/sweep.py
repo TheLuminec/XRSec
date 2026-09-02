@@ -128,6 +128,14 @@ def build_folds(cfg, folds: int, seed: int) -> list[list[str]]:
     The configured `exclude_users` is ignored: cross-validation defines its own
     held-out groups, and honouring both would silently shrink the training set.
     """
+    # Folds must partition whatever the run actually trains on. With max_users set,
+    # that is the subsample, not the full corpus.
+    from dataset import select_user_subset
+
+    subset = select_user_subset(_plain(cfg.data_dirs), getattr(cfg, "max_users", None),
+                                getattr(cfg, "seed", 0))
+    subset = set(subset) if subset else None
+
     by_dataset: dict[str, list[str]] = {}
     total_users = 0
     for directory in _plain(cfg.data_dirs) or []:
@@ -135,6 +143,7 @@ def build_folds(cfg, folds: int, seed: int) -> list[list[str]]:
             os.path.join(directory, name)
             for name in sorted(os.listdir(directory))
             if os.path.isdir(os.path.join(directory, name))
+            and (subset is None or os.path.join(directory, name) in subset)
         ]
         if users:
             by_dataset[directory] = users

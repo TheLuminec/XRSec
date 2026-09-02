@@ -40,6 +40,14 @@ channels: full
 # measurement - which changes how the work should be described, either way.
 center_position: false
 
+# Keep at most this many users, stratified proportionally across data_dirs. Exists to
+# separate identity count from dataset diversity: pooling seven corpora changed
+# identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a
+# no-op to active, all at once. Subsampling the pooled corpus back to 48 identities
+# spread across the same seven datasets holds diversity fixed and varies only count.
+# null keeps every user and costs nothing.
+max_users: null
+
 # Fraction of TRAINING users held out to choose the best epoch, disjoint from both
 # training and the reported test users. 0 keeps the historical behaviour of picking
 # the best epoch on the set being reported, which inflates the result by about +0.02:

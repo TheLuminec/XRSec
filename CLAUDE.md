@@ -161,7 +161,25 @@ What this does and does not mean:
 - **Not primarily behavioural.** This cannot be described as identifying people by how they move when three quarters of it is how tall they are.
 - **The behavioural component is real but small**: 0.535 / 0.541 against a 0.497 floor, AUC 0.553 / 0.561, two architectures agreeing. It deserves its own reported number rather than being folded into the headline.
 
-One caveat when quoting the 22%: the centred arm still contains **absolute quaternion**, and how someone holds their head is itself partly postural. So 22% is an upper bound on the purely behavioural share, not a point estimate. Centring orientation as well, or `channels=position` + `center_position`, would tighten it.
+**At 343 identities the behavioural component doubles while the anthropometric one is flat.** Same protocol, pooled 7-dataset corpus, stratified folds:
+
+| | 48 ids | 343 ids | headroom change |
+| --- | --- | --- | --- |
+| keeps position | 0.6691 | 0.6722 | 0.1724 → 0.1731 (**1.00×**) |
+| centred (movement only) | 0.5352 | 0.5765 | 0.0385 → 0.0774 (**2.01×**) |
+| random control | 0.4967 | 0.4991 | — |
+
+Behavioural share of total headroom: **22.3% → 44.7%**. AUC agrees independently (centred 0.553 → 0.603). Seven times the identities buys absolute position *nothing* and doubles movement — so **the ceiling on the behavioural component is data, not modelling**, consistent with three architectures tying and every gain coming from the objective and now identity count. It may not have plateaued at 343.
+
+**This comparison is confounded and should not yet be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
+
+```bash
+.venv/Scripts/python model/main.py mode=sweep max_users=48 ...   # vs the same without
+```
+
+Centred falls back toward 0.535 → it is identity count. Centred stays near 0.577 → it is data diversity. Both are publishable and they imply different next steps.
+
+One caveat when quoting the 22% (or the 44.7%): the centred arm still contains **absolute quaternion**, and how someone holds their head is itself partly postural. So 22% is an upper bound on the purely behavioural share, not a point estimate. Centring orientation as well, or `channels=position` + `center_position`, would tighten it.
 
 ### Selection inflation, and the fix
 
@@ -311,7 +329,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **154 passing, ~14s**.
+Current baseline: **159 passing, ~10s**.
 
 ## Performance notes
 

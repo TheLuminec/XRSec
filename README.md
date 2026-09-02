@@ -367,6 +367,18 @@ native rate duplicates frames rather than adding information:
 
 At `sample_rate=20`, ViewGauss is 50.5% duplicated frames and PanoSaliency 25.9%.
 
+## Isolating Identity Count from Data Diversity
+
+```powershell
+python model/main.py mode=sweep max_users=48
+```
+
+`max_users` keeps at most that many users, apportioned proportionally across
+`data_dirs` by largest remainder so the subset mirrors the corpus. It exists because
+pooling seven datasets changes identity count, dataset diversity and per-dataset
+normalisation all at once; holding the corpus fixed and varying only the count
+separates them. Cross-validation folds partition the subsample, not the full corpus.
+
 ## Cross-Session Verification
 
 ```powershell

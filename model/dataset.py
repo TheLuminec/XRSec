@@ -97,6 +97,7 @@ class SampleDataset:
         exclude_users: str | list[str] | None = None,
         swap_data: bool = False,
         channels: str = "full",
+        keep_users: set[str] | list[str] | None = None,
     ):
         self.dataset = []
         self.sample_time = sample_time
@@ -110,6 +111,10 @@ class SampleDataset:
             exclude_users = []
         elif isinstance(exclude_users, str):
             exclude_users = [exclude_users]
+
+        # Applied independently of exclude/swap so a subsampled corpus stays
+        # subsampled in every split, not just the training one.
+        self.keep_users = set(keep_users) if keep_users else None
 
         data_dirs = [data_dir] if isinstance(data_dir, str) else list(data_dir)
         # Dataset of origin per user, so normalisation can be fitted per dataset.
@@ -125,6 +130,8 @@ class SampleDataset:
         self.cache_misses = 0
         for dataset_id, directory in enumerate(data_dirs):
             for user_dir in self._iter_user_dirs(directory):
+                if self.keep_users is not None and user_dir not in self.keep_users:
+                    continue
                 if self.swap_data:
                     if user_dir not in exclude_users:
                         continue
@@ -295,6 +302,7 @@ def build_sample_index(
     swap_data: bool = False,
     channels: str = "full",
     center_position: bool = False,
+    keep_users=None,
 ) -> SampleIndex:
     """
     Build a stable sample index using sorted user and file traversal.
@@ -307,6 +315,7 @@ def build_sample_index(
             exclude_users=exclude_users,
             swap_data=swap_data,
             channels=channels,
+            keep_users=keep_users,
         ),
         center_position=center_position,
     )
@@ -479,6 +488,57 @@ def create_pair_dataloader(
     )
 
 
+def select_user_subset(data_dir, max_users: int | None, seed: int | None) -> list[str] | None:
+    """
+    Deterministically keep at most `max_users` users, stratified across datasets.
+
+    This exists to disambiguate identity count from data diversity. Going from one
+    corpus to seven changed three things at once - 48 identities to 343, one dataset
+    to seven, and per-dataset normalisation from a no-op to active - so a gain cannot
+    be attributed to identity count without holding the others fixed. Subsampling the
+    pooled corpus back down to 48 identities, spread across the same seven datasets,
+    isolates the variable.
+
+    Allocation is proportional to each dataset's size using largest remainder, so the
+    subset mirrors the corpus rather than over-representing whichever dataset happens
+    to sort first. Returns None when no subsampling is needed, which keeps the
+    filtering cost at zero for ordinary runs.
+    """
+    if not max_users or max_users <= 0:
+        return None
+
+    by_dataset: dict[str, list[str]] = {}
+    for directory in ([data_dir] if isinstance(data_dir, str) else list(data_dir)):
+        users = [
+            os.path.join(directory, name)
+            for name in sorted(os.listdir(directory))
+            if os.path.isdir(os.path.join(directory, name))
+        ]
+        if users:
+            by_dataset[directory] = users
+
+    total = sum(len(users) for users in by_dataset.values())
+    if max_users >= total:
+        return None
+
+    # Largest-remainder apportionment, so the quotas sum to exactly max_users.
+    exact = {d: len(u) * max_users / total for d, u in by_dataset.items()}
+    quota = {d: int(value) for d, value in exact.items()}
+    remaining = max_users - sum(quota.values())
+    for directory in sorted(by_dataset, key=lambda d: (-(exact[d] - quota[d]), d))[:remaining]:
+        quota[directory] += 1
+
+    rng = np.random.default_rng(_seed_value(seed, 31))
+    kept: list[str] = []
+    for directory in sorted(by_dataset):
+        users = by_dataset[directory]
+        take = min(quota[directory], len(users))
+        if take:
+            order = rng.permutation(len(users))[:take]
+            kept.extend(users[int(i)] for i in order)
+    return sorted(kept)
+
+
 def select_validation_users(data_dir, exclude_users, fraction: float, seed: int | None) -> list[str]:
     """
     Deterministically pick users to hold out for epoch selection.
@@ -532,6 +592,7 @@ def create_dataloader_from_path(
     channels: str = "full",
     cross_session_positives: bool = False,
     center_position: bool = False,
+    max_users: int | None = None,
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
     val_user_fraction: float = 0.0,
@@ -564,6 +625,8 @@ def create_dataloader_from_path(
             same user (see generate_pair_manifest).
         center_position: Subtract each window's mean position, leaving movement only.
             Separates behaviour from anthropometry (height, seated posture).
+        max_users: Keep at most this many users, stratified across datasets, so
+            identity count can be varied without changing dataset diversity.
         normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
             Evaluation must pass the training-time normalizer so held-out data is not
             used to derive the transform.
@@ -580,6 +643,9 @@ def create_dataloader_from_path(
         With return_normalizer, the ChannelNormalizer is appended to the result.
     """
     pin_memory = device.type == "cuda" if device else False
+    keep_users = select_user_subset(data_dir, max_users, seed)
+    if keep_users is not None:
+        print(f"User subsample: keeping {len(keep_users)} users, stratified across datasets")
 
     if not is_train:
         eval_swap_data = not swap_data if test_on_excluded else swap_data
@@ -595,6 +661,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            keep_users=keep_users,
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
         # available; doing so would let the held-out distribution shape the transform.
@@ -613,6 +680,8 @@ def create_dataloader_from_path(
     # Users reserved for epoch selection are excluded from training too, so the three
     # groups stay user-disjoint.
     validation_users = select_validation_users(data_dir, exclude_users, val_user_fraction, seed)
+    if keep_users is not None:
+        validation_users = [u for u in validation_users if u in set(keep_users)]
     training_exclusions = list(exclude_users or []) + validation_users
 
     train_dataset = SiameseDataset(
@@ -627,6 +696,7 @@ def create_dataloader_from_path(
         channels=channels,
         cross_session_positives=cross_session_positives,
         center_position=center_position,
+        keep_users=keep_users,
     )
 
     # Fit on the training users only, then apply the same transform everywhere.
@@ -650,6 +720,7 @@ def create_dataloader_from_path(
                 channels=channels,
                 cross_session_positives=cross_session_positives,
                 center_position=center_position,
+                keep_users=keep_users,
             )
             normalizer.transform(test_dataset.sample_index)
         else:
@@ -679,6 +750,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            keep_users=keep_users,
         )
         normalizer.transform(test_dataset.sample_index)
 
@@ -696,6 +768,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            keep_users=keep_users,
         )
         normalizer.transform(val_dataset.sample_index)
         val_loader = DataLoader(
@@ -747,6 +820,7 @@ class SiameseDataset(Dataset):
         channels: str = "full",
         cross_session_positives: bool = False,
         center_position: bool = False,
+        keep_users=None,
     ):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -758,6 +832,7 @@ class SiameseDataset(Dataset):
             swap_data=swap_data,
             channels=channels,
             center_position=center_position,
+            keep_users=keep_users,
         )
         self.num_users = self.sample_index.num_users
         self.num_samples = self.sample_index.sample_count
