@@ -1,8 +1,9 @@
 """
 PyTorch Dataset for XR user biometric identification.
 
-Wraps the existing data pipeline (Users -> UserProfile -> Sampler)
-into standard PyTorch Dataset objects for use with DataLoader.
+Wraps the existing data pipeline (UserProfile -> Sampler) into standard PyTorch
+Dataset objects for use with DataLoader. Sampled windows are cached to disk per
+user directory (see sample_cache.py), so repeat runs skip CSV parsing entirely.
 
 Each sample is a (7, seq_len) tensor representing one window of data:
     - 7 channels: qx, qy, qz, qw, Hx, Hy, Hz
@@ -13,12 +14,15 @@ Each sample is a (7, seq_len) tensor representing one window of data:
 from __future__ import annotations
 
 import math
+import os
+from pathlib import Path
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 
-from users import Users
+import sample_cache
+from user_profile import UserProfile
 
 
 def _seed_value(seed: int | None, offset: int = 0) -> int:
@@ -103,41 +107,75 @@ class SampleDataset:
         elif isinstance(exclude_users, str):
             exclude_users = [exclude_users]
 
-        users = []
-        if isinstance(data_dir, str):
-            users = [Users(data_dir, sample_time, sample_rate)]
-        else:
-            for directory in data_dir:
-                users.append(Users(directory, sample_time, sample_rate))
+        data_dirs = [data_dir] if isinstance(data_dir, str) else list(data_dir)
 
+        # Users are filtered before loading rather than after: excluded users cost
+        # nothing to skip, which matters for leave-users-out sweeps.
         self.sample_count = 0
-        for user_group in users:
-            for profile in user_group.user_profiles:
+        self.cache_hits = 0
+        self.cache_misses = 0
+        for directory in data_dirs:
+            for user_dir in self._iter_user_dirs(directory):
                 if self.swap_data:
-                    if profile.user_dir not in exclude_users:
+                    if user_dir not in exclude_users:
                         continue
                 else:
-                    if profile.user_dir in exclude_users:
+                    if user_dir in exclude_users:
                         continue
 
                 self.num_users += 1
-                samples = []
-                for sampler in profile.data_samplers:
-                    if sampler.sample_count == 0:
-                        continue
-                    all_samples = sampler.get_all_samples()
-                    for sample in all_samples:
-                        features = sample[:, 1:].astype(np.float32)
-                        samples.append(features.T)
-                        self.sample_count += 1
+                user_samples = self._load_user_samples(user_dir)
+                self.sample_count += int(user_samples.shape[0])
+                self.dataset.append(user_samples)
 
-                if samples:
-                    self.dataset.append(torch.tensor(np.array(samples), dtype=torch.float32))
-                else:
-                    seq_len = self.sample_time * self.sample_rate
-                    self.dataset.append(torch.empty((0, 7, seq_len), dtype=torch.float32))
+        cache_note = ""
+        if sample_cache.cache_enabled():
+            cache_note = f" (cache: {self.cache_hits} hit, {self.cache_misses} built)"
+        print(f"Loaded {self.sample_count} samples from {self.num_users} users{cache_note}")
 
-        print(f"Loaded {self.sample_count} samples from {self.num_users} users")
+    @staticmethod
+    def _iter_user_dirs(directory: str):
+        """
+        Yield each user directory under a dataset root, in sorted order.
+
+        Sorted traversal is what makes flat sample indices stable across machines,
+        so the ordering here must not change.
+        """
+        for name in sorted(os.listdir(directory)):
+            user_dir = os.path.join(directory, name)
+            if os.path.isdir(user_dir):
+                yield user_dir
+
+    def _load_user_samples(self, user_dir: str) -> torch.Tensor:
+        """Return one user's windows as (n_samples, 7, seq_len), via cache when possible."""
+        cache_path = None
+        if sample_cache.cache_enabled():
+            cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time, self.sample_rate)
+            cached = sample_cache.load(cache_path)
+            if cached is not None:
+                self.cache_hits += 1
+                return cached
+
+        self.cache_misses += 1
+        profile = UserProfile(user_dir, self.sample_time, self.sample_rate)
+
+        samples = []
+        for sampler in profile.data_samplers:
+            if sampler.sample_count == 0:
+                continue
+            for sample in sampler.get_all_samples():
+                # Drop the SessionTime column, then transpose to (channels, timesteps).
+                samples.append(sample[:, 1:].astype(np.float32).T)
+
+        if samples:
+            user_samples = torch.tensor(np.array(samples), dtype=torch.float32)
+        else:
+            seq_len = self.sample_time * self.sample_rate
+            user_samples = torch.empty((0, 7, seq_len), dtype=torch.float32)
+
+        if cache_path is not None:
+            sample_cache.store(cache_path, user_samples)
+        return user_samples
 
     def __len__(self):
         return self.num_users

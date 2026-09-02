@@ -5,7 +5,8 @@ from pathlib import Path
 import matplotlib
 import torch
 
-from model import Model, SiameseModel
+import feature_extractor as fe
+from model import DEFAULT_EXTRACTOR, SiameseModel
 
 
 matplotlib.use("Agg")
@@ -28,16 +29,34 @@ def load_checkpoint(checkpoint_path, device, seq_len=10):
     print(f"Loading checkpoint: {checkpoint_path}")
     checkpoint = torch.load(checkpoint_path, map_location=device)
 
-    # Initialize model using checkpoint params before touching the dataset
+    # Rebuild the exact extractor this checkpoint was trained with. Older checkpoints
+    # predate extractor selection and are assumed to be the paper architecture.
     embedding_dim = checkpoint.get('embedding_dim', 128)
     seq_len = checkpoint.get('seq_len', seq_len)
-    feature_extractor = Model(
-        embedding_dim=embedding_dim,
-        seq_len=seq_len
-    ).to(device)
-    model = SiameseModel(feature_extractor, embedding_dim=embedding_dim).to(device)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    extractor = checkpoint.get('extractor', DEFAULT_EXTRACTOR)
+    extractor_params = checkpoint.get('extractor_params', {})
 
+    backbone = fe.create(
+        extractor,
+        seq_len=seq_len,
+        num_channels=checkpoint.get('num_channels', 7),
+        embedding_dim=embedding_dim,
+        hyperparams=extractor_params,
+    ).to(device)
+    model = SiameseModel(backbone, embedding_dim=embedding_dim).to(device)
+
+    try:
+        model.load_state_dict(checkpoint['model_state_dict'])
+    except RuntimeError as exc:
+        raise RuntimeError(
+            f"Checkpoint '{checkpoint_path}' does not match extractor '{extractor}' "
+            f"(embedding_dim={embedding_dim}, seq_len={seq_len}, params={extractor_params}). "
+            "Checkpoints written before feature extractors became slottable used a different "
+            "state_dict layout and must be retrained.\n"
+            f"Original error: {exc}"
+        ) from exc
+
+    print(f"Model loaded: {backbone.describe()}")
     print(
         f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
     return model
@@ -58,12 +77,18 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch, extra=None):
     if checkpoint_dir:
         os.makedirs(checkpoint_dir, exist_ok=True)
 
+    backbone = model.feature_extractor
     checkpoint = {
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch,
-        'embedding_dim': model.feature_extractor.embedding_dim,
-        'seq_len': model.feature_extractor.seq_len,
+        'embedding_dim': backbone.embedding_dim,
+        'seq_len': backbone.seq_len,
+        # Identity of the extractor, so the checkpoint can be rebuilt without
+        # knowing which config produced it.
+        'extractor': fe.extractor_name(type(backbone)),
+        'extractor_params': dict(getattr(backbone, 'hyperparams', {})),
+        'num_channels': getattr(backbone, 'num_channels', 7),
     }
     if extra:
         checkpoint.update(extra)

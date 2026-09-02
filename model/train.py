@@ -12,11 +12,12 @@ from types import SimpleNamespace
 
 import numpy as np
 import torch
+from omegaconf import OmegaConf
 
 from boost_train import resolve_paths, run_boosted_training
 from dataset import create_dataloader_from_path
 from eval import evaluate
-from model import create_model
+from model import DEFAULT_EXTRACTOR, create_model
 from utils import save_checkpoint
 
 
@@ -226,11 +227,18 @@ def prepare_training_round(args, device, round_idx, previous_best_path=None, res
     """
     Initialize a model, optimizer, and history for a standard or boosted round.
     """
+    extractor_params = getattr(args, "extractor_params", None)
+    if extractor_params is not None and not isinstance(extractor_params, dict):
+        # Hydra hands over a DictConfig; the registry wants a plain mapping.
+        extractor_params = OmegaConf.to_container(extractor_params, resolve=True)
+
     model, criterion, optimizer = create_model(
         embedding_dim=args.embedding_dim,
         seq_len=getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10),
         lr=args.lr,
         device=device,
+        extractor=getattr(args, "extractor", DEFAULT_EXTRACTOR),
+        extractor_params=extractor_params,
     )
 
     history = _default_history()

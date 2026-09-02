@@ -11,10 +11,14 @@ The current pipeline trains a Siamese model on fixed-size headset motion windows
 - Backbone: graph aggregation + BiLSTM + self-attention
 - Objective: same-user / different-user prediction via distance logits
 
-The training system now supports both:
+The window-to-embedding backbone is a **slottable feature extractor**, so architectures
+can be written independently and compared on identical data, splits and seeds.
+
+The training system supports:
 
 - Standard single-run Siamese training
 - Deterministic boosted training with regenerated Siamese pair datasets across rounds
+- Sweep mode: many extractors and hyperparameter combinations in one command, ranked
 
 ## Project Layout
 
@@ -25,14 +29,21 @@ XRSec/
 ├── docs/
 │   └── ML_PROJECT_STANDARD.md
 ├── model/
-│   ├── main.py
-│   ├── train.py
+│   ├── main.py              # Hydra entry point (mode=train|test|sweep)
+│   ├── train.py             # standard training + shared round primitives
+│   ├── boost_train.py       # boosted round orchestration
+│   ├── sweep.py             # sweep mode
 │   ├── eval.py
-│   ├── dataset.py
-│   ├── model.py
+│   ├── dataset.py           # sample index + pair manifests
+│   ├── sample_cache.py      # on-disk cache of sampled windows
+│   ├── results_log.py       # one CSV row per run
+│   ├── model.py             # Siamese head + model factory
+│   ├── feature_extractor.py # extractor base class + registry
+│   ├── extractors/          # extractor implementations (auto-discovered)
 │   └── utils.py
 ├── processed_datasets/
-├── plots/
+├── results/                 # runs.csv
+├── sweeps/                  # sweep state and summaries
 ├── runs/
 └── tests/
 ```
@@ -149,6 +160,118 @@ When `graph: true`:
 
 Plotting uses a headless matplotlib backend, so it works in terminal-only environments and tests.
 
+## Feature Extractors
+
+The window-to-embedding backbone is slottable. Each extractor implements
+`(batch, 7, seq_len) -> (batch, embedding_dim)` and nothing else in the pipeline
+changes when you swap one.
+
+```powershell
+python model/main.py mode=train extractor=bilstm
+python model/main.py mode=train extractor=bilstm extractor_params={lstm_hidden:128,pooling:last}
+```
+
+List what is registered, with defaults and declared sweep spaces:
+
+```powershell
+.venv\Scripts\python model/list_extractors.py
+```
+
+### Adding one
+
+Drop a module into `model/extractors/`; it is discovered automatically.
+
+```python
+from feature_extractor import FeatureExtractor, register
+
+@register("my_extractor")
+class MyExtractor(FeatureExtractor):
+    def __init__(self, seq_len, num_channels=7, embedding_dim=128, width=64):
+        super().__init__(seq_len=seq_len, num_channels=num_channels,
+                         embedding_dim=embedding_dim, width=width)
+        ...
+
+    def forward(self, x):        # x: (batch, num_channels, seq_len)
+        ...                      # return: (batch, embedding_dim)
+
+    @classmethod
+    def search_space(cls):
+        return {"width": [32, 64, 128]}
+```
+
+Hyperparameters must be explicit keyword arguments with defaults, and every key in
+`search_space()` must be one of them. Running `pytest` then validates the new
+extractor automatically: output contract, varied sequence lengths and embedding
+widths, every declared sweep value, trainability, and checkpoint round-trip.
+
+## Sweep Mode
+
+Train many configurations in one command and rank them.
+
+```powershell
+python model/main.py mode=sweep
+```
+
+By default this sweeps the configured extractor over its own declared
+`search_space()`. Preview the plan before committing GPU time:
+
+```powershell
+python model/main.py mode=sweep sweep.dry_run=true
+```
+
+Compare every registered extractor at matched settings:
+
+```powershell
+python model/main.py mode=sweep sweep.extractors=all sweep.grid={lr:[0.001,0.0003]}
+```
+
+### Axes
+
+`sweep.grid` keys are namespaced. Prefix with `extractor_params.` to vary an
+extractor hyperparameter; any other key varies a top-level config value.
+
+```yaml
+sweep:
+  grid:
+    lr: [0.001, 0.0003]
+    embedding_dim: [64, 128]
+    extractor_params.lstm_hidden: [32, 64, 128]
+```
+
+`grid: auto` (the default) uses each extractor's declared `search_space()`.
+
+### Behaviour
+
+- **Failures are isolated.** A configuration that raises is recorded with its error
+  and the sweep continues, so one bad generated extractor cannot cost the whole run.
+- **Resume is on by default**, keyed by a digest of each configuration. Rerunning the
+  same sweep skips completed configurations and retries failed ones.
+- **Every configuration is appended to `results/runs.csv`**, tagged with `sweep_id`,
+  so sweep and non-sweep results stay comparable in one table.
+- `sweep.epochs` shortens each sweep run without touching the top-level `epochs`.
+- `sweep.strategy=random` with `sweep.max_runs=N` takes an unbiased subset;
+  capping a `grid` sweep just truncates it in order.
+
+Each sweep writes `{sweep.artifact_root}/{sweep_id}/` containing `sweep_state.json`,
+`summary.csv`, and per-configuration checkpoints under `runs/`.
+
+## Results Log
+
+Every run appends one row to `results/runs.csv`: config, metrics, checkpoint, run
+directory and git SHA, for standard, boosted and test runs alike. Sort that file
+instead of reopening checkpoints to compare experiments.
+
+## Sample Cache
+
+Sampled windows are cached per user directory under `.cache/samples/`, keyed by CSV
+content signature plus `sample_time`/`sample_rate`. This cuts dataset loading on the
+default dataset from ~23s to ~0.6s, and applies to both the train and validation
+index builds.
+
+- `XRSEC_SAMPLE_CACHE=0` disables it
+- `XRSEC_SAMPLE_CACHE_DIR=...` relocates it
+- Deleting `.cache/` is always safe; entries rebuild on demand
+
 ## Testing
 
 Run the full test suite with:
@@ -157,7 +280,7 @@ Run the full test suite with:
 .venv\Scripts\python -m pytest -q
 ```
 
-The test suite covers deterministic pair generation, hard-pair selection, boosted round orchestration, plotting, and the standard training path.
+The test suite covers deterministic pair generation, hard-pair selection, boosted round orchestration, plotting, sample caching, and the standard training path.
 
 ## More Detail
 

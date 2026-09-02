@@ -8,14 +8,23 @@ The codebase now has these foundations in place:
 
 - **Single source of truth for config** through `configs/config.yaml` with Hydra overrides.
 - **Deterministic training seeds** across dataset generation, validation splits, DataLoader shuffling, and boosted rounds.
-- **Two supported training modes**:
+- **Three supported modes**:
   - standard single-pass Siamese training
   - boosted hard-round training with regenerated pair manifests
+  - sweep over extractors and hyperparameters (`mode=sweep`)
 - **Checkpoint policy**:
   - standard mode saves the best checkpoint
   - boosted mode saves `best` and `last` checkpoints for every round plus the best overall model
 - **Compact boosted state tracking** through `boost_state.json`
 - **Training plots** for both standard runs and boosted round summaries
+- **Slottable feature extractors** through a registry, so architectures are
+  interchangeable and comparable on identical data, splits and seeds
+- **Sweep mode** (`mode=sweep`) for ranking extractors and hyperparameter
+  combinations in one command, with resume and per-configuration failure isolation
+- **A single results table** at `results/runs.csv`, one row per run across standard,
+  boosted, test and sweep runs
+- **A sample cache** that removes CSV parsing from repeat runs (~23s to ~0.6s on the
+  default dataset)
 
 ## 2) What the boosted workflow standardizes
 
@@ -56,6 +65,15 @@ Expected artifacts:
 - optional boosted summary graph at `graph_path`
 - optional per-round graphs in a sibling directory such as `plots/<stem>_rounds/`
 
+### Sweeps
+
+Expected artifacts under `{sweep.artifact_root}/{sweep_id}/`:
+
+- `sweep_state.json` (resume state, keyed by configuration digest)
+- `summary.csv` (ranked results, including failures and their errors)
+- `runs/<extractor>_<config_id>/best.pth` per configuration
+- one row per configuration in `results/runs.csv`, tagged with `sweep_id`
+
 ### Checkpoint metadata
 
 Checkpoints can now carry:
@@ -64,18 +82,28 @@ Checkpoints can now carry:
 - `round_idx`
 - `history`
 - `warm_start_from`
+- `extractor`, `extractor_params` and `num_channels`, so any checkpoint rebuilds its
+  own backbone without the config that produced it
 - seed/config metadata added by the training path
 
 ## 4) Remaining gaps
 
-The project is in much better shape than before, but there are still important gaps before this becomes a full experiment platform:
+Several earlier gaps are now closed: run metadata (git SHA, full config, extractor
+identity) is recorded per run in `results/runs.csv`, and sweeps are a first-class mode
+rather than manual config editing. What remains:
 
-- **Run metadata is still incomplete**
-  - we are not yet saving git SHA, package versions, or a frozen config snapshot beside every run
 - **Validation/evaluation metrics are still minimal**
-  - current evaluation is loss + accuracy only
-- **No external experiment tracker yet**
-  - MLflow or Weights & Biases would make comparison and sweep management much easier
+  - current evaluation is loss + accuracy only; no ROC-AUC, EER or confusion matrix
+- **No third split**
+  - per-epoch checkpoint selection, boosted best-round selection and the reported
+    number all use the same held-out users, so reported accuracy is optimistically biased
+- **No input normalization**
+  - features are fed raw, and position ranges differ substantially across datasets,
+    which confounds multi-dataset training and cross-dataset transfer
+- **Package versions are not captured**
+  - the git SHA and config are recorded, but not the environment
+- **No external experiment tracker**
+  - `results/runs.csv` covers comparison; MLflow or W&B would add run management
 - **No split-manifest registry yet**
   - boosted pair regeneration is deterministic, but we still do not persist user/session split manifests as first-class experiment assets
 - **No formal threshold calibration**
@@ -86,6 +114,7 @@ The project is in much better shape than before, but there are still important g
 For new experiments in this repository, the minimum acceptable bar should now be:
 
 1. Use Hydra config plus CLI overrides, not ad hoc script edits.
+   - For architecture comparisons use `mode=sweep`, not repeated manual runs.
 2. Set and record a root `seed`.
 3. Choose explicitly between standard and boosted training.
 4. Keep `graph: true` for any meaningful training run so loss/accuracy history is preserved.
@@ -111,14 +140,9 @@ For new experiments in this repository, the minimum acceptable bar should now be
 
 - Introduce explicit train/val/test split manifests at the user/session level.
 - Add experiment tracking.
-- Add sweep support for:
-  - `embedding_dim`
-  - `lr`
-  - `batch_size`
-  - `samples_per_user`
-  - `boosting.hard_fraction`
-  - `boosting.candidate_pairs_per_user`
-  - `boosting.match_ratio`
+- ~~Add sweep support~~ — done; `mode=sweep` covers any top-level config key
+  (`embedding_dim`, `lr`, `batch_size`, `samples_per_user`, `boosting.*`) plus
+  extractor hyperparameters via `extractor_params.<name>`.
 
 ### Milestone D
 

@@ -68,10 +68,12 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
     """
     loss, accuracy, preds, labels = evaluate(model, test_loader, criterion, device, return_preds=True)
 
-    print(f"\n{'─' * 40}")
+    # ASCII only: Windows consoles default to cp1252, so box-drawing characters
+    # crash the run with UnicodeEncodeError whenever stdout is piped or redirected.
+    print(f"\n{'-' * 40}")
     print(f"  Test Loss    : {loss:.4f}")
     print(f"  Test Accuracy: {accuracy:.2%}  ({int(accuracy * test_size)}/{test_size} correct)")
-    print(f"{'─' * 40}")
+    print(f"{'-' * 40}")
         
     return loss, accuracy
 

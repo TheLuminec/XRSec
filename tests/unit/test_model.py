@@ -1,6 +1,7 @@
 import torch
 
-from model import Model, SiameseModel
+from extractors.paper_gnn_bilstm import Model
+from model import SiameseModel
 
 
 def test_model_forward_output_shape():
@@ -17,16 +18,25 @@ def test_model_forward_output_shape():
     assert output.shape == (batch, embedding_dim)
 
 
-def test_siamese_forward_shape_and_similarity_ordering():
+def test_siamese_forward_shape_and_identical_pair_invariance():
     """
-    SiameseModel.forward should return (batch, 1), and identical pairs should
-    produce higher similarity logits (i.e., less negative distance) than random pairs.
+    SiameseModel.forward should return (batch, 1).
+
+    The head classifies |e1 - e2| through a learned linear layer, so an identical
+    pair has a zero difference vector and must collapse to exactly the classifier
+    bias for every row. Distinct pairs must not, which guards against embedding
+    collapse or a head that ignores its input.
+
+    Note: the logit is *not* a negative distance, so an untrained model carries no
+    ordering guarantee between identical and random pairs. Ordering is something
+    training has to produce, not an architectural invariant.
     """
     torch.manual_seed(0)
     batch = 6
+    embedding_dim = 32
 
-    feature_extractor = Model(embedding_dim=32)
-    siamese = SiameseModel(feature_extractor)
+    feature_extractor = Model(embedding_dim=embedding_dim)
+    siamese = SiameseModel(feature_extractor, embedding_dim=embedding_dim)
     siamese.eval()
 
     x = torch.randn(batch, 7, 10)
@@ -39,15 +49,16 @@ def test_siamese_forward_shape_and_similarity_ordering():
     assert identical_logits.shape == (batch, 1)
     assert random_logits.shape == (batch, 1)
 
-    # For identical inputs, distance should be zero => logit close to 0.
+    # Zero difference vector => every row equals the classifier bias.
     assert torch.allclose(
         identical_logits,
-        torch.zeros_like(identical_logits),
+        siamese.classifier.bias.expand_as(identical_logits),
         atol=1e-6,
     )
 
-    # Since logits are negative distances, higher means more similar.
-    assert torch.mean(identical_logits) > torch.mean(random_logits)
+    # The head must actually respond to the inputs it is given.
+    assert random_logits.std() > 1e-6
+    assert not torch.allclose(random_logits, identical_logits, atol=1e-6)
 
 
 def test_build_edge_index_connectivity_regression():

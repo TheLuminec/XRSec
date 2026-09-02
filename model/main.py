@@ -7,13 +7,16 @@ Usage examples:
     python model/main.py mode=test test_dirs=[/abs/path/users_eval]
 """
 
+import hashlib
 import re
 from pathlib import Path
 
 import hydra
 from hydra.utils import get_original_cwd, to_absolute_path
-from omegaconf import DictConfig, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
+import results_log
+from sweep import run_sweep
 from train import train
 from eval import evaluate_model
 from utils import plot_boosted_training_history, plot_training_history
@@ -45,12 +48,29 @@ def _normalize_paths(cfg: DictConfig) -> None:
     cfg.test_dirs = [to_absolute_path(p) for p in _as_list(cfg.test_dirs)]
     cfg.exclude_users = [to_absolute_path(p) for p in _as_list(cfg.exclude_users)]
 
+    # Hydra chdirs into a fresh run directory, so a relative sweep root would be
+    # unreachable next time and resume would never find prior state.
+    sweep = getattr(cfg, "sweep", None)
+    if sweep is not None and getattr(sweep, "artifact_root", None):
+        cfg.sweep.artifact_root = to_absolute_path(str(cfg.sweep.artifact_root))
+
 
 def _artifact_stem(cfg: DictConfig) -> str:
     active_dirs = cfg.test_dirs if cfg.mode == "test" and cfg.test_dirs else cfg.data_dirs
     tag = _dataset_tag(active_dirs)
+    # The extractor name is part of the stem so runs that differ only by extractor
+    # write to distinct checkpoints and plots. Non-default hyperparameters add a short
+    # digest, so a sweep does not produce many identically named artifacts.
+    extractor = _slug(str(getattr(cfg, "extractor", "paper_gnn_bilstm")))
+    params = getattr(cfg, "extractor_params", None)
+    if params:
+        digest = hashlib.sha1(
+            ";".join(f"{key}={params[key]}" for key in sorted(params)).encode("utf-8")
+        ).hexdigest()[:6]
+        extractor = f"{extractor}-{digest}"
+
     return (
-        f"{_slug(cfg.experiment_name)}_{tag}_"
+        f"{_slug(cfg.experiment_name)}_{tag}_{extractor}_"
         f"{cfg.sample_time}s_{cfg.sample_rate}hz_emb{cfg.embedding_dim}_{cfg.mode}"
     )
 
@@ -81,6 +101,10 @@ def main(cfg: DictConfig) -> None:
     _normalize_paths(cfg)
     _resolve_artifact_paths(cfg)
 
+    OmegaConf.set_struct(cfg, False)
+    cfg._dataset_tag = _dataset_tag(cfg.data_dirs)
+    OmegaConf.set_struct(cfg, True)
+
     if cfg.mode == "train":
         print("=== Starting Training Mode ===")
         result = train(cfg)
@@ -96,10 +120,21 @@ def main(cfg: DictConfig) -> None:
 
     elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")
-        evaluate_model(cfg)
+        result = evaluate_model(cfg)
+
+    elif cfg.mode == "sweep":
+        print("=== Starting Sweep Mode ===")
+        # run_sweep logs each configuration to the results table itself, so the
+        # single summary row that append_run would write here is skipped.
+        run_sweep(cfg)
+        return
 
     else:
         raise ValueError(f"Unsupported mode: {cfg.mode}")
+
+    results_log.append_run(cfg, result, dataset_tag=_dataset_tag(
+        cfg.test_dirs if cfg.mode == "test" and cfg.test_dirs else cfg.data_dirs
+    ))
 
 
 if __name__ == "__main__":

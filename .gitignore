@@ -4,3 +4,9 @@
 
 __pycache__/
 model/__pycache__/*
+
+# Cached sampled windows (safe to delete; rebuilt on demand)
+/.cache/
+
+# Sweep checkpoints and state (results/runs.csv keeps the numbers)
+/sweeps/

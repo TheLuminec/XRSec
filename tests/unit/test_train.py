@@ -3,8 +3,9 @@ from types import SimpleNamespace
 import torch
 
 from model import create_model
+from boost_train import select_hard_pair_subset
 from dataset import make_pair_manifest
-from train import prepare_training_round, select_hard_pair_subset
+from train import prepare_training_round
 from utils import save_checkpoint
 
 
