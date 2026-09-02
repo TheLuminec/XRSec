@@ -103,6 +103,16 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
 
+### Same-session positives (open validity question)
+
+A positive pair is two windows from the same user — and usually, therefore, from the **same recording session**, which shares headset mounting, seating position and the content being viewed. A model can score well by matching the session rather than the person, and because held-out positives are *also* same-session, that shortcut never appears as a train/test gap. This has the same shape as the cross-dataset shortcut, which cost 11 points once fixed.
+
+`cross_session_positives: true` draws positives from two different sessions of the same user. Users with only one session (all 18 of NJIT_6DOF) fall back to same-session and are counted in the run output.
+
+Measured beforehand: between-session position spread is comparable to or *smaller* than within-session spread (0.64–1.26× across three datasets), so position at least is a user-level property rather than a session fingerprint. That is reassuring but not sufficient — same-session evaluation is considered invalid in biometrics regardless, so the number to trust is the cross-session one.
+
+Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
+
 ### Selection inflation, and the fix
 
 `best_test_acc` is a **max over ~20 noisy evaluations of the set it reports**, which buys roughly **+0.02 for free**. This was caught by the `random` extractor under cross-validation: it scored 0.5173 as a best-of-20 but **0.4973 at its final epoch** — exactly chance. Every extractor showed the same offset, so **every historical `best_test_acc` in `results/runs.csv` is inflated by about 2 points, and the honest floor for that column is ~0.517, not 0.500.**
@@ -249,7 +259,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **142 passing, ~16s**.
+Current baseline: **148 passing, ~16s**.
 
 ## Performance notes
 

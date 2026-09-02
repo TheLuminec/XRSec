@@ -28,7 +28,7 @@ from pathlib import Path
 import torch
 
 
-CACHE_VERSION = 2  # v2: loader skips files with missing columns / zero duration
+CACHE_VERSION = 3  # v3: entries also carry per-window session ids
 
 # Anchored to the repo root, never the cwd: Hydra runs with `job.chdir: true`, so a
 # relative cache directory would land inside each run directory and never be reused.
@@ -77,21 +77,31 @@ def entry_path(user_dir: Path, sample_time: int, sample_rate: int,
     return cache_dir() / name
 
 
-def load(path: Path) -> torch.Tensor | None:
-    """Return the cached tensor, or None if absent or unreadable."""
+def load(path: Path):
+    """
+    Return (samples, session_ids), or None if absent or unreadable.
+
+    session_ids records which CSV each window came from, which is what allows
+    positive pairs to be restricted to *different* sessions of the same user.
+    """
     if not cache_enabled() or not path.exists():
         return None
     try:
         payload = torch.load(path, map_location="cpu", weights_only=True)
         samples = payload["samples"]
+        session_ids = payload.get("session_ids")
     except Exception:
         # A corrupt or partially written entry must never break a run; it will be
         # rebuilt and overwritten below.
         return None
-    return samples if isinstance(samples, torch.Tensor) else None
+    if not isinstance(samples, torch.Tensor):
+        return None
+    if not isinstance(session_ids, torch.Tensor) or session_ids.shape[0] != samples.shape[0]:
+        session_ids = torch.zeros(samples.shape[0], dtype=torch.long)
+    return samples, session_ids
 
 
-def store(path: Path, samples: torch.Tensor) -> None:
+def store(path: Path, samples: torch.Tensor, session_ids: torch.Tensor) -> None:
     """Write a cache entry atomically. Failures are silently ignored."""
     if not cache_enabled():
         return
@@ -99,7 +109,7 @@ def store(path: Path, samples: torch.Tensor) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         # Write-then-rename so a crash or a concurrent run never leaves a torn file.
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-        torch.save({"version": CACHE_VERSION, "samples": samples}, tmp_path)
+        torch.save({"version": CACHE_VERSION, "samples": samples, "session_ids": session_ids}, tmp_path)
         os.replace(tmp_path, path)
     except Exception:
         pass

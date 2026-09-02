@@ -115,6 +115,7 @@ class SampleDataset:
         # Dataset of origin per user, so normalisation can be fitted per dataset.
         self.dataset_names = [self._dataset_name(directory) for directory in data_dirs]
         self.user_dataset_ids: list[int] = []
+        self.session_ids: list[torch.Tensor] = []
         self.skipped_files: dict[str, int] = {}
 
         # Users are filtered before loading rather than after: excluded users cost
@@ -133,9 +134,10 @@ class SampleDataset:
 
                 self.num_users += 1
                 self.user_dataset_ids.append(dataset_id)
-                user_samples = self._load_user_samples(user_dir)
+                user_samples, user_sessions = self._load_user_samples(user_dir)
                 self.sample_count += int(user_samples.shape[0])
                 self.dataset.append(user_samples)
+                self.session_ids.append(user_sessions)
 
         cache_note = ""
         if sample_cache.cache_enabled():
@@ -164,8 +166,13 @@ class SampleDataset:
             if os.path.isdir(user_dir):
                 yield user_dir
 
-    def _load_user_samples(self, user_dir: str) -> torch.Tensor:
-        """Return one user's windows as (n_samples, 7, seq_len), via cache when possible."""
+    def _load_user_samples(self, user_dir: str):
+        """
+        Return (windows, session_ids) for one user, via cache when possible.
+
+        session_ids is the index of the CSV each window came from, so pair generation
+        can tell same-session from cross-session positives.
+        """
         cache_path = None
         if sample_cache.cache_enabled():
             cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time,
@@ -181,22 +188,26 @@ class SampleDataset:
             self.skipped_files[reason] = self.skipped_files.get(reason, 0) + count
 
         samples = []
-        for sampler in profile.data_samplers:
+        sessions = []
+        for session_index, sampler in enumerate(profile.data_samplers):
             if sampler.sample_count == 0:
                 continue
             for sample in sampler.get_all_samples():
                 # Drop the SessionTime column, then transpose to (channels, timesteps).
                 samples.append(sample[:, 1:].astype(np.float32).T)
+                sessions.append(session_index)
 
         if samples:
             user_samples = torch.tensor(np.array(samples), dtype=torch.float32)
+            user_sessions = torch.tensor(sessions, dtype=torch.long)
         else:
             seq_len = self.sample_time * self.sample_rate
             user_samples = torch.empty((0, self.num_channels, seq_len), dtype=torch.float32)
+            user_sessions = torch.empty(0, dtype=torch.long)
 
         if cache_path is not None:
-            sample_cache.store(cache_path, user_samples)
-        return user_samples
+            sample_cache.store(cache_path, user_samples, user_sessions)
+        return user_samples, user_sessions
 
     def __len__(self):
         return self.num_users
@@ -223,7 +234,9 @@ class SampleIndex:
         self.user_dataset_ids = list(user_dataset_ids)
 
         self.user_sample_indices: list[torch.Tensor] = []
+        dataset_session_ids = getattr(sample_dataset, "session_ids", [])
         flat_samples = []
+        flat_sessions = []
         window_dataset_ids = []
         offset = 0
         for user_index, user_samples in enumerate(sample_dataset.dataset):
@@ -233,6 +246,10 @@ class SampleIndex:
                 indices = torch.arange(offset, offset + sample_count, dtype=torch.long)
                 dataset_id = user_dataset_ids[user_index] if user_index < len(user_dataset_ids) else 0
                 window_dataset_ids.append(torch.full((sample_count,), dataset_id, dtype=torch.long))
+                if user_index < len(dataset_session_ids):
+                    flat_sessions.append(dataset_session_ids[user_index])
+                else:
+                    flat_sessions.append(torch.zeros(sample_count, dtype=torch.long))
             else:
                 indices = torch.empty(0, dtype=torch.long)
             self.user_sample_indices.append(indices)
@@ -241,9 +258,11 @@ class SampleIndex:
         if flat_samples:
             self.samples = torch.cat(flat_samples, dim=0)
             self.window_dataset_ids = torch.cat(window_dataset_ids, dim=0)
+            self.window_session_ids = torch.cat(flat_sessions, dim=0)
         else:
             self.samples = torch.empty((0, self.num_channels, self.seq_len), dtype=torch.float32)
             self.window_dataset_ids = torch.empty(0, dtype=torch.long)
+            self.window_session_ids = torch.empty(0, dtype=torch.long)
 
         self.sample_count = int(self.samples.shape[0])
 
@@ -280,6 +299,7 @@ def generate_pair_manifest(
     match_ratio: float = 0.5,
     seed: int | None = None,
     within_dataset_negatives: bool = False,
+    cross_session_positives: bool = False,
 ) -> dict[str, torch.Tensor]:
     """
     Deterministically generate siamese pairs from a stable sample index.
@@ -293,6 +313,14 @@ def generate_pair_manifest(
             transfer to a held-out split drawn from one dataset. Restricting negatives
             makes the training objective match the evaluation condition. This is a
             no-op when training on a single dataset.
+        cross_session_positives: Build positive pairs from two *different* recording
+            sessions of the same user. Same-session pairs share headset mounting,
+            seating position and the content being viewed, so a model can score well
+            by matching the session rather than the person - and because held-out
+            positives are same-session too, that shortcut does not show up as a
+            train/test gap. Cross-session verification is the standard requirement in
+            biometrics for exactly this reason. Users with only one session fall back
+            to same-session pairs and are counted in the manifest metadata.
     """
     if pairs_per_user <= 0 or sample_index.num_users == 0 or sample_index.sample_count == 0:
         return _empty_pair_manifest()
@@ -304,6 +332,8 @@ def generate_pair_manifest(
     x2_indices = []
     labels = []
     anchor_user_ids = []
+    cross_session_users = 0
+    single_session_users = 0
 
     user_dataset_ids = getattr(sample_index, "user_dataset_ids", []) or [0] * sample_index.num_users
 
@@ -331,10 +361,31 @@ def generate_pair_manifest(
             local_negative_target = 0
 
         if local_positive_target > 0:
-            x1_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
-            x2_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
-            x1_indices.extend(x1_pos.tolist())
-            x2_indices.extend(x2_pos.tolist())
+            session_groups = None
+            if cross_session_positives:
+                sessions = getattr(sample_index, "window_session_ids", None)
+                if sessions is not None and sessions.numel():
+                    user_sessions = sessions[user_samples]
+                    session_groups = [user_samples[user_sessions == s]
+                                      for s in torch.unique(user_sessions)]
+                    session_groups = [g for g in session_groups if g.numel() > 0]
+
+            if session_groups and len(session_groups) > 1:
+                # One window from each of two distinct sessions.
+                for _ in range(local_positive_target):
+                    first, second = rng.choice(len(session_groups), size=2, replace=False)
+                    x1_indices.append(int(rng.choice(session_groups[int(first)].numpy())))
+                    x2_indices.append(int(rng.choice(session_groups[int(second)].numpy())))
+                cross_session_users += 1
+            else:
+                # Single-session user (or session ids unavailable): fall back.
+                x1_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
+                x2_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
+                x1_indices.extend(x1_pos.tolist())
+                x2_indices.extend(x2_pos.tolist())
+                if cross_session_positives:
+                    single_session_users += 1
+
             labels.extend([1.0] * local_positive_target)
             anchor_user_ids.extend([user_idx] * local_positive_target)
 
@@ -348,6 +399,10 @@ def generate_pair_manifest(
                 x2_indices.append(x2_idx)
                 labels.append(0.0)
                 anchor_user_ids.append(user_idx)
+
+    if cross_session_positives and single_session_users:
+        print(f"  cross-session positives: {cross_session_users} users, "
+              f"{single_session_users} fell back to same-session (only one session)")
 
     manifest = make_pair_manifest(x1_indices, x2_indices, labels, anchor_user_ids)
     if manifest["labels"].numel() == 0:
@@ -456,6 +511,7 @@ def create_dataloader_from_path(
     normalize: str = "none",
     within_dataset_negatives: bool = False,
     channels: str = "full",
+    cross_session_positives: bool = False,
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
     val_user_fraction: float = 0.0,
@@ -484,6 +540,8 @@ def create_dataloader_from_path(
             dataset (see generate_pair_manifest).
         channels: Which input channels to build windows from - "full" (quaternion +
             position) or "position". See user_profile.CHANNEL_SETS.
+        cross_session_positives: Draw positive pairs from different sessions of the
+            same user (see generate_pair_manifest).
         normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
             Evaluation must pass the training-time normalizer so held-out data is not
             used to derive the transform.
@@ -513,6 +571,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 11),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            cross_session_positives=cross_session_positives,
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
         # available; doing so would let the held-out distribution shape the transform.
@@ -543,6 +602,7 @@ def create_dataloader_from_path(
         seed=_seed_value(seed, 1),
         within_dataset_negatives=within_dataset_negatives,
         channels=channels,
+        cross_session_positives=cross_session_positives,
     )
 
     # Fit on the training users only, then apply the same transform everywhere.
@@ -564,6 +624,7 @@ def create_dataloader_from_path(
                 seed=_seed_value(seed, 2),
                 within_dataset_negatives=within_dataset_negatives,
                 channels=channels,
+                cross_session_positives=cross_session_positives,
             )
             normalizer.transform(test_dataset.sample_index)
         else:
@@ -591,6 +652,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 4),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            cross_session_positives=cross_session_positives,
         )
         normalizer.transform(test_dataset.sample_index)
 
@@ -606,6 +668,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 22),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            cross_session_positives=cross_session_positives,
         )
         normalizer.transform(val_dataset.sample_index)
         val_loader = DataLoader(
@@ -655,6 +718,7 @@ class SiameseDataset(Dataset):
         match_ratio: float = 0.5,
         within_dataset_negatives: bool = False,
         channels: str = "full",
+        cross_session_positives: bool = False,
     ):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -678,6 +742,7 @@ class SiameseDataset(Dataset):
             match_ratio=self.match_ratio,
             seed=self.seed,
             within_dataset_negatives=within_dataset_negatives,
+            cross_session_positives=cross_session_positives,
         )
         self.siamese_count = int(self.manifest["labels"].shape[0])
 

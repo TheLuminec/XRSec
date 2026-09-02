@@ -367,6 +367,20 @@ native rate duplicates frames rather than adding information:
 
 At `sample_rate=20`, ViewGauss is 50.5% duplicated frames and PanoSaliency 25.9%.
 
+## Cross-Session Verification
+
+```powershell
+python model/main.py mode=train cross_session_positives=true
+```
+
+A positive pair is normally two windows from the same user, which usually means the
+same recording session - sharing headset mounting, seating position and viewed
+content. A model can score by matching the session rather than the person, and since
+held-out positives are same-session too, that shortcut never shows as a train/test
+gap. Cross-session evaluation is the standard requirement in biometrics.
+
+Users with only one session fall back to same-session pairs and are reported.
+
 ## Reporting an Honest Number
 
 `best_test_acc` is a max over every epoch of the set it reports, which inflates it by

@@ -154,6 +154,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
             match_ratio=match_ratio,
             seed=manifest_seed,
             within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        cross_session_positives=bool(getattr(args, "cross_session_positives", False)),
         )
         return manifest, {
             "manifest_seed": manifest_seed,
@@ -171,6 +172,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
         match_ratio=match_ratio,
         seed=candidate_seed,
         within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        cross_session_positives=bool(getattr(args, "cross_session_positives", False)),
     )
     previous_model = load_checkpoint(
         previous_best_path,
@@ -199,6 +201,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
         match_ratio=match_ratio,
         seed=refresh_seed,
         within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        cross_session_positives=bool(getattr(args, "cross_session_positives", False)),
     )
     manifest = concat_pair_manifests([hard_manifest, refresh_manifest])
     return manifest, {
@@ -315,6 +318,7 @@ def run_boosted_training(
         match_ratio=float(boosting.match_ratio),
         seed=derive_seed(args.seed, "boost", "validation_manifest"),
         within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        cross_session_positives=bool(getattr(args, "cross_session_positives", False)),
     )
     validation_loader = create_pair_dataloader(
         validation_sample_index,

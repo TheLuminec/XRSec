@@ -61,6 +61,14 @@ normalize: per_dataset
 # No effect when training on a single dataset.
 within_dataset_negatives: true
 
+# Build positive pairs from two DIFFERENT recording sessions of the same user.
+# Same-session pairs share headset mounting, seating position and the content being
+# viewed, so a model can score by matching the session rather than the person - and
+# because held-out positives are same-session too, that shortcut never shows up as a
+# train/test gap. Cross-session evaluation is the standard requirement in biometrics.
+# Users with only one session (all of NJIT_6DOF) fall back to same-session pairs.
+cross_session_positives: false
+
 # Feature extractor: any name registered in model/extractors/.
 # List them with: .venv/Scripts/python model/list_extractors.py
 extractor: bilstm
