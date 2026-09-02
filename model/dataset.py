@@ -405,6 +405,39 @@ def create_pair_dataloader(
     )
 
 
+def select_validation_users(data_dir, exclude_users, fraction: float, seed: int | None) -> list[str]:
+    """
+    Deterministically pick users to hold out for epoch selection.
+
+    These are drawn from the *training* users and are disjoint from both the training
+    and the reported test group, because the task is generalisation to unseen people:
+    a validation split that shares users with training would select on memorisation.
+
+    Returns [] when fraction is 0, which restores the previous single-split behaviour.
+    """
+    if not fraction or fraction <= 0:
+        return []
+
+    excluded = set(exclude_users or [])
+    candidates = []
+    for directory in ([data_dir] if isinstance(data_dir, str) else list(data_dir)):
+        for name in sorted(os.listdir(directory)):
+            path = os.path.join(directory, name)
+            if os.path.isdir(path) and path not in excluded:
+                candidates.append(path)
+
+    if len(candidates) < 3:
+        # Too few users to spare any: selecting on one user would be worse than not.
+        return []
+
+    count = int(round(len(candidates) * float(fraction)))
+    count = min(max(count, 1), len(candidates) - 2)
+
+    rng = np.random.default_rng(_seed_value(seed, 21))
+    chosen = rng.choice(len(candidates), size=count, replace=False)
+    return sorted(candidates[int(i)] for i in chosen)
+
+
 def create_dataloader_from_path(
     data_dir,
     batch_size: int,
@@ -425,6 +458,8 @@ def create_dataloader_from_path(
     channels: str = "full",
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
+    val_user_fraction: float = 0.0,
+    return_val: bool = False,
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -453,6 +488,12 @@ def create_dataloader_from_path(
             Evaluation must pass the training-time normalizer so held-out data is not
             used to derive the transform.
         return_normalizer: Append the fitted normalizer to the returned tuple.
+        val_user_fraction: Fraction of training users held out for epoch selection.
+            Reporting the best epoch chosen on the same set it reports inflates the
+            number - measured at about +0.02, since it is a max over ~20 noisy
+            evaluations. Selecting on a disjoint group removes that.
+        return_val: Return (train, val, test) instead of (train, test). `val` is None
+            when val_user_fraction is 0.
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
@@ -487,12 +528,17 @@ def create_dataloader_from_path(
         )
         return (test_loader, eval_normalizer) if return_normalizer else test_loader
 
+    # Users reserved for epoch selection are excluded from training too, so the three
+    # groups stay user-disjoint.
+    validation_users = select_validation_users(data_dir, exclude_users, val_user_fraction, seed)
+    training_exclusions = list(exclude_users or []) + validation_users
+
     train_dataset = SiameseDataset(
         data_dir,
         samples_per_user=samples_per_user,
         sample_time=sample_time,
         sample_rate=sample_rate,
-        exclude_users=exclude_users,
+        exclude_users=training_exclusions,
         swap_data=swap_data,
         seed=_seed_value(seed, 1),
         within_dataset_negatives=within_dataset_negatives,
@@ -548,6 +594,30 @@ def create_dataloader_from_path(
         )
         normalizer.transform(test_dataset.sample_index)
 
+    val_loader = None
+    if validation_users:
+        val_dataset = SiameseDataset(
+            data_dir,
+            samples_per_user=samples_per_user,
+            sample_time=sample_time,
+            sample_rate=sample_rate,
+            exclude_users=validation_users,
+            swap_data=True,
+            seed=_seed_value(seed, 22),
+            within_dataset_negatives=within_dataset_negatives,
+            channels=channels,
+        )
+        normalizer.transform(val_dataset.sample_index)
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            generator=torch.Generator().manual_seed(_seed_value(seed, 23)),
+        )
+        print(f"Validation split: {len(validation_users)} users held out for epoch selection")
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
@@ -564,7 +634,8 @@ def create_dataloader_from_path(
         pin_memory=pin_memory,
         generator=torch.Generator().manual_seed(_seed_value(seed, 6)),
     )
-    return (train_loader, test_loader, normalizer) if return_normalizer else (train_loader, test_loader)
+    loaders = (train_loader, val_loader, test_loader) if return_val else (train_loader, test_loader)
+    return (*loaders, normalizer) if return_normalizer else loaders
 
 
 class SiameseDataset(Dataset):

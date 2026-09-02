@@ -367,6 +367,23 @@ native rate duplicates frames rather than adding information:
 
 At `sample_rate=20`, ViewGauss is 50.5% duplicated frames and PanoSaliency 25.9%.
 
+## Reporting an Honest Number
+
+`best_test_acc` is a max over every epoch of the set it reports, which inflates it by
+about +0.02 - a max over ~20 noisy evaluations. A random-output extractor scores
+0.4973 at its final epoch but 0.5173 as a best-of.
+
+```powershell
+python model/main.py mode=train val_user_fraction=0.25
+```
+
+This holds out a group of training users - disjoint from both training and the
+reported test users - and chooses the epoch on them. Then report `selected_test_acc`.
+Verified with the random extractor over 3 seeds: max-over-epochs averaged 0.525 while
+the validation-selected figure averaged 0.502, i.e. chance.
+
+Default is 0, which keeps the historical behaviour so older numbers stay comparable.
+
 ## Results Log
 
 Every run appends one row to `results/runs.csv`: config, metrics, checkpoint, run

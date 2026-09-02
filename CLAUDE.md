@@ -103,7 +103,19 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
 
-Also note there is no third split: per-epoch best-checkpoint selection and boosted best-round selection both use the same held-out set that gets reported, so reported accuracy is optimistically biased.
+### Selection inflation, and the fix
+
+`best_test_acc` is a **max over ~20 noisy evaluations of the set it reports**, which buys roughly **+0.02 for free**. This was caught by the `random` extractor under cross-validation: it scored 0.5173 as a best-of-20 but **0.4973 at its final epoch** — exactly chance. Every extractor showed the same offset, so **every historical `best_test_acc` in `results/runs.csv` is inflated by about 2 points, and the honest floor for that column is ~0.517, not 0.500.**
+
+`val_user_fraction` fixes it by holding out a group of *training* users — disjoint from both training and the reported test users, since the task is generalisation to unseen people — and choosing the epoch on them. Three columns are now recorded:
+
+| column | meaning |
+| --- | --- |
+| `selected_test_acc` | test accuracy at the validation-chosen epoch — **report this** |
+| `best_test_acc` | max over epochs of the test set — optimistic, kept for continuity |
+| `best_val_acc` | the selection signal itself |
+
+Verified with the random extractor at `val_user_fraction=0.25` over 3 seeds: max-over-epochs averaged 0.525 while the validation-selected figure averaged **0.502**, i.e. chance. Default is 0 (historical behaviour) so old comparisons stay like-for-like; set it for anything you intend to quote.
 
 ### The evaluation is noisier than it looks
 

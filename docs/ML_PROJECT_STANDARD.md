@@ -100,9 +100,11 @@ rather than manual config editing. What remains:
 - ~~Validation/evaluation metrics are still minimal~~ - ROC-AUC and EER (with the
   EER threshold) are now computed per epoch and recorded per run. A confusion matrix
   is still not produced.
-- **No third split**
-  - per-epoch checkpoint selection, boosted best-round selection and the reported
-    number all use the same held-out users, so reported accuracy is optimistically biased
+- **No third split** - addressed for standard training by `val_user_fraction`, which
+  holds out training users to choose the epoch; report `selected_test_acc`. Measured
+  inflation without it is ~+0.02 (a random extractor scores 0.4973 at its final epoch
+  but 0.5173 as a best-of-20), so the honest floor for `best_test_acc` is ~0.517.
+  Boosted best-round selection still reads the set it reports and is NOT yet fixed.
 - **Single-split results are inside the noise**
   - which users are held out moves accuracy by ~0.114 (sd 0.037) against a +/-0.019
     binomial bar, and the project's fixed 5-user split is easier than average
@@ -132,15 +134,17 @@ For new experiments in this repository, the minimum acceptable bar should now be
 4. Keep `graph: true` for any meaningful training run so loss/accuracy history is preserved.
 5. Report cross-validated results (`sweep.folds`) for any comparison that informs a
    decision. Differences smaller than the fold spread are not results.
-6. When training on more than one dataset, keep `normalize: per_dataset` and
+6. Set `val_user_fraction` and quote `selected_test_acc` for any number that leaves
+   this repository. `best_test_acc` is inflated by ~0.02 by construction.
+7. When training on more than one dataset, keep `normalize: per_dataset` and
    `within_dataset_negatives: true`, and check each dataset's native sampling rate
    before raising `sample_rate` - requesting more than the native rate duplicates
    frames instead of adding information.
-7. Preserve boosted artifacts when using round training:
+8. Preserve boosted artifacts when using round training:
    - `boost_state.json`
    - round checkpoints
    - summary and round plots
-8. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
+9. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
 
 ## 6) Suggested next milestones
 

@@ -159,6 +159,7 @@ def run_training(
     train_loader,
     test_loader,
     device,
+    val_loader=None,
     start_epoch: int = 1,
     history=None,
     last_checkpoint_path=None,
@@ -172,21 +173,37 @@ def run_training(
         train_epoch_fn: Alternative per-epoch training step, used by the identity
             objective. Defaults to the pairwise step. Everything after the step -
             evaluation, history, checkpointing, best-model selection - is shared.
+        val_loader: Optional user-disjoint split used to CHOOSE the best epoch. When
+            given, `selected_test_acc` is the test accuracy at the epoch validation
+            picked, which is the honest number to report. Without it the best epoch is
+            chosen on the test set itself, which inflates the result by about +0.02 -
+            a max over ~20 noisy evaluations, measured with a random-output extractor
+            that scores 0.4973 at its final epoch but 0.5173 as a best-of.
     """
     train_epoch_fn = train_epoch_fn or train_epoch
     history = _normalize_history(history)
     print(f"\n{'Epoch':>5} | {'Train Loss':>10} | {'Train Acc':>9} | {'Test Loss':>9} | {'Test Acc':>8}")
     print("-" * 64)
 
-    best_test_acc = history["best_test_acc"]
+    best_selection_metric = history["best_test_acc"]
     if history["best_epoch"] == 0 and not history["test_acc"]:
-        best_test_acc = float("-inf")
+        best_selection_metric = float("-inf")
 
     best_epoch = history["best_epoch"]
 
     for epoch in range(start_epoch, epochs + 1):
         train_loss, train_acc = train_epoch_fn(model, train_loader, criterion, optimizer, device)
         test_loss, test_acc, metrics = evaluate(model, test_loader, criterion, device, return_metrics=True)
+
+        # The selection signal is validation when we have one, and the test set
+        # otherwise (the historical behaviour, kept for continuity).
+        if val_loader is not None:
+            val_loss, val_acc = evaluate(model, val_loader, criterion, device)
+            history.setdefault("val_loss", []).append(val_loss)
+            history.setdefault("val_acc", []).append(val_acc)
+            selection_metric = val_acc
+        else:
+            selection_metric = test_acc
 
         history["train_loss"].append(train_loss)
         history["train_acc"].append(train_acc)
@@ -198,13 +215,23 @@ def run_training(
         print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | "
               f"{test_acc:7.2%} | {metrics['auc']:7.4f} | {metrics['eer']:6.2%}")
 
-        if test_acc > best_test_acc:
-            best_test_acc = test_acc
+        # The max over every epoch of the reported set. This is what earlier runs
+        # recorded, and it is optimistic by construction - a max over ~20 noisy
+        # evaluations. Tracked unconditionally so it stays a genuine maximum rather
+        # than "the best test score among epochs validation happened to like".
+        history["best_test_acc"] = max(history.get("best_test_acc", 0.0), test_acc)
+
+        if selection_metric > best_selection_metric:
+            best_selection_metric = selection_metric
             best_epoch = epoch
-            history["best_test_acc"] = best_test_acc
+            # The honest figure when a validation split exists: test accuracy at the
+            # epoch chosen without looking at the test set.
+            history["selected_test_acc"] = test_acc
             history["best_epoch"] = best_epoch
             history["best_test_auc"] = metrics["auc"]
             history["best_test_eer"] = metrics["eer"]
+            if val_loader is not None:
+                history["best_val_acc"] = selection_metric
             save_checkpoint(
                 save_path,
                 model,
@@ -230,10 +257,19 @@ def run_training(
                 ),
             )
 
-    history["best_test_acc"] = 0.0 if best_test_acc == float("-inf") else best_test_acc
+    if best_selection_metric == float("-inf"):
+        history["best_test_acc"] = 0.0
+    history.setdefault("best_test_acc", 0.0)
     history["best_epoch"] = best_epoch
 
-    print(f"\nBest test accuracy: {history['best_test_acc']:.2%}")
+    # Always report the max-over-epochs figure too, since every historical number in
+    # results/runs.csv is of that kind and comparisons need to be like-for-like.
+    print(f"\nMax test accuracy over epochs: {history['best_test_acc']:.2%}  (optimistic)")
+    if val_loader is not None:
+        print(f"Test accuracy at the validation-selected epoch {best_epoch}: "
+              f"{history.get('selected_test_acc', 0.0):.2%}  <- report this one")
+    if history.get("test_acc"):
+        print(f"Final-epoch test accuracy: {history['test_acc'][-1]:.2%}")
     print(f"Model saved to: {save_path}")
     return history
 
@@ -299,7 +335,7 @@ def _run_standard_training(args, device):
     train_paths, test_paths, exclude_users = resolve_paths(args)
 
     print("Loading dataset...")
-    train_loader, test_loader, normalizer = create_dataloader_from_path(
+    train_loader, val_loader, test_loader, normalizer = create_dataloader_from_path(
         train_paths,
         args.batch_size,
         device,
@@ -316,6 +352,8 @@ def _run_standard_training(args, device):
         normalize=getattr(args, "normalize", "none"),
         within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
         channels=str(getattr(args, "channels", "full") or "full"),
+        val_user_fraction=float(getattr(args, "val_user_fraction", 0.0) or 0.0),
+        return_val=True,
         return_normalizer=True,
     )
 
@@ -344,6 +382,7 @@ def _run_standard_training(args, device):
         train_loader,
         test_loader,
         device,
+        val_loader=val_loader,
         start_epoch=start_epoch,
         history=history,
         train_epoch_fn=train_epoch_fn,

@@ -31,6 +31,13 @@ head: diff_linear
 # position), so this may cost little. Not every extractor accepts 3 channels - see
 # CLAUDE.md.
 channels: full
+
+# Fraction of TRAINING users held out to choose the best epoch, disjoint from both
+# training and the reported test users. 0 keeps the historical behaviour of picking
+# the best epoch on the set being reported, which inflates the result by about +0.02:
+# a random-output extractor scores 0.4973 at its final epoch but 0.5173 as a
+# best-of-20. With this set, report `selected_test_acc`.
+val_user_fraction: 0.0
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128
