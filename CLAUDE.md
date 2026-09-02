@@ -143,7 +143,25 @@ So the learned model adds **+0.107 over two lines of numpy**, and absolute posit
 
 This **reverses an earlier reading**. On the old protocol the trivial baseline scored 0.712 against a trained 0.656, which looked like the models adding nothing. That comparison was made on the fixed 5-user split — which is unusually easy — with same-session positives, and against a `best_test_acc` that was itself inflated. Corrected, the ordering flips. Any future "is the network earning its place" claim should be measured this way, not on the fixed split.
 
-`center_position` exists to push this further: it strips the anthropometric cue (height, seated posture) and leaves only how the person moves. The trivial descriptor collapses to 0.513 without absolute position; whether a *trained* model does is the open question, and it decides whether this work is behavioural biometrics or body measurement.
+### Anthropometry vs behaviour — answered
+
+**About three quarters of what this model does is absolute head position, i.e. height and seated posture.** Measured with `center_position` (5 stratified folds, `identity_softmax`, cross-session positives, validation-selected, paired on matched folds):
+
+| extractor | keeps position | centred (movement only) | difference | t(4) |
+| --- | --- | --- | --- | --- |
+| bilstm | 0.6691 | 0.5352 | −0.1339 | −9.00 |
+| motion_tdnn | 0.6753 | 0.5405 | −0.1348 | −10.27 |
+| random (control) | 0.4967 | 0.4967 | 0.0000 | — |
+
+Above the 0.4967 control floor: full headroom 0.1724, movement-only headroom 0.0385 — **22% retained**. Independently by AUC: 0.2237 → 0.0530, **24% retained**. Two architectures agree to within 0.001 on the size of the drop, the control is bit-identical across arms, and the trivial descriptor shows the same thing from the other direction (0.562 → 0.513).
+
+What this does and does not mean:
+
+- **Not spurious.** 0.669 is a real identification result and head height is a genuine biometric. It survived leave-users-out folds, validation-selected epochs and cross-session positives. There is no leakage here.
+- **Not primarily behavioural.** This cannot be described as identifying people by how they move when three quarters of it is how tall they are.
+- **The behavioural component is real but small**: 0.535 / 0.541 against a 0.497 floor, AUC 0.553 / 0.561, two architectures agreeing. It deserves its own reported number rather than being folded into the headline.
+
+One caveat when quoting the 22%: the centred arm still contains **absolute quaternion**, and how someone holds their head is itself partly postural. So 22% is an upper bound on the purely behavioural share, not a point estimate. Centring orientation as well, or `channels=position` + `center_position`, would tighten it.
 
 ### Selection inflation, and the fix
 
