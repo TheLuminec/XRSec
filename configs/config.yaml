@@ -3,6 +3,9 @@ mode: train
 seed: 67
 epochs: 20
 lr: 0.001
+# L2 penalty for Adam. Held-out accuracy peaks within a couple of epochs and then
+# declines, so this is the main regularisation knob alongside extractor dropout.
+weight_decay: 0.0
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128
@@ -87,6 +90,12 @@ sweep:
   grid: auto
   # grid = every combination in order; random = an unbiased subset when max_runs caps it.
   strategy: grid
+  # Cross-validate every configuration over K disjoint held-out user groups and rank
+  # by the mean. Strongly recommended: which users are held out moves accuracy by
+  # ~0.11 on this data, far more than the +/-0.02 binomial bar on 2560 pairs, so a
+  # single fixed split cannot separate configurations that differ by a few points.
+  # Ignores exclude_users and partitions every user across data_dirs.
+  folds: null
   max_runs: null
   seed: null
   # Epochs per sweep run; null keeps the top-level `epochs`.

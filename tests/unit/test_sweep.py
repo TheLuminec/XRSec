@@ -249,3 +249,121 @@ def test_boosted_sweep_runs_are_scored_by_best_round(tmp_path):
     }
     result = sweep.run_sweep(cfg, train_fn=lambda run_cfg: boosted)
     assert result["best"]["best_test_acc"] == 0.66
+
+
+# --- cross-validation over user folds -----------------------------------------
+
+@pytest.fixture
+def user_tree(tmp_path):
+    """A dataset directory with 6 users, enough to fold."""
+    root = tmp_path / "DS" / "users"
+    for user in range(6):
+        (root / str(user)).mkdir(parents=True)
+    return root
+
+
+def test_folds_partition_every_user_exactly_once(tmp_path, user_tree):
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = [str(user_tree)]
+
+    folds = sweep.build_folds(cfg, 3, seed=1)
+
+    assert len(folds) == 3
+    flat = [u for group in folds for u in group]
+    assert len(flat) == 6 and len(set(flat)) == 6, "folds must be disjoint and cover everyone"
+
+
+def test_folds_are_deterministic(tmp_path, user_tree):
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = [str(user_tree)]
+    assert sweep.build_folds(cfg, 3, seed=7) == sweep.build_folds(cfg, 3, seed=7)
+    assert sweep.build_folds(cfg, 3, seed=7) != sweep.build_folds(cfg, 3, seed=8)
+
+
+def test_too_many_folds_is_rejected(tmp_path, user_tree):
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = [str(user_tree)]
+    with pytest.raises(ValueError, match="at least that many users"):
+        sweep.build_folds(cfg, 99, seed=1)
+
+
+def test_fold_run_overrides_the_held_out_users(tmp_path, user_tree):
+    """Each fold must evaluate on its own group, via the leave-users-out convention."""
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = [str(user_tree)]
+    held = [str(user_tree / "0"), str(user_tree / "1")]
+
+    run_cfg = sweep.apply_configuration(
+        cfg, {"id": "abc", "extractor": "bilstm", "overrides": {}},
+        tmp_path / "root", "s1", fold=2, held_out_users=held,
+    )
+
+    assert list(run_cfg.exclude_users) == held
+    assert run_cfg.swap_data is False
+    assert run_cfg.test_on_excluded is True
+    assert run_cfg.fold == 2
+    assert "fold2" in run_cfg.save_path
+
+
+def test_cross_validated_sweep_reports_mean_and_spread(tmp_path, user_tree):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01, 0.001]}, folds=3)
+    cfg.data_dirs = [str(user_tree)]
+
+    # Score depends on the fold, so the spread is non-zero and checkable.
+    scores = {0: 0.60, 1: 0.70, 2: 0.80}
+
+    def fake_train(run_cfg):
+        return _history(scores[int(run_cfg.fold)] + (0.05 if run_cfg.lr == 0.01 else 0.0))
+
+    result = sweep.run_sweep(cfg, train_fn=fake_train)
+
+    assert len(result["records"]) == 2, "one aggregated row per configuration"
+    for record in result["records"]:
+        assert record["folds_completed"] == 3
+        assert record["fold_std"] == pytest.approx(0.0816, abs=1e-3)
+    best = result["best"]
+    assert best["best_test_acc"] == pytest.approx(0.75, abs=1e-6)
+    assert best["overrides"]["lr"] == 0.01
+
+
+def test_cross_validated_sweep_runs_every_configuration_on_every_fold(tmp_path, user_tree):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01, 0.001]}, folds=3)
+    cfg.data_dirs = [str(user_tree)]
+    seen = []
+
+    def fake_train(run_cfg):
+        seen.append((run_cfg.lr, int(run_cfg.fold)))
+        return _history(0.6)
+
+    sweep.run_sweep(cfg, train_fn=fake_train)
+    assert len(seen) == 6 and len(set(seen)) == 6
+
+
+def test_a_failed_fold_does_not_discard_the_others(tmp_path, user_tree):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]}, folds=3)
+    cfg.data_dirs = [str(user_tree)]
+
+    def flaky(run_cfg):
+        if int(run_cfg.fold) == 1:
+            raise RuntimeError("boom")
+        return _history(0.66)
+
+    result = sweep.run_sweep(cfg, train_fn=flaky)
+    record = result["records"][0]
+    assert record["status"] == "ok"
+    assert record["folds_completed"] == 2
+    assert record["best_test_acc"] == pytest.approx(0.66)
+
+
+def test_cross_validated_resume_skips_completed_folds(tmp_path, user_tree):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]}, folds=3)
+    cfg.data_dirs = [str(user_tree)]
+    calls = []
+
+    def counting(run_cfg):
+        calls.append(1)
+        return _history(0.6)
+
+    sweep.run_sweep(cfg, train_fn=counting)
+    sweep.run_sweep(cfg, train_fn=counting)
+    assert len(calls) == 3, "a resumed cross-validated sweep must not retrain finished folds"

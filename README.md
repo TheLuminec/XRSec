@@ -251,6 +251,22 @@ sweep:
 
 `grid: auto` (the default) uses each extractor's declared `search_space()`.
 
+### Cross-validation
+
+Which users are held out matters more than anything else measured on this data:
+swapping the held-out group moves a training-free position probe from 0.631 to 0.746
+(sd 0.037), against a +/-0.019 binomial bar on 2560 pairs. A single fixed split
+cannot separate configurations that differ by a few points.
+
+```powershell
+python model/main.py mode=sweep sweep.folds=5
+```
+
+Each configuration is trained on K disjoint held-out user groups and ranked by the
+mean, with the spread reported. `sweep.folds` ignores `exclude_users` and partitions
+every user across `data_dirs`. The ranking warns when the top two configurations
+differ by less than the fold spread.
+
 ### Behaviour
 
 - **Failures are isolated.** A configuration that raises is recorded with its error
@@ -260,6 +276,8 @@ sweep:
 - **Every configuration is appended to `results/runs.csv`**, tagged with `sweep_id`,
   so sweep and non-sweep results stay comparable in one table.
 - `sweep.epochs` shortens each sweep run without touching the top-level `epochs`.
+- With `sweep.folds`, resume works per fold, and a configuration still reports a mean
+  from whichever folds succeeded if one of them fails.
 - `sweep.strategy=random` with `sweep.max_runs=N` takes an unbiased subset;
   capping a `grid` sweep just truncates it in order.
 

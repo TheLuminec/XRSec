@@ -35,6 +35,8 @@ FIELDS = [
     "normalize",
     "within_dataset_negatives",
     "best_test_acc",
+    "best_test_auc",
+    "best_test_eer",
     "best_epoch",
     "final_train_acc",
     "final_test_acc",
@@ -50,6 +52,7 @@ FIELDS = [
     "samples_per_user",
     "batch_size",
     "lr",
+    "weight_decay",
     "hard_fraction",
     "candidate_pairs_per_user",
     "match_ratio",
@@ -123,8 +126,10 @@ def _last(values):
 def summarize(mode: str, result) -> dict:
     """Flatten a train/boosted/test result into the metric columns."""
     if mode == "test":
-        loss, accuracy = result
-        return {"final_test_loss": loss, "final_test_acc": accuracy, "best_test_acc": accuracy}
+        loss, accuracy, *rest = result
+        metrics = rest[0] if rest else {}
+        return {"final_test_loss": loss, "final_test_acc": accuracy, "best_test_acc": accuracy,
+                "best_test_auc": metrics.get("auc"), "best_test_eer": metrics.get("eer")}
 
     if isinstance(result, dict) and result.get("mode") == "boosted":
         summaries = result.get("round_summaries") or []
@@ -133,6 +138,8 @@ def summarize(mode: str, result) -> dict:
         final = histories[-1] if histories else {}
         return {
             "best_test_acc": best["best_test_acc"] if best else None,
+            "best_test_auc": (histories[best["round_idx"]].get("best_test_auc")
+                              if best and "round_idx" in best and best["round_idx"] < len(histories) else None),
             "best_epoch": best["best_epoch"] if best else None,
             "rounds_run": len(summaries),
             "epochs_run": len(final.get("train_loss") or []),
@@ -146,6 +153,8 @@ def summarize(mode: str, result) -> dict:
     history = result if isinstance(result, dict) else {}
     return {
         "best_test_acc": history.get("best_test_acc"),
+        "best_test_auc": history.get("best_test_auc"),
+        "best_test_eer": history.get("best_test_eer"),
         "best_epoch": history.get("best_epoch"),
         "epochs_run": len(history.get("train_loss") or []),
         "final_train_acc": _last(history.get("train_acc")),
@@ -191,6 +200,10 @@ def _append_row(path: Path, row: dict) -> None:
         existing = [
             {key: value for key, value in record.items() if key is not None}
             for record in csv.DictReader(handle)
+            # `results/runs.csv` is union-merged across machines (.gitattributes), so a
+            # merge of two differing schemas can leave a second header line mid-file.
+            # Treat it as the artefact it is rather than a row of data.
+            if record.get(FIELDS[0]) != FIELDS[0]
         ]
 
     with path.open("w", newline="", encoding="utf-8") as handle:
@@ -228,6 +241,7 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "samples_per_user": cfg.samples_per_user,
             "batch_size": cfg.batch_size,
             "lr": cfg.lr,
+            "weight_decay": getattr(cfg, "weight_decay", ""),
             "epochs_run": None,
             "rounds_run": None,
             "num_data_dirs": len(cfg.data_dirs or []),

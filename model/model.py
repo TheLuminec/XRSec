@@ -26,6 +26,7 @@ def create_model(
     extractor=DEFAULT_EXTRACTOR,
     extractor_params=None,
     num_channels=7,
+    weight_decay=0.0,
 ):
     """
     Create the model.
@@ -38,6 +39,8 @@ def create_model(
         extractor: Registered feature extractor name (see model/extractors/)
         extractor_params: Hyperparameter overrides for that extractor
         num_channels: Number of input channels
+        weight_decay: L2 penalty for Adam. The model overfits held-out users within a
+            couple of epochs, and nothing previously regularised the weights.
     """
     # Imported here rather than at module scope: extractor modules import from this
     # module, so a top-level import would be circular.
@@ -58,7 +61,7 @@ def create_model(
     print(f"Model parameters: {param_count:,}")
 
     criterion = nn.BCEWithLogitsLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     return model, criterion, optimizer
 
 

@@ -1,0 +1,3 @@
+# Append-only experiment log: two machines appending different runs must not
+# conflict. Union merge keeps every row from both sides.
+results/runs.csv merge=union

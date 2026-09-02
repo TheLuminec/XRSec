@@ -115,3 +115,22 @@ def test_logging_failure_does_not_raise(tmp_path):
     """A finished run must never be lost to a logging error."""
     broken = SimpleNamespace(mode="train")  # missing nearly every attribute
     assert results_log.append_run(broken, _history(), "users", results_path=tmp_path / "r.csv") is None
+
+
+def test_stray_header_from_a_union_merge_is_not_treated_as_data(tmp_path, monkeypatch):
+    """
+    results/runs.csv is union-merged across machines. A merge of two differing
+    schemas can leave a duplicated header line mid-file; it must not become a row.
+    """
+    path = tmp_path / "runs.csv"
+    results_log.append_run(_cfg(), _history(), dataset_tag="users", results_path=path)
+
+    with path.open("a", newline="", encoding="utf-8") as handle:
+        handle.write(",".join(results_log.FIELDS) + "\n")
+
+    monkeypatch.setattr(results_log, "FIELDS", results_log.FIELDS + ["another_metric"])
+    results_log.append_run(_cfg(), _history(), dataset_tag="users", results_path=path)
+
+    rows = _rows(path)
+    assert len(rows) == 2, "the duplicated header must be dropped, not migrated as data"
+    assert all(row["mode"] == "train" for row in rows)

@@ -7,11 +7,12 @@ Loads a trained model checkpoint and evaluates accuracy on the dataset.
 import torch
 import torch.nn as nn
 from dataset import create_dataloader_from_path
+from metrics import pair_metrics
 from normalization import ChannelNormalizer
 from utils import load_checkpoint
 
 
-def evaluate(model, loader, criterion, device, return_preds=False):
+def evaluate(model, loader, criterion, device, return_preds=False, return_metrics=False):
     """
     Evaluate the model.
     
@@ -21,6 +22,9 @@ def evaluate(model, loader, criterion, device, return_preds=False):
         criterion: Loss function
         device: Device to evaluate on
         return_preds: Whether to return predictions and labels
+        return_metrics: Also return threshold-free verification metrics (AUC, EER).
+            Accuracy alone is measured at the fixed logit>0 threshold and hides
+            ranking quality, which is what actually matters for verification.
     """
     model.eval()
     total_loss = 0.0
@@ -29,6 +33,9 @@ def evaluate(model, loader, criterion, device, return_preds=False):
 
     all_preds = []
     all_labels = []
+    all_scores = []
+    score_chunks = []
+    label_chunks = []
 
     with torch.no_grad():
         for batch_x, batch_y in loader:
@@ -45,6 +52,10 @@ def evaluate(model, loader, criterion, device, return_preds=False):
             correct += (predicted == batch_y).sum().item()
             total += batch_y.size(0)
 
+            if return_metrics:
+                score_chunks.append(output.detach().cpu())
+                label_chunks.append(batch_y.detach().cpu())
+
             if return_preds:
                 all_preds.extend(predicted.cpu().tolist())
                 all_labels.extend(batch_y.cpu().tolist())
@@ -52,8 +63,17 @@ def evaluate(model, loader, criterion, device, return_preds=False):
     avg_loss = total_loss / total
     accuracy = correct / total
 
+    metrics = {}
+    if return_metrics:
+        import torch as _torch
+        metrics = pair_metrics(_torch.cat(score_chunks), _torch.cat(label_chunks))
+
+    if return_preds and return_metrics:
+        return avg_loss, accuracy, all_preds, all_labels, metrics
     if return_preds:
         return avg_loss, accuracy, all_preds, all_labels
+    if return_metrics:
+        return avg_loss, accuracy, metrics
     return avg_loss, accuracy
 
 def run_evaluation(model, test_loader, criterion, test_size, device):
@@ -122,6 +142,6 @@ def evaluate_model(args, device=None):
 
     criterion = nn.BCEWithLogitsLoss()
     
-    loss, accuracy = run_evaluation(model, test_loader, criterion, test_size, device)
-    
-    return loss, accuracy
+    loss, accuracy, metrics = run_evaluation(model, test_loader, criterion, test_size, device)
+
+    return loss, accuracy, metrics

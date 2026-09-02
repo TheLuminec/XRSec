@@ -103,9 +103,28 @@ The default config trains on 43 users and evaluates on 5 held-out ones. **`test_
 
 Also note there is no third split: per-epoch best-checkpoint selection and boosted best-round selection both use the same held-out set that gets reported, so reported accuracy is optimistically biased.
 
+### The evaluation is noisier than it looks
+
+**Measured:** holding out a different random 5 users moves a training-free position probe from 0.631 to 0.746 — a **0.114 spread, sd 0.037** — while the binomial error bar on 2560 pairs is only ±0.019. The effective sample size is the number of held-out *users*, not pairs.
+
+Two consequences that should govern how any result here is read:
+
+1. **Differences below ~0.04 on a single split are not real.** An 8-configuration regularization sweep produced a range of 0.682–0.692; that is entirely inside the noise and separates nothing.
+2. **The project's fixed split (users 1–5) is unusually easy**: 0.754 on the same probe versus 0.686 for the average random split. Numbers from it are optimistic, and an unreproducible historical high could partly be a lucky split.
+
+Use `sweep.folds: K` for anything you intend to act on. It ignores `exclude_users`, partitions every user across `data_dirs` into K disjoint held-out groups, runs each configuration on all of them, and ranks by the mean while reporting the spread. It prints an explicit warning when the top two configurations differ by less than the fold standard deviation.
+
 ## Data
 
-Model input lives in `processed_datasets/<Dataset_Name>/users/<user_id>/<task>.csv`, gitignored, with required columns `SessionTime`, `UnitQuaternion.{x,y,z,w}`, `HmdPosition.{x,y,z}` at ≥10Hz. Eight datasets are populated locally (~350 users); the other `processed_datasets/` folders are empty stubs.
+Model input lives in `processed_datasets/<Dataset_Name>/users/<user_id>/<task>.csv`, gitignored, with required columns `SessionTime`, `UnitQuaternion.{x,y,z,w}`, `HmdPosition.{x,y,z}` at ≥10Hz.
+
+**Which datasets exist is per-machine and must be checked, not assumed** — `processed_datasets/` is ~6.9GB when fully populated and cannot travel through git, so two checkouts of this repo routinely hold different data. Confirm before planning a run:
+
+```bash
+for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) users  $d"; done
+```
+
+The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
 Getting a *new* dataset to that layout is currently the weakest link:
 
@@ -147,6 +166,15 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 - `boosting.artifact_root: boosting` is likewise relative, so `boosting.resume` never finds prior state across runs. Resume requires an absolute `artifact_root`.
 - Stdout is still not captured: metrics are `print`ed, so Hydra's per-run `main.log` files remain empty. Per-run results are now appended to `results/runs.csv` instead (see below); per-epoch history still lives only in checkpoint `history` dicts and PNG plots. To recover a past result: `torch.load(ckpt, map_location='cpu', weights_only=False)['history']`.
 
+## Verification metrics
+
+`model/metrics.py`. Accuracy is measured at the fixed `logit > 0` threshold, which conflates ranking quality with operating-point placement — a model can sit at 0.50 accuracy while still ranking pairs usefully. `evaluate(..., return_metrics=True)` adds:
+
+- **ROC-AUC** — threshold-free ranking quality. Ties are rank-averaged, which matters because an untrained model emits a near-constant logit and naive AUC would report 0.0 or 1.0 depending on sort order.
+- **EER** and its threshold — the standard biometric verification number, comparable across datasets with different pair balance.
+
+Both are tracked per epoch into `history` (`test_auc`, `test_eer`) and recorded in `results/runs.csv` as `best_test_auc` / `best_test_eer`.
+
 ## Results log
 
 `model/results_log.py` appends one row per run to `results/runs.csv` (absolute path, anchored to the repo root so `job.chdir` can't misplace it). It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: the file is migrated in place, existing rows are backfilled with blanks, and columns dropped from `FIELDS` are retained rather than deleted. Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
@@ -165,7 +193,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **100 passing, ~10s**.
+Current baseline: **121 passing, ~25s**.
 
 ## Performance notes
 

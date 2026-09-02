@@ -53,6 +53,8 @@ def _default_history():
         "train_acc": [],
         "test_loss": [],
         "test_acc": [],
+        "test_auc": [],
+        "test_eer": [],
         "best_test_acc": 0.0,
         "best_epoch": 0,
     }
@@ -176,20 +178,25 @@ def run_training(
 
     for epoch in range(start_epoch, epochs + 1):
         train_loss, train_acc = train_epoch(model, train_loader, criterion, optimizer, device)
-        test_loss, test_acc = evaluate(model, test_loader, criterion, device)
+        test_loss, test_acc, metrics = evaluate(model, test_loader, criterion, device, return_metrics=True)
 
         history["train_loss"].append(train_loss)
         history["train_acc"].append(train_acc)
         history["test_loss"].append(test_loss)
         history["test_acc"].append(test_acc)
+        history.setdefault("test_auc", []).append(metrics["auc"])
+        history.setdefault("test_eer", []).append(metrics["eer"])
 
-        print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | {test_acc:7.2%}")
+        print(f"{epoch:5d} | {train_loss:10.4f} | {train_acc:8.2%} | {test_loss:9.4f} | "
+              f"{test_acc:7.2%} | {metrics['auc']:7.4f} | {metrics['eer']:6.2%}")
 
         if test_acc > best_test_acc:
             best_test_acc = test_acc
             best_epoch = epoch
             history["best_test_acc"] = best_test_acc
             history["best_epoch"] = best_epoch
+            history["best_test_auc"] = metrics["auc"]
+            history["best_test_eer"] = metrics["eer"]
             save_checkpoint(
                 save_path,
                 model,
@@ -239,6 +246,7 @@ def prepare_training_round(args, device, round_idx, previous_best_path=None, res
         device=device,
         extractor=getattr(args, "extractor", DEFAULT_EXTRACTOR),
         extractor_params=extractor_params,
+        weight_decay=float(getattr(args, "weight_decay", 0.0) or 0.0),
     )
 
     history = _default_history()

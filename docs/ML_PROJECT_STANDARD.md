@@ -97,11 +97,17 @@ Several earlier gaps are now closed: run metadata (git SHA, full config, extract
 identity) is recorded per run in `results/runs.csv`, and sweeps are a first-class mode
 rather than manual config editing. What remains:
 
-- **Validation/evaluation metrics are still minimal**
-  - current evaluation is loss + accuracy only; no ROC-AUC, EER or confusion matrix
+- ~~Validation/evaluation metrics are still minimal~~ - ROC-AUC and EER (with the
+  EER threshold) are now computed per epoch and recorded per run. A confusion matrix
+  is still not produced.
 - **No third split**
   - per-epoch checkpoint selection, boosted best-round selection and the reported
     number all use the same held-out users, so reported accuracy is optimistically biased
+- **Single-split results are inside the noise**
+  - which users are held out moves accuracy by ~0.114 (sd 0.037) against a +/-0.019
+    binomial bar, and the project's fixed 5-user split is easier than average
+    (0.754 vs 0.686 on a training-free probe). `sweep.folds` cross-validates over
+    user groups; any comparison acted on should use it
 - ~~No input normalization~~ - done. `normalize: per_dataset` standardises each
   dataset's channels (fitted on training users, stored in the checkpoint), and
   `within_dataset_negatives: true` stops the pair task degrading into "same
@@ -124,15 +130,17 @@ For new experiments in this repository, the minimum acceptable bar should now be
 2. Set and record a root `seed`.
 3. Choose explicitly between standard and boosted training.
 4. Keep `graph: true` for any meaningful training run so loss/accuracy history is preserved.
-5. When training on more than one dataset, keep `normalize: per_dataset` and
+5. Report cross-validated results (`sweep.folds`) for any comparison that informs a
+   decision. Differences smaller than the fold spread are not results.
+6. When training on more than one dataset, keep `normalize: per_dataset` and
    `within_dataset_negatives: true`, and check each dataset's native sampling rate
    before raising `sample_rate` - requesting more than the native rate duplicates
    frames instead of adding information.
-6. Preserve boosted artifacts when using round training:
+7. Preserve boosted artifacts when using round training:
    - `boost_state.json`
    - round checkpoints
    - summary and round plots
-7. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
+8. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
 
 ## 6) Suggested next milestones
 
@@ -140,11 +148,8 @@ For new experiments in this repository, the minimum acceptable bar should now be
 
 - Save a config snapshot beside every training run.
 - Save environment metadata beside every run.
-- Add richer evaluation metrics:
-  - ROC-AUC
-  - EER
-  - confusion matrix
-  - threshold used
+- ~~Add richer evaluation metrics~~ - ROC-AUC, EER and the EER threshold are done;
+  a confusion matrix is still outstanding.
 
 ### Milestone C
 
