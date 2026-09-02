@@ -185,7 +185,15 @@ What this does and does not mean:
 
 Behavioural share of total headroom: **22.3% → 44.7%**. AUC agrees independently (centred 0.553 → 0.603). Seven times the identities buys absolute position *nothing* and doubles movement — so **the ceiling on the behavioural component is data, not modelling**, consistent with three architectures tying and every gain coming from the objective and now identity count. It may not have plateaued at 343.
 
-**This comparison is confounded and should not yet be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
+**The 48-identity control run was attempted and is not yet conclusive.** On AUC (which is unaffected by label balance) the behavioural headroom above the control floor went +0.103 at 343 identities to **−0.090 at 48** — the centred arm does not degrade, it disappears. Diversity is held constant by construction, so that points at identity count. Three reasons not to bank it yet:
+
+1. **The 48-identity pair sets were 69% positive**, because of the `within_dataset_negatives` bug fixed in the same commit as this note — users who were the sole member of their dataset in a fold had their positives inflated to a double share. The *training* pairs were skewed too, so the two arms differ in pair balance as well as identity count. That is a second confound, not just a broken accuracy column.
+2. Not paired — different user subsets, so mean ± sd only, and the 48-identity spread is 3–5× the 343-identity spread.
+3. Centred AUC came out at 0.4153, *below* chance rather than at it, which is not a credible point estimate on 5 folds of 9 users.
+
+Rerun after the balance fix before quoting it. **Accuracy is invalid for that run entirely**: the random control scored 0.6886 accuracy at AUC 0.5056 — a constant predictor on a 69/31 set, outscoring both real configurations.
+
+**The 343-identity comparison is also confounded and should not be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
 
 ```bash
 .venv/Scripts/python model/main.py mode=sweep max_users=48 ...   # vs the same without
@@ -345,7 +353,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **179 passing, ~11s**.
+Current baseline: **182 passing, ~10s**.
 
 ## Performance notes
 

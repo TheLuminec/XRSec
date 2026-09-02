@@ -363,3 +363,40 @@ def test_single_session_count_is_zero_without_provenance():
     from dataset import count_single_session_users
 
     assert count_single_session_users(types.SimpleNamespace(window_session_ids=None)) == 0
+
+
+def test_a_user_without_eligible_negatives_does_not_skew_the_label_balance():
+    """
+    The 48-identity bug: a user with no eligible negative partner had their positives
+    inflated to the full quota, giving them double weight on the positive side. On a
+    stratified subsample several users are the sole member of their dataset, and the
+    set came out 69% positive - where a constant predictor scores 0.69 and accuracy
+    measures label balance rather than performance.
+    """
+    index = _multi_dataset_index(users_per_dataset=(1, 3))
+
+    manifest = generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=11,
+                                      within_dataset_negatives=True)
+
+    lone = manifest["anchor_user_ids"] == 0
+    others = ~lone
+    # The lone user contributes only their positive share, not a doubled one.
+    assert int(lone.sum()) == 20
+    assert manifest["labels"][lone].min() == 1.0
+    # So the overall set stays close to the requested ratio instead of 69% positive.
+    assert 0.5 <= float(manifest["labels"].mean()) <= 0.60
+
+
+def test_balance_warning_fires_when_the_ratio_drifts(capsys):
+    index = _multi_dataset_index(users_per_dataset=(1, 1))
+    generate_pair_manifest(index, pairs_per_user=20, match_ratio=0.5, seed=3,
+                           within_dataset_negatives=True)
+    output = capsys.readouterr().out
+    assert "pair set is" in output and "Accuracy at a fixed threshold is unsafe" in output
+
+
+def test_no_balance_warning_when_the_ratio_holds(capsys):
+    index = _multi_dataset_index(users_per_dataset=(3, 3))
+    generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=3,
+                           within_dataset_negatives=True)
+    assert "WARNING" not in capsys.readouterr().out

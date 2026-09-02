@@ -384,6 +384,7 @@ def generate_pair_manifest(
     anchor_user_ids = []
     cross_session_users = 0
     single_session_users = 0
+    users_without_negatives = 0
 
     user_dataset_ids = getattr(sample_index, "user_dataset_ids", []) or [0] * sample_index.num_users
 
@@ -407,8 +408,15 @@ def generate_pair_manifest(
         local_positive_target = positive_target
         local_negative_target = negative_target
         if not valid_negative_users[user_idx]:
-            local_positive_target = pairs_per_user
+            # No eligible negative partner - the sole user of their dataset under
+            # within_dataset_negatives, typically. Emit their normal share of
+            # positives and no negatives, rather than inflating positives to fill the
+            # quota: doing that gave such users double weight on the positive side and
+            # skewed the whole set. On a 48-user stratified subsample it produced a
+            # 69/31 split, where a constant predictor scores 0.69 and accuracy stops
+            # measuring anything.
             local_negative_target = 0
+            users_without_negatives += 1
 
         if local_positive_target > 0:
             session_groups = None
@@ -457,6 +465,15 @@ def generate_pair_manifest(
     manifest = make_pair_manifest(x1_indices, x2_indices, labels, anchor_user_ids)
     if manifest["labels"].numel() == 0:
         return manifest
+
+    # Accuracy is read at a fixed threshold, so it only means anything on a set whose
+    # balance is what was asked for. Nothing downstream would reveal a drift, so say
+    # it here.
+    realized = float(manifest["labels"].mean())
+    if abs(realized - match_ratio) > 0.02:
+        print(f"  WARNING: pair set is {realized:.1%} positive, requested "
+              f"{match_ratio:.1%}. {users_without_negatives} user(s) had no eligible "
+              "negative partner. Accuracy at a fixed threshold is unsafe here; read AUC/EER.")
 
     permutation = torch.as_tensor(
         rng.permutation(manifest["labels"].shape[0]),

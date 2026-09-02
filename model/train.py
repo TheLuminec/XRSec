@@ -409,6 +409,14 @@ def _run_standard_training(args, device):
         if index is not None:
             history["same_session_fallback_users"] = count_single_session_users(index)
 
+    # Realized label balance of the reported set, so a drift is visible in the record
+    # rather than only in a log nobody kept.
+    evaluated = test_loader.dataset
+    evaluated = getattr(evaluated, "dataset", evaluated)
+    manifest = getattr(evaluated, "manifest", None)
+    if manifest is not None and manifest["labels"].numel():
+        history["eval_positive_fraction"] = float(manifest["labels"].mean())
+
     return history
 
 
