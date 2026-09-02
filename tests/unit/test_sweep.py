@@ -367,3 +367,56 @@ def test_cross_validated_resume_skips_completed_folds(tmp_path, user_tree):
     sweep.run_sweep(cfg, train_fn=counting)
     sweep.run_sweep(cfg, train_fn=counting)
     assert len(calls) == 3, "a resumed cross-validated sweep must not retrain finished folds"
+
+
+def test_folds_are_stratified_across_datasets(tmp_path):
+    """
+    Pooled datasets are very uneven and differ in difficulty, so a fold heavy in one
+    of them measures something different from its neighbours and inflates the fold
+    spread - the statistic that decides whether a result is real.
+    """
+    roots = []
+    for name, count in (("Big", 20), ("Small", 5)):
+        root = tmp_path / name / "users"
+        for user in range(count):
+            (root / str(user)).mkdir(parents=True)
+        roots.append(str(root))
+
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = roots
+    folds = sweep.build_folds(cfg, 5, seed=3)
+
+    for group in folds:
+        big = sum(1 for u in group if "Big" in u)
+        small = sum(1 for u in group if "Small" in u)
+        assert big == 4, f"expected 20/5 = 4 Big users per fold, got {big}"
+        assert small == 1, f"expected 5/5 = 1 Small user per fold, got {small}"
+
+
+def test_stratification_handles_counts_that_do_not_divide_evenly(tmp_path):
+    root = tmp_path / "DS" / "users"
+    for user in range(7):
+        (root / str(user)).mkdir(parents=True)
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = [str(root)]
+
+    folds = sweep.build_folds(cfg, 3, seed=1)
+    sizes = sorted(len(g) for g in folds)
+    assert sizes == [2, 2, 3]
+    flat = [u for g in folds for u in g]
+    assert len(flat) == 7 and len(set(flat)) == 7
+
+
+def test_fold_composition_is_reported(tmp_path):
+    roots = []
+    for name, count in (("Alpha", 6), ("Beta", 4)):
+        root = tmp_path / name / "users"
+        for user in range(count):
+            (root / str(user)).mkdir(parents=True)
+        roots.append(str(root))
+    cfg = _cfg(tmp_path)
+    cfg.data_dirs = roots
+
+    text = sweep.describe_fold_composition(sweep.build_folds(cfg, 2, seed=5))
+    assert "Alpha=3" in text and "Beta=2" in text
+    assert "fold 0" in text and "fold 1" in text

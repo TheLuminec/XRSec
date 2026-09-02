@@ -109,23 +109,64 @@ def resolve_axes(cfg, extractor: str) -> dict[str, list]:
 
 def build_folds(cfg, folds: int, seed: int) -> list[list[str]]:
     """
-    Partition every user across all data_dirs into `folds` disjoint held-out groups.
+    Partition every user across all data_dirs into `folds` disjoint held-out groups,
+    stratified by dataset.
+
+    Stratification matters once several datasets are pooled. The corpus is very
+    uneven - 100 / 99 / 48 / 35 / 22 / 21 / 18 users - and the datasets differ in
+    difficulty: ViewGauss is 10Hz native and half its frames are duplicates at
+    sample_rate=20, NJIT is room-scale walking with one session per user. Partitioning
+    the pooled user list at random lets fold composition vary binomially, so a fold
+    heavy in one dataset is measuring something different from its neighbours. That
+    shows up as inflated fold variance, which is the one thing this project cannot
+    afford: the fold spread is already what decides whether a difference is real.
+
+    Assigning each dataset's users round-robin across folds keeps every fold's
+    composition proportional to within one user per dataset. The starting offset is
+    randomised per dataset so the remainder does not always land in fold 0.
 
     The configured `exclude_users` is ignored: cross-validation defines its own
     held-out groups, and honouring both would silently shrink the training set.
     """
-    users = []
+    by_dataset: dict[str, list[str]] = {}
+    total_users = 0
     for directory in _plain(cfg.data_dirs) or []:
-        for name in sorted(os.listdir(directory)):
-            path = os.path.join(directory, name)
-            if os.path.isdir(path):
-                users.append(path)
+        users = [
+            os.path.join(directory, name)
+            for name in sorted(os.listdir(directory))
+            if os.path.isdir(os.path.join(directory, name))
+        ]
+        if users:
+            by_dataset[directory] = users
+            total_users += len(users)
 
-    if folds < 2 or len(users) < folds:
-        raise ValueError(f"sweep.folds={folds} needs at least that many users; found {len(users)}.")
+    if folds < 2 or total_users < folds:
+        raise ValueError(f"sweep.folds={folds} needs at least that many users; found {total_users}.")
 
-    order = np.random.default_rng(int(seed)).permutation(len(users))
-    return [[users[int(i)] for i in order[fold::folds]] for fold in range(folds)]
+    rng = np.random.default_rng(int(seed))
+    groups: list[list[str]] = [[] for _ in range(folds)]
+    for directory in sorted(by_dataset):
+        users = by_dataset[directory]
+        order = rng.permutation(len(users))
+        offset = int(rng.integers(folds))
+        for position, index in enumerate(order):
+            groups[(position + offset) % folds].append(users[int(index)])
+
+    return [sorted(group) for group in groups]
+
+
+def describe_fold_composition(fold_users: list[list[str]]) -> str:
+    """Users per dataset per fold, so an unbalanced split is visible not assumed."""
+    datasets = sorted({Path(user).parent.parent.name for group in fold_users for user in group})
+    lines = [f"Fold composition ({len(fold_users)} folds, "
+             f"{sum(len(g) for g in fold_users)} users):"]
+    for index, group in enumerate(fold_users):
+        counts = {name: 0 for name in datasets}
+        for user in group:
+            counts[Path(user).parent.parent.name] += 1
+        detail = "  ".join(f"{name[:22]}={counts[name]}" for name in datasets)
+        lines.append(f"  fold {index}: {len(group):>4} users   {detail}")
+    return "\n".join(lines)
 
 
 def _configuration_id(extractor: str, overrides: dict) -> str:
@@ -346,6 +387,8 @@ def run_sweep(cfg, train_fn=None) -> dict:
     folds = int(folds) if folds else None
     fold_seed = _sweep_setting(cfg, "seed") or getattr(cfg, "seed", 0)
     fold_users = build_folds(cfg, folds, fold_seed) if folds else None
+    if fold_users:
+        print(describe_fold_composition(fold_users))
     sweep_id = hashlib.sha1(
         json.dumps([c["id"] for c in configurations], sort_keys=True).encode("utf-8")
     ).hexdigest()[:10]

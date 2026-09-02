@@ -168,6 +168,8 @@ Two consequences that should govern how any result here is read:
 1. **Differences below ~0.04 on a single split are not real.** An 8-configuration regularization sweep produced a range of 0.682–0.692; that is entirely inside the noise and separates nothing.
 2. **The project's fixed split (users 1–5) is unusually easy**: 0.754 on the same probe versus 0.686 for the average random split. Numbers from it are optimistic, and an unreproducible historical high could partly be a lucky split.
 
+Folds are **stratified by dataset**: each dataset's users are assigned round-robin across folds, so every fold's composition is proportional to within one user. This matters once several datasets are pooled — the corpus is 100/99/48/35/22/21/18 users and they differ in difficulty (ViewGauss is 10Hz native and half-duplicated at `sample_rate=20`; NJIT is room-scale walking with one session per user), so a randomly-partitioned fold heavy in one dataset measures something different from its neighbours and inflates the very spread that decides whether a result is real. `run_sweep` prints the per-fold composition so an unbalanced split is visible rather than assumed.
+
 Use `sweep.folds: K` for anything you intend to act on. It ignores `exclude_users`, partitions every user across `data_dirs` into K disjoint held-out groups, runs each configuration on all of them, and ranks by the mean while reporting the spread. It prints an explicit warning when the top two configurations differ by less than the fold standard deviation.
 
 ## Data
@@ -291,7 +293,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **151 passing, ~16s**.
+Current baseline: **154 passing, ~14s**.
 
 ## Performance notes
 
