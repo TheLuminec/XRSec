@@ -15,7 +15,7 @@ import torch
 from omegaconf import OmegaConf
 
 from boost_train import resolve_paths, run_boosted_training
-from dataset import create_dataloader_from_path
+from dataset import count_single_session_users, create_dataloader_from_path
 from eval import evaluate
 from model import DEFAULT_EXTRACTOR, create_model
 from user_profile import channel_count
@@ -376,7 +376,7 @@ def _run_standard_training(args, device):
             model, source.sample_index, source.manifest, device, args
         )
 
-    return run_training(
+    history = run_training(
         args.epochs,
         args.save_path,
         model,
@@ -399,6 +399,17 @@ def _run_standard_training(args, device):
             "normalizer": normalizer.state_dict(),
         },
     )
+
+    # How much of a "cross-session" result actually was: users with one session fall
+    # back to same-session positives, so the qualification belongs with the number.
+    if getattr(args, "cross_session_positives", False):
+        test_dataset = test_loader.dataset
+        test_dataset = getattr(test_dataset, "dataset", test_dataset)
+        index = getattr(test_dataset, "sample_index", None)
+        if index is not None:
+            history["same_session_fallback_users"] = count_single_session_users(index)
+
+    return history
 
 
 def train(args):

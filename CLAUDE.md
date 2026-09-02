@@ -119,7 +119,21 @@ The default config trains on 43 users and evaluates on 5 held-out ones. **`test_
 
 A positive pair is two windows from the same user — and usually, therefore, from the **same recording session**, which shares headset mounting, seating position and the content being viewed. A model can score well by matching the session rather than the person, and because held-out positives are *also* same-session, that shortcut never appears as a train/test gap. This has the same shape as the cross-dataset shortcut, which cost 11 points once fixed.
 
-`cross_session_positives: true` draws positives from two different sessions of the same user. Users with only one session (all 18 of NJIT_6DOF) fall back to same-session and are counted in the run output.
+`cross_session_positives: true` draws positives from two different sessions of the same user. Users with only one session fall back to same-session pairs, and that count is recorded per run as `same_session_fallback_users` so the qualification travels with the number.
+
+Session inventory (users with fewer than 2 sessions):
+
+| dataset | users | 1 session | min | median |
+| --- | --- | --- | --- | --- |
+| NJIT_6DOF | 18 | **18** | 1 | 1 |
+| Head_and_Gaze | 100 | 0 | 34 | 54 |
+| PanoSaliency | 99 | 0 | 2 | 22 |
+| VR_User_Behavior | 48 | 0 | 18 | 18 |
+| ViewGauss | 35 | 0 | 4 | 4 |
+| EyeNavGS | 22 | 0 | 12 | 12 |
+| Panonut360 | 21 | 0 | 15 | 15 |
+
+**NJIT_6DOF is the only affected dataset.** On the pooled corpus that is 18/343 = 5.2% of users; on VR_User_Behavior alone it is 0%, so the single-dataset cross-session results are fully cross-session.
 
 **Result:** cross-session pairing costs only **1.1–1.6 points** (bilstm 0.685 → 0.669, t(4)=−4.06, lost 5/5; motion_tdnn 0.686 → 0.675, t(4)=−1.40, not distinguishable from zero). The `random` control sits at chance under *both* regimes (0.4947 / 0.4967), so the drop is a real effect on real signal rather than an artifact of the new pair construction. Set against the cross-dataset shortcut — worth 11 points when live — this is the signature of a model that mostly is **not** relying on session matching.
 
@@ -329,7 +343,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **159 passing, ~10s**.
+Current baseline: **161 passing, ~11s**.
 
 ## Performance notes
 

@@ -321,6 +321,28 @@ def build_sample_index(
     )
 
 
+def count_single_session_users(sample_index) -> int:
+    """
+    Users with fewer than two sessions, which cannot form a cross-session positive.
+
+    `cross_session_positives` falls back to same-session pairs for these, silently as
+    far as the reported number is concerned. Recording the count means the
+    qualification travels with the result instead of living in a chat log. Measured on
+    this corpus: NJIT_6DOF is the only affected dataset (all 18 users, one session
+    each); every other dataset has a minimum of 2 sessions per user, so the pooled
+    figure is 18/343 = 5.2%.
+    """
+    sessions = getattr(sample_index, "window_session_ids", None)
+    if sessions is None or sessions.numel() == 0:
+        return 0
+
+    count = 0
+    for window_indices in sample_index.user_sample_indices:
+        if window_indices.numel() and torch.unique(sessions[window_indices]).numel() < 2:
+            count += 1
+    return count
+
+
 def generate_pair_manifest(
     sample_index: SampleIndex,
     pairs_per_user: int,

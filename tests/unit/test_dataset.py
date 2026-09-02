@@ -342,3 +342,24 @@ def test_keep_users_filters_independently_of_swap_data(tmp_path):
 
     assert train.num_users == 2, "kept minus excluded"
     assert test.num_users == 1, "the excluded user, still inside the subsample"
+
+
+def test_counts_users_that_cannot_form_cross_session_positives():
+    """
+    A user with one session falls back to same-session pairs, so a cross-session
+    result is only as cross-session as the corpus allows. That has to be countable.
+    """
+    from dataset import count_single_session_users
+
+    index = _sessioned_index(sessions_per_user=(3, 1, 2))
+    assert count_single_session_users(index) == 1
+
+    assert count_single_session_users(_sessioned_index(sessions_per_user=(4, 4))) == 0
+    assert count_single_session_users(_sessioned_index(sessions_per_user=(1, 1, 1))) == 3
+
+
+def test_single_session_count_is_zero_without_provenance():
+    import types
+    from dataset import count_single_session_users
+
+    assert count_single_session_users(types.SimpleNamespace(window_session_ids=None)) == 0

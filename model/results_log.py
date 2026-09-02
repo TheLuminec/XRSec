@@ -38,6 +38,7 @@ FIELDS = [
     "normalize",
     "within_dataset_negatives",
     "cross_session_positives",
+    "same_session_fallback_users",
     "center_position",
     "max_users",
     "selected_test_acc",
@@ -163,6 +164,7 @@ def summarize(mode: str, result) -> dict:
     return {
         "best_test_acc": history.get("best_test_acc"),
         "selected_test_acc": history.get("selected_test_acc"),
+        "same_session_fallback_users": history.get("same_session_fallback_users"),
         "best_val_acc": history.get("best_val_acc"),
         "best_test_auc": history.get("best_test_auc"),
         "best_test_eer": history.get("best_test_eer"),
