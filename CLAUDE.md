@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
-Current state: on held-out users the model plateaus around **0.55–0.63 accuracy on a balanced binary task** (chance = 0.50), while training accuracy reaches ~0.75. The core result is not yet working — treat infrastructure changes as being in service of diagnosing that, not as ends in themselves.
+Current state: on held-out users, single-split results sit around **0.69 on a balanced binary task** (chance = 0.50) while training accuracy reaches 0.83–0.93 — the model still substantially memorizes its training identities. A historical 0.85 exists but its configuration was lost and it has not been reproduced.
+
+**Read every number here against the noise floor.** Which users are held out moves accuracy by ~0.114 (sd 0.037), so single-split differences below ~0.04 are not results. See "The evaluation is noisier than it looks" below; use `sweep.folds`.
 
 ## Commands
 
