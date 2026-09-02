@@ -221,6 +221,7 @@ def _build_train_and_validation_indexes(args):
         sample_rate=getattr(args, "sample_rate", 10),
         exclude_users=exclude_users,
         swap_data=swap_data,
+        channels=str(getattr(args, "channels", "full") or "full"),
     )
 
     if test_paths:
@@ -230,6 +231,7 @@ def _build_train_and_validation_indexes(args):
             sample_rate=getattr(args, "sample_rate", 10),
             exclude_users=exclude_users,
             swap_data=(not swap_data if test_on_excluded else swap_data),
+            channels=str(getattr(args, "channels", "full") or "full"),
         )
     elif test_on_excluded:
         validation_sample_index = build_sample_index(
@@ -238,6 +240,7 @@ def _build_train_and_validation_indexes(args):
             sample_rate=getattr(args, "sample_rate", 10),
             exclude_users=exclude_users,
             swap_data=not swap_data,
+            channels=str(getattr(args, "channels", "full") or "full"),
         )
     else:
         validation_sample_index = train_sample_index

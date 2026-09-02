@@ -215,6 +215,25 @@ trainability, determinism, and checkpoint round-trip.
 | `bilstm` | The same without the GNN branches - isolates what the graph layers add |
 | `random` | Ignores its input and emits noise - the chance-level floor (~50%) |
 
+## Channel Sets
+
+```powershell
+python model/main.py mode=train channels=position extractor=bilstm
+```
+
+- `full` (default) - quaternion + position, 7 channels
+- `position` - position only, 3 channels
+
+`position` unlocks 2814 extra sessions (48% more data): it doubles Head_and_Gaze
+(28,661 -> 57,344 windows) and recovers `360_em_dataset`, which records no
+orientation at all. Orientation is also a weak identity cue on its own (0.529 AUC on
+held-out users vs 0.768 for mean position), so this may cost little - but it is an
+experiment, so `full` stays the default.
+
+Not every extractor accepts 3 channels: `bilstm` and `random` do; `motion_tdnn` and
+`paper_gnn_bilstm` assume the 7-channel layout and will report that clearly rather
+than crashing.
+
 ## Training Objectives
 
 ```powershell

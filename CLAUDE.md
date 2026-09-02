@@ -168,6 +168,18 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 - `boosting.artifact_root: boosting` is likewise relative, so `boosting.resume` never finds prior state across runs. Resume requires an absolute `artifact_root`.
 - Stdout is still not captured: metrics are `print`ed, so Hydra's per-run `main.log` files remain empty. Per-run results are now appended to `results/runs.csv` instead (see below); per-epoch history still lives only in checkpoint `history` dicts and PNG plots. To recover a past result: `torch.load(ckpt, map_location='cpu', weights_only=False)['history']`.
 
+## Channel sets
+
+`channels` selects what a window is built from: `full` (quaternion + position, 7 channels, the original) or `position` (3 channels).
+
+**Why `position` exists.** Requiring quaternion discards 2814 sessions — **48% more data than the pipeline uses** — because much of this corpus records head position but no orientation. Measured: `channels=position` takes Head_and_Gaze from 28,661 to **57,344 windows** (the 2630 `V1_*` files, same 100 users as `V2_*`, so roughly double the windows per identity) and recovers all 13 users of `360_em_dataset`, which is otherwise 100% unusable.
+
+Orientation also measures as a weak identity cue: on held-out users, mean position separates at **0.768** AUC, quaternion statistics at **0.529**, and the two combined score *below* position alone. So dropping it may cost little — but that is an experiment, not an assumption, which is why this is a switch and `full` remains the default.
+
+The channel set is part of the sample-cache key and is stored in the checkpoint, so evaluating a position-only model never silently receives 7-channel windows.
+
+**Extractors must honour `self.num_channels`.** `bilstm` and `random` do. `motion_tdnn` and `paper_gnn_bilstm` assume the 7-channel layout — `motion_tdnn` slices `x[:, :4]` as quaternion, `paper_gnn_bilstm` builds a fixed 10-node graph — and cannot run position-only until they read their own channel count. `fe.create()` probes any non-7 channel count with one tiny forward pass and raises a message naming the extractor and what to do, rather than letting an `IndexError` surface from inside the forward pass.
+
 ## Training objectives
 
 `objective` selects how the extractor is trained. Both save the same
@@ -225,7 +237,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **136 passing, ~17s**.
+Current baseline: **142 passing, ~16s**.
 
 ## Performance notes
 

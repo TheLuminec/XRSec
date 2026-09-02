@@ -162,7 +162,27 @@ def create(
                 f"Extractor '{name}' does not accept {unknown}. Accepted hyperparameters: {tunable or '(none)'}."
             )
 
-    return cls(seq_len=seq_len, num_channels=num_channels, embedding_dim=embedding_dim, **hyperparams)
+    extractor = cls(seq_len=seq_len, num_channels=num_channels, embedding_dim=embedding_dim, **hyperparams)
+
+    # Extractors written against the 7-channel layout often index it positionally
+    # (x[:, :4] as quaternion, a graph sized for 7 nodes), and fail deep inside the
+    # forward pass with an IndexError that names neither the extractor nor the cause.
+    # A single tiny forward pass turns that into something actionable. Only paid when
+    # the channel count is not the historical default, so normal runs cost nothing.
+    if num_channels != 7:
+        try:
+            check_output_contract(extractor, batch_size=1)
+        except Exception as exc:
+            raise ValueError(
+                f"Extractor '{name}' does not support num_channels={num_channels} "
+                f"(channels='{'position' if num_channels == 3 else num_channels}'). "
+                "It appears to assume the 7-channel quaternion+position layout. Either "
+                "run this extractor with channels=full, or make it read its own "
+                "self.num_channels instead of slicing fixed offsets.\n"
+                f"Underlying error: {type(exc).__name__}: {exc}"
+            ) from exc
+
+    return extractor
 
 
 def check_output_contract(extractor: FeatureExtractor, batch_size: int = 2) -> torch.Tensor:

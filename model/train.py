@@ -18,6 +18,7 @@ from boost_train import resolve_paths, run_boosted_training
 from dataset import create_dataloader_from_path
 from eval import evaluate
 from model import DEFAULT_EXTRACTOR, create_model
+from user_profile import channel_count
 from utils import save_checkpoint
 
 
@@ -270,6 +271,7 @@ def prepare_training_round(args, device, round_idx, previous_best_path=None, res
         extractor_params=extractor_params,
         weight_decay=float(getattr(args, "weight_decay", 0.0) or 0.0),
         head=_resolve_head(args),
+        num_channels=channel_count(str(getattr(args, "channels", "full") or "full")),
     )
 
     history = _default_history()
@@ -313,6 +315,7 @@ def _run_standard_training(args, device):
         seed=args.seed,
         normalize=getattr(args, "normalize", "none"),
         within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        channels=str(getattr(args, "channels", "full") or "full"),
         return_normalizer=True,
     )
 

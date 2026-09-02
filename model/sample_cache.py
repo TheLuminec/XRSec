@@ -49,7 +49,8 @@ def _slug(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9]+", "-", text).strip("-")[:48] or "x"
 
 
-def directory_signature(user_dir: Path, sample_time: int, sample_rate: int) -> str:
+def directory_signature(user_dir: Path, sample_time: int, sample_rate: int,
+                        channels: str = "full") -> str:
     """
     Content signature for one user directory at one sampling resolution.
 
@@ -57,7 +58,7 @@ def directory_signature(user_dir: Path, sample_time: int, sample_rate: int) -> s
     (a stat per file) while still catching edits, additions and removals.
     """
     hasher = hashlib.sha256()
-    hasher.update(f"v{CACHE_VERSION}|{sample_time}|{sample_rate}|".encode("utf-8"))
+    hasher.update(f"v{CACHE_VERSION}|{sample_time}|{sample_rate}|{channels}|".encode("utf-8"))
     for name in sorted(os.listdir(user_dir)):
         if not name.endswith(".csv"):
             continue
@@ -66,11 +67,13 @@ def directory_signature(user_dir: Path, sample_time: int, sample_rate: int) -> s
     return hasher.hexdigest()
 
 
-def entry_path(user_dir: Path, sample_time: int, sample_rate: int) -> Path:
+def entry_path(user_dir: Path, sample_time: int, sample_rate: int,
+               channels: str = "full") -> Path:
     """Readable-but-unique cache filename: dataset, user, resolution, signature."""
-    signature = directory_signature(user_dir, sample_time, sample_rate)
+    signature = directory_signature(user_dir, sample_time, sample_rate, channels)
     dataset_name = user_dir.parent.parent.name if len(user_dir.parents) >= 2 else "dataset"
-    name = f"{_slug(dataset_name)}__{_slug(user_dir.name)}__{sample_time}s{sample_rate}hz__{signature[:16]}.pt"
+    name = (f"{_slug(dataset_name)}__{_slug(user_dir.name)}__"
+            f"{sample_time}s{sample_rate}hz_{_slug(channels)}__{signature[:16]}.pt")
     return cache_dir() / name
 
 

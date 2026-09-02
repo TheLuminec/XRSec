@@ -137,6 +137,7 @@ def evaluate_model(args, device=None):
         seed=getattr(args, "seed", 67),
         normalize=getattr(args, "normalize", "none"),
         normalizer=normalizer if normalizer.enabled else None,
+        channels=checkpoint.get("channels", str(getattr(args, "channels", "full") or "full")),
     )
     test_size = len(test_loader.dataset)
 

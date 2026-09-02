@@ -190,3 +190,40 @@ def test_checkpoint_round_trip_rebuilds_the_same_extractor(name, tmp_path):
         restored.eval()
         with torch.no_grad():
             assert torch.allclose(model(x1, x2), restored(x1, x2), atol=1e-6)
+
+
+# --- channel sets -------------------------------------------------------------
+
+@pytest.mark.parametrize("name", ALL_EXTRACTORS)
+def test_non_default_channel_count_either_works_or_fails_clearly(name):
+    """
+    channels=position feeds extractors 3 channels instead of 7. An extractor that
+    assumes the quaternion+position layout must say so by name, not die with an
+    IndexError from somewhere inside its forward pass.
+    """
+    try:
+        extractor = fe.create(name, seq_len=20, num_channels=3, embedding_dim=16)
+    except ValueError as exc:
+        message = str(exc)
+        assert name in message
+        assert "num_channels=3" in message
+        assert "channels=full" in message, "the error must say what to do instead"
+        return
+
+    assert extractor.num_channels == 3
+    output = fe.check_output_contract(extractor, batch_size=2)
+    assert output.shape == (2, 16)
+
+
+def test_a_channel_agnostic_extractor_actually_runs_on_three_channels():
+    """At least one registered extractor must support position-only data."""
+    extractor = fe.create("bilstm", seq_len=20, num_channels=3, embedding_dim=16)
+    fe.check_output_contract(extractor, batch_size=2)
+
+
+def test_seven_channel_creation_skips_the_probe(monkeypatch):
+    """The validation forward pass must not be paid on ordinary 7-channel runs."""
+    calls = []
+    monkeypatch.setattr(fe, "check_output_contract", lambda *a, **k: calls.append(1))
+    fe.create("bilstm", seq_len=20, num_channels=7, embedding_dim=8)
+    assert calls == []

@@ -94,6 +94,9 @@ def save_checkpoint(checkpoint_path, model, optimizer, epoch, extra=None):
         'num_channels': getattr(backbone, 'num_channels', 7),
         # Which scoring head to rebuild; older checkpoints predate the choice.
         'head': getattr(model, 'head', 'diff_linear'),
+        # The channel set the windows were built from. Evaluating a position-only
+        # model on full 7-channel windows would silently feed it the wrong inputs.
+        'channels': 'position' if getattr(backbone, 'num_channels', 7) == 3 else 'full',
     }
     if extra:
         checkpoint.update(extra)

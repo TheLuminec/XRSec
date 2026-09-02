@@ -20,6 +20,17 @@ identity_scale: 30.0
 
 # Pair scoring head: diff_linear (original) or cosine.
 head: diff_linear
+
+# Which input channels to build windows from.
+#   full      quaternion + position (7 channels), the original
+#   position  position only (3 channels)
+# `position` unlocks 2814 extra sessions - 48% more data - because much of this
+# corpus records position but no orientation: half of Head_and_Gaze (the V1_* files,
+# same users as V2) and all of 360_em_dataset. Orientation also measures as a weak
+# identity cue on its own (0.529 AUC on held-out users, against 0.768 for mean
+# position), so this may cost little. Not every extractor accepts 3 channels - see
+# CLAUDE.md.
+channels: full
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128

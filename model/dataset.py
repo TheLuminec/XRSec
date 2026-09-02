@@ -23,7 +23,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 
 import sample_cache
 from normalization import ChannelNormalizer
-from user_profile import UserProfile
+from user_profile import UserProfile, channel_count
 
 
 def _seed_value(seed: int | None, offset: int = 0) -> int:
@@ -96,12 +96,15 @@ class SampleDataset:
         sample_rate: int = 10,
         exclude_users: str | list[str] | None = None,
         swap_data: bool = False,
+        channels: str = "full",
     ):
         self.dataset = []
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.num_users = 0
         self.swap_data = swap_data
+        self.channels = channels
+        self.num_channels = channel_count(channels)
 
         if exclude_users is None:
             exclude_users = []
@@ -165,14 +168,15 @@ class SampleDataset:
         """Return one user's windows as (n_samples, 7, seq_len), via cache when possible."""
         cache_path = None
         if sample_cache.cache_enabled():
-            cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time, self.sample_rate)
+            cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time,
+                                                 self.sample_rate, self.channels)
             cached = sample_cache.load(cache_path)
             if cached is not None:
                 self.cache_hits += 1
                 return cached
 
         self.cache_misses += 1
-        profile = UserProfile(user_dir, self.sample_time, self.sample_rate)
+        profile = UserProfile(user_dir, self.sample_time, self.sample_rate, channels=self.channels)
         for reason, count in getattr(profile, "skipped", {}).items():
             self.skipped_files[reason] = self.skipped_files.get(reason, 0) + count
 
@@ -188,7 +192,7 @@ class SampleDataset:
             user_samples = torch.tensor(np.array(samples), dtype=torch.float32)
         else:
             seq_len = self.sample_time * self.sample_rate
-            user_samples = torch.empty((0, 7, seq_len), dtype=torch.float32)
+            user_samples = torch.empty((0, self.num_channels, seq_len), dtype=torch.float32)
 
         if cache_path is not None:
             sample_cache.store(cache_path, user_samples)
@@ -211,6 +215,8 @@ class SampleIndex:
         self.sample_rate = sample_dataset.sample_rate
         self.seq_len = self.sample_time * self.sample_rate
         self.num_users = sample_dataset.num_users
+        self.num_channels = getattr(sample_dataset, "num_channels", 7)
+        self.channels = getattr(sample_dataset, "channels", "full")
 
         self.dataset_names = list(getattr(sample_dataset, "dataset_names", []))
         user_dataset_ids = getattr(sample_dataset, "user_dataset_ids", [])
@@ -236,7 +242,7 @@ class SampleIndex:
             self.samples = torch.cat(flat_samples, dim=0)
             self.window_dataset_ids = torch.cat(window_dataset_ids, dim=0)
         else:
-            self.samples = torch.empty((0, 7, self.seq_len), dtype=torch.float32)
+            self.samples = torch.empty((0, self.num_channels, self.seq_len), dtype=torch.float32)
             self.window_dataset_ids = torch.empty(0, dtype=torch.long)
 
         self.sample_count = int(self.samples.shape[0])
@@ -251,6 +257,7 @@ def build_sample_index(
     sample_rate: int = 10,
     exclude_users=None,
     swap_data: bool = False,
+    channels: str = "full",
 ) -> SampleIndex:
     """
     Build a stable sample index using sorted user and file traversal.
@@ -262,6 +269,7 @@ def build_sample_index(
             sample_rate=sample_rate,
             exclude_users=exclude_users,
             swap_data=swap_data,
+            channels=channels,
         )
     )
 
@@ -414,6 +422,7 @@ def create_dataloader_from_path(
     seed: int | None = None,
     normalize: str = "none",
     within_dataset_negatives: bool = False,
+    channels: str = "full",
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
 ):
@@ -438,6 +447,8 @@ def create_dataloader_from_path(
         normalize: Input standardisation mode - "none", "per_dataset" or "global".
         within_dataset_negatives: Restrict negative pairs to users from the same
             dataset (see generate_pair_manifest).
+        channels: Which input channels to build windows from - "full" (quaternion +
+            position) or "position". See user_profile.CHANNEL_SETS.
         normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
             Evaluation must pass the training-time normalizer so held-out data is not
             used to derive the transform.
@@ -460,6 +471,7 @@ def create_dataloader_from_path(
             swap_data=eval_swap_data,
             seed=_seed_value(seed, 11),
             within_dataset_negatives=within_dataset_negatives,
+            channels=channels,
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
         # available; doing so would let the held-out distribution shape the transform.
@@ -484,6 +496,7 @@ def create_dataloader_from_path(
         swap_data=swap_data,
         seed=_seed_value(seed, 1),
         within_dataset_negatives=within_dataset_negatives,
+        channels=channels,
     )
 
     # Fit on the training users only, then apply the same transform everywhere.
@@ -504,6 +517,7 @@ def create_dataloader_from_path(
                 swap_data=not swap_data,
                 seed=_seed_value(seed, 2),
                 within_dataset_negatives=within_dataset_negatives,
+                channels=channels,
             )
             normalizer.transform(test_dataset.sample_index)
         else:
@@ -530,6 +544,7 @@ def create_dataloader_from_path(
             swap_data=test_swap_data,
             seed=_seed_value(seed, 4),
             within_dataset_negatives=within_dataset_negatives,
+            channels=channels,
         )
         normalizer.transform(test_dataset.sample_index)
 
@@ -568,6 +583,7 @@ class SiameseDataset(Dataset):
         seed: int | None = None,
         match_ratio: float = 0.5,
         within_dataset_negatives: bool = False,
+        channels: str = "full",
     ):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -577,6 +593,7 @@ class SiameseDataset(Dataset):
             sample_rate=sample_rate,
             exclude_users=exclude_users,
             swap_data=swap_data,
+            channels=channels,
         )
         self.num_users = self.sample_index.num_users
         self.num_samples = self.sample_index.sample_count
