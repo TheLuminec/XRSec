@@ -356,7 +356,10 @@ def run_sweep(cfg, train_fn=None) -> dict:
     state = _load_state(state_path) if resume else {}
     completed = state.get("records", {}) if resume else {}
 
-    print(f"\n=== Sweep {sweep_id}: {len(configurations)} configuration(s) ===")
+    plan = f"{len(configurations)} configuration(s)"
+    if fold_users:
+        plan += f" x {len(fold_users)} folds = {len(configurations) * len(fold_users)} runs"
+    print(f"\n=== Sweep {sweep_id}: {plan} ===")
     for configuration in configurations:
         marker = "done" if configuration["id"] in completed else "todo"
         print(f"  [{marker}] {describe_configuration(configuration)}")
