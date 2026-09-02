@@ -178,6 +178,59 @@ def describe_fold_composition(fold_users: list[list[str]]) -> str:
     return "\n".join(lines)
 
 
+#: Keys that describe HOW a sweep is run rather than WHAT it measures. Changing one
+#: should reuse existing results, not invalidate them.
+_IDENTITY_IGNORED_TOP = {"hydra", "sweep_id", "_dataset_tag", "save_path", "model_path",
+                         "graph_path", "graph", "num_workers", "mode"}
+_IDENTITY_IGNORED_SWEEP = {"artifact_root", "resume", "dry_run"}
+
+
+def _portable(value):
+    """
+    Reduce absolute paths to their last three components.
+
+    Without this the same experiment gets a different identity on every machine,
+    because data_dirs are absolutised at startup against different repo roots.
+    """
+    if isinstance(value, str) and ("/" in value or "\\" in value):
+        parts = Path(value).parts
+        return "/".join(parts[-3:]) if len(parts) >= 3 else value
+    if isinstance(value, list):
+        return [_portable(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _portable(item) for key, item in value.items()}
+    return value
+
+
+def config_identity(cfg, configurations: list[dict]) -> str:
+    """
+    Digest of everything that defines what this sweep measures.
+
+    This exists because the previous identity was the extractor names plus the grid
+    overrides and nothing else. Every top-level key - max_users, objective, normalize,
+    sample_time, data_dirs, val_user_fraction - was invisible, so two sweeps differing
+    only in one of them shared an artifact root and a state file. The second would
+    find the first's records, skip every run as already complete, and print the first
+    sweep's numbers under the second's banner. That is a silent wrong answer rather
+    than a crash, and it is worse still when the stale numbers happen to agree with
+    the hypothesis being tested.
+    """
+    try:
+        payload = OmegaConf.to_container(cfg, resolve=True)
+    except Exception:
+        payload = {key: value for key, value in vars(cfg).items()} if hasattr(cfg, "__dict__") else dict(cfg)
+
+    payload = {key: value for key, value in payload.items() if key not in _IDENTITY_IGNORED_TOP}
+    sweep_section = payload.get("sweep") or {}
+    if isinstance(sweep_section, dict):
+        payload["sweep"] = {key: value for key, value in sweep_section.items()
+                            if key not in _IDENTITY_IGNORED_SWEEP}
+    payload["__configurations__"] = [c["id"] for c in configurations]
+
+    canonical = json.dumps(_portable(payload), sort_keys=True, default=str)
+    return hashlib.sha1(canonical.encode("utf-8")).hexdigest()[:10]
+
+
 def _configuration_id(extractor: str, overrides: dict) -> str:
     payload = json.dumps({"extractor": extractor, "overrides": overrides}, sort_keys=True, default=str)
     return hashlib.sha1(payload.encode("utf-8")).hexdigest()[:10]
@@ -398,14 +451,27 @@ def run_sweep(cfg, train_fn=None) -> dict:
     fold_users = build_folds(cfg, folds, fold_seed) if folds else None
     if fold_users:
         print(describe_fold_composition(fold_users))
-    sweep_id = hashlib.sha1(
-        json.dumps([c["id"] for c in configurations], sort_keys=True).encode("utf-8")
-    ).hexdigest()[:10]
+    sweep_id = config_identity(cfg, configurations)
 
     artifact_root = Path(str(_sweep_setting(cfg, "artifact_root", "sweeps"))) / sweep_id
     state_path = artifact_root / "sweep_state.json"
     resume = bool(_sweep_setting(cfg, "resume", True))
     state = _load_state(state_path) if resume else {}
+
+    # Second line of defence. The identity above should make a collision impossible,
+    # but a state file written by an older version of this code carries an identity
+    # computed a different way. Reusing it would silently skip every run and report
+    # someone else's numbers, so refuse rather than trust the directory name.
+    stored_identity = state.get("config_identity")
+    if state and stored_identity is not None and stored_identity != sweep_id:
+        print(f"WARNING: state at {state_path} was written for configuration "
+              f"{stored_identity}, not {sweep_id}. Ignoring it and starting fresh.")
+        state = {}
+    elif state and stored_identity is None:
+        print(f"WARNING: state at {state_path} predates configuration identities and "
+              "cannot be verified. Ignoring it and starting fresh.")
+        state = {}
+
     completed = state.get("records", {}) if resume else {}
 
     plan = f"{len(configurations)} configuration(s)"
@@ -468,7 +534,7 @@ def run_sweep(cfg, train_fn=None) -> dict:
             traceback.print_exc()
 
         records[key] = record
-        _write_state(state_path, {"sweep_id": sweep_id, "records": records})
+        _write_state(state_path, {"sweep_id": sweep_id, "config_identity": sweep_id, "records": records})
 
     if fold_users is None:
         ordered = [records[c["id"]] for c in configurations if c["id"] in records]

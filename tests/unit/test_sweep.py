@@ -420,3 +420,102 @@ def test_fold_composition_is_reported(tmp_path):
     text = sweep.describe_fold_composition(sweep.build_folds(cfg, 2, seed=5))
     assert "Alpha=3" in text and "Beta=2" in text
     assert "fold 0" in text and "fold 1" in text
+
+
+# --- sweep identity: the collision that reported one sweep's numbers as another's ---
+
+def _ids(tmp_path, **cfg_overrides):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    for key, value in cfg_overrides.items():
+        setattr(cfg, key, value)
+    return sweep.config_identity(cfg, sweep.build_configurations(cfg))
+
+
+def test_identity_is_stable_for_an_identical_sweep(tmp_path):
+    assert _ids(tmp_path) == _ids(tmp_path)
+
+
+@pytest.mark.parametrize("key,value", [
+    ("max_users", 48),
+    ("objective", "identity_softmax"),
+    ("normalize", "global"),
+    ("sample_time", 5),
+    ("sample_rate", 40),
+    ("embedding_dim", 64),
+    ("val_user_fraction", 0.25),
+    ("cross_session_positives", True),
+    ("center_position", True),
+    ("channels", "position"),
+    ("samples_per_user", 128),
+    ("seed", 999),
+])
+def test_every_experimental_key_changes_the_identity(tmp_path, key, value):
+    """
+    The real bug: identity was extractor names plus grid overrides only, so a sweep
+    differing in max_users reused the previous sweep's state, skipped all its runs as
+    complete, and printed the previous sweep's numbers under the new banner.
+    """
+    assert _ids(tmp_path) != _ids(tmp_path, **{key: value}), (
+        f"changing {key} must produce a different sweep identity, or the two sweeps "
+        "share a state file and the second silently reports the first's results"
+    )
+
+
+def test_data_dirs_change_the_identity(tmp_path):
+    assert _ids(tmp_path) != _ids(tmp_path, data_dirs=["/x/DatasetA/users", "/x/DatasetB/users"])
+
+
+def test_operational_keys_do_not_change_the_identity(tmp_path):
+    """Where artifacts land, or whether we resume, is not part of what is measured."""
+    base = _cfg(tmp_path, grid={"lr": [0.01]})
+    other = _cfg(tmp_path, grid={"lr": [0.01]}, artifact_root="/somewhere/else",
+                 resume=False, dry_run=True)
+    configurations = sweep.build_configurations(base)
+    assert sweep.config_identity(base, configurations) == sweep.config_identity(other, configurations)
+
+
+def test_identity_is_portable_across_machines(tmp_path):
+    """Absolute paths differ per checkout; the same experiment must still match."""
+    a = _ids(tmp_path, data_dirs=["/home/alice/repo/processed_datasets/DS/users"])
+    b = _ids(tmp_path, data_dirs=["C:/Users/bob/GIT/repo/processed_datasets/DS/users"])
+    assert a == b
+
+
+def test_state_from_a_different_configuration_is_refused(tmp_path, capsys):
+    """
+    Belt and braces: a state file written by older code carries no identity, or a
+    different one. Trusting the directory name is what caused the silent skip.
+    """
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    calls = []
+
+    def counting(run_cfg):
+        calls.append(1)
+        return _history(0.6)
+
+    result = sweep.run_sweep(cfg, train_fn=counting)
+    assert len(calls) == 1
+
+    state_file = next((tmp_path / "sweeps").rglob("sweep_state.json"))
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    state["config_identity"] = "somethingelse"
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+    sweep.run_sweep(cfg, train_fn=counting)
+    assert len(calls) == 2, "a mismatched state file must not be resumed from"
+    assert "Ignoring it and starting fresh" in capsys.readouterr().out
+
+
+def test_state_without_an_identity_is_refused(tmp_path, capsys):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    calls = []
+    sweep.run_sweep(cfg, train_fn=lambda c: (calls.append(1), _history(0.6))[1])
+
+    state_file = next((tmp_path / "sweeps").rglob("sweep_state.json"))
+    state = json.loads(state_file.read_text(encoding="utf-8"))
+    del state["config_identity"]
+    state_file.write_text(json.dumps(state), encoding="utf-8")
+
+    sweep.run_sweep(cfg, train_fn=lambda c: (calls.append(1), _history(0.6))[1])
+    assert len(calls) == 2
+    assert "cannot be verified" in capsys.readouterr().out

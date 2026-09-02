@@ -343,7 +343,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **161 passing, ~11s**.
+Current baseline: **179 passing, ~11s**.
 
 ## Performance notes
 
