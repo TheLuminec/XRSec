@@ -28,7 +28,7 @@ from pathlib import Path
 import torch
 
 
-CACHE_VERSION = 1
+CACHE_VERSION = 2  # v2: loader skips files with missing columns / zero duration
 
 # Anchored to the repo root, never the cwd: Hydra runs with `job.chdir: true`, so a
 # relative cache directory would land inside each run directory and never be reused.

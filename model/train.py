@@ -266,7 +266,7 @@ def _run_standard_training(args, device):
     train_paths, test_paths, exclude_users = resolve_paths(args)
 
     print("Loading dataset...")
-    train_loader, test_loader = create_dataloader_from_path(
+    train_loader, test_loader, normalizer = create_dataloader_from_path(
         train_paths,
         args.batch_size,
         device,
@@ -280,6 +280,9 @@ def _run_standard_training(args, device):
         swap_data=getattr(args, "swap_data", False),
         test_on_excluded=getattr(args, "test_on_excluded", False),
         seed=args.seed,
+        normalize=getattr(args, "normalize", "none"),
+        within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
+        return_normalizer=True,
     )
 
     model, criterion, optimizer, start_epoch, history, _ = prepare_training_round(args, device, round_idx=0)
@@ -294,7 +297,13 @@ def _run_standard_training(args, device):
         device,
         start_epoch=start_epoch,
         history=history,
-        checkpoint_extra={"mode": "standard", "seed": int(args.seed)},
+        checkpoint_extra={
+            "mode": "standard",
+            "seed": int(args.seed),
+            # Carried so evaluation applies the training-time transform rather than
+            # re-deriving statistics from held-out data.
+            "normalizer": normalizer.state_dict(),
+        },
     )
 
 

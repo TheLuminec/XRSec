@@ -266,6 +266,53 @@ sweep:
 Each sweep writes `{sweep.artifact_root}/{sweep_id}/` containing `sweep_state.json`,
 `summary.csv`, and per-configuration checkpoints under `runs/`.
 
+## Input Standardisation
+
+Datasets do not share a coordinate frame - mean head height spans 0.00003 to 2.89
+across the corpus and position range spans 40x. Pooling them naively lets a model
+identify the *dataset* rather than the *user*, because a positive pair is always the
+same user and therefore always the same dataset.
+
+```yaml
+normalize: per_dataset          # per_dataset | global | none
+within_dataset_negatives: true  # negatives only from users in the same dataset
+```
+
+- `normalize` standardises each dataset's channels separately. Statistics are fitted
+  on training users only and stored in the checkpoint, so `mode=test` reuses the
+  training-time transform rather than deriving one from held-out data.
+- `within_dataset_negatives` removes the remaining cross-dataset cue from the pair
+  task. Both are no-ops when training on a single dataset.
+
+Measured across six datasets (238 identities, same 5 held-out users):
+
+| configuration | held-out accuracy |
+| --- | --- |
+| raw | 0.576 |
+| + per-dataset standardisation | 0.643 |
+| + within-dataset negatives | 0.687 |
+
+## Dataset Health
+
+`UserProfile` skips files that are unusable (missing required columns, under two
+rows, non-finite, or zero duration) and reports the counts, instead of letting one
+bad file take down a whole dataset.
+
+Native sampling rates vary widely, and requesting a `sample_rate` above a dataset's
+native rate duplicates frames rather than adding information:
+
+| dataset | users | native Hz |
+| --- | --- | --- |
+| Head_and_Gaze | 100 | 120 (half the files carry no quaternion and are skipped) |
+| PanoSaliency | 99 | 16.5 |
+| VR_User_Behavior | 48 | 89.5 |
+| ViewGauss | 35 | 10.1 |
+| EyeNavGS | 22 | 125 |
+| Panonut360 | 21 | 94 |
+| NJIT_6DOF | 18 | 250 |
+
+At `sample_rate=20`, ViewGauss is 50.5% duplicated frames and PanoSaliency 25.9%.
+
 ## Results Log
 
 Every run appends one row to `results/runs.csv`: config, metrics, checkpoint, run

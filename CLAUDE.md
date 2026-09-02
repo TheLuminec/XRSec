@@ -113,7 +113,30 @@ Getting a *new* dataset to that layout is currently the weakest link:
 - That directory does not exist on `main` and neither does any parser — the eight working parsers were removed in commit `6421567` ("Data seperation") and survive only in git history (`git show normalization:datasets/<name>/parser.py`; the `normalization` branch is an ancestor of `main`, not pending work).
 - `formatter.py`'s output path (`datasets/<name>/processed_data/users/`) does not match where the model reads from (`processed_datasets/<name>/users/`), so onboarding a dataset ends with a manual move.
 
-Features are fed to the model **raw and unnormalized**. Position ranges differ substantially across datasets (roughly ±1 in most, up to +5.7 in NJIT), so multi-dataset runs and cross-dataset transfer are confounded by per-dataset offsets.
+### Data condition (audited)
+
+| dataset | users | native Hz | notes |
+| --- | --- | --- | --- |
+| Head_and_Gaze | 100 | 120 | **half the files (2630 `V1_*`) have no quaternion** — gaze rays only |
+| PanoSaliency | 99 | 16.5 | 25 single-row sessions (zero duration); below 20Hz |
+| VR_User_Behavior | 48 | 89.5 | the default dataset |
+| ViewGauss | 35 | 10.1 | well below 20Hz |
+| EyeNavGS | 22 | 125 | |
+| Panonut360 | 21 | 94 | |
+| NJIT_6DOF | 18 | 250 | room-scale walking, position range 5.13m |
+
+Quaternions are unit-norm everywhere and there are no non-finite values. `UserProfile` skips files that are missing required columns, have fewer than two rows, are non-finite, or have non-positive duration, and reports the counts — before this, one bad file raised `KeyError` and took down a whole dataset (which is what made Head_and_Gaze unusable).
+
+**Requesting a `sample_rate` above a dataset's native rate duplicates frames**, because `Sampler` takes the nearest point to each target time. At 20Hz this is 50.5% duplicate consecutive frames for ViewGauss and 25.9% for PanoSaliency, against 7.1% for VR_User_Behavior — so derived velocity is partly fictitious for the low-rate datasets. Check the table above before raising `sample_rate`.
+
+### Normalization and negative sampling
+
+Datasets share no coordinate frame: mean head height spans 0.00003 (Panonut360) to 2.89 (NJIT), and position range spans 40x. Two settings exist because of this, and they solve **different halves of the same problem**:
+
+- `normalize` (`per_dataset` | `global` | `none`) — `model/normalization.py`. Standardizes each dataset's channels separately, removing cross-dataset offset and scale while preserving the *relative* differences between users within a dataset, which is where identity lives. Statistics are **fitted on training users only** and stored in the checkpoint, so `mode=test` applies the training-time transform instead of re-deriving it from held-out data. An unknown dataset at evaluation time falls back to fitting on the target data and says so.
+- `within_dataset_negatives` — negatives are drawn only from users in the same dataset. A positive pair is always the same user and therefore always the same dataset, so pooling six datasets makes **79% of negatives cross-dataset**; raw mean-position distance then answers "different user?" for 71% of training pairs. No-op for a single dataset.
+
+Measured on six datasets (238 identities, evaluated on the same 5 held-out users throughout): 0.576 raw → 0.643 with standardization → **0.687 with both**. Training accuracy falls from 0.936 to 0.830 as the shortcut disappears and the model is forced onto the real task.
 
 ## Outputs and the `auto` path trap
 
@@ -142,7 +165,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **79 passing, ~10s**.
+Current baseline: **100 passing, ~10s**.
 
 ## Performance notes
 

@@ -11,6 +11,21 @@ sample_rate: 20
 
 samples_per_user: 512
 
+# Input standardisation. Coordinate frames and scales differ per dataset (mean head
+# height spans 0.00003 to 2.89; position range spans 40x), which otherwise lets a
+# model identify the dataset instead of the user when several are pooled.
+# per_dataset: standardise each dataset's channels separately (removes that shortcut)
+# global:      one set of statistics over everything (fixes channel scale only)
+# none:        raw values, as before
+# Statistics are fitted on training users only and stored in the checkpoint.
+normalize: per_dataset
+
+# Draw negative pairs only from users in the same dataset. A positive pair is always
+# the same user and so always the same dataset; without this, 79% of negatives become
+# cross-dataset when several are pooled and the task degrades into "same dataset?".
+# No effect when training on a single dataset.
+within_dataset_negatives: true
+
 # Feature extractor: any name registered in model/extractors/.
 # List them with: .venv/Scripts/python model/list_extractors.py
 extractor: bilstm

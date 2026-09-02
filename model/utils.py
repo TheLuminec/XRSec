@@ -13,7 +13,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-def load_checkpoint(checkpoint_path, device, seq_len=10):
+def load_checkpoint(checkpoint_path, device, seq_len=10, return_checkpoint=False):
     """
     Load the model checkpoint.
 
@@ -21,6 +21,8 @@ def load_checkpoint(checkpoint_path, device, seq_len=10):
         checkpoint_path: Path to the checkpoint
         device: Device to load the model on
         seq_len: Sequence length parameter (fallback for old models)
+        return_checkpoint: Also return the raw checkpoint dict, which carries the
+            normalizer state and other metadata evaluation needs.
     """
     if not os.path.exists(checkpoint_path):
         print(f"ERROR: checkpoint not found at '{checkpoint_path}'")
@@ -59,7 +61,7 @@ def load_checkpoint(checkpoint_path, device, seq_len=10):
     print(f"Model loaded: {backbone.describe()}")
     print(
         f"Model loaded. Parameters: {sum(p.numel() for p in model.parameters()):,}")
-    return model
+    return (model, checkpoint) if return_checkpoint else model
 
 
 def save_checkpoint(checkpoint_path, model, optimizer, epoch, extra=None):

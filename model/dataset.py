@@ -22,6 +22,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 
 import sample_cache
+from normalization import ChannelNormalizer
 from user_profile import UserProfile
 
 
@@ -108,13 +109,17 @@ class SampleDataset:
             exclude_users = [exclude_users]
 
         data_dirs = [data_dir] if isinstance(data_dir, str) else list(data_dir)
+        # Dataset of origin per user, so normalisation can be fitted per dataset.
+        self.dataset_names = [self._dataset_name(directory) for directory in data_dirs]
+        self.user_dataset_ids: list[int] = []
+        self.skipped_files: dict[str, int] = {}
 
         # Users are filtered before loading rather than after: excluded users cost
         # nothing to skip, which matters for leave-users-out sweeps.
         self.sample_count = 0
         self.cache_hits = 0
         self.cache_misses = 0
-        for directory in data_dirs:
+        for dataset_id, directory in enumerate(data_dirs):
             for user_dir in self._iter_user_dirs(directory):
                 if self.swap_data:
                     if user_dir not in exclude_users:
@@ -124,6 +129,7 @@ class SampleDataset:
                         continue
 
                 self.num_users += 1
+                self.user_dataset_ids.append(dataset_id)
                 user_samples = self._load_user_samples(user_dir)
                 self.sample_count += int(user_samples.shape[0])
                 self.dataset.append(user_samples)
@@ -132,6 +138,15 @@ class SampleDataset:
         if sample_cache.cache_enabled():
             cache_note = f" (cache: {self.cache_hits} hit, {self.cache_misses} built)"
         print(f"Loaded {self.sample_count} samples from {self.num_users} users{cache_note}")
+        if self.skipped_files:
+            detail = ", ".join(f"{count} {reason}" for reason, count in sorted(self.skipped_files.items()))
+            print(f"  skipped unusable files: {detail}")
+
+    @staticmethod
+    def _dataset_name(directory: str) -> str:
+        """`.../<Dataset_Name>/users` -> `<Dataset_Name>`; the key normalisation uses."""
+        path = Path(directory)
+        return path.parent.name if path.name == "users" else path.name
 
     @staticmethod
     def _iter_user_dirs(directory: str):
@@ -158,6 +173,8 @@ class SampleDataset:
 
         self.cache_misses += 1
         profile = UserProfile(user_dir, self.sample_time, self.sample_rate)
+        for reason, count in getattr(profile, "skipped", {}).items():
+            self.skipped_files[reason] = self.skipped_files.get(reason, 0) + count
 
         samples = []
         for sampler in profile.data_samplers:
@@ -195,14 +212,21 @@ class SampleIndex:
         self.seq_len = self.sample_time * self.sample_rate
         self.num_users = sample_dataset.num_users
 
+        self.dataset_names = list(getattr(sample_dataset, "dataset_names", []))
+        user_dataset_ids = getattr(sample_dataset, "user_dataset_ids", [])
+        self.user_dataset_ids = list(user_dataset_ids)
+
         self.user_sample_indices: list[torch.Tensor] = []
         flat_samples = []
+        window_dataset_ids = []
         offset = 0
-        for user_samples in sample_dataset.dataset:
+        for user_index, user_samples in enumerate(sample_dataset.dataset):
             sample_count = int(user_samples.shape[0])
             if sample_count > 0:
                 flat_samples.append(user_samples)
                 indices = torch.arange(offset, offset + sample_count, dtype=torch.long)
+                dataset_id = user_dataset_ids[user_index] if user_index < len(user_dataset_ids) else 0
+                window_dataset_ids.append(torch.full((sample_count,), dataset_id, dtype=torch.long))
             else:
                 indices = torch.empty(0, dtype=torch.long)
             self.user_sample_indices.append(indices)
@@ -210,8 +234,10 @@ class SampleIndex:
 
         if flat_samples:
             self.samples = torch.cat(flat_samples, dim=0)
+            self.window_dataset_ids = torch.cat(window_dataset_ids, dim=0)
         else:
             self.samples = torch.empty((0, 7, self.seq_len), dtype=torch.float32)
+            self.window_dataset_ids = torch.empty(0, dtype=torch.long)
 
         self.sample_count = int(self.samples.shape[0])
 
@@ -245,9 +271,20 @@ def generate_pair_manifest(
     pairs_per_user: int,
     match_ratio: float = 0.5,
     seed: int | None = None,
+    within_dataset_negatives: bool = False,
 ) -> dict[str, torch.Tensor]:
     """
     Deterministically generate siamese pairs from a stable sample index.
+
+    Args:
+        within_dataset_negatives: Draw negative partners only from users in the same
+            dataset. A positive pair is always the same user and therefore always the
+            same dataset, so when several datasets are pooled the negatives become
+            overwhelmingly cross-dataset (79% measured on six datasets) and the task
+            collapses into "same dataset?" - which is trivially separable and does not
+            transfer to a held-out split drawn from one dataset. Restricting negatives
+            makes the training objective match the evaluation condition. This is a
+            no-op when training on a single dataset.
     """
     if pairs_per_user <= 0 or sample_index.num_users == 0 or sample_index.sample_count == 0:
         return _empty_pair_manifest()
@@ -260,9 +297,17 @@ def generate_pair_manifest(
     labels = []
     anchor_user_ids = []
 
+    user_dataset_ids = getattr(sample_index, "user_dataset_ids", []) or [0] * sample_index.num_users
+
+    def _eligible(user_idx: int, candidate: int) -> bool:
+        if candidate == user_idx or len(sample_index.user_sample_indices[candidate]) == 0:
+            return False
+        if within_dataset_negatives and user_dataset_ids[candidate] != user_dataset_ids[user_idx]:
+            return False
+        return True
+
     valid_negative_users = {
-        user_idx: [candidate for candidate in range(sample_index.num_users)
-                   if candidate != user_idx and len(sample_index.user_sample_indices[candidate]) > 0]
+        user_idx: [candidate for candidate in range(sample_index.num_users) if _eligible(user_idx, candidate)]
         for user_idx in range(sample_index.num_users)
     }
 
@@ -367,6 +412,10 @@ def create_dataloader_from_path(
     swap_data: bool = False,
     test_on_excluded: bool = False,
     seed: int | None = None,
+    normalize: str = "none",
+    within_dataset_negatives: bool = False,
+    normalizer: ChannelNormalizer | None = None,
+    return_normalizer: bool = False,
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -386,9 +435,17 @@ def create_dataloader_from_path(
         swap_data: Whether to swap what is included and excluded
         test_on_excluded: If true, uses the excluded paths for the testing dataset instead of doing a random split
         seed: Root seed for deterministic pair generation and splits
+        normalize: Input standardisation mode - "none", "per_dataset" or "global".
+        within_dataset_negatives: Restrict negative pairs to users from the same
+            dataset (see generate_pair_manifest).
+        normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
+            Evaluation must pass the training-time normalizer so held-out data is not
+            used to derive the transform.
+        return_normalizer: Append the fitted normalizer to the returned tuple.
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
+        With return_normalizer, the ChannelNormalizer is appended to the result.
     """
     pin_memory = device.type == "cuda" if device else False
 
@@ -402,7 +459,12 @@ def create_dataloader_from_path(
             exclude_users=exclude_users,
             swap_data=eval_swap_data,
             seed=_seed_value(seed, 11),
+            within_dataset_negatives=within_dataset_negatives,
         )
+        # Evaluation never fits its own statistics when a training-time normalizer is
+        # available; doing so would let the held-out distribution shape the transform.
+        eval_normalizer = normalizer if normalizer is not None else ChannelNormalizer(normalize).fit(dataset.sample_index)
+        eval_normalizer.transform(dataset.sample_index)
         test_loader = DataLoader(
             dataset,
             batch_size=batch_size,
@@ -411,7 +473,7 @@ def create_dataloader_from_path(
             pin_memory=pin_memory,
             generator=torch.Generator().manual_seed(_seed_value(seed, 12)),
         )
-        return test_loader
+        return (test_loader, eval_normalizer) if return_normalizer else test_loader
 
     train_dataset = SiameseDataset(
         data_dir,
@@ -421,7 +483,15 @@ def create_dataloader_from_path(
         exclude_users=exclude_users,
         swap_data=swap_data,
         seed=_seed_value(seed, 1),
+        within_dataset_negatives=within_dataset_negatives,
     )
+
+    # Fit on the training users only, then apply the same transform everywhere.
+    if normalizer is None:
+        normalizer = ChannelNormalizer(normalize).fit(train_dataset.sample_index)
+    normalizer.transform(train_dataset.sample_index)
+    if normalizer.enabled:
+        print(normalizer.describe())
 
     if test_dir is None:
         if test_on_excluded:
@@ -433,7 +503,9 @@ def create_dataloader_from_path(
                 exclude_users=exclude_users,
                 swap_data=not swap_data,
                 seed=_seed_value(seed, 2),
+                within_dataset_negatives=within_dataset_negatives,
             )
+            normalizer.transform(test_dataset.sample_index)
         else:
             generator = torch.Generator().manual_seed(_seed_value(seed, 3))
             if len(train_dataset) <= 1:
@@ -457,7 +529,9 @@ def create_dataloader_from_path(
             exclude_users=exclude_users,
             swap_data=test_swap_data,
             seed=_seed_value(seed, 4),
+            within_dataset_negatives=within_dataset_negatives,
         )
+        normalizer.transform(test_dataset.sample_index)
 
     train_loader = DataLoader(
         train_dataset,
@@ -475,7 +549,7 @@ def create_dataloader_from_path(
         pin_memory=pin_memory,
         generator=torch.Generator().manual_seed(_seed_value(seed, 6)),
     )
-    return train_loader, test_loader
+    return (train_loader, test_loader, normalizer) if return_normalizer else (train_loader, test_loader)
 
 
 class SiameseDataset(Dataset):
@@ -493,6 +567,7 @@ class SiameseDataset(Dataset):
         swap_data: bool = False,
         seed: int | None = None,
         match_ratio: float = 0.5,
+        within_dataset_negatives: bool = False,
     ):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -514,6 +589,7 @@ class SiameseDataset(Dataset):
             pairs_per_user=self.samples_per_user,
             match_ratio=self.match_ratio,
             seed=self.seed,
+            within_dataset_negatives=within_dataset_negatives,
         )
         self.siamese_count = int(self.manifest["labels"].shape[0])
 

@@ -7,6 +7,7 @@ Loads a trained model checkpoint and evaluates accuracy on the dataset.
 import torch
 import torch.nn as nn
 from dataset import create_dataloader_from_path
+from normalization import ChannelNormalizer
 from utils import load_checkpoint
 
 
@@ -91,7 +92,11 @@ def evaluate_model(args, device=None):
     print(f"Using device: {device}")
 
     seq_len = getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10)
-    model = load_checkpoint(args.model_path, device, seq_len)
+    model, checkpoint = load_checkpoint(args.model_path, device, seq_len, return_checkpoint=True)
+    # The transform the model was trained under; refitting it here would let the
+    # evaluation set shape its own normalisation.
+    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'))
+    print(normalizer.describe())
     
     eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None) or getattr(args, "data_dir", None)
     if eval_dirs is None:
@@ -110,6 +115,8 @@ def evaluate_model(args, device=None):
         swap_data=getattr(args, "swap_data", False),
         test_on_excluded=getattr(args, "test_on_excluded", False),
         seed=getattr(args, "seed", 67),
+        normalize=getattr(args, "normalize", "none"),
+        normalizer=normalizer if normalizer.enabled else None,
     )
     test_size = len(test_loader.dataset)
 

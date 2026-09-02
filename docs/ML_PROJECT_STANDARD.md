@@ -25,6 +25,11 @@ The codebase now has these foundations in place:
   boosted, test and sweep runs
 - **A sample cache** that removes CSV parsing from repeat runs (~23s to ~0.6s on the
   default dataset)
+- **Per-dataset input standardisation** with training-only statistics carried in the
+  checkpoint, plus within-dataset negative sampling, so several datasets can be
+  pooled without the model learning to identify the dataset instead of the user
+- **Tolerant data loading** that skips unusable files and reports them, rather than
+  failing a whole dataset on one malformed file
 
 ## 2) What the boosted workflow standardizes
 
@@ -97,9 +102,10 @@ rather than manual config editing. What remains:
 - **No third split**
   - per-epoch checkpoint selection, boosted best-round selection and the reported
     number all use the same held-out users, so reported accuracy is optimistically biased
-- **No input normalization**
-  - features are fed raw, and position ranges differ substantially across datasets,
-    which confounds multi-dataset training and cross-dataset transfer
+- ~~No input normalization~~ - done. `normalize: per_dataset` standardises each
+  dataset's channels (fitted on training users, stored in the checkpoint), and
+  `within_dataset_negatives: true` stops the pair task degrading into "same
+  dataset?". Together these took six-dataset training from 0.576 to 0.687 held-out.
 - **Package versions are not captured**
   - the git SHA and config are recorded, but not the environment
 - **No external experiment tracker**
@@ -118,11 +124,15 @@ For new experiments in this repository, the minimum acceptable bar should now be
 2. Set and record a root `seed`.
 3. Choose explicitly between standard and boosted training.
 4. Keep `graph: true` for any meaningful training run so loss/accuracy history is preserved.
-5. Preserve boosted artifacts when using round training:
+5. When training on more than one dataset, keep `normalize: per_dataset` and
+   `within_dataset_negatives: true`, and check each dataset's native sampling rate
+   before raising `sample_rate` - requesting more than the native rate duplicates
+   frames instead of adding information.
+6. Preserve boosted artifacts when using round training:
    - `boost_state.json`
    - round checkpoints
    - summary and round plots
-6. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
+7. Avoid persisting regenerated pair tensors unless a future debugging need proves that necessary.
 
 ## 6) Suggested next milestones
 

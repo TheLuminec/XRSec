@@ -18,6 +18,7 @@ from dataset import (
     generate_pair_manifest,
     make_pair_manifest,
 )
+from normalization import ChannelNormalizer
 from utils import load_checkpoint
 
 
@@ -152,6 +153,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
             pairs_per_user=samples_per_user,
             match_ratio=match_ratio,
             seed=manifest_seed,
+            within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
         )
         return manifest, {
             "manifest_seed": manifest_seed,
@@ -168,6 +170,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
         pairs_per_user=int(boosting.candidate_pairs_per_user),
         match_ratio=match_ratio,
         seed=candidate_seed,
+        within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
     )
     previous_model = load_checkpoint(
         previous_best_path,
@@ -195,6 +198,7 @@ def _build_round_manifest(args, device, round_idx, train_sample_index, previous_
         pairs_per_user=refresh_pairs_per_user,
         match_ratio=match_ratio,
         seed=refresh_seed,
+        within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
     )
     manifest = concat_pair_manifests([hard_manifest, refresh_manifest])
     return manifest, {
@@ -238,7 +242,15 @@ def _build_train_and_validation_indexes(args):
     else:
         validation_sample_index = train_sample_index
 
-    return train_sample_index, validation_sample_index
+    # Fit on training users only, then apply the same transform to validation.
+    normalizer = ChannelNormalizer(getattr(args, "normalize", "none")).fit(train_sample_index)
+    normalizer.transform(train_sample_index)
+    if validation_sample_index is not train_sample_index:
+        normalizer.transform(validation_sample_index)
+    if normalizer.enabled:
+        print(normalizer.describe())
+
+    return train_sample_index, validation_sample_index, normalizer
 
 
 def _load_boost_state(state_path: Path):
@@ -293,12 +305,13 @@ def run_boosted_training(
     state_path = artifact_root / "boost_state.json"
     rounds_dir.mkdir(parents=True, exist_ok=True)
 
-    train_sample_index, validation_sample_index = _build_train_and_validation_indexes(args)
+    train_sample_index, validation_sample_index, normalizer = _build_train_and_validation_indexes(args)
     validation_manifest = generate_pair_manifest(
         validation_sample_index,
         pairs_per_user=int(args.samples_per_user),
         match_ratio=float(boosting.match_ratio),
         seed=derive_seed(args.seed, "boost", "validation_manifest"),
+        within_dataset_negatives=getattr(args, "within_dataset_negatives", False),
     )
     validation_loader = create_pair_dataloader(
         validation_sample_index,
@@ -405,6 +418,7 @@ def run_boosted_training(
                 "round_idx": round_idx,
                 "seed": int(args.seed),
                 "round_manifest_meta": manifest_meta,
+                "normalizer": normalizer.state_dict(),
                 "warm_start_from": checkpoint.get("warm_start_from"),
             },
         )
