@@ -6,7 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
-Current state: on held-out users, single-split results sit around **0.69 on a balanced binary task** (chance = 0.50) while training accuracy reaches 0.83–0.93 — the model still substantially memorizes its training identities. A historical 0.85 exists but its configuration was lost and it has not been reproduced.
+Current state: the defensible headline is **0.669** on unseen users (chance = 0.50) — `bilstm`, `objective=identity_softmax`, cross-session positives, validation-selected epoch, averaged over 5 leave-users-out folds on VR_User_Behavior. That is the only figure that has survived all three corrections below; earlier numbers in this file and in `results/runs.csv` predate one or more of them. A historical 0.85 exists but its configuration was lost and it has not been reproduced.
+
+What moved it, measured with paired folds:
+
+| change | effect |
+| --- | --- |
+| `objective=identity_softmax` vs pairwise BCE | **+6.5**, 5/5 folds on each of three backbones |
+| per-dataset normalization + within-dataset negatives (pooled data) | **+11.1** |
+| extractor architecture (3 working ones, 10 folds) | **~0**, spread under 1 point |
+| cross-session positives (correction, not a gain) | −1.1 to −1.6 |
+| validation-selected epoch (correction) | −2 |
+
+**The extractor is not the constraint.** Two cross-validated sweeps put `paper_gnn_bilstm`, `bilstm` and `motion_tdnn` within 0.002 of each other. The objective, the pairing rules and the data are where the movement is.
 
 **Read every number here against the noise floor.** Which users are held out moves accuracy by ~0.114 (sd 0.037), so single-split differences below ~0.04 are not results. See "The evaluation is noisier than it looks" below; use `sweep.folds`.
 
@@ -103,13 +115,17 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
 
-### Same-session positives (open validity question)
+### Same-session positives (answered: costs ~1.5 points)
 
 A positive pair is two windows from the same user — and usually, therefore, from the **same recording session**, which shares headset mounting, seating position and the content being viewed. A model can score well by matching the session rather than the person, and because held-out positives are *also* same-session, that shortcut never appears as a train/test gap. This has the same shape as the cross-dataset shortcut, which cost 11 points once fixed.
 
 `cross_session_positives: true` draws positives from two different sessions of the same user. Users with only one session (all 18 of NJIT_6DOF) fall back to same-session and are counted in the run output.
 
-Measured beforehand: between-session position spread is comparable to or *smaller* than within-session spread (0.64–1.26× across three datasets), so position at least is a user-level property rather than a session fingerprint. That is reassuring but not sufficient — same-session evaluation is considered invalid in biometrics regardless, so the number to trust is the cross-session one.
+**Result:** cross-session pairing costs only **1.1–1.6 points** (bilstm 0.685 → 0.669, t(4)=−4.06, lost 5/5; motion_tdnn 0.686 → 0.675, t(4)=−1.40, not distinguishable from zero). The `random` control sits at chance under *both* regimes (0.4947 / 0.4967), so the drop is a real effect on real signal rather than an artifact of the new pair construction. Set against the cross-dataset shortcut — worth 11 points when live — this is the signature of a model that mostly is **not** relying on session matching.
+
+So: same-session pairing was inflating the figure by about a point and a half, and the +6.5 from `identity_softmax` survives intact. Quote the cross-session number.
+
+Predicted beforehand from data alone: between-session position spread is comparable to or *smaller* than within-session spread (0.64–1.26× across three datasets), so position is a user-level property rather than a session fingerprint.
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
