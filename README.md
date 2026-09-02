@@ -200,9 +200,20 @@ class MyExtractor(FeatureExtractor):
 ```
 
 Hyperparameters must be explicit keyword arguments with defaults, and every key in
-`search_space()` must be one of them. Running `pytest` then validates the new
-extractor automatically: output contract, varied sequence lengths and embedding
-widths, every declared sweep value, trainability, and checkpoint round-trip.
+`search_space()` must be one of them. If `forward` is stochastic in eval mode, set
+`deterministic = False` on the class.
+
+Running `pytest` then validates the new extractor automatically: output contract,
+varied sequence lengths and embedding widths, every declared sweep value,
+trainability, determinism, and checkpoint round-trip.
+
+### Built-in extractors
+
+| Name | What it is |
+| --- | --- |
+| `paper_gnn_bilstm` | The published GNN + BiLSTM + attention architecture (default) |
+| `bilstm` | The same without the GNN branches - isolates what the graph layers add |
+| `random` | Ignores its input and emits noise - the chance-level floor (~50%) |
 
 ## Sweep Mode
 

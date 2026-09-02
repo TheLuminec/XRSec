@@ -45,6 +45,14 @@ class FeatureExtractor(nn.Module, ABC):
         **hyperparams: Extractor-specific settings, recorded for checkpointing.
     """
 
+    #: Whether ``forward`` in eval mode is a pure function of its input.
+    #: Set False only for deliberately stochastic extractors, such as the ``random``
+    #: chance-level baseline. Leaving it True on a stochastic extractor is caught by
+    #: the contract tests, which is the point: dropout left active at eval time, or an
+    #: uninitialised buffer, shows up as an accidental loss of determinism rather than
+    #: as unexplained variance between runs.
+    deterministic: bool = True
+
     def __init__(self, seq_len: int, num_channels: int = 7, embedding_dim: int = 128, **hyperparams):
         super().__init__()
         self.seq_len = int(seq_len)

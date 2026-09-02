@@ -67,6 +67,33 @@ def test_every_search_space_value_builds_and_runs(name):
 
 
 @pytest.mark.parametrize("name", ALL_EXTRACTORS)
+def test_declared_determinism_matches_behaviour(name):
+    """
+    An extractor claiming determinism must return identical embeddings for identical
+    input in eval mode. Catches dropout left active at eval, or unseeded noise, which
+    would otherwise surface as unexplained variance between sweep runs.
+    """
+    extractor = fe.create(name, seq_len=10, embedding_dim=16)
+    extractor.eval()
+    x = torch.randn(3, 7, 10)
+    with torch.no_grad():
+        first, second = extractor(x), extractor(x)
+
+    identical = torch.allclose(first, second, atol=1e-6)
+    if fe.get(name).deterministic:
+        assert identical, (
+            f"'{name}' declares deterministic = True but produced different embeddings "
+            "for the same input in eval mode. Fix the non-determinism, or set "
+            "`deterministic = False` on the class if it is intentional."
+        )
+    else:
+        assert not identical, (
+            f"'{name}' declares deterministic = False but is in fact deterministic; "
+            "remove the flag so it gets the stronger checks."
+        )
+
+
+@pytest.mark.parametrize("name", ALL_EXTRACTORS)
 def test_records_hyperparameters_for_checkpointing(name):
     extractor = fe.create(name, seq_len=10, embedding_dim=8)
     assert isinstance(extractor.hyperparams, dict)
@@ -85,13 +112,28 @@ def test_slots_into_the_siamese_model(name):
     logits = model(x1, x2)
     assert logits.shape == (4, 1)
 
-    # One optimisation step must actually update the extractor's parameters.
-    before = [p.detach().clone() for p in model.feature_extractor.parameters()]
+    # One optimisation step must actually update something. Which parameters exist
+    # depends on the extractor: a baseline like `random` can legitimately have none of
+    # its own at default settings, in which case only the Siamese head learns.
+    extractor_before = [p.detach().clone() for p in model.feature_extractor.parameters()]
+    head_before = [p.detach().clone() for p in model.classifier.parameters()]
+
     loss = criterion(logits, torch.tensor([[1.0], [0.0], [1.0], [0.0]]))
     loss.backward()
     optimizer.step()
-    after = list(model.feature_extractor.parameters())
-    assert any(not torch.allclose(b, a) for b, a in zip(before, after))
+
+    if extractor_before:
+        after = list(model.feature_extractor.parameters())
+        assert any(not torch.allclose(b, a) for b, a in zip(extractor_before, after)), (
+            f"'{name}' has parameters but none of them changed after an optimiser step; "
+            "gradients are not reaching the extractor."
+        )
+    else:
+        head_after = list(model.classifier.parameters())
+        assert any(not torch.allclose(b, a) for b, a in zip(head_before, head_after)), (
+            f"'{name}' exposes no parameters of its own, and the Siamese head did not "
+            "train either, so this configuration cannot learn at all."
+        )
 
 
 def test_unknown_extractor_name_is_rejected():
@@ -133,8 +175,18 @@ def test_checkpoint_round_trip_rebuilds_the_same_extractor(name, tmp_path):
     for key, value in params.items():
         assert restored.feature_extractor.hyperparams[key] == value
 
-    x1, x2 = torch.randn(2, 7, 10), torch.randn(2, 7, 10)
-    model.eval()
-    restored.eval()
-    with torch.no_grad():
-        assert torch.allclose(model(x1, x2), restored(x1, x2), atol=1e-6)
+    # Weights are the ground truth for a round trip, and this holds for stochastic
+    # extractors too.
+    original_state = model.state_dict()
+    restored_state = restored.state_dict()
+    assert original_state.keys() == restored_state.keys()
+    for key in original_state:
+        assert torch.allclose(original_state[key], restored_state[key], atol=1e-6)
+
+    # Identical weights only imply identical outputs when forward is a pure function.
+    if fe.get(name).deterministic:
+        x1, x2 = torch.randn(2, 7, 10), torch.randn(2, 7, 10)
+        model.eval()
+        restored.eval()
+        with torch.no_grad():
+            assert torch.allclose(model(x1, x2), restored(x1, x2), atol=1e-6)
