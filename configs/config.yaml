@@ -32,6 +32,14 @@ head: diff_linear
 # CLAUDE.md.
 channels: full
 
+# Subtract each window's mean position, leaving only movement within the window.
+# Absolute position carries height and seated posture, which is the strongest single
+# identity cue measured here (0.768 AUC on unseen users) but an anthropometric one
+# rather than a behavioural one. Centring isolates how the person moves. Paired with
+# the uncentred run it answers whether this task is behavioural biometrics or body
+# measurement - which changes how the work should be described, either way.
+center_position: false
+
 # Fraction of TRAINING users held out to choose the best epoch, disjoint from both
 # training and the reported test users. 0 keeps the historical behaviour of picking
 # the best epoch on the set being reported, which inflates the result by about +0.02:

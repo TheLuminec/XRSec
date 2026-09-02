@@ -216,12 +216,17 @@ class SampleDataset:
         return self.dataset[idx]
 
 
+def position_channel_slice(num_channels: int) -> slice:
+    """Where the position channels sit, for either channel set."""
+    return slice(4, 7) if num_channels >= 7 else slice(0, 3)
+
+
 class SampleIndex:
     """
     Stable index over flattened per-user samples.
     """
 
-    def __init__(self, sample_dataset: SampleDataset):
+    def __init__(self, sample_dataset: SampleDataset, center_position: bool = False):
         self.sample_time = sample_dataset.sample_time
         self.sample_rate = sample_dataset.sample_rate
         self.seq_len = self.sample_time * self.sample_rate
@@ -265,6 +270,18 @@ class SampleIndex:
             self.window_session_ids = torch.empty(0, dtype=torch.long)
 
         self.sample_count = int(self.samples.shape[0])
+        self.center_position = center_position
+
+        if center_position and self.sample_count:
+            # Remove each window's mean position, leaving only movement within the
+            # window. Absolute position carries height and seated posture - the
+            # strongest single identity cue measured here (0.768 AUC on unseen users)
+            # but an anthropometric one. Centring isolates what is left: how the person
+            # moves. If accuracy survives, the task is behavioural; if it collapses to
+            # chance, this is body measurement wearing a behavioural label.
+            channels = position_channel_slice(self.samples.shape[1])
+            position = self.samples[:, channels, :]
+            self.samples[:, channels, :] = position - position.mean(dim=2, keepdim=True)
 
     def __len__(self):
         return self.sample_count
@@ -277,6 +294,7 @@ def build_sample_index(
     exclude_users=None,
     swap_data: bool = False,
     channels: str = "full",
+    center_position: bool = False,
 ) -> SampleIndex:
     """
     Build a stable sample index using sorted user and file traversal.
@@ -289,7 +307,8 @@ def build_sample_index(
             exclude_users=exclude_users,
             swap_data=swap_data,
             channels=channels,
-        )
+        ),
+        center_position=center_position,
     )
 
 
@@ -512,6 +531,7 @@ def create_dataloader_from_path(
     within_dataset_negatives: bool = False,
     channels: str = "full",
     cross_session_positives: bool = False,
+    center_position: bool = False,
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
     val_user_fraction: float = 0.0,
@@ -542,6 +562,8 @@ def create_dataloader_from_path(
             position) or "position". See user_profile.CHANNEL_SETS.
         cross_session_positives: Draw positive pairs from different sessions of the
             same user (see generate_pair_manifest).
+        center_position: Subtract each window's mean position, leaving movement only.
+            Separates behaviour from anthropometry (height, seated posture).
         normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
             Evaluation must pass the training-time normalizer so held-out data is not
             used to derive the transform.
@@ -572,6 +594,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             cross_session_positives=cross_session_positives,
+            center_position=center_position,
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
         # available; doing so would let the held-out distribution shape the transform.
@@ -603,6 +626,7 @@ def create_dataloader_from_path(
         within_dataset_negatives=within_dataset_negatives,
         channels=channels,
         cross_session_positives=cross_session_positives,
+        center_position=center_position,
     )
 
     # Fit on the training users only, then apply the same transform everywhere.
@@ -625,6 +649,7 @@ def create_dataloader_from_path(
                 within_dataset_negatives=within_dataset_negatives,
                 channels=channels,
                 cross_session_positives=cross_session_positives,
+                center_position=center_position,
             )
             normalizer.transform(test_dataset.sample_index)
         else:
@@ -653,6 +678,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             cross_session_positives=cross_session_positives,
+            center_position=center_position,
         )
         normalizer.transform(test_dataset.sample_index)
 
@@ -669,6 +695,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             cross_session_positives=cross_session_positives,
+            center_position=center_position,
         )
         normalizer.transform(val_dataset.sample_index)
         val_loader = DataLoader(
@@ -719,6 +746,7 @@ class SiameseDataset(Dataset):
         within_dataset_negatives: bool = False,
         channels: str = "full",
         cross_session_positives: bool = False,
+        center_position: bool = False,
     ):
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -729,6 +757,7 @@ class SiameseDataset(Dataset):
             exclude_users=exclude_users,
             swap_data=swap_data,
             channels=channels,
+            center_position=center_position,
         )
         self.num_users = self.sample_index.num_users
         self.num_samples = self.sample_index.sample_count

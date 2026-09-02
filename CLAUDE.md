@@ -129,6 +129,22 @@ Predicted beforehand from data alone: between-session position spread is compara
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
+### How much is the model actually adding?
+
+Measured under the **corrected** protocol (5 leave-users-out folds, cross-session positives, per-dataset normalization, threshold fitted on validation users and accuracy reported on held-out users) — the same protocol the trained runs use:
+
+| | accuracy |
+| --- | --- |
+| trivial descriptor: per-channel mean + std of the window, thresholded | 0.562 |
+| the same with `center_position` (movement only, no absolute position) | 0.513 |
+| **trained model** (`bilstm`, `identity_softmax`) | **0.669** |
+
+So the learned model adds **+0.107 over two lines of numpy**, and absolute position is worth about 0.05 of the trivial descriptor's 0.062 above chance.
+
+This **reverses an earlier reading**. On the old protocol the trivial baseline scored 0.712 against a trained 0.656, which looked like the models adding nothing. That comparison was made on the fixed 5-user split — which is unusually easy — with same-session positives, and against a `best_test_acc` that was itself inflated. Corrected, the ordering flips. Any future "is the network earning its place" claim should be measured this way, not on the fixed split.
+
+`center_position` exists to push this further: it strips the anthropometric cue (height, seated posture) and leaves only how the person moves. The trivial descriptor collapses to 0.513 without absolute position; whether a *trained* model does is the open question, and it decides whether this work is behavioural biometrics or body measurement.
+
 ### Selection inflation, and the fix
 
 `best_test_acc` is a **max over ~20 noisy evaluations of the set it reports**, which buys roughly **+0.02 for free**. This was caught by the `random` extractor under cross-validation: it scored 0.5173 as a best-of-20 but **0.4973 at its final epoch** — exactly chance. Every extractor showed the same offset, so **every historical `best_test_acc` in `results/runs.csv` is inflated by about 2 points, and the honest floor for that column is ~0.517, not 0.500.**
@@ -212,7 +228,7 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 
 **Why `position` exists.** Requiring quaternion discards 2814 sessions — **48% more data than the pipeline uses** — because much of this corpus records head position but no orientation. Measured: `channels=position` takes Head_and_Gaze from 28,661 to **57,344 windows** (the 2630 `V1_*` files, same 100 users as `V2_*`, so roughly double the windows per identity) and recovers all 13 users of `360_em_dataset`, which is otherwise 100% unusable.
 
-Orientation also measures as a weak identity cue: on held-out users, mean position separates at **0.768** AUC, quaternion statistics at **0.529**, and the two combined score *below* position alone. So dropping it may cost little — but that is an experiment, not an assumption, which is why this is a switch and `full` remains the default.
+Orientation also measures as a weak identity cue: mean position separates held-out users at **0.768** AUC against **0.529** for quaternion statistics. **Both figures come from the old protocol** (the easy fixed 5-user split, same-session positives) and are optimistic — see the trivial-baseline table below for the corrected numbers. The ordering has held up, but dropping orientation is an experiment, not an assumption, which is why this is a switch and `full` remains the default.
 
 The channel set is part of the sample-cache key and is stored in the checkpoint, so evaluating a position-only model never silently receives 7-channel windows.
 
@@ -275,7 +291,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **148 passing, ~16s**.
+Current baseline: **151 passing, ~16s**.
 
 ## Performance notes
 

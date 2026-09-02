@@ -208,3 +208,50 @@ def test_cross_session_positives_are_deterministic():
                                cross_session_positives=True)
     for key in a:
         assert torch.equal(a[key], b[key])
+
+
+def test_center_position_removes_the_window_mean_from_position_only():
+    """Centring must zero the position mean and leave orientation untouched."""
+    import types
+    from dataset import SampleIndex
+
+    samples = torch.randn(6, 7, 10) + 5.0
+    fake = types.SimpleNamespace(
+        sample_time=1, sample_rate=10, num_users=1, dataset=[samples.clone()],
+        dataset_names=["DS"], user_dataset_ids=[0], session_ids=[torch.zeros(6, dtype=torch.long)],
+    )
+    index = SampleIndex(fake, center_position=True)
+
+    position = index.samples[:, 4:7, :]
+    assert torch.allclose(position.mean(dim=2), torch.zeros(6, 3), atol=1e-5)
+    # Quaternion channels are untouched, so their mean stays near the original +5.
+    assert index.samples[:, :4, :].mean() > 4.0
+
+
+def test_center_position_targets_the_right_channels_when_position_only():
+    import types
+    from dataset import SampleIndex, position_channel_slice
+
+    assert position_channel_slice(7) == slice(4, 7)
+    assert position_channel_slice(3) == slice(0, 3)
+
+    samples = torch.randn(4, 3, 10) + 2.0
+    fake = types.SimpleNamespace(
+        sample_time=1, sample_rate=10, num_users=1, dataset=[samples.clone()],
+        dataset_names=["DS"], user_dataset_ids=[0], session_ids=[torch.zeros(4, dtype=torch.long)],
+        num_channels=3, channels="position",
+    )
+    index = SampleIndex(fake, center_position=True)
+    assert torch.allclose(index.samples.mean(dim=2), torch.zeros(4, 3), atol=1e-5)
+
+
+def test_center_position_is_off_by_default():
+    import types
+    from dataset import SampleIndex
+
+    samples = torch.randn(4, 7, 10) + 5.0
+    fake = types.SimpleNamespace(
+        sample_time=1, sample_rate=10, num_users=1, dataset=[samples.clone()],
+        dataset_names=["DS"], user_dataset_ids=[0], session_ids=[torch.zeros(4, dtype=torch.long)],
+    )
+    assert torch.allclose(SampleIndex(fake).samples, samples)
