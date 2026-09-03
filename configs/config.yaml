@@ -56,6 +56,16 @@ center_position: false
 #   bra  the same differencing twice
 encoding: raw
 
+# How raw samples become fixed-rate frames.
+#   nearest  take the closest raw point to each target time (the original)
+#   bin      average every raw point inside the target interval, interpolating an
+#            empty one
+# nearest fails in both directions: below the native rate it repeats the same row
+# (50.5% duplicate consecutive frames for ViewGauss at 20Hz, so derived velocity is
+# zero half the time), and above it keeps one sample in twelve from a 250Hz source and
+# aliases the rest. Both corrupt any velocity or acceleration encoding.
+resample: nearest
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a

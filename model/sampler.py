@@ -19,12 +19,14 @@ class Sampler:
     randomness.
     """
 
-    def __init__(self, data: np.ndarray, sample_time: int = 1, sample_rate: int = 10, variance=0.01, index_randomness=0):
+    def __init__(self, data: np.ndarray, sample_time: int = 1, sample_rate: int = 10, variance=0.01,
+                 index_randomness=0, resample: str = "nearest"):
         self.data = data
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.variance = variance
         self.index_randomness = index_randomness
+        self.resample = resample
         self.data_len = data.shape[0]
         self.time_start = data[0, 0]
         self.time_end = data[-1, 0]
@@ -33,7 +35,74 @@ class Sampler:
         self.current_index = 0
         self.sample_count = math.floor(self.duration / self.sample_time)
 
-        self._preprocess()
+        if resample not in ("nearest", "bin"):
+            raise ValueError(f"resample must be 'nearest' or 'bin', got {resample!r}.")
+        if resample == "bin":
+            self._preprocess_binned()
+        else:
+            self._preprocess()
+
+    def _align_quaternion_signs(self, columns: np.ndarray) -> np.ndarray:
+        """
+        Put consecutive quaternions in a common hemisphere before averaging.
+
+        q and -q are the same rotation, so averaging across a sign flip cancels rather
+        than smooths - the same double-cover trap that made derived angular velocity
+        useless before it was handled. Only applies when a quaternion is present.
+        """
+        if columns.shape[1] < 7 or columns.shape[0] < 2:
+            return columns
+
+        aligned = columns.copy()
+        quaternion = aligned[:, :4]
+        dots = np.sum(quaternion[1:] * quaternion[:-1], axis=1)
+        signs = np.concatenate([[1.0], np.cumprod(np.where(dots < 0.0, -1.0, 1.0))])
+        aligned[:, :4] = quaternion * signs[:, None]
+        return aligned
+
+    def _preprocess_binned(self):
+        """
+        Average every raw sample inside each target interval, interpolating empty ones.
+
+        Nearest-point selection fails in both directions. Below the native rate it
+        picks the same row repeatedly - 50.5% exact duplicate consecutive frames for
+        ViewGauss at 20Hz - so derived velocity is zero half the time. Above it, it
+        keeps one sample in twelve for a 250Hz source and aliases the rest into what
+        survives. Averaging within the interval is an anti-aliasing filter for the
+        first case; interpolating an empty interval is the right answer for the
+        second. Both matter for any velocity or acceleration encoding, which is
+        computed from consecutive frames.
+        """
+        steps = self.sample_rate * self.sample_time
+        columns = self._align_quaternion_signs(self.data[:, 1:].astype(float))
+        times = self.data[:, 0].astype(float)
+        step = 1.0 / self.sample_rate
+
+        offsets = np.arange(steps, dtype=float) * step
+        starts = self.time_start + np.arange(self.sample_count, dtype=float) * self.sample_time
+        targets = (starts[:, None] + offsets[None, :]).ravel()
+
+        low = np.searchsorted(times, targets - step / 2.0, side="left")
+        high = np.searchsorted(times, targets + step / 2.0, side="left")
+        counts = high - low
+
+        cumulative = np.vstack([np.zeros((1, columns.shape[1])), np.cumsum(columns, axis=0)])
+        totals = cumulative[high] - cumulative[low]
+        means = np.divide(totals, np.maximum(counts, 1)[:, None])
+
+        empty = counts == 0
+        if empty.any():
+            for channel in range(columns.shape[1]):
+                means[empty, channel] = np.interp(targets[empty], times, columns[:, channel])
+
+        if columns.shape[1] >= 7:
+            norms = np.linalg.norm(means[:, :4], axis=1, keepdims=True)
+            means[:, :4] = means[:, :4] / np.maximum(norms, 1e-8)
+
+        # Re-attach the time column the rest of the pipeline expects to strip.
+        self.samples = np.concatenate(
+            [targets[:, None], means], axis=1
+        ).reshape(self.sample_count, steps, self.data.shape[1])
 
     def __iter__(self):
         self.current_index = 0
