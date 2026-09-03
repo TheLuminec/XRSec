@@ -138,7 +138,16 @@ def window_curve_model(args, device=None):
     ks = getattr(args, "curve_k", None) or [1, 2, 4, 8, 16]
     if isinstance(ks, (str, int)):
         ks = [ks]
-    ks = [int(k) for k in ks]
+    # An entry may be a bare k or a [reference, probe] pair; the reference side is
+    # worth substantially more, so the asymmetric points are the interesting ones.
+    parsed = []
+    for entry in ks:
+        if isinstance(entry, (str, int, float)):
+            parsed.append(int(entry))
+        else:
+            pair = [int(v) for v in entry]
+            parsed.append((pair[0], pair[-1]))
+    ks = parsed
 
     rows = window_curve(
         model, index, device, ks=ks,

@@ -359,3 +359,36 @@ def test_decomposition_is_absent_without_session_provenance():
     index.window_session_ids = torch.empty(0, dtype=torch.long)
     assert variance_decomposition(torch.randn(index.sample_count, 8), index) == {}
     assert "unavailable" in format_decomposition({})
+
+
+# --- asymmetric evidence ------------------------------------------------------
+#
+# Measured on a held-out corpus: 8 -> 16 reference windows bought +0.13 rank-1 where
+# 1 -> 6 probe windows bought +0.11 from a lower base. The two sides are not worth the
+# same, so averaging k on both sweeps the wrong line through the space.
+
+def test_the_two_sides_can_carry_different_window_counts():
+    index = _index(users=4, sessions=3, per_session=8)
+    manifest = generate_template_manifest(index, pairs_per_user=8, k=6, k_probe=2, seed=1)
+    assert manifest["x1_indices"].shape[1] == 6
+    assert manifest["x2_indices"].shape[1] == 2
+
+
+def test_omitting_k_probe_keeps_the_symmetric_behaviour():
+    index = _index(users=4, sessions=3, per_session=8)
+    manifest = generate_template_manifest(index, pairs_per_user=8, k=3, seed=1)
+    assert manifest["x1_indices"].shape[1] == manifest["x2_indices"].shape[1] == 3
+
+
+def test_sessions_must_be_long_enough_for_whichever_side_lands_on_them():
+    """Either side can be drawn from any session, so the larger k sets the floor."""
+    index = _index(users=4, sessions=2, per_session=4)
+    manifest = generate_template_manifest(index, pairs_per_user=8, k=6, k_probe=2, seed=1)
+    assert manifest["labels"].numel() == 0
+
+
+def test_the_curve_accepts_pairs_as_well_as_bare_k():
+    index = _index(users=4, sessions=3, per_session=8)
+    rows = window_curve(_model(), index, torch.device("cpu"),
+                        ks=[1, (4, 1)], pairs_per_user=8, seed=2)
+    assert [(r["k"], r["k_probe"]) for r in rows] == [(1, 1), (4, 1)]

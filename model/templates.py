@@ -56,6 +56,7 @@ def generate_template_manifest(
     sample_index,
     pairs_per_user: int,
     k: int,
+    k_probe: int | None = None,
     match_ratio: float = 0.5,
     seed: int | None = None,
     within_dataset_negatives: bool = True,
@@ -72,8 +73,11 @@ def generate_template_manifest(
     user_dataset_ids = getattr(sample_index, "user_dataset_ids", None) or [0] * sample_index.num_users
 
     eligible = {}
+    # The reference side may carry more windows than the probe side, so a session has
+    # to be long enough for whichever side lands on it.
+    k_probe = k if k_probe is None else int(k_probe)
     for user in range(sample_index.num_users):
-        groups = _sessions_for_user(sample_index, user, minimum=k)
+        groups = _sessions_for_user(sample_index, user, minimum=max(k, k_probe))
         if groups:
             eligible[user] = groups
 
@@ -84,8 +88,8 @@ def generate_template_manifest(
     skipped_users = sample_index.num_users - len(eligible)
     single_session = 0
 
-    def draw(group: torch.Tensor) -> list[int]:
-        picked = rng.choice(group.numel(), size=k, replace=False)
+    def draw(group: torch.Tensor, size: int) -> list[int]:
+        picked = rng.choice(group.numel(), size=size, replace=False)
         return [int(group[int(i)]) for i in picked]
 
     for user, groups in eligible.items():
@@ -93,8 +97,8 @@ def generate_template_manifest(
         if len(groups) >= 2:
             for _ in range(positives_target):
                 first, second = rng.choice(len(groups), size=2, replace=False)
-                x1.append(draw(groups[int(first)]))
-                x2.append(draw(groups[int(second)]))
+                x1.append(draw(groups[int(first)], k))
+                x2.append(draw(groups[int(second)], k_probe))
                 labels.append(1.0)
                 anchors.append(user)
         else:
@@ -109,15 +113,15 @@ def generate_template_manifest(
         if partners:
             for _ in range(negatives_target):
                 partner = int(rng.choice(partners))
-                x1.append(draw(groups[int(rng.choice(len(groups)))]))
+                x1.append(draw(groups[int(rng.choice(len(groups)))], k))
                 partner_groups = eligible[partner]
-                x2.append(draw(partner_groups[int(rng.choice(len(partner_groups)))]))
+                x2.append(draw(partner_groups[int(rng.choice(len(partner_groups)))], k_probe))
                 labels.append(0.0)
                 anchors.append(user)
 
     if not labels:
-        empty = torch.empty((0, k), dtype=torch.long)
-        return {"x1_indices": empty, "x2_indices": empty,
+        return {"x1_indices": torch.empty((0, k), dtype=torch.long),
+                "x2_indices": torch.empty((0, k_probe), dtype=torch.long),
                 "labels": torch.empty(0), "anchor_user_ids": torch.empty(0, dtype=torch.long),
                 "skipped_users": skipped_users, "single_session_users": single_session}
 
@@ -469,14 +473,23 @@ def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
         return []
 
     rows = []
-    for k in ks:
+    for entry in ks:
+        # An entry is either a bare k (the symmetric diagonal, as before) or a
+        # (reference, probe) pair. The two sides are worth very different amounts:
+        # measured on a held-out corpus, 8 to 16 reference windows bought +0.13 rank-1
+        # where 1 to 6 probe windows bought +0.11 from a lower base. Averaging k on
+        # both sides therefore sweeps the wrong line through the space.
+        k_ref, k_probe = (entry, entry) if isinstance(entry, (int, float)) else tuple(entry)
+        k_ref, k_probe = int(k_ref), int(k_probe)
+
         manifest = generate_template_manifest(
-            sample_index, pairs_per_user=pairs_per_user, k=int(k),
+            sample_index, pairs_per_user=pairs_per_user, k=k_ref, k_probe=k_probe,
             match_ratio=match_ratio, seed=seed,
             within_dataset_negatives=within_dataset_negatives,
         )
         if manifest["labels"].numel() == 0:
-            rows.append({"k": int(k), "pairs": 0, "note": "no session had k windows"})
+            rows.append({"k": k_ref, "k_probe": k_probe, "pairs": 0,
+                         "note": "no session had k windows"})
             continue
 
         scores = score_templates(model, embeddings, manifest, device)
@@ -485,7 +498,8 @@ def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
         accuracy = float(((scores > metrics["eer_threshold"]).float() == labels).float().mean())
 
         rows.append({
-            "k": int(k),
+            "k": k_ref,
+            "k_probe": k_probe,
             "pairs": int(labels.numel()),
             "positive_fraction": float(labels.mean()),
             "auc": metrics["auc"],

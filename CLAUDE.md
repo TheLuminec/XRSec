@@ -509,21 +509,25 @@ is barely organised for identification at all, seen users included.
    +0.13; 1 to 6 probe windows buys +0.11 from a much lower base. `mode=curve` averages
    k on *both* sides, so the symmetric diagonal is the wrong operating point and an
    asymmetric `(gallery_k, probe_k)` is nearly free.
-3. **A real gap survives the units correction.** At matched N=17 and matched 15s of
-   probe, this checkpoint gets 0.269, saturating near 0.434 with far more evidence than
-   the published setup used. Against 0.785, the units mismatch explains a great deal and
-   does not explain everything.
+3. **Whether a real gap survives the units correction is UNTESTED.** At matched N=17
+   and matched 15s probe this checkpoint reaches 0.269, saturating near 0.434 with far
+   more evidence than the published setup used - but the control above says it scores
+   0.208 on users it was *trained on*. A model that cannot rank its own training
+   identities above 0.21 has an embedding space that is barely organised for this task,
+   so its shortfall against 0.785 measures the checkpoint, not the pipeline. This run
+   bounds nothing about the remaining gap; the `identity_softmax` run does.
 
-**The most likely remaining cause is the objective, and it is directly testable.** X
-§6.3 reports a classification model at **43.2%** where their similarity model gets
-78.5%. Our best-evidence pair_bce figure is **0.434**. Treat that as coincidence until
-`identity_softmax` is measured the same way - but it is the arm the briefing predicts,
-`identity_softmax` is already worth +6.5 on verification, and rank-1 is the metric an
-angular-margin embedding is actually trained to serve, so it should gain far more here
-than it did on verification. Running `mode=curve` on the 343-identity
+**The objective is the leading hypothesis, and it is directly testable.**
+`identity_softmax` is the similarity family the briefing identifies as correct, it is
+already worth +6.5 on verification, and rank-1 is precisely what an angular-margin
+embedding is trained to serve - so it should gain far more here than it did on
+verification. Running `mode=curve` on the 343-identity
 `identity_softmax` checkpoint is the single highest-value measurement outstanding.
 
-`gallery_k` / `probe_k` / `probes_per_user` set how much evidence each side gets.
+`gallery_k` / `probe_k` / `probes_per_user` set how much evidence each side gets, and
+`curve_k` accepts `[reference, probe]` pairs as well as bare values, so
+`curve_k=[[16,1],[16,4],[4,16]]` sweeps the asymmetry directly. The reference side is
+worth more, so the symmetric diagonal is not where the good operating points are.
 Enrolment size is worth more than probe size in the literature, and the asymmetry is
 free to test here.
 
