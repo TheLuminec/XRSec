@@ -148,6 +148,15 @@ def window_curve_model(args, device=None):
         batch_size=int(getattr(args, "batch_size", 512)),
     )
 
+    # Printed before the curve, because it predicts the curve's shape: averaging can
+    # only reduce the within-session component, so a flat result should be checked
+    # against what this decomposition says to expect rather than argued about.
+    from templates import embed_all, format_decomposition, variance_decomposition
+
+    embeddings = embed_all(model, index, device, int(getattr(args, "batch_size", 512)))
+    normalise = getattr(model, "head", "diff_linear") == "cosine"
+    print("\n" + format_decomposition(variance_decomposition(embeddings, index, normalise)))
+
     print("\nWindows aggregated per side (k=1 is the single-window operating point):")
     print(format_curve(rows))
 

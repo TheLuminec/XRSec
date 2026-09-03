@@ -188,6 +188,88 @@ def score_templates(model, embeddings: torch.Tensor, manifest, device) -> torch.
     return model.score(left, right).view(-1).detach().cpu()
 
 
+def variance_decomposition(embeddings: torch.Tensor, sample_index, normalise: bool = True) -> dict:
+    """
+    Split embedding variance into the three components that decide the k-curve.
+
+    A template averages k windows from ONE session, so it can only reduce the
+    within-session component. The between-session offset is shared by every window in
+    a template and survives averaging untouched, which is why a flat curve is not by
+    itself evidence of a broken sweep - and why the positive control, whose noise is
+    independent per window, cannot settle that question either.
+
+    Measuring the split turns the ambiguity into a prediction. Effective noise at k is
+    roughly `between_session + within_session / k`, so the curve should improve until
+    `within_session / k` falls below `between_session` and then flatten. Reporting
+    `plateau_k` alongside the curve means a flat result can be checked against what
+    the data says it should be, rather than argued about.
+
+    Returns the three variances, the signal-to-shift ratio, and that plateau estimate.
+    """
+    sessions = getattr(sample_index, "window_session_ids", None)
+    if embeddings.numel() == 0 or sessions is None or sessions.numel() == 0:
+        return {}
+
+    vectors = F.normalize(embeddings, dim=1) if normalise else embeddings
+
+    session_means, user_means, within = [], [], []
+    for user in range(sample_index.num_users):
+        windows = sample_index.user_sample_indices[user]
+        if windows.numel() == 0:
+            continue
+        per_user = []
+        for session in torch.unique(sessions[windows]):
+            group = windows[sessions[windows] == session]
+            block = vectors[group]
+            mean = block.mean(dim=0)
+            per_user.append(mean)
+            within.append(float((block - mean).pow(2).sum(dim=1).mean()))
+        if per_user:
+            stacked = torch.stack(per_user)
+            session_means.append(stacked)
+            user_means.append(stacked.mean(dim=0))
+
+    if not user_means:
+        return {}
+
+    users = torch.stack(user_means)
+    grand = users.mean(dim=0)
+    between_user = float((users - grand).pow(2).sum(dim=1).mean())
+    between_session = float(torch.cat([
+        (block - block.mean(dim=0)).pow(2).sum(dim=1) for block in session_means
+        if block.shape[0] > 1
+    ]).mean()) if any(block.shape[0] > 1 for block in session_means) else 0.0
+    within_session = float(np.mean(within)) if within else 0.0
+
+    plateau = None
+    if between_session > 0 and within_session > 0:
+        plateau = max(1, int(round(within_session / between_session)))
+
+    return {
+        "between_user": between_user,
+        "between_session": between_session,
+        "within_session": within_session,
+        "signal_to_shift": between_user / between_session if between_session > 0 else float("inf"),
+        "plateau_k": plateau,
+    }
+
+
+def format_decomposition(parts: dict) -> str:
+    if not parts:
+        return "variance decomposition unavailable (no session provenance)"
+    lines = [
+        "Embedding variance, and what averaging can reach:",
+        f"  between-user        {parts['between_user']:.4f}   the signal",
+        f"  between-session     {parts['between_session']:.4f}   shared by a whole template, averaging cannot reduce it",
+        f"  within-session      {parts['within_session']:.4f}   what averaging k windows actually reduces",
+        f"  signal / shift      {parts['signal_to_shift']:.2f}",
+    ]
+    if parts.get("plateau_k"):
+        lines.append(f"  predicted plateau   k ~ {parts['plateau_k']}   "
+                     "(above this, within-session noise is below the between-session shift)")
+    return "\n".join(lines)
+
+
 def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
                  pairs_per_user: int = 64, match_ratio: float = 0.5,
                  seed: int | None = 67, within_dataset_negatives: bool = True,

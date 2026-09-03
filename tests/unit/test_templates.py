@@ -6,6 +6,8 @@ import torch
 from templates import (
     embed_all,
     format_curve,
+    format_decomposition,
+    variance_decomposition,
     generate_template_manifest,
     score_templates,
     window_curve,
@@ -283,3 +285,77 @@ def test_aggregation_demonstrably_improves_a_signal_it_should_improve():
         f"k=8 {aucs[1]:.3f}); a flat curve on real data cannot be interpreted while "
         "this fails"
     )
+
+
+# --- variance decomposition ---------------------------------------------------
+
+def _synthetic_embeddings(users, sessions, per_session, dim,
+                          user_scale, session_scale, window_scale, seed=0):
+    """Embeddings with a known three-level structure."""
+    generator = torch.Generator().manual_seed(seed)
+    blocks = []
+    for user in range(users):
+        identity = torch.randn(dim, generator=generator) * user_scale
+        for _ in range(sessions):
+            shift = torch.randn(dim, generator=generator) * session_scale
+            noise = torch.randn(per_session, dim, generator=generator) * window_scale
+            blocks.append(identity + shift + noise)
+    return torch.cat(blocks)
+
+
+def test_decomposition_separates_the_three_levels():
+    """
+    Averaging k windows can only reduce the within-session term. Measuring the split
+    is what turns a flat curve from an argument into a prediction, so the measurement
+    itself has to be right.
+    """
+    users, sessions, per_session, dim = 10, 4, 40, 12
+    embeddings = _synthetic_embeddings(users, sessions, per_session, dim,
+                                       user_scale=1.0, session_scale=0.3, window_scale=0.1)
+    index = _index(users=users, sessions=sessions, per_session=per_session)
+
+    parts = variance_decomposition(embeddings, index, normalise=False)
+
+    # Ordering is what matters: signal above session shift above window noise.
+    assert parts["between_user"] > parts["between_session"] > parts["within_session"]
+    assert parts["signal_to_shift"] > 1.0
+
+
+def test_decomposition_tracks_a_growing_session_shift():
+    users, sessions, per_session, dim = 8, 4, 40, 12
+    index = _index(users=users, sessions=sessions, per_session=per_session)
+
+    small = variance_decomposition(
+        _synthetic_embeddings(users, sessions, per_session, dim, 1.0, 0.1, 0.2, seed=1),
+        index, normalise=False)
+    large = variance_decomposition(
+        _synthetic_embeddings(users, sessions, per_session, dim, 1.0, 0.9, 0.2, seed=1),
+        index, normalise=False)
+
+    assert large["between_session"] > small["between_session"]
+    assert large["signal_to_shift"] < small["signal_to_shift"]
+
+
+def test_plateau_estimate_moves_with_the_noise_ratio():
+    """
+    plateau_k is where within-session noise falls below the between-session shift.
+    More window noise relative to session shift should push the plateau later.
+    """
+    users, sessions, per_session, dim = 8, 4, 60, 12
+    index = _index(users=users, sessions=sessions, per_session=per_session)
+
+    noisy = variance_decomposition(
+        _synthetic_embeddings(users, sessions, per_session, dim, 1.0, 0.2, 1.0, seed=2),
+        index, normalise=False)
+    clean = variance_decomposition(
+        _synthetic_embeddings(users, sessions, per_session, dim, 1.0, 0.2, 0.2, seed=2),
+        index, normalise=False)
+
+    assert noisy["plateau_k"] > clean["plateau_k"]
+
+
+def test_decomposition_is_absent_without_session_provenance():
+    index = _index()
+    index.window_session_ids = torch.empty(0, dtype=torch.long)
+    assert variance_decomposition(torch.randn(index.sample_count, 8), index) == {}
+    assert "unavailable" in format_decomposition({})
