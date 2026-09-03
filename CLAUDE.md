@@ -327,6 +327,22 @@ for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) use
 
 The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
+**How big an acquisition has to be to be worth converting.** Identity count is the
+binding constraint, but the power analysis sets a floor on what is worth chasing: 48 ->
+343 identities (7x) turned the behavioural signal from chance into clearly measurable,
+while 419 -> 463 (1.1x) is far below anything a paired 5-fold test can resolve. **An
+acquisition needs to roughly double the corpus - ~400+ new identities - to justify the
+conversion risk.** In XR biometrics only BOXRR-23 clears that; the rest of the field is
+15-100 users per dataset because that is what a lab study yields.
+
+Searched and rejected, recorded so the search is not repeated:
+
+| dataset | verdict |
+| --- | --- |
+| **GazeBaseVR** | **Disqualified on content, not access.** 407 participants, CC-BY, trivial figshare download - and **no head position or orientation channel at all**. Participants were on a chin rest specifically to suppress head movement, and gaze is expressed as an angle relative to a fixed headset (Lohr et al. 2023, Table 4). The attractive access profile means someone will propose it again; it is the wrong signal, not the wrong licence. |
+| Liebers et al. | No confirmed public release; 16 users maximum. |
+| OpenNEEDS | 44 users, correct signals (head+hand+gaze), but gated behind a request process to Meta. |
+
 **BOXRR-23** (105,852 users, ~5.35TB) is the largest identity source available and
 identity count is our binding constraint, so it is the highest-value acquisition on the
 board. The user has agreed to its Data Use Agreement. **That agreement carries ongoing
