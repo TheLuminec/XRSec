@@ -1,7 +1,17 @@
 # Proposal: strided windows and multi-window scoring
 
 Status: **Part 2 approved and implemented** (`mode=curve`, `model/templates.py`).
-Part 1 held pending Part 2's results, as proposed.
+Part 1 implemented, with the temporal-separation guard, ahead of the k-curve that
+was going to gate it. The gate was "do more windows help?"; the reason for building it
+now is different - `sample_time` cannot be swept honestly without a stride, because
+lengthening a window shortens the example count at the same time. The k-curve still
+decides whether the extra windows are worth using; it no longer decides whether the
+mechanism exists.
+
+The secondary fix in this section (interpolating rather than picking the nearest
+frame) shipped separately as `resample: bin`, using bin-averaging rather than the
+slerp described below - averaging is the anti-aliasing filter the decimation case
+actually needs, and empty intervals are interpolated.
 
 ### Bound on what Part 2 can achieve — noticed during implementation
 

@@ -99,6 +99,7 @@ class SampleDataset:
         swap_data: bool = False,
         channels: str = "full",
         resample: str = "nearest",
+        window_stride: float | None = None,
         keep_users: set[str] | list[str] | None = None,
     ):
         self.dataset = []
@@ -108,6 +109,7 @@ class SampleDataset:
         self.swap_data = swap_data
         self.channels = channels
         self.resample = resample
+        self.window_stride = window_stride
         self.num_channels = channel_count(channels)
 
         if exclude_users is None:
@@ -124,6 +126,7 @@ class SampleDataset:
         self.dataset_names = [self._dataset_name(directory) for directory in data_dirs]
         self.user_dataset_ids: list[int] = []
         self.session_ids: list[torch.Tensor] = []
+        self.start_times: list[torch.Tensor] = []
         self.skipped_files: dict[str, int] = {}
 
         # Users are filtered before loading rather than after: excluded users cost
@@ -144,10 +147,11 @@ class SampleDataset:
 
                 self.num_users += 1
                 self.user_dataset_ids.append(dataset_id)
-                user_samples, user_sessions = self._load_user_samples(user_dir)
+                user_samples, user_sessions, user_starts = self._load_user_samples(user_dir)
                 self.sample_count += int(user_samples.shape[0])
                 self.dataset.append(user_samples)
                 self.session_ids.append(user_sessions)
+                self.start_times.append(user_starts)
 
         cache_note = ""
         if sample_cache.cache_enabled():
@@ -178,16 +182,19 @@ class SampleDataset:
 
     def _load_user_samples(self, user_dir: str):
         """
-        Return (windows, session_ids) for one user, via cache when possible.
+        Return (windows, session_ids, start_times) for one user, via cache when possible.
 
         session_ids is the index of the CSV each window came from, so pair generation
-        can tell same-session from cross-session positives.
+        can tell same-session from cross-session positives. start_times is where in
+        that CSV each window begins, so pair generation can refuse to pair two windows
+        that overlap in time once strides are allowed to overlap.
         """
         cache_path = None
         if sample_cache.cache_enabled():
             cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time,
                                                  self.sample_rate,
-                                                 f"{self.channels}-{self.resample}")
+                                                 f"{self.channels}-{self.resample}"
+                                                 f"-s{self.window_stride or self.sample_time}")
             cached = sample_cache.load(cache_path)
             if cached is not None:
                 self.cache_hits += 1
@@ -195,31 +202,36 @@ class SampleDataset:
 
         self.cache_misses += 1
         profile = UserProfile(user_dir, self.sample_time, self.sample_rate,
-                              channels=self.channels, resample=self.resample)
+                              channels=self.channels, resample=self.resample,
+                              window_stride=self.window_stride)
         for reason, count in getattr(profile, "skipped", {}).items():
             self.skipped_files[reason] = self.skipped_files.get(reason, 0) + count
 
         samples = []
         sessions = []
+        starts = []
         for session_index, sampler in enumerate(profile.data_samplers):
             if sampler.sample_count == 0:
                 continue
-            for sample in sampler.get_all_samples():
+            for window_index, sample in enumerate(sampler.get_all_samples()):
                 # Drop the SessionTime column, then transpose to (channels, timesteps).
                 samples.append(sample[:, 1:].astype(np.float32).T)
                 sessions.append(session_index)
+                starts.append(float(sampler.window_start_times[window_index]))
 
         if samples:
             user_samples = torch.tensor(np.array(samples), dtype=torch.float32)
             user_sessions = torch.tensor(sessions, dtype=torch.long)
+            user_starts = torch.tensor(starts, dtype=torch.float32)
         else:
             seq_len = self.sample_time * self.sample_rate
             user_samples = torch.empty((0, self.num_channels, seq_len), dtype=torch.float32)
             user_sessions = torch.empty(0, dtype=torch.long)
+            user_starts = torch.empty(0, dtype=torch.float32)
 
         if cache_path is not None:
-            sample_cache.store(cache_path, user_samples, user_sessions)
-        return user_samples, user_sessions
+            sample_cache.store(cache_path, user_samples, user_sessions, user_starts)
+        return user_samples, user_sessions, user_starts
 
     def __len__(self):
         return self.num_users
@@ -253,8 +265,10 @@ class SampleIndex:
 
         self.user_sample_indices: list[torch.Tensor] = []
         dataset_session_ids = getattr(sample_dataset, "session_ids", [])
+        dataset_start_times = getattr(sample_dataset, "start_times", [])
         flat_samples = []
         flat_sessions = []
+        flat_starts = []
         window_dataset_ids = []
         offset = 0
         for user_index, user_samples in enumerate(sample_dataset.dataset):
@@ -268,6 +282,10 @@ class SampleIndex:
                     flat_sessions.append(dataset_session_ids[user_index])
                 else:
                     flat_sessions.append(torch.zeros(sample_count, dtype=torch.long))
+                if user_index < len(dataset_start_times):
+                    flat_starts.append(dataset_start_times[user_index])
+                else:
+                    flat_starts.append(torch.zeros(sample_count, dtype=torch.float32))
             else:
                 indices = torch.empty(0, dtype=torch.long)
             self.user_sample_indices.append(indices)
@@ -277,10 +295,17 @@ class SampleIndex:
             self.samples = torch.cat(flat_samples, dim=0)
             self.window_dataset_ids = torch.cat(window_dataset_ids, dim=0)
             self.window_session_ids = torch.cat(flat_sessions, dim=0)
+            # None, not zeros, when no start times were supplied. All-zero start times
+            # read as "every window begins at t=0", which makes every same-session pair
+            # look like a total overlap and would silently delete same-session
+            # positives. Absent has to stay distinguishable from present-and-zero.
+            self.window_start_times = (
+                torch.cat(flat_starts, dim=0) if dataset_start_times else None)
         else:
             self.samples = torch.empty((0, self.num_channels, self.seq_len), dtype=torch.float32)
             self.window_dataset_ids = torch.empty(0, dtype=torch.long)
             self.window_session_ids = torch.empty(0, dtype=torch.long)
+            self.window_start_times = None
 
         self.sample_count = int(self.samples.shape[0])
         self.center_position = center_position
@@ -314,6 +339,7 @@ def build_sample_index(
     swap_data: bool = False,
     channels: str = "full",
     resample: str = "nearest",
+    window_stride: float | None = None,
     center_position: bool = False,
     encoding: str = "raw",
     keep_users=None,
@@ -330,6 +356,7 @@ def build_sample_index(
             swap_data=swap_data,
             channels=channels,
             resample=resample,
+            window_stride=window_stride,
             keep_users=keep_users,
         ),
         center_position=center_position,
@@ -415,6 +442,71 @@ def count_single_session_users(sample_index) -> int:
     return count
 
 
+def _sample_same_session_positives(sample_index, user_samples, count, rng):
+    """
+    Draw `count` positive pairs from one user's windows without ever pairing two
+    windows that share frames.
+
+    Two windows overlap only if they come from the same session and their start times
+    are closer than one window's length. At the default stride windows are laid
+    back-to-back, so the only pair this excludes is a window with *itself* - which the
+    previous code produced with probability 1/n per pair, because x1 and x2 were drawn
+    independently with replacement. A window paired with itself is a free positive.
+
+    Once `window_stride < sample_time` the same rule is doing much more work: two
+    windows overlapping by 80% share most of their frames, so an unguarded positive
+    pair is close to a self-match. That would inflate the result invisibly - held-out
+    positives would be inflated identically, so no train/test gap would appear. It is
+    the same shape as the same-session shortcut and the label-imbalance skew this
+    project has already had to remove, which is why the guard ships with the stride
+    rather than after it.
+
+    Returns (x1, x2, degenerate), where `degenerate` counts pairs for which the user
+    had no non-overlapping partner at all - a session shorter than two windows.
+    """
+    windows = user_samples.numpy()
+    total = windows.shape[0]
+    if total == 0:
+        return [], [], 0
+
+    x1_slots = rng.integers(0, total, size=count)
+
+    # A window is never a valid partner for itself, whatever metadata is available.
+    ineligible = windows[None, :] == windows[x1_slots][:, None]
+
+    starts = getattr(sample_index, "window_start_times", None)
+    if starts is not None and starts.numel():
+        # Overlap needs both facts: same session, and starts closer than one window.
+        # Windows from different sessions can never share frames.
+        user_starts = starts[user_samples].numpy().astype(float)
+        sessions = getattr(sample_index, "window_session_ids", None)
+        if sessions is not None and sessions.numel():
+            user_sessions = sessions[user_samples].numpy()
+        else:
+            user_sessions = np.zeros(total, dtype=int)
+
+        same_session = user_sessions[None, :] == user_sessions[x1_slots][:, None]
+        too_close = (np.abs(user_starts[None, :] - user_starts[x1_slots][:, None])
+                     < float(sample_index.sample_time))
+        ineligible |= same_session & too_close
+    # Without start times overlap cannot be measured, so nothing beyond the self-pair
+    # is excluded. Defaulting the missing times to zero would instead mark every
+    # same-session pair as overlapping and silently delete same-session positives.
+
+    eligible = ~ineligible
+    available = eligible.sum(axis=1)
+    degenerate = int((available == 0).sum())
+    # A user whose only session is shorter than two windows has no valid partner; fall
+    # back to any window rather than dropping the pair, and report the count.
+    eligible[available == 0] = True
+    available = np.maximum(available, 1)
+
+    draw = rng.random(count) * available
+    x2_slots = (eligible.cumsum(axis=1) > draw[:, None]).argmax(axis=1)
+
+    return windows[x1_slots].tolist(), windows[x2_slots].tolist(), degenerate
+
+
 def generate_pair_manifest(
     sample_index: SampleIndex,
     pairs_per_user: int,
@@ -455,6 +547,7 @@ def generate_pair_manifest(
     labels = []
     anchor_user_ids = []
     cross_session_users = 0
+    overlapping_fallback_pairs = 0
     single_session_users = 0
     users_without_negatives = 0
 
@@ -508,11 +601,13 @@ def generate_pair_manifest(
                     x2_indices.append(int(rng.choice(session_groups[int(second)].numpy())))
                 cross_session_users += 1
             else:
-                # Single-session user (or session ids unavailable): fall back.
-                x1_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
-                x2_pos = rng.choice(user_samples.numpy(), size=local_positive_target, replace=True)
-                x1_indices.extend(x1_pos.tolist())
-                x2_indices.extend(x2_pos.tolist())
+                # Single-session user (or session ids unavailable): fall back to
+                # same-session positives, but never to two windows sharing frames.
+                x1_pos, x2_pos, degenerate = _sample_same_session_positives(
+                    sample_index, user_samples, local_positive_target, rng)
+                x1_indices.extend(x1_pos)
+                x2_indices.extend(x2_pos)
+                overlapping_fallback_pairs += degenerate
                 if cross_session_positives:
                     single_session_users += 1
 
@@ -533,6 +628,11 @@ def generate_pair_manifest(
     if cross_session_positives and single_session_users:
         print(f"  cross-session positives: {cross_session_users} users, "
               f"{single_session_users} fell back to same-session (only one session)")
+    if overlapping_fallback_pairs:
+        # Loud on purpose: these are the only positives that can share frames, and a
+        # silent count is how the previous inflation bugs stayed hidden.
+        print(f"  WARNING: {overlapping_fallback_pairs} positive pairs had no "
+              f"non-overlapping partner (session shorter than two windows)")
 
     manifest = make_pair_manifest(x1_indices, x2_indices, labels, anchor_user_ids)
     if manifest["labels"].numel() == 0:
@@ -695,6 +795,7 @@ def create_dataloader_from_path(
     within_dataset_negatives: bool = False,
     channels: str = "full",
     resample: str = "nearest",
+    window_stride: float | None = None,
     cross_session_positives: bool = False,
     center_position: bool = False,
     encoding: str = "raw",
@@ -768,6 +869,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             resample=resample,
+            window_stride=window_stride,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -805,6 +907,7 @@ def create_dataloader_from_path(
         within_dataset_negatives=within_dataset_negatives,
         channels=channels,
         resample=resample,
+        window_stride=window_stride,
         cross_session_positives=cross_session_positives,
         center_position=center_position,
         encoding=encoding,
@@ -831,6 +934,7 @@ def create_dataloader_from_path(
                 within_dataset_negatives=within_dataset_negatives,
                 channels=channels,
                 resample=resample,
+                window_stride=window_stride,
                 cross_session_positives=cross_session_positives,
                 center_position=center_position,
                 encoding=encoding,
@@ -863,6 +967,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             resample=resample,
+            window_stride=window_stride,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -883,6 +988,7 @@ def create_dataloader_from_path(
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
             resample=resample,
+            window_stride=window_stride,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -937,6 +1043,7 @@ class SiameseDataset(Dataset):
         within_dataset_negatives: bool = False,
         channels: str = "full",
         resample: str = "nearest",
+        window_stride: float | None = None,
         cross_session_positives: bool = False,
         center_position: bool = False,
         encoding: str = "raw",
@@ -952,6 +1059,7 @@ class SiameseDataset(Dataset):
             swap_data=swap_data,
             channels=channels,
             resample=resample,
+            window_stride=window_stride,
             center_position=center_position,
             encoding=encoding,
             keep_users=keep_users,

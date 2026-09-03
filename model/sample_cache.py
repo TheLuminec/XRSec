@@ -28,7 +28,7 @@ from pathlib import Path
 import torch
 
 
-CACHE_VERSION = 3  # v3: entries also carry per-window session ids
+CACHE_VERSION = 4  # v4: entries also carry each window's start time
 
 # Anchored to the repo root, never the cwd: Hydra runs with `job.chdir: true`, so a
 # relative cache directory would land inside each run directory and never be reused.
@@ -79,10 +79,12 @@ def entry_path(user_dir: Path, sample_time: int, sample_rate: int,
 
 def load(path: Path):
     """
-    Return (samples, session_ids), or None if absent or unreadable.
+    Return (samples, session_ids, start_times), or None if absent or unreadable.
 
     session_ids records which CSV each window came from, which is what allows
     positive pairs to be restricted to *different* sessions of the same user.
+    start_times records where in that session each window begins, which is what lets
+    pair generation refuse two overlapping windows once strides can overlap.
     """
     if not cache_enabled() or not path.exists():
         return None
@@ -90,6 +92,7 @@ def load(path: Path):
         payload = torch.load(path, map_location="cpu", weights_only=True)
         samples = payload["samples"]
         session_ids = payload.get("session_ids")
+        start_times = payload.get("start_times")
     except Exception:
         # A corrupt or partially written entry must never break a run; it will be
         # rebuilt and overwritten below.
@@ -98,10 +101,13 @@ def load(path: Path):
         return None
     if not isinstance(session_ids, torch.Tensor) or session_ids.shape[0] != samples.shape[0]:
         session_ids = torch.zeros(samples.shape[0], dtype=torch.long)
-    return samples, session_ids
+    if not isinstance(start_times, torch.Tensor) or start_times.shape[0] != samples.shape[0]:
+        start_times = torch.zeros(samples.shape[0], dtype=torch.float32)
+    return samples, session_ids, start_times
 
 
-def store(path: Path, samples: torch.Tensor, session_ids: torch.Tensor) -> None:
+def store(path: Path, samples: torch.Tensor, session_ids: torch.Tensor,
+          start_times: torch.Tensor) -> None:
     """Write a cache entry atomically. Failures are silently ignored."""
     if not cache_enabled():
         return
@@ -109,7 +115,8 @@ def store(path: Path, samples: torch.Tensor, session_ids: torch.Tensor) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         # Write-then-rename so a crash or a concurrent run never leaves a torn file.
         tmp_path = path.with_name(f"{path.name}.{os.getpid()}.tmp")
-        torch.save({"version": CACHE_VERSION, "samples": samples, "session_ids": session_ids}, tmp_path)
+        torch.save({"version": CACHE_VERSION, "samples": samples, "session_ids": session_ids,
+                    "start_times": start_times}, tmp_path)
         os.replace(tmp_path, path)
     except Exception:
         pass

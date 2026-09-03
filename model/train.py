@@ -385,6 +385,7 @@ def _run_standard_training(args, device):
         center_position=bool(getattr(args, "center_position", False)),
         encoding=str(getattr(args, "encoding", "raw") or "raw"),
         resample=str(getattr(args, "resample", "nearest") or "nearest"),
+        window_stride=getattr(args, "window_stride", None) or None,
         max_users=getattr(args, "max_users", None),
         val_user_fraction=float(getattr(args, "val_user_fraction", 0.0) or 0.0),
         return_val=True,

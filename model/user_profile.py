@@ -48,13 +48,15 @@ class UserProfile:
     """Holds a collection of data samplers for a specific user ID."""
 
     def __init__(self, user_dir: str, sample_time: int = 1, sample_rate: int = 10,
-                 channels: str = "full", resample: str = "nearest"):
+                 channels: str = "full", resample: str = "nearest",
+                 window_stride: float | None = None):
         self.user_dir = user_dir
         self.data_samplers = []
         self.sample_time = sample_time
         self.sample_rate = sample_rate
         self.channels = channels
         self.resample = resample
+        self.window_stride = window_stride
         self.required_columns = ['SessionTime'] + channel_columns(channels)
 
         self._load_data()
@@ -100,7 +102,8 @@ class UserProfile:
             return
 
         self.data_samplers.append(
-            Sampler(data, self.sample_time, self.sample_rate, resample=self.resample))
+            Sampler(data, self.sample_time, self.sample_rate, resample=self.resample,
+                    window_stride=self.window_stride))
 
 
 if __name__ == "__main__":

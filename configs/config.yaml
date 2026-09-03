@@ -66,6 +66,15 @@ encoding: raw
 # aliases the rest. Both corrupt any velocity or acceleration encoding.
 resample: nearest
 
+# Seconds between the starts of consecutive windows. null means sample_time, i.e.
+# back-to-back windows sharing no frames - the original behaviour. A smaller value
+# overlaps them, which yields more windows per session without shortening them; this
+# is what makes a longer sample_time testable without also cutting the number of
+# training examples. Pair generation refuses to pair two windows of one session that
+# are closer than sample_time apart, so overlapping windows never produce a near
+# self-match positive.
+window_stride: null
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a

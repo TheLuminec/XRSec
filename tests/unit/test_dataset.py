@@ -442,3 +442,100 @@ def test_balance_enforcement_is_deterministic():
                                within_dataset_negatives=True)
     for key in a:
         assert torch.equal(a[key], b[key])
+
+
+# --- the temporal-separation guard --------------------------------------------
+#
+# Overlapping windows make positive pairs dangerous: two windows overlapping by 80%
+# share most of their frames, so the pair is close to a self-match. It would inflate
+# the result invisibly, because held-out positives would be inflated identically and
+# no train/test gap would appear.
+
+def _overlapping_index(sessions=2, windows_per_session=8, sample_time=2, stride=1.0):
+    """Index whose windows overlap, with honest session ids and start times."""
+    import types
+    import torch as T
+    from dataset import SampleIndex
+
+    total = sessions * windows_per_session
+    session_ids = T.arange(total) // windows_per_session
+    starts = T.tensor(
+        [(i % windows_per_session) * stride for i in range(total)], dtype=T.float32)
+
+    fake = types.SimpleNamespace(
+        sample_time=sample_time, sample_rate=10, num_users=2,
+        dataset=[T.randn(total, 7, sample_time * 10), T.randn(total, 7, sample_time * 10)],
+        dataset_names=["DS"], user_dataset_ids=[0, 0],
+        session_ids=[session_ids, session_ids.clone()],
+        start_times=[starts, starts.clone()],
+    )
+    return SampleIndex(fake)
+
+
+def test_no_positive_pair_ever_shares_frames():
+    """The guard that makes overlapping strides safe to use at all."""
+    index = _overlapping_index()
+    manifest = generate_pair_manifest(index, pairs_per_user=200, match_ratio=1.0, seed=3)
+
+    positives = manifest["labels"] == 1
+    assert positives.sum() > 0
+    starts = index.window_start_times
+    sessions = index.window_session_ids
+    for a, b in zip(manifest["x1_indices"][positives].tolist(),
+                    manifest["x2_indices"][positives].tolist()):
+        if int(sessions[a]) == int(sessions[b]):
+            separation = abs(float(starts[a]) - float(starts[b]))
+            assert separation >= index.sample_time, (
+                f"windows at {float(starts[a])} and {float(starts[b])} overlap")
+
+
+def test_a_positive_is_never_a_window_paired_with_itself():
+    """
+    Held independently of start times: x1 and x2 used to be drawn separately with
+    replacement, so a window could be paired with itself with probability 1/n.
+    """
+    index = _sessioned_index()
+    manifest = generate_pair_manifest(index, pairs_per_user=400, match_ratio=1.0, seed=11)
+    positives = manifest["labels"] == 1
+    assert not (manifest["x1_indices"][positives] == manifest["x2_indices"][positives]).any()
+
+
+def test_cross_session_positives_still_span_sessions_when_windows_overlap():
+    index = _overlapping_index()
+    manifest = generate_pair_manifest(index, pairs_per_user=100, match_ratio=1.0, seed=4,
+                                      cross_session_positives=True)
+    positives = manifest["labels"] == 1
+    sessions = index.window_session_ids
+    for a, b in zip(manifest["x1_indices"][positives].tolist(),
+                    manifest["x2_indices"][positives].tolist()):
+        assert int(sessions[a]) != int(sessions[b])
+
+
+def test_a_session_with_no_valid_partner_is_reported_not_hidden(capsys):
+    """One window per session leaves no non-overlapping partner; say so out loud."""
+    index = _overlapping_index(sessions=1, windows_per_session=1)
+    generate_pair_manifest(index, pairs_per_user=20, match_ratio=1.0, seed=2)
+    assert "no non-overlapping partner" in capsys.readouterr().out
+
+
+def test_absent_start_times_do_not_delete_same_session_positives():
+    """
+    Zero is a legitimate start time, so "absent" must not be represented as zeros - it
+    would mark every same-session pair as a total overlap and quietly remove them.
+    """
+    index = _sessioned_index()
+    assert index.window_start_times is None
+
+    manifest = generate_pair_manifest(index, pairs_per_user=60, match_ratio=1.0, seed=5)
+    positives = manifest["labels"] == 1
+    sessions = index.window_session_ids
+    same = [int(sessions[a]) == int(sessions[b])
+            for a, b in zip(manifest["x1_indices"][positives].tolist(),
+                            manifest["x2_indices"][positives].tolist())]
+    assert any(same)
+
+
+def test_sample_index_carries_window_start_times_when_supplied():
+    index = _overlapping_index()
+    assert index.window_start_times is not None
+    assert index.window_start_times.shape[0] == index.sample_count

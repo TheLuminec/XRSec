@@ -175,16 +175,6 @@ What this does and does not mean:
 - **Not primarily behavioural.** This cannot be described as identifying people by how they move when three quarters of it is how tall they are.
 - **The behavioural component is real but small**: 0.535 / 0.541 against a 0.497 floor, AUC 0.553 / 0.561, two architectures agreeing. It deserves its own reported number rather than being folded into the headline.
 
-**At 343 identities the behavioural component doubles while the anthropometric one is flat.** Same protocol, pooled 7-dataset corpus, stratified folds:
-
-| | 48 ids | 343 ids | headroom change |
-| --- | --- | --- | --- |
-| keeps position | 0.6691 | 0.6722 | 0.1724 → 0.1731 (**1.00×**) |
-| centred (movement only) | 0.5352 | 0.5765 | 0.0385 → 0.0774 (**2.01×**) |
-| random control | 0.4967 | 0.4991 | — |
-
-Behavioural share of total headroom: **22.3% → 44.7%**. AUC agrees independently (centred 0.553 → 0.603). Seven times the identities buys absolute position *nothing* and doubles movement — so **the ceiling on the behavioural component is data, not modelling**, consistent with three architectures tying and every gain coming from the objective and now identity count. It may not have plateaued at 343.
-
 **The behavioural component is identity-count-limited — the diversity confound is resolved.** `max_users=48` subsamples the pooled corpus back to 48 identities stratified across the same 7 datasets, holding dataset diversity fixed and varying only identity count. Balanced pair sets in training and evaluation on both halves (`eval_positive_fraction` 0.5000, control at chance on both metrics):
 
 | | 343 ids acc | AUC | 48 ids acc | AUC |
@@ -207,15 +197,13 @@ Two consequences worth acting on:
 1. **The behavioural ceiling is data, not modelling.** Consistent with three architectures tying, `motion_gram` losing, and every gain coming from the objective and identity count. It may not have plateaued at 343 — that is now a live question rather than a rhetorical one.
 2. **Every single-dataset behavioural result in this repo is uninterpretable.** VR_User_Behavior alone is 48 identities. The 0.535/0.541 centred figures measured there sit at roughly the level this table shows is indistinguishable from chance, so they should not be quoted as evidence of a behavioural component.
 
-**The 343-identity arm was rerun under the fixed code and is bit-identical** (sweep `bc69fd0d50`, 20/20 configurations, `eval_positive_fraction` 0.5000 on every fold): keeps-position 0.6722 / AUC 0.7264, centred 0.5765 / AUC 0.6029, random 0.4991 / AUC 0.4993. So the label-balance bug never touched it - it was always balanced - and both halves of the comparison now come from the same code. The 48-identity caveat below is unaffected; that arm is the one that needs rerunning.
+**A caveat on the 48-identity centred figure, and a caveat on the caveat.** The pooled 48-identity subsample draws proportionally from all 7 datasets, so it includes ViewGauss (10Hz native) and PanoSaliency (17Hz), which at `sample_rate=20` under `resample=nearest` contribute 50.5% and 27.0% exact duplicate consecutive frames. Duplicated frames destroy movement and leave absolute position untouched, so they penalise the centred arm specifically. That is worth testing directly - `max_users=48 center_position=true` over `resample: [nearest, bin]`, 10 runs - because it is a real question at fixed identity count.
 
-**The 343-identity comparison is still confounded on a different axis and should not be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
+What it is **not** is a contradiction needing explanation. The single-dataset centred figure (0.5352, +0.0385 over floor) is one this file has already retired as uninterpretable: it is 48 identities, which is exactly where this table shows the behavioural signal is indistinguishable from chance, and +0.0385 on 5 folds of ~10 held-out users sits inside the measured 0.037 fold spread. +0.0385 and -0.0082 are two draws from the same no-signal distribution. Treating the first as a fact the second must account for would invent a sampling effect to explain noise. If `bin` does not move the centred arm, that is one 48-identity measurement agreeing with another - not evidence the collapse is "genuine".
 
-```bash
-.venv/Scripts/python model/main.py mode=sweep max_users=48 ...   # vs the same without
-```
+**Both arms were rerun under the fixed code.** The 343 arm came back bit-identical (sweep `bc69fd0d50`, 20/20 configurations), and the 48 arm is sweep `34a943c9a1` on `732a12c` with the balance fix, 20 folds, `eval_positive_fraction` 0.5000, 0 warnings. The label-balance bug never touched the 343 arm - it was always balanced - so both halves of the comparison are on balanced pair sets and effectively on the same code. Nothing here is outstanding.
 
-Centred falls back toward 0.535 → it is identity count. Centred stays near 0.577 → it is data diversity. Both are publishable and they imply different next steps.
+Superseded, for anyone reading older notes: the earlier version of this comparison put the pooled 343-identity corpus against **VR_User_Behavior alone**, which varies identity count, dataset diversity and `normalize=per_dataset` together. `max_users` exists to separate them and has now done so. The 22.3% -> 44.7% behavioural-share figure came from that confounded pairing; use the table above instead.
 
 One caveat when quoting the 22% (or the 44.7%): the centred arm still contains **absolute quaternion**, and how someone holds their head is itself partly postural. So 22% is an upper bound on the purely behavioural share, not a point estimate. Centring orientation as well, or `channels=position` + `center_position`, would tighten it.
 
@@ -291,6 +279,47 @@ Getting any *other* new dataset to that layout is still the weakest link:
 | NJIT_6DOF | 18 | 250 | room-scale walking, position range 5.13m |
 
 Quaternions are unit-norm everywhere and there are no non-finite values. `UserProfile` skips files that are missing required columns, have fewer than two rows, are non-finite, or have non-positive duration, and reports the counts — before this, one bad file raised `KeyError` and took down a whole dataset (which is what made Head_and_Gaze unusable).
+
+### `window_stride`: how often a window starts
+
+Windows were always laid back-to-back: a 180s session at `sample_time=2` gives 90
+windows sharing no frames. `window_stride` (seconds, `null` = `sample_time` = the
+original behaviour) sets the gap between consecutive window *starts*, so a smaller
+value overlaps them. Measured on PanoSaliency at `sample_time=2`: 90,212 windows at
+the default, 179,558 at `window_stride=1`.
+
+**Why it matters now.** Our windows are 2s where published results use 10-60s, which
+makes window length the most obvious untested lever - but raising `sample_time` to 10
+also cuts the window count 5x, so "longer window" and "less training data" move
+together and the experiment answers neither. A stride decouples them: `sample_time=10,
+window_stride=2` keeps roughly today's example count at five times the context.
+
+**The guard is part of the feature, not a follow-up.** Two windows overlapping by 80%
+share most of their frames, so a positive pair drawn from them is close to a
+self-match: trivially easy, and *invisible*, because held-out positives would be
+inflated identically and no train/test gap would appear. That is the same shape as the
+same-session shortcut (worth ~1.5 points) and the cross-dataset shortcut (worth 11).
+So `generate_pair_manifest` refuses to pair two windows of one session whose starts
+are closer than `sample_time`; windows from different sessions can never share frames
+and are unaffected. `test_no_positive_pair_ever_shares_frames` asserts it.
+
+This also removed a defect present at *every* stride: `x1` and `x2` were drawn
+independently with replacement, so a positive pair could be a window paired with
+itself with probability 1/n. Rare (~1% at typical window counts) but free accuracy,
+and it means runs from before this change are not bit-comparable to runs after it.
+
+Per-window start times live in `SampleIndex.window_start_times` (sample cache v4).
+**`None` when unavailable, never zeros** - zero is a legitimate start time, and
+all-zero times read as "every window begins at t=0", which marks every same-session
+pair as a total overlap and silently deletes same-session positives. That bug was
+written and caught by the fixture during this change; keep absent distinguishable from
+present-and-zero.
+
+Prediction, recorded before measuring: modest and possibly negative on its own.
+Overlapping windows are correlated, so 5x the windows is nowhere near 5x the
+information, and correlated examples can overfit faster. Honest expectation at fixed
+`sample_time`: **-0.01 to +0.02**. Its value is in making the `sample_time` sweep
+interpretable, not in the extra windows.
 
 ### `resample`: how a window is built from raw frames
 

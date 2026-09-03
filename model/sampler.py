@@ -20,7 +20,7 @@ class Sampler:
     """
 
     def __init__(self, data: np.ndarray, sample_time: int = 1, sample_rate: int = 10, variance=0.01,
-                 index_randomness=0, resample: str = "nearest"):
+                 index_randomness=0, resample: str = "nearest", window_stride: float | None = None):
         self.data = data
         self.sample_time = sample_time
         self.sample_rate = sample_rate
@@ -33,7 +33,31 @@ class Sampler:
         self.duration = self.time_end - self.time_start
         self.avg_hertz = data.shape[0] / self.duration
         self.current_index = 0
-        self.sample_count = math.floor(self.duration / self.sample_time)
+
+        # Seconds between the starts of consecutive windows. Defaults to sample_time,
+        # which is back-to-back windows sharing no frames - exactly the original
+        # behaviour, and the formula below reduces to floor(duration / sample_time)
+        # for that case. A smaller stride overlaps them.
+        #
+        # Overlap is only safe because pair generation refuses to pair two windows of
+        # one session that are less than sample_time apart. Without that guard a
+        # positive pair drawn from two 80%-overlapping windows is close to a
+        # self-match: trivially easy, and invisible, because held-out positives would
+        # be inflated identically and no train/test gap would appear. That is the same
+        # shape as the same-session shortcut this project has already had to remove.
+        self.window_stride = float(window_stride) if window_stride else float(sample_time)
+        if self.window_stride <= 0:
+            raise ValueError(f"window_stride must be positive, got {self.window_stride!r}.")
+        if self.duration < self.sample_time:
+            self.sample_count = 0
+        else:
+            self.sample_count = int(
+                math.floor((self.duration - self.sample_time) / self.window_stride)) + 1
+
+        #: Start time of each window, in the session's own clock. Carried so pair
+        #: generation can measure the separation between two windows.
+        self.window_start_times = (
+            self.time_start + np.arange(self.sample_count, dtype=float) * self.window_stride)
 
         if resample not in ("nearest", "bin"):
             raise ValueError(f"resample must be 'nearest' or 'bin', got {resample!r}.")
@@ -79,7 +103,7 @@ class Sampler:
         step = 1.0 / self.sample_rate
 
         offsets = np.arange(steps, dtype=float) * step
-        starts = self.time_start + np.arange(self.sample_count, dtype=float) * self.sample_time
+        starts = self.window_start_times
         targets = (starts[:, None] + offsets[None, :]).ravel()
 
         low = np.searchsorted(times, targets - step / 2.0, side="left")
@@ -137,7 +161,7 @@ class Sampler:
         end_range = int(self.avg_hertz * 2)
         for i in range(self.sample_rate * self.sample_time):
             current_time = self.time_start + \
-                (current_index * self.sample_time) + (i / self.sample_rate)
+                (current_index * self.window_stride) + (i / self.sample_rate)
             data_index = self._get_data_point_closest_to_time(
                 current_time, last_range_end, last_range_end + end_range)
             if self.index_randomness > 0:
@@ -155,7 +179,18 @@ class Sampler:
         self.samples = np.zeros(
             (self.sample_count, self.sample_rate * self.sample_time, self.data.shape[1]))
         last_range_end = 0
+        # The nearest-point search only ever moves forward, carrying the previous
+        # window's last index into the next one. That holds while windows are
+        # back-to-back, but overlapping windows start *before* the previous one ended,
+        # so the search has to be rewound or every window after the first would be
+        # sampled from the wrong stretch of the session. Left untouched at the default
+        # stride, so existing windows stay bit-identical.
+        overlapping = self.window_stride < self.sample_time
         for i in range(self.sample_count):
+            if overlapping:
+                rewound = int(np.searchsorted(
+                    self.data[:, 0], self.window_start_times[i], side="left"))
+                last_range_end = max(0, min(self.data_len - 1, rewound - 1))
             self.samples[i], last_range_end = self._get_sample_slice(
                 i, last_range_end)
 

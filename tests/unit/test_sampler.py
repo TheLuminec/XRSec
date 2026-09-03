@@ -164,3 +164,71 @@ def test_position_only_data_is_resampled_too():
 def test_invalid_resample_mode_is_rejected():
     with pytest.raises(ValueError, match="resample must be"):
         Sampler(_timed(50, 20.0), sample_time=1, sample_rate=10, resample="spline")
+
+
+# --- strided windows ----------------------------------------------------------
+
+def test_default_stride_is_exactly_the_old_back_to_back_behaviour():
+    """
+    window_stride defaults to sample_time, and the count formula must reduce to the
+    original floor(duration / sample_time) for that case - otherwise every number
+    recorded so far silently stops being comparable.
+    """
+    for rows, hz, sample_time in [(200, 50.0, 1), (137, 20.0, 2), (301, 33.0, 3)]:
+        data = _timed(rows=rows, hz=hz)
+        sampler = Sampler(data, sample_time=sample_time, sample_rate=10)
+        duration = data[-1, 0] - data[0, 0]
+        assert sampler.sample_count == int(duration // sample_time)
+
+
+def test_a_smaller_stride_produces_overlapping_windows():
+    data = _timed(rows=400, hz=50.0)          # 7.98s
+    back_to_back = Sampler(data, sample_time=2, sample_rate=10)
+    overlapped = Sampler(data, sample_time=2, sample_rate=10, window_stride=1)
+
+    assert back_to_back.sample_count == 3
+    assert overlapped.sample_count == 6
+    assert overlapped.window_start_times[1] - overlapped.window_start_times[0] == 1.0
+
+
+def test_window_start_times_line_up_with_the_windows_themselves():
+    """The guard measures overlap with these, so they must describe the real windows."""
+    data = _timed(rows=400, hz=50.0)
+    sampler = Sampler(data, sample_time=2, sample_rate=10, window_stride=1, resample="bin")
+
+    for index in range(sampler.sample_count):
+        first_timestamp = sampler.get_sample(index)[0, 0]
+        assert first_timestamp == pytest.approx(sampler.window_start_times[index], abs=1e-6)
+
+
+def test_overlapping_windows_are_not_sampled_from_the_wrong_stretch():
+    """
+    The nearest-point search only moves forward, carrying the previous window's last
+    index into the next. Overlapping windows start before the previous one ended, so
+    without a rewind every window after the first drifts later and later.
+    """
+    data = _timed(rows=600, hz=50.0)
+    nearest = Sampler(data, sample_time=2, sample_rate=10, window_stride=1)
+    binned = Sampler(data, sample_time=2, sample_rate=10, window_stride=1, resample="bin")
+
+    # Position ramps with time, so a drifting window shows up as a wrong first value.
+    for index in range(nearest.sample_count):
+        assert nearest.get_sample(index)[0, 5] == pytest.approx(
+            binned.get_sample(index)[0, 5], abs=0.05)
+
+
+def test_a_stride_larger_than_the_window_leaves_gaps():
+    data = _timed(rows=500, hz=50.0)          # 9.98s
+    sampler = Sampler(data, sample_time=2, sample_rate=10, window_stride=4)
+    assert sampler.sample_count == 2
+    assert list(sampler.window_start_times) == [0.0, 4.0]
+
+
+def test_a_session_shorter_than_one_window_yields_nothing():
+    data = _timed(rows=30, hz=50.0)           # 0.58s, shorter than sample_time
+    assert Sampler(data, sample_time=2, sample_rate=10, window_stride=1).sample_count == 0
+
+
+def test_non_positive_stride_is_rejected():
+    with pytest.raises(ValueError, match="window_stride must be positive"):
+        Sampler(_timed(200, 50.0), sample_time=2, sample_rate=10, window_stride=-1)
