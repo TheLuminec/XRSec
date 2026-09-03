@@ -393,6 +393,14 @@ gap. Cross-session evaluation is the standard requirement in biometrics.
 
 Users with only one session fall back to same-session pairs and are reported.
 
+## The 0.85 in the Project's History
+
+A frequently-cited 0.85 from this project's early history was a **seen-user** figure:
+the same people appeared in training and test, with only the pairs split randomly.
+Reproduced here at 0.810 with `test_on_excluded=false`, against 0.62-0.67 for the
+same configuration with users held out. Every number reported now is leave-users-out
+and is not comparable to it.
+
 ## Reporting an Honest Number
 
 `best_test_acc` is a max over every epoch of the set it reports, which inflates it by
