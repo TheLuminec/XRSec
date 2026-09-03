@@ -470,6 +470,36 @@ Skip it and AUC looks fine while accuracy sits at chance for the wrong reason.
 `diff_linear` keeps the original `classifier.*` parameter names so older checkpoints
 still load. Identity training is standard-mode only; boosting stays pairwise.
 
+## Tried and measured at zero: adaptive score normalization
+
+`model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes
+one operating point serves every identity - and it does not, since some sit in a dense
+part of the space and score high against everyone. AS-Norm is the standard fix in
+speaker verification: rescale each score by how surprising it is for the two sides
+involved, using the top-k similarities of each against an impostor cohort. It needs no
+retraining and no new data, only embeddings already computed.
+
+**Measured, and it does nothing here.** Spare `pair_bce` checkpoint, 100 unseen
+Head_and_Gaze users, cosine scores, cohort built per-identity so window-count imbalance
+cannot dominate it:
+
+| cohort | best dAUC |
+| --- | --- |
+| training users, different dataset | **-0.0014** (negative at every top_k) |
+| domain-matched, users disjoint from the trials | **+0.0025** at top_k=200 |
+
++0.0025 on 13,200 pairs is inside the binomial error alone (~0.008), let alone the
+0.037 fold spread. Both readings are zero. The one real signal is that a cohort from a
+*different dataset* is actively worse than none, which is consistent with the
+cross-dataset normalization problems this corpus has everywhere else.
+
+**Do not spend sweep runs on this.** The one caveat worth keeping is that it was
+measured on the checkpoint whose own control scores 0.208 on users it was trained on -
+AS-Norm exploits embedding geometry, and that space is barely organised, so there may
+be nothing there to exploit rather than nothing to gain. It is post-hoc and costs zero
+training runs, so it is worth one line of curiosity next time a properly trained
+`identity_softmax` checkpoint is scored, and nothing more than that.
+
 ## Two untuned levers on the objective
 
 The objective is the only thing measured to give a large gain (+6.5). Both of these
