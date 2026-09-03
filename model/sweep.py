@@ -348,14 +348,34 @@ def _write_state(path: Path, payload: dict) -> None:
         json.dump(payload, handle, indent=2, sort_keys=True, default=str)
 
 
+#: Ranking metric, best first. `selected_test_acc` is the test accuracy at the epoch
+#: chosen on a disjoint validation split; `best_test_acc` is the max over epochs of
+#: the reported set, which is inflated by about +0.02 by construction and is also
+#: sensitive to pair-set balance. Ranking on the latter is how a sweep came to print
+#: an order that disagreed with its own honest column.
+_RANKING_METRICS = ("selected_test_acc", "best_test_acc")
+
+
 def _best_accuracy(result) -> float | None:
     if not isinstance(result, dict):
         return None
     if result.get("mode") == "boosted":
         summaries = result.get("round_summaries") or []
         return max((float(s["best_test_acc"]) for s in summaries), default=None)
-    value = result.get("best_test_acc")
-    return float(value) if value is not None else None
+    for key in _RANKING_METRICS:
+        value = result.get(key)
+        if value is not None:
+            return float(value)
+    return None
+
+
+def ranking_metric_name(result) -> str:
+    """Which metric a result was ranked on, so the report can say so."""
+    if isinstance(result, dict):
+        for key in _RANKING_METRICS:
+            if result.get(key) is not None:
+                return key
+    return "unknown"
 
 
 def _aggregate_folds(configurations: list[dict], records: dict) -> list[dict]:
@@ -385,6 +405,7 @@ def _aggregate_folds(configurations: list[dict], records: dict) -> list[dict]:
         if scores:
             entry.update({
                 "status": "ok",
+                "metric": next((r.get("metric") for r in fold_records if r.get("metric")), None),
                 "best_test_acc": float(np.mean(scores)),
                 "fold_std": float(np.std(scores)),
                 "checkpoint": fold_records[0].get("checkpoint", ""),
@@ -404,6 +425,10 @@ def _print_ranking(records: list[dict]) -> None:
 
     print("\n" + "=" * 78)
     print(f"SWEEP RESULTS  ({len(completed)} completed, {len(failed)} failed)")
+    metric = next((r.get("metric") for r in completed if r.get("metric")), None)
+    if metric:
+        note = "" if metric == "selected_test_acc" else "  <- inflated; set val_user_fraction"
+        print(f"ranked on: {metric}{note}")
     print("=" * 78)
 
     if completed:
@@ -524,6 +549,7 @@ def run_sweep(cfg, train_fn=None) -> dict:
             record.update({
                 "status": "ok",
                 "best_test_acc": _best_accuracy(result),
+                "metric": ranking_metric_name(result),
                 "checkpoint": str(run_cfg.save_path),
             })
             results_log.append_run(run_cfg, result, dataset_tag=str(getattr(cfg, "_dataset_tag", "") or "sweep"))

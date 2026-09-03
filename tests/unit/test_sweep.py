@@ -519,3 +519,30 @@ def test_state_without_an_identity_is_refused(tmp_path, capsys):
     sweep.run_sweep(cfg, train_fn=lambda c: (calls.append(1), _history(0.6))[1])
     assert len(calls) == 2
     assert "cannot be verified" in capsys.readouterr().out
+
+
+def test_ranking_prefers_the_validation_selected_metric(tmp_path):
+    """
+    best_test_acc is a max over epochs of the reported set, inflated by ~0.02 and
+    sensitive to pair balance. Ranking on it made a sweep print an order that
+    disagreed with its own honest column.
+    """
+    cfg = _cfg(tmp_path, grid={"lr": [0.01, 0.001]})
+
+    def fake_train(run_cfg):
+        # A ranks higher on the inflated metric, B on the honest one.
+        if run_cfg.lr == 0.01:
+            return {**_history(0.90), "selected_test_acc": 0.60}
+        return {**_history(0.80), "selected_test_acc": 0.70}
+
+    result = sweep.run_sweep(cfg, train_fn=fake_train)
+    assert result["best"]["overrides"]["lr"] == 0.001
+    assert result["best"]["best_test_acc"] == pytest.approx(0.70)
+    assert result["best"]["metric"] == "selected_test_acc"
+
+
+def test_ranking_falls_back_when_no_validation_split_was_used(tmp_path):
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    result = sweep.run_sweep(cfg, train_fn=lambda c: _history(0.62))
+    assert result["best"]["best_test_acc"] == pytest.approx(0.62)
+    assert result["best"]["metric"] == "best_test_acc"
