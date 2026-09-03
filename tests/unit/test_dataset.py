@@ -1,6 +1,7 @@
 import pathlib
 import sys
 
+import pytest
 import torch
 
 import sampler
@@ -379,20 +380,12 @@ def test_a_user_without_eligible_negatives_does_not_skew_the_label_balance():
                                       within_dataset_negatives=True)
 
     lone = manifest["anchor_user_ids"] == 0
-    others = ~lone
-    # The lone user contributes only their positive share, not a doubled one.
-    assert int(lone.sum()) == 20
+    # All positive - they have no eligible partner - but never more than the per-user
+    # positive share of 20, which is what the inflation bug produced (40, a doubled
+    # share). Balance enforcement then trims further, so this is an upper bound.
+    assert 0 < int(lone.sum()) <= 20
     assert manifest["labels"][lone].min() == 1.0
-    # So the overall set stays close to the requested ratio instead of 69% positive.
-    assert 0.5 <= float(manifest["labels"].mean()) <= 0.60
-
-
-def test_balance_warning_fires_when_the_ratio_drifts(capsys):
-    index = _multi_dataset_index(users_per_dataset=(1, 1))
-    generate_pair_manifest(index, pairs_per_user=20, match_ratio=0.5, seed=3,
-                           within_dataset_negatives=True)
-    output = capsys.readouterr().out
-    assert "pair set is" in output and "Accuracy at a fixed threshold is unsafe" in output
+    assert float(manifest["labels"].mean()) == pytest.approx(0.5, abs=0.01)
 
 
 def test_no_balance_warning_when_the_ratio_holds(capsys):
@@ -400,3 +393,52 @@ def test_no_balance_warning_when_the_ratio_holds(capsys):
     generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=3,
                            within_dataset_negatives=True)
     assert "WARNING" not in capsys.readouterr().out
+
+
+def test_pair_balance_is_enforced_not_merely_reported():
+    """
+    Two fixes failed here before enforcement. Removing the positive-share inflation
+    left the set at 62% positive, because a user with no eligible negative partner
+    contributes positives and no negatives however many positives that is.
+    """
+    index = _multi_dataset_index(users_per_dataset=(1, 1, 4))
+
+    manifest = generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=13,
+                                      within_dataset_negatives=True)
+
+    assert float(manifest["labels"].mean()) == pytest.approx(0.5, abs=0.01)
+
+
+@pytest.mark.parametrize("ratio", [0.25, 0.5, 0.75])
+def test_requested_ratio_is_honoured(ratio):
+    index = _multi_dataset_index(users_per_dataset=(1, 3))
+    manifest = generate_pair_manifest(index, pairs_per_user=60, match_ratio=ratio, seed=5,
+                                      within_dataset_negatives=True)
+    assert float(manifest["labels"].mean()) == pytest.approx(ratio, abs=0.02)
+
+
+def test_balanced_input_is_left_alone(capsys):
+    index = _multi_dataset_index(users_per_dataset=(3, 3))
+    manifest = generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=5,
+                                      within_dataset_negatives=True)
+    assert float(manifest["labels"].mean()) == pytest.approx(0.5, abs=0.01)
+    assert "dropped" not in capsys.readouterr().out
+
+
+def test_all_positive_set_warns_rather_than_returning_nothing(capsys):
+    """A single user cannot form negatives; trimming to balance would empty the set."""
+    index = _multi_dataset_index(users_per_dataset=(1,))
+    manifest = generate_pair_manifest(index, pairs_per_user=10, match_ratio=0.5, seed=5,
+                                      within_dataset_negatives=True)
+    assert manifest["labels"].numel() > 0
+    assert "accuracy is meaningless here" in capsys.readouterr().out
+
+
+def test_balance_enforcement_is_deterministic():
+    index = _multi_dataset_index(users_per_dataset=(1, 3))
+    a = generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=8,
+                               within_dataset_negatives=True)
+    b = generate_pair_manifest(index, pairs_per_user=40, match_ratio=0.5, seed=8,
+                               within_dataset_negatives=True)
+    for key in a:
+        assert torch.equal(a[key], b[key])

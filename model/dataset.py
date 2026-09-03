@@ -321,6 +321,62 @@ def build_sample_index(
     )
 
 
+def enforce_pair_balance(manifest, match_ratio: float, rng, users_without_negatives: int = 0):
+    """
+    Trim the over-represented label until the realized ratio matches the requested one.
+
+    Accuracy is read at a fixed threshold, so it only means anything on a set whose
+    balance is what was asked for. Two rounds of this went wrong before it was
+    enforced rather than merely reported:
+
+      1. A user with no eligible negative partner had their positives inflated to the
+         full quota. On a 48-user stratified subsample the set came out 69% positive
+         and the random control scored 0.6886, outscoring both real configurations.
+      2. Removing the inflation was not enough. Such a user still contributes
+         positives and no negatives, so each one shifts the set positive regardless of
+         how many positives they contribute - 2-4 users out of 9-11 per fold left it
+         at 62% positive.
+
+    Under `within_dataset_negatives`, any user who is the sole member of their dataset
+    in a fold has no eligible partner, so this is structural rather than a rare edge
+    case. Trimming keeps every user in the evaluation - dropping the affected users
+    instead would have cost 20-40% of a held-out fold - at the price of a few pairs.
+    """
+    labels = manifest["labels"].view(-1)
+    if labels.numel() == 0:
+        return manifest
+
+    positive_indices = torch.nonzero(labels > 0.5, as_tuple=False).view(-1)
+    negative_indices = torch.nonzero(labels <= 0.5, as_tuple=False).view(-1)
+    positives, negatives = positive_indices.numel(), negative_indices.numel()
+
+    if positives == 0 or negatives == 0 or not (0.0 < match_ratio < 1.0):
+        # Nothing to trim against. Say so rather than silently returning a set whose
+        # accuracy cannot be read.
+        if positives == 0 or negatives == 0:
+            print(f"  WARNING: pair set is entirely {'positive' if negatives == 0 else 'negative'}; "
+                  "accuracy is meaningless here, read AUC/EER.")
+        return manifest
+
+    # Largest balanced subset: keep as many as the scarcer side allows.
+    keep_positive = min(positives, int(negatives * match_ratio / (1.0 - match_ratio)))
+    keep_negative = min(negatives, int(round(keep_positive * (1.0 - match_ratio) / match_ratio)))
+    dropped = (positives - keep_positive) + (negatives - keep_negative)
+    if dropped == 0:
+        return manifest
+
+    chosen = torch.cat([
+        positive_indices[torch.as_tensor(rng.permutation(positives)[:keep_positive], dtype=torch.long)],
+        negative_indices[torch.as_tensor(rng.permutation(negatives)[:keep_negative], dtype=torch.long)],
+    ])
+    balanced = {key: value[chosen] for key, value in manifest.items()}
+
+    print(f"  balance: dropped {dropped} of {labels.numel()} pairs to reach "
+          f"{float(balanced['labels'].mean()):.1%} positive "
+          f"({users_without_negatives} user(s) had no eligible negative partner)")
+    return balanced
+
+
 def count_single_session_users(sample_index) -> int:
     """
     Users with fewer than two sessions, which cannot form a cross-session positive.
@@ -466,14 +522,7 @@ def generate_pair_manifest(
     if manifest["labels"].numel() == 0:
         return manifest
 
-    # Accuracy is read at a fixed threshold, so it only means anything on a set whose
-    # balance is what was asked for. Nothing downstream would reveal a drift, so say
-    # it here.
-    realized = float(manifest["labels"].mean())
-    if abs(realized - match_ratio) > 0.02:
-        print(f"  WARNING: pair set is {realized:.1%} positive, requested "
-              f"{match_ratio:.1%}. {users_without_negatives} user(s) had no eligible "
-              "negative partner. Accuracy at a fixed threshold is unsafe here; read AUC/EER.")
+    manifest = enforce_pair_balance(manifest, match_ratio, rng, users_without_negatives)
 
     permutation = torch.as_tensor(
         rng.permutation(manifest["labels"].shape[0]),

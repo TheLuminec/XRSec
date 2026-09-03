@@ -203,6 +203,17 @@ Centred falls back toward 0.535 → it is identity count. Centred stays near 0.5
 
 One caveat when quoting the 22% (or the 44.7%): the centred arm still contains **absolute quaternion**, and how someone holds their head is itself partly postural. So 22% is an upper bound on the purely behavioural share, not a point estimate. Centring orientation as well, or `channels=position` + `center_position`, would tighten it.
 
+### Pair balance is enforced, not reported
+
+Accuracy is read at the fixed `logit > 0` threshold, so it only means anything on a set whose balance is what was asked for. This went wrong twice:
+
+1. A user with no eligible negative partner had their positives **inflated to the full quota**. On a 48-user stratified subsample the set came out 69% positive and the `random` control scored 0.6886 accuracy at AUC 0.5056 — outscoring both real configurations.
+2. Removing the inflation was not enough. Such a user still contributes positives and *no* negatives, so each one shifts the set positive regardless of how many positives they contribute. 2–4 users out of 9–11 per fold left it at 62% positive.
+
+Under `within_dataset_negatives`, any user who is the sole member of their dataset in a fold has no eligible partner, so this is structural rather than a rare edge case — and it is created by `max_users` subsampling and fold stratification, both of which spread small datasets thin.
+
+`enforce_pair_balance` now trims the over-represented label until the realized ratio matches `match_ratio`, and reports how many pairs it dropped. Trimming keeps every user in the evaluation; dropping the affected users instead would have cost 20–40% of a held-out fold. The realized fraction is recorded per run as `eval_positive_fraction` — check it before reading any accuracy figure.
+
 ### Selection inflation, and the fix
 
 `best_test_acc` is a **max over ~20 noisy evaluations of the set it reports**, which buys roughly **+0.02 for free**. This was caught by the `random` extractor under cross-validation: it scored 0.5173 as a best-of-20 but **0.4973 at its final epoch** — exactly chance. Every extractor showed the same offset, so **every historical `best_test_acc` in `results/runs.csv` is inflated by about 2 points, and the honest floor for that column is ~0.517, not 0.500.**
@@ -353,7 +364,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **182 passing, ~10s**.
+Current baseline: **201 passing, ~26s**.
 
 ## Performance notes
 
