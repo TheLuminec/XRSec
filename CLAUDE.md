@@ -327,6 +327,38 @@ for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) use
 
 The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
+**BOXRR-23 format facts**, read from the `xror` library's own source rather than its
+documentation, and verified end-to-end against synthetic XROR files:
+
+| | |
+| --- | --- |
+| device selection | on `type='HMD'` / `joint='HEAD'`. **Never on `name`** - that is an arbitrary hardware string that varies by headset model. |
+| quaternion order | axes are `x,y,z` then `i,j,k,1` - **scalar last, already our x,y,z,w**. No reorder, unlike who-is-alyx. Read by declared axis name, never by position. |
+| units | 1.0 = 1 metre. No conversion (unlike who-is-alyx's centimetres). |
+| time | seconds since recording start. No conversion (unlike who-is-alyx's `delta_time_ms`). |
+
+**Tilt Brush recordings may carry no head track at all.** The library's own `fromTilt()`
+adds exactly one device - `BRUSH`, `type='OTHER'` - and no HMD. If BOXRR-23's Tilt Brush
+files were produced the same way, that portion of the corpus is brush-tip trajectory
+only and is unusable here. `prepare_boxrr.py` skips any recording with no HMD/HEAD
+device and reports why rather than guessing. **Confirm against real `--inspect` output
+before planning around any recording count**, and prefer Beat Saber sources
+(BeatLeader, ScoreSaber) when selecting users from the BSON index.
+
+**Sizing the slice.** At ~53MB per user, and needing to roughly double 419 identities to
+clear the resolution floor:
+
+| users | ~size | corpus | vs now |
+| --- | --- | --- | --- |
+| 500 | 26GB | 919 | 2.2x |
+| **2000** | **104GB** | **2419** | **5.8x** |
+| 5000 | 259GB | 5419 | 12.9x |
+
+**2000 users is the target**: 5.8x the identity count at ~100GB, comparable to the 7x
+jump that turned the behavioural signal from chance into measurable. Select users with
+two or more recordings so cross-session positives hold, and take a handful of recordings
+each rather than all ~45 - identities per byte is what matters, not recordings per user.
+
 **How big an acquisition has to be to be worth converting.** Identity count is the
 binding constraint, but the power analysis sets a floor on what is worth chasing: 48 ->
 343 identities (7x) turned the behavioural signal from chance into clearly measurable,
