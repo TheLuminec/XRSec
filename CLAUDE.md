@@ -345,6 +345,28 @@ device and reports why rather than guessing. **Confirm against real `--inspect` 
 before planning around any recording count**, and prefer Beat Saber sources
 (BeatLeader, ScoreSaber) when selecting users from the BSON index.
 
+**What 2419 identities makes measurable, and the design question it raises.** Identity
+count is the only data-side lever that has ever moved this project, and at 419 we cannot
+tell whether the behavioural component has plateaued - CLAUDE.md has carried that as a
+live question since the 48-vs-343 result. `max_users` already subsamples by identity
+count, so a corpus of 2419 turns "more identities help" from a slogan into a **curve**:
+419 / 1000 / 2419 at fixed dataset diversity.
+
+**But BOXRR is Beat Saber**, a single highly structured activity, where our existing
+corpus is 360-degree video viewing and navigation. Adding 2000 Beat Saber identities
+changes corpus composition far more than it changes identity count alone, so the curve
+has to be read two ways and they answer different questions:
+
+- **held-out BOXRR users** - does identity count help *within* a domain? Clean, and the
+  one the curve is really about.
+- **train with BOXRR, test on our existing datasets** - do extra identities from a
+  different activity improve generalisation to the domains we care about? This is the
+  question that decides whether the acquisition was worth it, and it is the harder one.
+
+Expect the second to be weaker than the first. `normalize=per_dataset` and
+`within_dataset_negatives` handle the mechanics of pooling, but neither makes Beat Saber
+motion resemble seated video viewing.
+
 **Sizing the slice.** At ~53MB per user, and needing to roughly double 419 identities to
 clear the resolution floor:
 
@@ -377,7 +399,7 @@ Searched and rejected, recorded so the search is not repeated:
 
 **BOXRR-23** (105,852 users, ~5.35TB) is the largest identity source available and
 identity count is our binding constraint, so it is the highest-value acquisition on the
-board. The user has agreed to its Data Use Agreement. **That agreement carries ongoing
+board. The user has agreed to its Data Use Agreement and has confirmed with their advisor that ethics approval is in place, satisfying clause 9. **That agreement carries ongoing
 obligations, not just an access checkbox** - it is a HIPAA-style Limited Data Set
 agreement from UC Berkeley's Office of Technology Licensing, and these outlive the
 download:
