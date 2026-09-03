@@ -27,8 +27,9 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
             ranking quality, which is what actually matters for verification.
     """
     model.eval()
-    total_loss = 0.0
-    correct = 0
+    # Same reason as the training loops: a per-batch .item() stalls the GPU every step.
+    total_loss = torch.zeros((), device=device)
+    correct = torch.zeros((), device=device)
     total = 0
 
     all_preds = []
@@ -46,11 +47,11 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
             output = model(batch_x1, batch_x2).view(-1)
             loss = criterion(output, batch_y)
 
-            total_loss += loss.item() * batch_y.size(0)
+            total_loss += loss.detach() * batch_y.size(0)
 
             predicted = (output > 0.0).float()   # if output is logits
-            correct += (predicted == batch_y).sum().item()
-            total += batch_y.size(0)
+            correct += (predicted == batch_y).sum()
+            total += int(batch_y.size(0))
 
             if return_metrics:
                 score_chunks.append(output.detach().cpu())
@@ -60,8 +61,8 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
                 all_preds.extend(predicted.cpu().tolist())
                 all_labels.extend(batch_y.cpu().tolist())
 
-    avg_loss = total_loss / total
-    accuracy = correct / total
+    avg_loss = float(total_loss) / total
+    accuracy = float(correct) / total
 
     metrics = {}
     if return_metrics:

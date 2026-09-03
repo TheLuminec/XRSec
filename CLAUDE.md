@@ -1206,6 +1206,44 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 Current baseline: **256 passing, ~10s**.
 
+## GPU throughput
+
+Measured on an RTX 3050 Ti, `bilstm`, seq_len 100, batch 256, one identity-training
+step, warm:
+
+| variant | ms/step | windows/s | vs baseline |
+| --- | --- | --- | --- |
+| baseline (per-batch `.item()`, CPU tensor) | 25.4 | 10,081 | 1.00x |
+| **no per-batch sync** | **11.1** | **23,144** | **2.30x** |
+| + samples resident on GPU | 10.2 | 25,028 | 2.48x |
+| + AMP fp16 | 12.3 | 20,775 | **2.06x - AMP HURTS** |
+| + batch 512 | 19.0 | 26,974 | 2.68x |
+| + batch 1024 | 36.6 | 28,006 | 2.78x |
+
+**The whole win is not stalling the pipeline.** `total_loss += loss.item()` and
+`correct += (...).sum().item()` each force a device sync *every batch*, so the GPU sat
+idle waiting for the CPU rather than queueing the next batch. Accumulating as device
+tensors and reading once per epoch is **2.30x** for arithmetic that is mathematically
+identical - applied to `train_epoch`, `train_identity_epoch` and `evaluate`.
+
+**AMP is measured harmful here and should not be turned on.** fp16 cost 2.48x -> 2.06x
+in isolation. These models are small (153k parameters for `bilstm`) and not
+compute-bound, so the conversion overhead and `GradScaler` are not repaid, and cuDNN's
+LSTM does not use tensor cores usefully at this size. It would also change numerics for
+no gain.
+
+**Two further gains exist and are not free**, so they are not applied by default:
+
+- **Samples resident on GPU** is worth another 8%. The window tensor is ~0.4GB at 419
+  identities and ~2.2GB at 2419, which fits on larger cards but not on a 4GB laptop, and
+  it needs the batch-slicing path rather than per-item `DataLoader` indexing to pay off.
+- **Larger batches** raise throughput ~12% from 256 to 1024, but batch size **changes
+  the optimisation**, so it is an experiment rather than a speedup. Do not raise it to
+  go faster and then compare against runs at 256.
+
+Note the ms/step column rises with batch size while windows/s also rises - throughput is
+the figure that matters for epoch time, not per-step latency.
+
 ## Performance notes
 
 Keep `num_workers: 0` unless benchmarked: the whole sample tensor lives in memory inside the Dataset, and Windows spawn-based workers pickle it per worker.
