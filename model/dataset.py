@@ -22,6 +22,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset, random_split
 
 import sample_cache
+from input_encoding import apply_encoding
 from normalization import ChannelNormalizer
 from user_profile import UserProfile, channel_count
 
@@ -233,7 +234,8 @@ class SampleIndex:
     Stable index over flattened per-user samples.
     """
 
-    def __init__(self, sample_dataset: SampleDataset, center_position: bool = False):
+    def __init__(self, sample_dataset: SampleDataset, center_position: bool = False,
+                 encoding: str = "raw"):
         self.sample_time = sample_dataset.sample_time
         self.sample_rate = sample_dataset.sample_rate
         self.seq_len = self.sample_time * self.sample_rate
@@ -278,6 +280,12 @@ class SampleIndex:
 
         self.sample_count = int(self.samples.shape[0])
         self.center_position = center_position
+        self.encoding = encoding
+
+        # Before centring: br already removes the absolute position, so applying both
+        # would centre an already-centred signal rather than compounding.
+        if encoding != "raw" and self.sample_count:
+            self.samples = apply_encoding(self.samples, encoding)
 
         if center_position and self.sample_count:
             # Remove each window's mean position, leaving only movement within the
@@ -302,6 +310,7 @@ def build_sample_index(
     swap_data: bool = False,
     channels: str = "full",
     center_position: bool = False,
+    encoding: str = "raw",
     keep_users=None,
 ) -> SampleIndex:
     """
@@ -318,6 +327,7 @@ def build_sample_index(
             keep_users=keep_users,
         ),
         center_position=center_position,
+        encoding=encoding,
     )
 
 
@@ -680,6 +690,7 @@ def create_dataloader_from_path(
     channels: str = "full",
     cross_session_positives: bool = False,
     center_position: bool = False,
+    encoding: str = "raw",
     max_users: int | None = None,
     normalizer: ChannelNormalizer | None = None,
     return_normalizer: bool = False,
@@ -713,6 +724,8 @@ def create_dataloader_from_path(
             same user (see generate_pair_manifest).
         center_position: Subtract each window's mean position, leaving movement only.
             Separates behaviour from anthropometry (height, seated posture).
+        encoding: Input encoding - raw, br, brv or bra. Applied in the data layer so
+            every extractor sees the same transform (see model/encodings.py).
         max_users: Keep at most this many users, stratified across datasets, so
             identity count can be varied without changing dataset diversity.
         normalizer: A pre-fitted normalizer to apply instead of fitting a new one.
@@ -749,6 +762,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            encoding=encoding,
             keep_users=keep_users,
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
@@ -784,6 +798,7 @@ def create_dataloader_from_path(
         channels=channels,
         cross_session_positives=cross_session_positives,
         center_position=center_position,
+        encoding=encoding,
         keep_users=keep_users,
     )
 
@@ -808,6 +823,7 @@ def create_dataloader_from_path(
                 channels=channels,
                 cross_session_positives=cross_session_positives,
                 center_position=center_position,
+                encoding=encoding,
                 keep_users=keep_users,
             )
             normalizer.transform(test_dataset.sample_index)
@@ -838,6 +854,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            encoding=encoding,
             keep_users=keep_users,
         )
         normalizer.transform(test_dataset.sample_index)
@@ -856,6 +873,7 @@ def create_dataloader_from_path(
             channels=channels,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
+            encoding=encoding,
             keep_users=keep_users,
         )
         normalizer.transform(val_dataset.sample_index)
@@ -908,6 +926,7 @@ class SiameseDataset(Dataset):
         channels: str = "full",
         cross_session_positives: bool = False,
         center_position: bool = False,
+        encoding: str = "raw",
         keep_users=None,
     ):
         self.sample_time = sample_time
@@ -920,6 +939,7 @@ class SiameseDataset(Dataset):
             swap_data=swap_data,
             channels=channels,
             center_position=center_position,
+            encoding=encoding,
             keep_users=keep_users,
         )
         self.num_users = self.sample_index.num_users

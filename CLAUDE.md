@@ -310,6 +310,20 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 - `boosting.artifact_root: boosting` is likewise relative, so `boosting.resume` never finds prior state across runs. Resume requires an absolute `artifact_root`.
 - Stdout is still not captured: metrics are `print`ed, so Hydra's per-run `main.log` files remain empty. Per-run results are now appended to `results/runs.csv` instead (see below); per-epoch history still lives only in checkpoint `history` dicts and PNG plots. To recover a past result: `torch.load(ckpt, map_location='cpu', weights_only=False)['history']`.
 
+## Input encodings
+
+`encoding` (`raw` | `br` | `brv` | `bra`) transforms windows in the **data layer**, so every extractor sees the same input. `model/input_encoding.py`.
+
+**Why it is an axis and not an extractor detail.** The result "extractor architecture is worth ~0, spread under one point across three backbones over ten folds" was measured across backbones that do not share an encoding: `bilstm` and `paper_gnn_bilstm` consume raw channels while `motion_tdnn` derives kinematics internally. Architecture and encoding varied together, so that experiment cannot separate them. The literature runs the comparison the other way — architecture fixed, encoding varied — and reports **raw < br < brv < bra**. Neither result answers the other. One sweep over {extractors} × {encodings} with `sweep.folds` answers both.
+
+It also bears on the anthropometry finding: `center_position` removes the window's mean position but leaves absolute orientation, so the movement-only arm was measured in roughly the weakest encoding available. A movement-only result at `bra` is a different claim from one at raw-centred.
+
+**Head-only approximation.** The published body-relative encodings derive a body frame from head *and* both controllers; this corpus is head-only. So `br` is pose relative to the window's first frame — orientation as `q0⁻¹·q_t`, position rotated into `q0`'s frame. That is up-axis agnostic, which matters because the up axis differs across this corpus and anything yaw-based would be guessing. `brv` and `bra` are frame-to-frame deltas, already invariant to absolute pose.
+
+Channel count is preserved (7 stays 7, 3 stays 3) so every extractor contract holds. The rotation block of a velocity encoding is the **delta rotation** — still a unit quaternion, sign-normalized for the double cover — not a componentwise difference of two quaternions.
+
+The module is called `input_encoding`, not `encodings`: that name belongs to a stdlib package the interpreter loads at startup, and a local module of that name is silently shadowed.
+
 ## Channel sets
 
 `channels` selects what a window is built from: `full` (quaternion + position, 7 channels, the original) or `position` (3 channels).
@@ -386,7 +400,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **231 passing, ~10s**.
+Current baseline: **256 passing, ~10s**.
 
 ## Performance notes
 

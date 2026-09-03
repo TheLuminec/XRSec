@@ -45,6 +45,17 @@ channels: full
 # measurement - which changes how the work should be described, either way.
 center_position: false
 
+# Input encoding, applied in the data layer so every extractor sees the same
+# transform. Our "architecture doesn't matter" result was measured across backbones
+# that ALSO differ in encoding (bilstm and paper_gnn_bilstm eat raw channels;
+# motion_tdnn derives kinematics), so it cannot separate the two. The literature runs
+# the comparison the other way and reports raw < br < brv < bra.
+#   raw  scene-relative, unchanged
+#   br   pose relative to the window's first frame (head-only approximation)
+#   brv  frame-to-frame delta rotation and linear velocity
+#   bra  the same differencing twice
+encoding: raw
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a
