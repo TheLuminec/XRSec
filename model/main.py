@@ -18,7 +18,7 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 import results_log
 from sweep import run_sweep
 from train import train
-from eval import evaluate_model
+from eval import evaluate_model, window_curve_model
 from utils import plot_boosted_training_history, plot_training_history
 
 def _as_list(value):
@@ -121,6 +121,13 @@ def main(cfg: DictConfig) -> None:
     elif cfg.mode == "test":
         print("=== Starting Testing Mode ===")
         result = evaluate_model(cfg)
+
+    elif cfg.mode == "curve":
+        print("=== Starting Window-Curve Mode ===")
+        # Post-hoc analysis of an existing checkpoint; it writes no results row of its
+        # own, since one run produces a curve rather than a single number.
+        window_curve_model(cfg)
+        return
 
     elif cfg.mode == "sweep":
         print("=== Starting Sweep Mode ===")

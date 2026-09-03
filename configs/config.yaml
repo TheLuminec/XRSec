@@ -1,5 +1,10 @@
 mode: train
 
+# mode=curve only: how many windows to aggregate per side. k=1 reproduces the
+# single-window operating point every existing number was measured at, so the curve
+# is an added dimension rather than a replacement metric. Needs no retraining.
+curve_k: [1, 2, 4, 8, 16]
+
 seed: 67
 epochs: 20
 lr: 0.001

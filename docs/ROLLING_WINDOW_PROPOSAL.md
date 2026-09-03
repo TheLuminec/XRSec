@@ -1,6 +1,27 @@
 # Proposal: strided windows and multi-window scoring
 
-Status: **awaiting approval**. Nothing here is implemented.
+Status: **Part 2 approved and implemented** (`mode=curve`, `model/templates.py`).
+Part 1 held pending Part 2's results, as proposed.
+
+### Bound on what Part 2 can achieve — noticed during implementation
+
+A template is drawn from **one session**, which is the correct choice: mixing sessions
+inside a template would average away the very session variability that cross-session
+evaluation exists to expose. But it follows that averaging k windows reduces only the
+**within-session** component of the error and leaves the **between-session** shift
+untouched — and the between-session shift is precisely what makes cross-session
+verification hard.
+
+So the gain from k is bounded by how much of the error is within-session noise rather
+than between-session offset. If the curve flattens early, that is not a failure of
+the implementation; it is a measurement saying the error is dominated by between-
+session variation, which would itself be worth knowing and would point at
+session-invariant representations rather than more evidence per decision.
+
+A first run on a deliberately undertrained checkpoint (3 epochs, 5 held-out users,
+640 pairs) came out flat: AUC 0.710 at k=1 against 0.712 at k=16. That is far too
+noisy to conclude from and is recorded only so nobody reads the first real curve as a
+surprise.
 
 ## What the pipeline does now
 

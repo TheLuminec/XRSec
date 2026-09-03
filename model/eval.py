@@ -98,6 +98,61 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
         
     return loss, accuracy
 
+def window_curve_model(args, device=None):
+    """
+    Metrics as a function of windows aggregated per side, for a trained checkpoint.
+
+    Reuses everything mode=test already does - rebuild the extractor, recover the
+    training-time normalizer, honour the checkpoint's channel set - and then replaces
+    the single evaluation with a curve over k. Needs no retraining: one forward pass
+    over the evaluation windows serves every k.
+    """
+    from dataset import build_sample_index
+    from templates import format_curve, window_curve
+
+    if device is None:
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
+
+    seq_len = getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10)
+    model, checkpoint = load_checkpoint(args.model_path, device, seq_len, return_checkpoint=True)
+    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'))
+    print(normalizer.describe())
+
+    eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None)
+    exclude_users = getattr(args, "exclude_users", None)
+    swap = getattr(args, "swap_data", False)
+    index = build_sample_index(
+        eval_dirs,
+        sample_time=getattr(args, "sample_time", 1),
+        sample_rate=getattr(args, "sample_rate", 10),
+        exclude_users=exclude_users,
+        swap_data=(not swap if getattr(args, "test_on_excluded", False) else swap),
+        channels=checkpoint.get("channels", str(getattr(args, "channels", "full") or "full")),
+        center_position=bool(getattr(args, "center_position", False)),
+    )
+    normalizer.transform(index)
+
+    # Hydra hands this over as a ListConfig, which is iterable but is not a list
+    # instance, so test for iterability rather than for type.
+    ks = getattr(args, "curve_k", None) or [1, 2, 4, 8, 16]
+    if isinstance(ks, (str, int)):
+        ks = [ks]
+    ks = [int(k) for k in ks]
+
+    rows = window_curve(
+        model, index, device, ks=ks,
+        pairs_per_user=int(getattr(args, "samples_per_user", 512)),
+        seed=getattr(args, "seed", 67),
+        within_dataset_negatives=bool(getattr(args, "within_dataset_negatives", True)),
+        batch_size=int(getattr(args, "batch_size", 512)),
+    )
+
+    print("\nWindows aggregated per side (k=1 is the single-window operating point):")
+    print(format_curve(rows))
+    return rows
+
+
 def evaluate_model(args, device=None):
     """
     Evaluate the model pipeline.
