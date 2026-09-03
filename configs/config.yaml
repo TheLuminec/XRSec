@@ -89,6 +89,11 @@ probes_per_user: 16
 # that is the gallery size of the closest published leave-users-out result (78.5%).
 gallery_sizes: [17, 48, 100]
 
+# Evaluate a checkpoint on the split it was trained under, recovered from the
+# checkpoint itself. Set false only to deliberately score a model on a different set -
+# cross-dataset evaluation, say - and expect to say so when reporting the number.
+use_checkpoint_split: true
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a

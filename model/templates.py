@@ -313,6 +313,13 @@ def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
     cmc = [float((rank <= k).float().mean()) for k in range(1, users + 1)]
 
     matched = {}
+    # A requested size larger than the gallery cannot be honoured. Dropping it quietly
+    # is how a gallery_sizes=[17,48,100] request against a 5-user evaluation set came
+    # back reporting nothing at all rather than saying why.
+    unavailable = sorted({int(n) for n in gallery_sizes if int(n) > users})
+    if unavailable:
+        print(f"  WARNING: gallery sizes {unavailable} exceed the {users} enrolled "
+              f"users and were not measured")
     for size in sorted({int(n) for n in gallery_sizes if 1 < int(n) <= users}):
         scores_at_size = []
         for draw in range(subsets):

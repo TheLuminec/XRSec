@@ -186,3 +186,16 @@ def test_matched_sizes_appear_in_the_formatted_output():
     text = format_cmc(result)
     text.encode("cp1252")
     assert "N=3" in text
+
+
+def test_a_gallery_size_larger_than_the_gallery_is_reported(capsys):
+    """
+    Requesting [17,48,100] against a 5-user evaluation set used to return nothing at
+    all, with no indication that the request had been dropped rather than measured.
+    """
+    index, embeddings = _index(num_users=5)
+    result = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=4, seed=1,
+                       gallery_sizes=(17, 48), subsets=3)
+    assert result["rank1_at_gallery_size"] == {}
+    assert "exceed the 5 enrolled users" in capsys.readouterr().out

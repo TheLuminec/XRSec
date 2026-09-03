@@ -432,7 +432,10 @@ def _print_ranking(records: list[dict]) -> None:
     print(f"SWEEP RESULTS  ({len(completed)} completed, {len(failed)} failed)")
     metric = next((r.get("metric") for r in completed if r.get("metric")), None)
     if metric:
-        note = "" if metric == "selected_test_acc" else "  <- inflated; set val_user_fraction"
+        # Both selected_* metrics are chosen on validation users; only the best_* ones
+        # are a max over evaluations of the set they report.
+        inflated = not str(metric).startswith("selected_")
+        note = "  <- inflated; set val_user_fraction" if inflated else ""
         print(f"ranked on: {metric}{note}")
     print("=" * 78)
 
@@ -556,6 +559,10 @@ def run_sweep(cfg, train_fn=None) -> dict:
             "id": configuration["id"],
             "key": key,
             "fold": fold_index,
+            # Which users this fold held out. A fold number alone does not identify
+            # them, so without this every later evaluation of the fold's checkpoint
+            # silently depends on build_folds producing the same partition forever.
+            "held_out_users": list(held_out or []),
             "extractor": configuration["extractor"],
             "overrides": configuration["overrides"],
             "description": description,

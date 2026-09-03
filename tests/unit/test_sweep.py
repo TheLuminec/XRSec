@@ -591,3 +591,21 @@ def test_code_identity_tracks_content_not_the_git_sha():
     first = results_log.code_identity()
     assert first and len(first) == 10
     assert results_log.code_identity() == first, "must be stable within a process"
+
+
+def test_the_inflated_note_is_only_for_metrics_chosen_on_the_test_set(capsys):
+    """
+    Both selected_* metrics are chosen on validation users. The banner used to compare
+    against selected_test_acc alone, so ranking on selected_test_auc - the default -
+    printed "inflated; set val_user_fraction" on every run that already had it set.
+    """
+    from sweep import _print_ranking
+
+    for metric in ("selected_test_auc", "selected_test_acc"):
+        _print_ranking([{"status": "ok", "best_test_acc": 0.6, "metric": metric,
+                         "description": "d", "id": "i"}])
+        assert "inflated" not in capsys.readouterr().out, metric
+
+    _print_ranking([{"status": "ok", "best_test_acc": 0.6, "metric": "best_test_acc",
+                     "description": "d", "id": "i"}])
+    assert "inflated" in capsys.readouterr().out

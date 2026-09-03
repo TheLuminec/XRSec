@@ -98,6 +98,53 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
         
     return loss, accuracy
 
+
+def _resolve_eval_split(args, checkpoint):
+    """
+    Decide which users to evaluate on, and say so out loud.
+
+    A checkpoint written after this change records the split it was trained under, so
+    evaluating it is correct by construction. One written before does not, and the old
+    behaviour was to fall back to whatever the config happened to hold - silently, and
+    towards the default 5-user split that CLAUDE.md documents as unusually easy. That
+    produces a healthy-looking run with a flattering number and no way to notice.
+    """
+    split = checkpoint.get("eval_split") if isinstance(checkpoint, dict) else None
+    use_recorded = bool(getattr(args, "use_checkpoint_split", True))
+
+    if split and use_recorded:
+        eval_dirs = split.get("test_dirs") or split.get("data_dirs")
+        exclude_users = split.get("exclude_users") or []
+        swap = bool(split.get("swap_data", False))
+        on_excluded = bool(split.get("test_on_excluded", False))
+        print(f"Evaluation split recovered from the checkpoint: "
+              f"{len(exclude_users)} named users, test_on_excluded={on_excluded}")
+        for key in ("sample_time", "sample_rate", "encoding", "resample", "center_position"):
+            recorded, current = split.get(key), getattr(args, key, None)
+            if recorded is not None and current is not None and str(recorded) != str(current):
+                print(f"  WARNING: {key} was {recorded} at training time, {current} now")
+        return eval_dirs, exclude_users, swap, on_excluded
+
+    eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None)
+    exclude_users = getattr(args, "exclude_users", None) or []
+    swap = bool(getattr(args, "swap_data", False))
+    on_excluded = bool(getattr(args, "test_on_excluded", False))
+    if not split:
+        print("-" * 78)
+        print("WARNING: this checkpoint records no evaluation split, so the one below "
+              "comes from")
+        print("         the CONFIG and is UNVERIFIED. If it is the default split, the "
+              "number will")
+        print("         be on 5 users - a split CLAUDE.md documents as unusually easy - "
+              "and will")
+        print("         not be the held-out users this model was actually trained "
+              "against.")
+        print(f"         config split: {len(exclude_users)} named users, "
+              f"test_on_excluded={on_excluded}")
+        print("-" * 78)
+    return eval_dirs, exclude_users, swap, on_excluded
+
+
 def window_curve_model(args, device=None):
     """
     Metrics as a function of windows aggregated per side, for a trained checkpoint.
@@ -119,15 +166,13 @@ def window_curve_model(args, device=None):
     normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'))
     print(normalizer.describe())
 
-    eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None)
-    exclude_users = getattr(args, "exclude_users", None)
-    swap = getattr(args, "swap_data", False)
+    eval_dirs, exclude_users, swap, on_excluded = _resolve_eval_split(args, checkpoint)
     index = build_sample_index(
         eval_dirs,
         sample_time=getattr(args, "sample_time", 1),
         sample_rate=getattr(args, "sample_rate", 10),
         exclude_users=exclude_users,
-        swap_data=(not swap if getattr(args, "test_on_excluded", False) else swap),
+        swap_data=(not swap if on_excluded else swap),
         channels=checkpoint.get("channels", str(getattr(args, "channels", "full") or "full")),
         center_position=bool(getattr(args, "center_position", False)),
     )

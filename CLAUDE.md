@@ -344,11 +344,12 @@ Quaternions are put in a common hemisphere before averaging (q and -q are the sa
 rotation, so averaging across a sign flip cancels instead of smoothing) and
 renormalized after; measured norm stays 1.0000.
 
-Default is `nearest` so old comparisons stay like-for-like. **Set `resample=bin` for
-anything measuring velocity or acceleration**, and prefer it generally - it is strictly
-better-conditioned input. It also removes the reason to drop low-rate datasets from a
-run, which used to be the only workaround and cost identities, the one thing known to
-be binding.
+Default is `nearest`, and **measurement says keep it** - `bin` lost on all four
+encodings over 40 runs, worst on `raw`. See the screen above. The duplicate frames are
+real; removing them costs more than they do, because averaging also removes
+high-frequency content that carries identity. `bin` remains available and is the right
+choice if a future result depends on honest velocity, but it is not the better default
+and the "strictly better-conditioned input" reasoning was wrong.
 
 ### Normalization and negative sampling
 
@@ -371,6 +372,51 @@ Measured on six datasets (238 identities, evaluated on the same 5 held-out users
 ## Input encodings
 
 `encoding` (`raw` | `br` | `brv` | `bra`) transforms windows in the **data layer**, so every extractor sees the same input. `model/input_encoding.py`.
+
+**MEASURED, and the literature ordering does not hold here.** 40 runs, `bilstm`, 5
+stratified folds, 419 identities, all 8 datasets (sweep `6cc4e6f506`,
+`eval_positive_fraction` 0.500 throughout):
+
+| encoding | resample | selected AUC | selected acc |
+| --- | --- | --- | --- |
+| **raw** | **nearest** | **0.7284 +-0.018** | **0.6727 +-0.018** |
+| raw | bin | 0.7086 +-0.011 | 0.6544 +-0.013 |
+| bra | nearest | 0.5970 +-0.009 | 0.5697 +-0.005 |
+| brv | nearest | 0.5796 +-0.010 | 0.5553 +-0.007 |
+| br | nearest | 0.5713 +-0.013 | 0.5472 +-0.008 |
+
+**raw >> bra > brv > br**, against the published **raw < br < brv < bra**. raw beats the
+best alternative by 0.13 AUC - roughly 7x the largest fold sd in the table, so this is
+not a spread artefact. Our existing default was already the best of the eight.
+
+Why the inversion is plausible rather than suspicious: **~78% of what this model does is
+absolute head position**, and `br`/`brv`/`bra` all remove exactly that. The published
+ordering comes from setups with controllers and a real body frame, where the
+body-relative encodings preserve information ours cannot reconstruct from a head alone.
+Removing the dominant cue costs more than the derived kinematics return.
+
+**This retires the confound rather than resolving it in the feared direction.**
+Architecture was measured across backbones that did not share an encoding, so
+"architecture is worth ~0" could have been an encoding effect in disguise. Encoding
+turns out to matter a great deal - and we were already at its maximum, so the
+architecture finding stands.
+
+### `resample=bin` loses, and the duplicate-frame story does not survive
+
+Paired by fold, `bin - nearest` on AUC: raw **-0.0198** (t(4)=-2.15), br -0.0117
+(-2.33), brv -0.0060 (-1.73), bra -0.0040 (-1.74). **bin lost 1/5 folds on every arm.**
+
+The prediction recorded before the run was that `bin` would help `brv`/`bra`
+substantially and `raw`/`br` barely, because only the delta encodings read consecutive
+frames. **The observed interaction is the opposite in both sign and rank**: bin hurts
+everything, hurts `raw` *most* and `bra` *least*. The consistent reading is that
+bin is a low-pass filter that removes high-frequency content carrying identity, and the
+delta encodings lose least because they had already discarded most of it.
+
+So the 50.5% duplicate frames are real and are **not** what was holding `brv`/`bra`
+back. Keep `resample=nearest` as the default. This does not vindicate nearest-sampling
+on principle - it says the encodings that depend on consecutive frames lose here to one
+that does not, for a more basic reason than sampling.
 
 **Why it is an axis and not an extractor detail.** The result "extractor architecture is worth ~0, spread under one point across three backbones over ten folds" was measured across backbones that do not share an encoding: `bilstm` and `paper_gnn_bilstm` consume raw channels while `motion_tdnn` derives kinematics internally. Architecture and encoding varied together, so that experiment cannot separate them. The literature runs the comparison the other way — architecture fixed, encoding varied — and reports **raw < br < brv < bra**. Neither result answers the other. One sweep over {extractors} × {encodings} with `sweep.folds` answers both.
 

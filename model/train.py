@@ -429,6 +429,29 @@ def _run_standard_training(args, device):
             # Carried so evaluation applies the training-time transform rather than
             # re-deriving statistics from held-out data.
             "normalizer": normalizer.state_dict(),
+            # Which users this model never saw, and how its windows were built. A
+            # sweep checkpoint used to carry no record of its own fold, so evaluating
+            # one fell back to whatever split the config happened to hold - silently,
+            # and towards the default 5-user split that CLAUDE.md documents as
+            # unusually easy. Every later analysis otherwise depends on build_folds
+            # producing an identical partition forever.
+            "eval_split": {
+                "data_dirs": [str(d) for d in (getattr(args, "data_dirs", None) or [])],
+                "test_dirs": [str(d) for d in (getattr(args, "test_dirs", None) or [])],
+                "exclude_users": [str(u) for u in (getattr(args, "exclude_users", None) or [])],
+                "swap_data": bool(getattr(args, "swap_data", False)),
+                "test_on_excluded": bool(getattr(args, "test_on_excluded", False)),
+                "max_users": getattr(args, "max_users", None),
+                "sample_time": int(args.sample_time),
+                "sample_rate": int(args.sample_rate),
+                "window_stride": getattr(args, "window_stride", None),
+                "resample": str(getattr(args, "resample", "nearest") or "nearest"),
+                "encoding": str(getattr(args, "encoding", "raw") or "raw"),
+                "center_position": bool(getattr(args, "center_position", False)),
+                "normalize": str(getattr(args, "normalize", "none") or "none"),
+                "within_dataset_negatives": bool(getattr(args, "within_dataset_negatives", True)),
+                "cross_session_positives": bool(getattr(args, "cross_session_positives", False)),
+            },
         },
     )
 
