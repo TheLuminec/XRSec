@@ -490,9 +490,23 @@ still improving when training stops. Both naive readings are wrong:
   runs. The median is not the number that governs this - the tail is.
 
 `early_stopping_patience` handles both: early peakers stop, late ones keep going. 0 by
-default, so nothing already recorded changes. At patience ~6 most runs would stop around
-epoch 13 while the tail runs to the cap, which is the compute saving without the
-censoring - worth setting for sweeps, where run count is the binding cost.
+default, so nothing already recorded changes.
+
+**Do not use it on an axis nobody has characterised yet.** Patience truncates
+slow-converging runs, so if a treatment converges slower - a lower margin, a smaller
+scale, a longer window - its runs are exactly the ones cut short, and the sweep reports
+that setting as worse when it was only stopped earlier. **That is a bias correlated with
+the treatment**, which is worse than spending the wall clock, and it would be invisible
+in the results table. Use patience on axes whose epoch distribution is already known to
+sit well inside the cap; on a first look at a new axis, leave it at 0.
+
+**The recorded distribution is right-censored and this is not a detail.** p90 is epoch 18
+against a cap of 20 and 5% select 19 or 20, so for the top decile we do not know what
+epoch those runs would have chosen with room to run. Every "best epoch" statistic above
+is therefore a lower bound, and some fraction of our existing results may simply be
+under-trained. Raising `epochs` to 30 decensors it, and is the right move for a first
+look at a new axis - it costs 50% more per run and removes a bias rather than trading
+one for another.
 
 ## We spend a quarter of our identities choosing an epoch
 
@@ -604,7 +618,106 @@ never seen at all.
 `balance_identities: true` draws each window with probability inversely proportional to
 its identity's count, keeping the epoch the same size. Off by default.
 
-**Piloted, and it does not work.** 3 stratified folds on the pooled corpus,
+**The first pilot of this was invalid and its result must not be cited.** It ran on the
+config's default `data_dirs`, which is **VR_User_Behavior alone** - a corpus where every
+identity has 1049 or 1050 windows, `max/min` = **1.0x**, effective identity count
+**48/48 = 100%**. There is no imbalance there to correct, so balanced sampling is a
+mathematical no-op and the only thing it can contribute is resampling-with-replacement
+noise. The -0.030 it produced measured that noise, not the hypothesis.
+
+This is the same failure shape as the `mode=curve` split fallback: a config default
+silently standing in for the intended experiment, producing a plausible number with
+nothing to flag it. **Pass `data_dirs` explicitly for any pooled-corpus run** - the
+default is single-dataset and always has been.
+
+Rerunning on the pooled 7-dataset corpus, where the 87.5x imbalance actually lives.
+Until that lands this is **untested**, and the prediction registered beforehand
+(+0.005 to +0.02) still stands unmeasured.
+
+**Why it might still cost rather than pay**, predicted before either pilot: inverse-
+frequency sampling draws *with replacement*, so a well-recorded identity's 1050 windows
+get sampled far fewer times than they exist. Effective identity count rises while the
+number of *distinct* windows seen per epoch falls. Fixing diversity by discarding data
+may not be a trade worth making. If it does fail on the pooled corpus, the variants that
+avoid the mechanism are sqrt-frequency weighting - the standard compromise - or capping
+frequent identities without upsampling rare ones.
+
+## Tried and measured at zero: adaptive score normalization
+
+`model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes
+one operating point serves every identity - and it does not, since some sit in a dense
+part of the space and score high against everyone. AS-Norm is the standard fix in
+speaker verification: rescale each score by how surprising it is for the two sides
+involved, using the top-k similarities of each against an impostor cohort. It needs no
+retraining and no new data, only embeddings already computed.
+
+**Measured, and it does nothing here.** Spare `pair_bce` checkpoint, 100 unseen
+Head_and_Gaze users, cosine scores, cohort built per-identity so window-count imbalance
+cannot dominate it:
+
+| cohort | best dAUC |
+| --- | --- |
+| training users, different dataset | **-0.0014** (negative at every top_k) |
+| domain-matched, users disjoint from the trials | **+0.0025** at top_k=200 |
+
++0.0025 on 13,200 pairs is inside the binomial error alone (~0.008), let alone the
+0.037 fold spread. Both readings are zero. The one real signal is that a cohort from a
+*different dataset* is actively worse than none, which is consistent with the
+cross-dataset normalization problems this corpus has everywhere else.
+
+**Do not spend sweep runs on this.** The one caveat worth keeping is that it was
+measured on the checkpoint whose own control scores 0.208 on users it was trained on -
+AS-Norm exploits embedding geometry, and that space is barely organised, so there may
+be nothing there to exploit rather than nothing to gain. It is post-hoc and costs zero
+training runs, so it is worth one line of curiosity next time a properly trained
+`identity_softmax` checkpoint is scored, and nothing more than that.
+
+## Two untuned levers on the objective
+
+The objective is the only thing measured to give a large gain (+6.5). Both of these
+sit inside it and neither has ever been varied.
+
+### `identity_margin` / `identity_scale` were never swept
+
+AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
+recorded runs** - they were not even columns in the results log until now. These are
+the two hyperparameters that decide how hard the objective pushes identities apart, and
+0.35/30 are the values the face-recognition literature tuned against corpora with tens
+of thousands of identities. We have 343. There is no reason to think the same setting
+is right, and it is the cheapest untested thing on the board.
+
+### Window counts per identity span 77x, and that costs ~38% of our identities
+
+`WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
+identity's influence on the gradient is proportional to how much data it happens to
+have. Measured on the pooled 7-dataset corpus, at both window lengths because window
+count is `floor(duration / sample_time)` and a short session can round down to nothing:
+
+| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
+| --- | --- | --- |
+| identities with windows | 312 | 312 |
+| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
+| max/min | 77.6x | **87.5x** |
+| top 10% hold | 23.6% | 23.9% |
+| bottom 50% hold | 19.1% | 18.6% |
+| **effective identity count** | 193 of 312 | **190 of 312** |
+
+No identity drops out at the longer window, and the imbalance is marginally *worse*
+there, so the effect is a property of the corpus rather than of one window length.
+
+The last row is the inverse participation ratio: the number of *evenly represented*
+identities this corpus is worth under uniform window sampling. **We are discarding
+about 39% of our identity diversity to sampling imbalance** - on the one axis that has
+been measured to bind, and for free, without needing a single new user.
+
+AM-Softmax with imbalanced classes separates frequent identities well and rare ones
+poorly, which is the wrong trade when the entire task is generalising to identities
+never seen at all.
+
+`balance_identities: true` draws each window with probability inversely proportional to
+its identity's count, keeping the epoch the same size. Off by default.
+
+**Piloted: no measurable benefit at either window length, and a possible cost at the one we run.** 3 stratified folds on the pooled corpus,
 `identity_softmax`, `bilstm`, paired by fold (laptop pilot: `batch_size=256`, so the
 absolute numbers do not sit beside the main sweeps - the paired difference does):
 
@@ -615,9 +728,11 @@ absolute numbers do not sit beside the main sweeps - the paired difference does)
 
 The prediction registered beforehand was **+0.005 to +0.02**. The measured result at the
 configuration we actually run is **-0.030**, past the -0.01 threshold agreed for taking
-a negative seriously rather than shrugging at it. Both arms have fold sd ~0.039 on 3
-folds so neither is individually significant, and they disagree in sign - but there is
-no case here for spending 10 more runs on a positive.
+a negative seriously. **The two arms disagree in sign at a fold sd of 0.039**, so the
+defensible statement is "no measurable benefit at either window length, and a possible
+cost at the one we run" - *not* that balancing hurts. The mechanism below is what makes
+the negative plausible; the measurement alone does not establish it. Either way there is
+no case for spending 10 more runs hunting a positive.
 
 **Why it plausibly costs rather than pays**, and this was predicted before the pilot ran:
 inverse-frequency sampling draws *with replacement*, so a well-recorded identity's 1050
