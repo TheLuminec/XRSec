@@ -185,13 +185,27 @@ What this does and does not mean:
 
 Behavioural share of total headroom: **22.3% → 44.7%**. AUC agrees independently (centred 0.553 → 0.603). Seven times the identities buys absolute position *nothing* and doubles movement — so **the ceiling on the behavioural component is data, not modelling**, consistent with three architectures tying and every gain coming from the objective and now identity count. It may not have plateaued at 343.
 
-**The 48-identity control run was attempted and is not yet conclusive.** On AUC (which is unaffected by label balance) the behavioural headroom above the control floor went +0.103 at 343 identities to **−0.090 at 48** — the centred arm does not degrade, it disappears. Diversity is held constant by construction, so that points at identity count. Three reasons not to bank it yet:
+**The behavioural component is identity-count-limited — the diversity confound is resolved.** `max_users=48` subsamples the pooled corpus back to 48 identities stratified across the same 7 datasets, holding dataset diversity fixed and varying only identity count. Balanced pair sets in training and evaluation on both halves (`eval_positive_fraction` 0.5000, control at chance on both metrics):
 
-1. **The 48-identity pair sets were 69% positive**, because of the `within_dataset_negatives` bug fixed in the same commit as this note — users who were the sole member of their dataset in a fold had their positives inflated to a double share. The *training* pairs were skewed too, so the two arms differ in pair balance as well as identity count. That is a second confound, not just a broken accuracy column.
-2. Not paired — different user subsets, so mean ± sd only, and the 48-identity spread is 3–5× the 343-identity spread.
-3. Centred AUC came out at 0.4153, *below* chance rather than at it, which is not a credible point estimate on 5 folds of 9 users.
+| | 343 ids acc | AUC | 48 ids acc | AUC |
+| --- | --- | --- | --- | --- |
+| keeps position | 0.6722 | 0.7264 | 0.6228 | 0.6879 |
+| centred (movement only) | 0.5765 | 0.6029 | **0.4906** | **0.4700** |
+| random control | 0.4991 | 0.4993 | 0.4988 | 0.4973 |
 
-Rerun after the balance fix before quoting it. **Accuracy is invalid for that run entirely**: the random control scored 0.6886 accuracy at AUC 0.5056 — a constant predictor on a 69/31 set, outscoring both real configurations.
+Headroom above the measured control floor:
+
+| | accuracy | AUC |
+| --- | --- | --- |
+| keeps position | +0.1731 → +0.1240 (keeps ~72%) | +0.2271 → +0.1906 |
+| centred | +0.0774 → **−0.0082** (keeps none) | +0.1036 → **−0.0273** |
+
+**At 48 identities the behavioural arm is at chance.** The anthropometric arm loses about a quarter of its headroom over the same 7× reduction; the behavioural arm loses all of it. So the behavioural signal is not merely helped by more identities — below some threshold between 48 and 343 it is not measurable at all, while head height is nearly as identifiable at 48 as at 343.
+
+Two consequences worth acting on:
+
+1. **The behavioural ceiling is data, not modelling.** Consistent with three architectures tying, `motion_gram` losing, and every gain coming from the objective and identity count. It may not have plateaued at 343 — that is now a live question rather than a rhetorical one.
+2. **Every single-dataset behavioural result in this repo is uninterpretable.** VR_User_Behavior alone is 48 identities. The 0.535/0.541 centred figures measured there sit at roughly the level this table shows is indistinguishable from chance, so they should not be quoted as evidence of a behavioural component.
 
 **The 343-identity comparison is also confounded and should not be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
 
