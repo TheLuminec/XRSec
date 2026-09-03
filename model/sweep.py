@@ -348,12 +348,17 @@ def _write_state(path: Path, payload: dict) -> None:
         json.dump(payload, handle, indent=2, sort_keys=True, default=str)
 
 
-#: Ranking metric, best first. `selected_test_acc` is the test accuracy at the epoch
-#: chosen on a disjoint validation split; `best_test_acc` is the max over epochs of
-#: the reported set, which is inflated by about +0.02 by construction and is also
-#: sensitive to pair-set balance. Ranking on the latter is how a sweep came to print
-#: an order that disagreed with its own honest column.
-_RANKING_METRICS = ("selected_test_acc", "best_test_acc")
+#: Ranking metric, best first.
+#:   selected_test_auc  AUC at the validation-chosen epoch. Threshold-free and
+#:                      insensitive to pair balance, which is why it leads: accuracy
+#:                      has broken twice on this data, once through selection
+#:                      inflation and once through a 69/31 pair set where a constant
+#:                      predictor outscored every real configuration.
+#:   selected_test_acc  accuracy at that same epoch. Meaningful, but only on a set
+#:                      whose balance is what was requested.
+#:   best_test_acc      max over epochs of the reported set. Inflated by ~+0.02 by
+#:                      construction; the last resort, and flagged as such.
+_RANKING_METRICS = ("selected_test_auc", "selected_test_acc", "best_test_acc")
 
 
 def _best_accuracy(result) -> float | None:
@@ -488,6 +493,9 @@ def run_sweep(cfg, train_fn=None) -> dict:
     # computed a different way. Reusing it would silently skip every run and report
     # someone else's numbers, so refuse rather than trust the directory name.
     stored_identity = state.get("config_identity")
+    stored_code = state.get("code_identity")
+    current_code = results_log.code_identity()
+
     if state and stored_identity is not None and stored_identity != sweep_id:
         print(f"WARNING: state at {state_path} was written for configuration "
               f"{stored_identity}, not {sweep_id}. Ignoring it and starting fresh.")
@@ -495,6 +503,15 @@ def run_sweep(cfg, train_fn=None) -> dict:
     elif state and stored_identity is None:
         print(f"WARNING: state at {state_path} predates configuration identities and "
               "cannot be verified. Ignoring it and starting fresh.")
+        state = {}
+    elif state and stored_code != current_code:
+        # The config is identical but the code is not. Reusing these records would
+        # report pre-change numbers as though they came from the current code - which
+        # is how three launches were lost in one day, each time silently confirming
+        # what had been measured before the fix.
+        print(f"WARNING: state at {state_path} was written by code {stored_code or 'unknown'}, "
+              f"not {current_code}. The configuration matches but the implementation "
+              "changed, so those results are not this experiment's. Starting fresh.")
         state = {}
 
     completed = state.get("records", {}) if resume else {}
@@ -560,7 +577,8 @@ def run_sweep(cfg, train_fn=None) -> dict:
             traceback.print_exc()
 
         records[key] = record
-        _write_state(state_path, {"sweep_id": sweep_id, "config_identity": sweep_id, "records": records})
+        _write_state(state_path, {"sweep_id": sweep_id, "config_identity": sweep_id,
+                            "code_identity": results_log.code_identity(), "records": records})
 
     if fold_users is None:
         ordered = [records[c["id"]] for c in configurations if c["id"] in records]

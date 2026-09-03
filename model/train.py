@@ -22,6 +22,30 @@ from user_profile import channel_count
 from utils import save_checkpoint
 
 
+BOOSTING_RETIRED = """boosting is retired and will not run.
+
+It has three protocol problems that were fixed for standard training and never for
+it, and one it cannot fix:
+
+  1. Best-round selection reads the same held-out set it reports, which inflates the
+     result by about +0.02 (measured: a random-output extractor scores 0.4973 at its
+     final epoch but 0.5173 as a best-of-20). Standard training solves this with
+     val_user_fraction; boosting has no equivalent.
+  2. boosting.artifact_root is relative, so under hydra job.chdir it lands inside a
+     fresh run directory and boosting.resume never finds prior state.
+  3. It is pairwise-only, so objective=identity_softmax does not apply - and that
+     objective is worth +6.5 points on every backbone, 5/5 folds. Any boosted number
+     is therefore not comparable to a current one.
+
+Across every recorded run it never produced a competitive result. Use standard
+training:
+
+  mode=train objective=identity_softmax val_user_fraction=0.25
+
+The code remains in model/boost_train.py for reference. If you want it back, the
+three items above are what to fix first."""
+
+
 def _namespaceify(value):
     if isinstance(value, dict):
         return SimpleNamespace(**{key: _namespaceify(inner) for key, inner in value.items()})
@@ -230,6 +254,11 @@ def run_training(
             history["best_epoch"] = best_epoch
             history["best_test_auc"] = metrics["auc"]
             history["best_test_eer"] = metrics["eer"]
+            # Same values, named for what they are: the metrics at the epoch chosen
+            # without looking at the test set. AUC and EER are threshold-free and
+            # insensitive to pair balance, which is where accuracy has failed twice.
+            history["selected_test_auc"] = metrics["auc"]
+            history["selected_test_eer"] = metrics["eer"]
             if val_loader is not None:
                 history["best_val_acc"] = selection_metric
             save_checkpoint(
@@ -432,6 +461,7 @@ def train(args):
     print(f"Using device: {device}")
 
     if getattr(args.boosting, "enabled", False):
+        raise RuntimeError(BOOSTING_RETIRED)
         return run_boosted_training(
             args,
             device,

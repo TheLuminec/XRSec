@@ -14,6 +14,7 @@ every failure here is caught and downgraded to a warning.
 from __future__ import annotations
 
 import csv
+import hashlib
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -45,6 +46,8 @@ FIELDS = [
     "selected_test_acc",
     "best_test_acc",
     "best_val_acc",
+    "selected_test_auc",
+    "selected_test_eer",
     "best_test_auc",
     "best_test_eer",
     "best_epoch",
@@ -77,6 +80,7 @@ FIELDS = [
     "checkpoint",
     "run_dir",
     "git_sha",
+    "code_identity",
 ]
 
 
@@ -99,6 +103,43 @@ def _git_sha() -> str:
         return revision
     except Exception:
         return ""
+
+
+_CODE_ROOT = REPO_ROOT / "model"
+_code_identity_cache: str | None = None
+
+
+def code_identity() -> str:
+    """
+    Content hash of every .py under model/, as a short digest.
+
+    A config digest is not enough to identify an experiment: the code that turns
+    config into numbers is half of it. A bugfix changes no config key, so a sweep
+    resumed after one matched its old state file, skipped every run, and re-printed
+    the pre-fix numbers under the new banner. That cost three launches in one day and
+    it fails in the direction of confirming whatever was measured before.
+
+    Content rather than the git SHA, because the tree is routinely dirty and every
+    dirty state would otherwise share one identity - which is exactly the collision
+    being prevented. A comment-only edit does invalidate resume; that trade is
+    deliberate, since a false reuse costs a wrong answer and a false invalidation
+    costs recompute.
+    """
+    global _code_identity_cache
+    if _code_identity_cache is not None:
+        return _code_identity_cache
+
+    try:
+        digest = hashlib.sha1()
+        for path in sorted(_CODE_ROOT.rglob("*.py")):
+            if "__pycache__" in path.parts:
+                continue
+            digest.update(str(path.relative_to(_CODE_ROOT)).replace("\\", "/").encode("utf-8"))
+            digest.update(hashlib.sha1(path.read_bytes()).digest())
+        _code_identity_cache = digest.hexdigest()[:10]
+    except Exception:
+        _code_identity_cache = ""
+    return _code_identity_cache
 
 
 def _relative_to_repo(path) -> str:
@@ -169,6 +210,8 @@ def summarize(mode: str, result) -> dict:
         "eval_positive_fraction": history.get("eval_positive_fraction"),
         "best_val_acc": history.get("best_val_acc"),
         "best_test_auc": history.get("best_test_auc"),
+        "selected_test_auc": history.get("selected_test_auc"),
+        "selected_test_eer": history.get("selected_test_eer"),
         "best_test_eer": history.get("best_test_eer"),
         "best_epoch": history.get("best_epoch"),
         "epochs_run": len(history.get("train_loss") or []),
@@ -276,6 +319,7 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "checkpoint": _relative_to_repo(cfg.model_path if mode == "test" else cfg.save_path),
             "run_dir": _relative_to_repo(Path.cwd()),
             "git_sha": _git_sha(),
+            "code_identity": code_identity(),
         }
         if boosting_enabled:
             row.update({

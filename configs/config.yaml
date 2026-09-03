@@ -121,6 +121,7 @@ model_path: auto
 graph: true
 graph_path: auto
 
+# RETIRED. enabled=true refuses with an explanation; see CLAUDE.md.
 boosting:
   enabled: false
   rounds: 10

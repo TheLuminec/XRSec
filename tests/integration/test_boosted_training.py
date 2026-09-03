@@ -44,51 +44,36 @@ def _base_args(tmp_path, boosting_enabled):
     )
 
 
-def test_boosted_training_creates_round_artifacts(tmp_path):
+def test_boosting_is_retired_and_refuses_to_run(tmp_path):
+    """
+    Boosting is retired rather than fixed: best-round selection reads the set it
+    reports, its artifact root cannot resume, and it is pairwise-only so the
+    identity_softmax objective (+6.5 points) does not apply. A boosted number is
+    therefore not comparable to a current one, so it must refuse rather than produce
+    one.
+    """
+    import pytest
+
     args = _base_args(tmp_path, boosting_enabled=True)
 
-    result = train(args)
+    with pytest.raises(RuntimeError, match="boosting is retired"):
+        train(args)
 
-    artifact_root = pathlib.Path(args.boosting.artifact_root)
-    assert result["mode"] == "boosted"
-    assert len(result["round_histories"]) == 2
-    assert (artifact_root / "rounds" / "round_000_best.pth").exists()
-    assert (artifact_root / "rounds" / "round_000_last.pth").exists()
-    assert (artifact_root / "rounds" / "round_001_best.pth").exists()
-    assert (artifact_root / "rounds" / "round_001_last.pth").exists()
-    assert pathlib.Path(args.save_path).exists()
-    assert not (artifact_root / "sample_index.pt").exists()
-    assert not (artifact_root / "validation_pairs.pt").exists()
-    assert not (artifact_root / "rounds" / "round_000_train_pairs.pt").exists()
-
-    with (artifact_root / "boost_state.json").open("r", encoding="utf-8") as handle:
-        state = json.load(handle)
-
-    assert state["mode"] == "complete"
-    assert len(state["round_summaries"]) == 2
-    assert state["best_checkpoint"].endswith(".pth")
+    assert not pathlib.Path(args.save_path).exists(), "a retired path must not write artifacts"
 
 
-def test_boosted_training_is_reproducible_from_seed(tmp_path):
-    run_a = _base_args(tmp_path / "run_a", boosting_enabled=True)
-    run_b = _base_args(tmp_path / "run_b", boosting_enabled=True)
+def test_the_refusal_explains_what_to_use_instead(tmp_path):
+    import pytest
 
-    result_a = train(run_a)
-    result_b = train(run_b)
+    from train import BOOSTING_RETIRED
 
-    assert [summary["best_epoch"] for summary in result_a["round_summaries"]] == [
-        summary["best_epoch"] for summary in result_b["round_summaries"]
-    ]
-    assert [summary["best_test_acc"] for summary in result_a["round_summaries"]] == [
-        summary["best_test_acc"] for summary in result_b["round_summaries"]
-    ]
-    assert [summary["train_pairs"] for summary in result_a["round_summaries"]] == [
-        summary["train_pairs"] for summary in result_b["round_summaries"]
-    ]
-    assert [summary["manifest_meta"] for summary in result_a["round_summaries"]] == [
-        summary["manifest_meta"] for summary in result_b["round_summaries"]
-    ]
-    assert pathlib.Path(result_a["best_checkpoint"]).name == pathlib.Path(result_b["best_checkpoint"]).name
+    with pytest.raises(RuntimeError) as raised:
+        train(_base_args(tmp_path, boosting_enabled=True))
+
+    message = str(raised.value)
+    assert "identity_softmax" in message, "the refusal must name the supported path"
+    assert "val_user_fraction" in message
+    assert message == BOOSTING_RETIRED
 
 
 def test_standard_training_path_still_saves_checkpoint(tmp_path):

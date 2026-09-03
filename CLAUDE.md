@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
-Current state: the defensible headline is **0.669** on unseen users (chance = 0.50) — `bilstm`, `objective=identity_softmax`, cross-session positives, validation-selected epoch, averaged over 5 leave-users-out folds on VR_User_Behavior. That is the only figure that has survived all three corrections below; earlier numbers in this file and in `results/runs.csv` predate one or more of them. A historical 0.85 exists but its configuration was lost and it has not been reproduced.
+Current state: the defensible headline is **0.669** on unseen users (chance = 0.50) — `bilstm`, `objective=identity_softmax`, cross-session positives, validation-selected epoch, averaged over 5 leave-users-out folds on VR_User_Behavior. That is the only figure that has survived all three corrections below; earlier numbers in this file and in `results/runs.csv` predate one or more of them. A historical 0.85 was **retired** rather than chased: its configuration was lost, it never reproduced, and the corrected protocol cannot account for it. Stacking every known inflation — the easy fixed split, same-session positives, best-of-epochs selection — does not plausibly reach it, so it was either a materially different setup or a leak. Do not treat it as a target; it makes every honest number look like a regression.
 
 What moved it, measured with paired folds:
 
@@ -346,7 +346,7 @@ Both are tracked per epoch into `history` (`test_auc`, `test_eer`) and recorded 
 
 ## Results log
 
-`model/results_log.py` appends one row per run to `results/runs.csv` (absolute path, anchored to the repo root so `job.chdir` can't misplace it). **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
+`model/results_log.py` appends one row per run to `results/runs.csv` (absolute path, anchored to the repo root so `job.chdir` can't misplace it). **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: the file is migrated in place, existing rows are backfilled with blanks, and columns dropped from `FIELDS` are retained rather than deleted. Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 
@@ -360,11 +360,16 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 - Deleting `.cache/` is always safe. Entries for superseded signatures are never garbage-collected, so it grows across resolutions (~100MB for two resolutions of one dataset).
 - The cache is only valid because sampling is deterministic (`Sampler` is always built with `index_randomness=0`). **If per-epoch index jitter is ever enabled, the cache must be bypassed** or it will freeze one fixed augmentation.
 
+## Retired
+
+- **boosting** — `boosting.enabled=true` refuses with an explanation. Best-round selection reads the set it reports (~+0.02 inflation, no `val_user_fraction` equivalent), `boosting.artifact_root` is relative so resume never worked, and it is pairwise-only so `identity_softmax` (+6.5) cannot apply. No recorded boosted run was ever competitive. Code stays in `model/boost_train.py` for reference.
+- **the historical 0.85** — never reproduced, configuration lost, and the corrected protocol cannot account for it even stacking every known inflation. Not a target.
+
 ## Known-broken
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **201 passing, ~26s**.
+Current baseline: **204 passing, ~24s**.
 
 ## Performance notes
 

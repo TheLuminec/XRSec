@@ -546,3 +546,48 @@ def test_ranking_falls_back_when_no_validation_split_was_used(tmp_path):
     result = sweep.run_sweep(cfg, train_fn=lambda c: _history(0.62))
     assert result["best"]["best_test_acc"] == pytest.approx(0.62)
     assert result["best"]["metric"] == "best_test_acc"
+
+
+def test_state_written_by_different_code_is_refused(tmp_path, capsys, monkeypatch):
+    """
+    The third instance of the same class: a bugfix changes no config key, so the
+    config identity matched, resume reused the old records, and the sweep re-printed
+    pre-fix numbers as though they were the fix's. Identity is config AND code.
+    """
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    calls = []
+
+    def counting(run_cfg):
+        calls.append(1)
+        return _history(0.6)
+
+    monkeypatch.setattr(sweep.results_log, "code_identity", lambda: "codeaaaaaa")
+    sweep.run_sweep(cfg, train_fn=counting)
+    assert len(calls) == 1
+
+    # Same config, different implementation.
+    monkeypatch.setattr(sweep.results_log, "code_identity", lambda: "codebbbbbb")
+    sweep.run_sweep(cfg, train_fn=counting)
+
+    assert len(calls) == 2, "a code change must invalidate resume"
+    assert "the implementation" in capsys.readouterr().out
+
+
+def test_state_written_by_the_same_code_still_resumes(tmp_path, monkeypatch):
+    """Resume must survive an unchanged implementation, or it is useless."""
+    cfg = _cfg(tmp_path, grid={"lr": [0.01]})
+    calls = []
+    monkeypatch.setattr(sweep.results_log, "code_identity", lambda: "codeaaaaaa")
+
+    for _ in range(2):
+        sweep.run_sweep(cfg, train_fn=lambda c: (calls.append(1), _history(0.6))[1])
+    assert len(calls) == 1
+
+
+def test_code_identity_tracks_content_not_the_git_sha():
+    """The tree is routinely dirty, so every dirty state would share one git SHA."""
+    import results_log
+
+    first = results_log.code_identity()
+    assert first and len(first) == 10
+    assert results_log.code_identity() == first, "must be stable within a process"
