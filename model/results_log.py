@@ -15,16 +15,45 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import json
+import platform
+import re
 import subprocess
+import uuid
 from datetime import datetime
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_RESULTS_PATH = REPO_ROOT / "results" / "runs.csv"
+
+#: Frozen history. Every run up to the switch to per-machine shards lives here and
+#: nothing appends to it any more.
+LEGACY_RESULTS_PATH = REPO_ROOT / "results" / "runs.csv"
+
+#: What runs are actually written to: one append-only JSONL per machine.
+#:
+#: The log is committed from three machines and merged with `merge=union`
+#: (.gitattributes), which unions *lines*. A CSV's meaning lives in a header those
+#: lines share, and this schema migrates by design - so the moment two machines hold
+#: different column counts, union files every row from one side under the other's
+#: header. That happened: 537 rows, 237 duplicated, seed 67 reading as 2, run_dir
+#: holding a git SHA. Both inputs were individually clean.
+#:
+#: JSONL removes the class rather than patching it. Each line is a self-describing
+#: record, so a union of any two versions is correct by construction, adding a field
+#: is a non-event, and appending never rewrites an existing line. Sharding per machine
+#: means the common case does not merge at all.
+RUNS_DIR = REPO_ROOT / "results" / "runs"
+
+#: Derived, gitignored, rebuilt after every append: the whole log as one table for
+#: analysis. Read this, never write it.
+COMBINED_RESULTS_PATH = REPO_ROOT / "results" / "runs_all.csv"
+
+DEFAULT_RESULTS_PATH = LEGACY_RESULTS_PATH  # retained: older callers import this name
 
 # Fixed column order. Append new columns at the end so existing files stay readable.
 FIELDS = [
+    "run_id",
     "timestamp",
     "mode",
     "boosting",
@@ -36,6 +65,7 @@ FIELDS = [
     "head",
     "channels",
     "encoding",
+    "resample",
     "sweep_id",
     "normalize",
     "within_dataset_negatives",
@@ -287,15 +317,91 @@ def _append_row(path: Path, row: dict) -> None:
     print(f"Results log schema updated ({len(header)} -> {len(fieldnames)} columns)")
 
 
+def machine_name() -> str:
+    """Filesystem-safe host name, used to give each machine its own shard."""
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "-", platform.node() or "unknown").strip("-")
+    return name.lower() or "unknown"
+
+
+def shard_path() -> Path:
+    return RUNS_DIR / f"{machine_name()}.jsonl"
+
+
+def _append_jsonl(path: Path, row: dict) -> None:
+    """
+    Append one self-describing record. Never rewrites an existing line.
+
+    That restriction is the whole point: it is what makes `merge=union` correct for
+    this file instead of merely conflict-free.
+    """
+    with path.open("a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(row, default=str, sort_keys=True) + "\n")
+
+
+def _read_jsonl(path: Path) -> list[dict]:
+    rows = []
+    for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            # One damaged line must not hide every other run in the file.
+            print(f"WARNING: skipping unreadable line {number} of {path.name}")
+            continue
+        if isinstance(record, dict):
+            rows.append(record)
+    return rows
+
+
+def load_runs(include_legacy: bool = True) -> list[dict]:
+    """Every recorded run, from the frozen CSV and every machine's shard."""
+    rows: list[dict] = []
+    if include_legacy and LEGACY_RESULTS_PATH.exists():
+        with LEGACY_RESULTS_PATH.open("r", newline="", encoding="utf-8") as handle:
+            rows.extend(
+                {key: value for key, value in record.items() if key is not None}
+                for record in csv.DictReader(handle)
+                if record.get("timestamp") != "timestamp"
+            )
+    if RUNS_DIR.exists():
+        for path in sorted(RUNS_DIR.glob("*.jsonl")):
+            rows.extend(_read_jsonl(path))
+    rows.sort(key=lambda row: str(row.get("timestamp") or ""))
+    return rows
+
+
+def write_combined_csv(path: Path | None = None) -> Path:
+    """
+    Materialise the whole log as one table. Derived and gitignored - the shards are
+    the record, this is the convenient view of it.
+    """
+    path = Path(path) if path else COMBINED_RESULTS_PATH
+    rows = load_runs()
+    extra = [key for row in rows for key in row if key not in FIELDS]
+    fieldnames = FIELDS + sorted(dict.fromkeys(extra))
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, extrasaction="ignore", restval="")
+        writer.writeheader()
+        writer.writerows(rows)
+    return path
+
+
 def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) -> Path | None:
     """Append one row describing this run. Returns the path written, or None on failure."""
     try:
-        path = Path(results_path) if results_path else DEFAULT_RESULTS_PATH
+        path = Path(results_path) if results_path else shard_path()
         boosting = getattr(cfg, "boosting", None)
         boosting_enabled = bool(getattr(boosting, "enabled", False)) if boosting else False
         mode = str(cfg.mode)
 
         row = {
+            # Makes every line unique, so a union merge can never coalesce two
+            # distinct runs that happen to agree on all their fields.
+            "run_id": uuid.uuid4().hex[:12],
             "timestamp": datetime.now().isoformat(timespec="seconds"),
             "mode": mode,
             "boosting": boosting_enabled,
@@ -306,6 +412,7 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "head": getattr(cfg, "head", ""),
             "channels": getattr(cfg, "channels", ""),
             "encoding": getattr(cfg, "encoding", ""),
+            "resample": getattr(cfg, "resample", ""),
             "extractor_params": _params(getattr(cfg, "extractor_params", None)),
             "sweep_id": getattr(cfg, "sweep_id", ""),
             "normalize": getattr(cfg, "normalize", ""),
@@ -346,7 +453,15 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
         row.update(summarize(mode, result))
 
         path.parent.mkdir(parents=True, exist_ok=True)
-        _append_row(path, row)
+        if path.suffix == ".jsonl":
+            _append_jsonl(path, row)
+            # Keep the readable table current without ever committing it.
+            try:
+                write_combined_csv()
+            except Exception as exc:
+                print(f"WARNING: could not rebuild {COMBINED_RESULTS_PATH.name}: {exc}")
+        else:
+            _append_row(path, row)
 
         print(f"Run recorded in {path}")
         return path

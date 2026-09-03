@@ -384,6 +384,7 @@ def _run_standard_training(args, device):
         cross_session_positives=bool(getattr(args, "cross_session_positives", False)),
         center_position=bool(getattr(args, "center_position", False)),
         encoding=str(getattr(args, "encoding", "raw") or "raw"),
+        resample=str(getattr(args, "resample", "nearest") or "nearest"),
         max_users=getattr(args, "max_users", None),
         val_user_fraction=float(getattr(args, "val_user_fraction", 0.0) or 0.0),
         return_val=True,

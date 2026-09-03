@@ -207,7 +207,9 @@ Two consequences worth acting on:
 1. **The behavioural ceiling is data, not modelling.** Consistent with three architectures tying, `motion_gram` losing, and every gain coming from the objective and identity count. It may not have plateaued at 343 — that is now a live question rather than a rhetorical one.
 2. **Every single-dataset behavioural result in this repo is uninterpretable.** VR_User_Behavior alone is 48 identities. The 0.535/0.541 centred figures measured there sit at roughly the level this table shows is indistinguishable from chance, so they should not be quoted as evidence of a behavioural component.
 
-**The 343-identity comparison is also confounded and should not be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
+**The 343-identity arm was rerun under the fixed code and is bit-identical** (sweep `bc69fd0d50`, 20/20 configurations, `eval_positive_fraction` 0.5000 on every fold): keeps-position 0.6722 / AUC 0.7264, centred 0.5765 / AUC 0.6029, random 0.4991 / AUC 0.4993. So the label-balance bug never touched it - it was always balanced - and both halves of the comparison now come from the same code. The 48-identity caveat below is unaffected; that arm is the one that needs rerunning.
+
+**The 343-identity comparison is still confounded on a different axis and should not be quoted as an identity-count law.** The pooled run changed three things at once: identity count 48→343, dataset diversity 1→7, and `normalize=per_dataset` from a no-op to active. `max_users` exists to disambiguate it — subsample the pooled corpus back to 48 identities stratified across the same 7 datasets, everything else identical:
 
 ```bash
 .venv/Scripts/python model/main.py mode=sweep max_users=48 ...   # vs the same without
@@ -290,7 +292,34 @@ Getting any *other* new dataset to that layout is still the weakest link:
 
 Quaternions are unit-norm everywhere and there are no non-finite values. `UserProfile` skips files that are missing required columns, have fewer than two rows, are non-finite, or have non-positive duration, and reports the counts — before this, one bad file raised `KeyError` and took down a whole dataset (which is what made Head_and_Gaze unusable).
 
-**Requesting a `sample_rate` above a dataset's native rate duplicates frames**, because `Sampler` takes the nearest point to each target time. At 20Hz this is 50.5% duplicate consecutive frames for ViewGauss and 25.9% for PanoSaliency, against 7.1% for VR_User_Behavior — so derived velocity is partly fictitious for the low-rate datasets. Check the table above before raising `sample_rate`.
+### `resample`: how a window is built from raw frames
+
+`Sampler` originally took the **nearest raw point** to each target time, which fails in
+both directions. Below a dataset's native rate it returns the same row repeatedly, so
+derived velocity is zero for those steps; above it, it keeps one row in twelve for a
+250Hz source and folds the rest in as aliasing. Both matter directly for `brv`/`bra`,
+which are computed from consecutive frames.
+
+`resample: bin` averages every raw sample inside each target interval and interpolates
+intervals that contain none - an anti-aliasing filter for the first failure, the right
+answer for the second. Measured, exact duplicate consecutive frames at `sample_rate=20`:
+
+| dataset | native | `nearest` | `bin` |
+| --- | --- | --- | --- |
+| ViewGauss | 10Hz | **50.5%** | **0.0%** |
+| PanoSaliency | 17Hz | 27.0% | 8.1% |
+| VR_User_Behavior | 89Hz | 7.5% | 1.7% |
+| NJIT_6DOF | 250Hz | 0.0% | 0.0% |
+
+Quaternions are put in a common hemisphere before averaging (q and -q are the same
+rotation, so averaging across a sign flip cancels instead of smoothing) and
+renormalized after; measured norm stays 1.0000.
+
+Default is `nearest` so old comparisons stay like-for-like. **Set `resample=bin` for
+anything measuring velocity or acceleration**, and prefer it generally - it is strictly
+better-conditioned input. It also removes the reason to drop low-rate datasets from a
+run, which used to be the only workaround and cost identities, the one thing known to
+be binding.
 
 ### Normalization and negative sampling
 
@@ -377,9 +406,23 @@ Both are tracked per epoch into `history` (`test_auc`, `test_eer`) and recorded 
 
 ## Results log
 
-`model/results_log.py` appends one row per run to `results/runs.csv` (absolute path, anchored to the repo root so `job.chdir` can't misplace it). **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
+`model/results_log.py` records one run per line. Paths are absolute, anchored to the repo root so `job.chdir` can't misplace them.
 
-It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: the file is migrated in place, existing rows are backfilled with blanks, and columns dropped from `FIELDS` are retained rather than deleted. Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
+**Where it lives (changed):**
+
+| path | what it is |
+| --- | --- |
+| `results/runs/<machine>.jsonl` | the record. Append-only, one self-describing JSON object per run, one file per machine. |
+| `results/runs.csv` | frozen history - every run before the switch. Nothing appends to it. |
+| `results/runs_all.csv` | derived view of both, rebuilt after every run. Gitignored. **Read this for analysis.** |
+
+`load_runs()` returns everything from the first two as dicts; `write_combined_csv()` produces the third.
+
+**Why it is not one CSV any more.** The log is committed from three machines and merged with `merge=union`, which unions *lines* - but a CSV's meaning lives in a header those lines share, and this schema migrates by design. The moment two machines held different column counts (57 vs 56), union filed every row from one side under the other's header: 537 rows, 237 duplicated, `seed` 67 reading as 2, `run_dir` holding a git SHA, and 151 rows appearing to have a `template_k` that was pure column shift. Both inputs were individually clean; nothing was wrong until they met. Repaired by rebuilding on column *name*.
+
+JSONL removes the class instead of patching it - a union of self-describing records is correct whatever schema either side used, adding a field is a non-event, and appending never rewrites a line. `run_id` makes every line unique so union can't coalesce two runs that agree on all fields. Tests cover the property, not just the writing: `test_union_merging_two_schemas_keeps_every_field_on_the_right_row` reproduces the exact merge that corrupted the file. **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
+
+It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 
 The 95 pre-existing runs under `runs/` are not in this file; they can be backfilled from checkpoint `history` dicts plus each run's `.hydra/config.yaml`.
 

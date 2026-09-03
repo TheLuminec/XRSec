@@ -10,3 +10,6 @@ model/__pycache__/*
 
 # Sweep checkpoints and state (results/runs.csv keeps the numbers)
 /sweeps/
+
+# Derived view of the results log, rebuilt after every run (results/runs/ is the record).
+results/runs_all.csv

@@ -98,6 +98,7 @@ class SampleDataset:
         exclude_users: str | list[str] | None = None,
         swap_data: bool = False,
         channels: str = "full",
+        resample: str = "nearest",
         keep_users: set[str] | list[str] | None = None,
     ):
         self.dataset = []
@@ -106,6 +107,7 @@ class SampleDataset:
         self.num_users = 0
         self.swap_data = swap_data
         self.channels = channels
+        self.resample = resample
         self.num_channels = channel_count(channels)
 
         if exclude_users is None:
@@ -184,14 +186,16 @@ class SampleDataset:
         cache_path = None
         if sample_cache.cache_enabled():
             cache_path = sample_cache.entry_path(Path(user_dir), self.sample_time,
-                                                 self.sample_rate, self.channels)
+                                                 self.sample_rate,
+                                                 f"{self.channels}-{self.resample}")
             cached = sample_cache.load(cache_path)
             if cached is not None:
                 self.cache_hits += 1
                 return cached
 
         self.cache_misses += 1
-        profile = UserProfile(user_dir, self.sample_time, self.sample_rate, channels=self.channels)
+        profile = UserProfile(user_dir, self.sample_time, self.sample_rate,
+                              channels=self.channels, resample=self.resample)
         for reason, count in getattr(profile, "skipped", {}).items():
             self.skipped_files[reason] = self.skipped_files.get(reason, 0) + count
 
@@ -309,6 +313,7 @@ def build_sample_index(
     exclude_users=None,
     swap_data: bool = False,
     channels: str = "full",
+    resample: str = "nearest",
     center_position: bool = False,
     encoding: str = "raw",
     keep_users=None,
@@ -324,6 +329,7 @@ def build_sample_index(
             exclude_users=exclude_users,
             swap_data=swap_data,
             channels=channels,
+            resample=resample,
             keep_users=keep_users,
         ),
         center_position=center_position,
@@ -688,6 +694,7 @@ def create_dataloader_from_path(
     normalize: str = "none",
     within_dataset_negatives: bool = False,
     channels: str = "full",
+    resample: str = "nearest",
     cross_session_positives: bool = False,
     center_position: bool = False,
     encoding: str = "raw",
@@ -760,6 +767,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 11),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            resample=resample,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -796,6 +804,7 @@ def create_dataloader_from_path(
         seed=_seed_value(seed, 1),
         within_dataset_negatives=within_dataset_negatives,
         channels=channels,
+        resample=resample,
         cross_session_positives=cross_session_positives,
         center_position=center_position,
         encoding=encoding,
@@ -821,6 +830,7 @@ def create_dataloader_from_path(
                 seed=_seed_value(seed, 2),
                 within_dataset_negatives=within_dataset_negatives,
                 channels=channels,
+                resample=resample,
                 cross_session_positives=cross_session_positives,
                 center_position=center_position,
                 encoding=encoding,
@@ -852,6 +862,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 4),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            resample=resample,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -871,6 +882,7 @@ def create_dataloader_from_path(
             seed=_seed_value(seed, 22),
             within_dataset_negatives=within_dataset_negatives,
             channels=channels,
+            resample=resample,
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
@@ -924,6 +936,7 @@ class SiameseDataset(Dataset):
         match_ratio: float = 0.5,
         within_dataset_negatives: bool = False,
         channels: str = "full",
+        resample: str = "nearest",
         cross_session_positives: bool = False,
         center_position: bool = False,
         encoding: str = "raw",
@@ -938,6 +951,7 @@ class SiameseDataset(Dataset):
             exclude_users=exclude_users,
             swap_data=swap_data,
             channels=channels,
+            resample=resample,
             center_position=center_position,
             encoding=encoding,
             keep_users=keep_users,

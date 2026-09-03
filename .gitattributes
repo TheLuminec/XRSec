@@ -1,3 +1,19 @@
-# Append-only experiment log: two machines appending different runs must not
-# conflict. Union merge keeps every row from both sides.
+# The experiment log is written from three machines and merged without review, so it
+# has to be mergeable by construction rather than by care.
+#
+# Per-machine shards, one self-describing JSON record per line, append-only. A union
+# merge of two shards is then just concatenation of independent records, which is
+# correct whatever schema either side was written under.
+results/runs/*.jsonl merge=union
+
+# Frozen history: every run recorded before the switch to shards. Nothing appends to
+# this any more. Union stays on it only so a straggler commit from a machine that has
+# not pulled yet still merges cleanly - and that is safe precisely because both sides
+# now carry the same 57 columns.
+#
+# Do NOT put a migrating CSV behind a union driver again. Union merges LINES while a
+# CSV's meaning lives in a header those lines share, so the moment two machines hold
+# different column counts every row from one side is filed under the other's header.
+# That produced 537 rows, 237 of them duplicates, seed 67 reading as 2 and run_dir
+# holding a git SHA - from two inputs that were each individually clean.
 results/runs.csv merge=union
