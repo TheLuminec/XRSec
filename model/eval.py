@@ -227,6 +227,22 @@ def window_curve_model(args, device=None):
     )
     print("\n" + format_cmc(identification))
 
+    # Single-session users match themselves within one recording, so the figure above
+    # is an upper bound. Report the cross-session-only number beside it rather than
+    # picking one - the gap between them is how much of rank-1 is session matching.
+    strict = cmc_curve(
+        model, embeddings, index, device,
+        gallery_k=int(getattr(args, "gallery_k", 8)),
+        probe_k=int(getattr(args, "probe_k", 1)),
+        probes_per_user=int(getattr(args, "probes_per_user", 16)),
+        seed=getattr(args, "seed", 67),
+        gallery_sizes=tuple(int(n) for n in (getattr(args, "gallery_sizes", None) or [])),
+        require_cross_session=True,
+    )
+    if strict.get("users", 0) >= 2 and strict["users"] != identification.get("users"):
+        print("\nCross-session users only (single-session users excluded):")
+        print(format_cmc(strict))
+
     print("\nWindows aggregated per side (k=1 is the single-window operating point):")
     print(format_curve(rows))
 

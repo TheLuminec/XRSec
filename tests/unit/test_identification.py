@@ -199,3 +199,39 @@ def test_a_gallery_size_larger_than_the_gallery_is_reported(capsys):
                        gallery_sizes=(17, 48), subsets=3)
     assert result["rank1_at_gallery_size"] == {}
     assert "exceed the 5 enrolled users" in capsys.readouterr().out
+
+
+# --- single-session users inflate rank-1 ---------------------------------------
+
+def test_single_session_users_can_be_excluded_rather_than_fallen_back_on():
+    """
+    A single-session user's gallery and probe come from one recording, so a correct
+    match may be session matching. On real folds that was 10-12 of ~62 users - ~17% of
+    the gallery - inflating rank-1 by an unknown amount.
+    """
+    index, embeddings = _index(num_users=6, sessions_per_user=1, windows_per_session=16)
+    lenient = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                        gallery_k=4, probe_k=1, probes_per_user=4, seed=1)
+    strict = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=4, seed=1,
+                       require_cross_session=True)
+    assert lenient["users"] == 6
+    assert strict["users"] == 0, "no user has two sessions, so none should enrol"
+
+
+def test_cross_session_users_are_unaffected_by_the_flag():
+    index, embeddings = _index(num_users=6, sessions_per_user=2, windows_per_session=8)
+    lenient = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                        gallery_k=4, probe_k=1, probes_per_user=4, seed=2)
+    strict = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=4, seed=2,
+                       require_cross_session=True)
+    assert lenient["users"] == strict["users"] == 6
+    assert strict["rank1"] == pytest.approx(lenient["rank1"])
+
+
+def test_the_output_says_which_regime_produced_the_number(capsys):
+    index, embeddings = _index(num_users=6, sessions_per_user=1, windows_per_session=16)
+    lenient = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                        gallery_k=4, probe_k=1, probes_per_user=4, seed=3)
+    assert "inflates rank-1" in format_cmc(lenient)

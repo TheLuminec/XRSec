@@ -57,6 +57,7 @@ def generate_template_manifest(
     pairs_per_user: int,
     k: int,
     k_probe: int | None = None,
+    population_k: int | None = None,
     match_ratio: float = 0.5,
     seed: int | None = None,
     within_dataset_negatives: bool = True,
@@ -76,8 +77,16 @@ def generate_template_manifest(
     # The reference side may carry more windows than the probe side, so a session has
     # to be long enough for whichever side lands on it.
     k_probe = k if k_probe is None else int(k_probe)
+    # Eligibility is decided by population_k, NOT by this row's k. A session must hold
+    # max(k) windows to take part, so every k in a curve scores the same users.
+    # Without this the population shrinks as k grows - at k=16 more than half the
+    # enrolled users cannot supply 16 windows and the pair count falls by 47% - and the
+    # curve compares a smaller, differently-composed set against a larger one. The
+    # apparent decline is then partly the population changing rather than averaging
+    # failing, which makes the whole curve uninterpretable.
+    floor = max(k, k_probe) if population_k is None else int(population_k)
     for user in range(sample_index.num_users):
-        groups = _sessions_for_user(sample_index, user, minimum=max(k, k_probe))
+        groups = _sessions_for_user(sample_index, user, minimum=floor)
         if groups:
             eligible[user] = groups
 
@@ -213,7 +222,8 @@ def _ranks_within(scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
 def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
               gallery_k: int = 8, probe_k: int = 1, probes_per_user: int = 16,
               seed: int | None = None, batch_size: int = 256,
-              gallery_sizes: tuple[int, ...] = (), subsets: int = 20) -> dict:
+              gallery_sizes: tuple[int, ...] = (), subsets: int = 20,
+              require_cross_session: bool = False) -> dict:
     """
     Closed-set identification: rank every held-out user against a probe.
 
@@ -266,6 +276,14 @@ def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
         if len(usable) >= 2:
             first, second = rng.choice(len(usable), size=2, replace=False)
             gallery_pool, probe_pool = usable[int(first)], usable[int(second)]
+        elif require_cross_session:
+            # Excluded rather than fallen back on. A single-session user's gallery and
+            # probe come from one recording, so a correct match can be session matching
+            # rather than identification - and at 10-12 of ~62 users per fold that is
+            # ~17% of the gallery inflating rank-1 by an unknown amount.
+            same_session_fallback += 1
+            skipped += 1
+            continue
         else:
             # One session: split its windows so gallery and probe stay disjoint. The
             # session shortcut is live for this user, which is why it is counted.
@@ -353,6 +371,7 @@ def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
         "mean_rank": float(rank.float().mean()),
         "same_session_fallback_users": same_session_fallback,
         "skipped_users": skipped,
+        "require_cross_session": bool(require_cross_session),
         "cmc": cmc,
     }
 
@@ -377,8 +396,12 @@ def format_cmc(result: dict) -> str:
             lines.append(f"    N={size:<4} {entry['rank1']:.4f} +/- {entry['sd']:.4f}"
                          f"   (chance {entry['chance']:.4f})")
     if result.get("same_session_fallback_users"):
-        lines.append(f"  WARNING: {result['same_session_fallback_users']} users had one session; "
-                     f"their gallery and probe share it")
+        if result.get("require_cross_session"):
+            lines.append(f"  {result['same_session_fallback_users']} single-session users "
+                         f"EXCLUDED (gallery and probe would share a recording)")
+        else:
+            lines.append(f"  WARNING: {result['same_session_fallback_users']} users had one "
+                         f"session; their gallery and probe share it, which inflates rank-1")
     if result.get("skipped_users"):
         lines.append(f"  {result['skipped_users']} users skipped (too few windows)")
     return "\n".join(lines)
@@ -479,6 +502,16 @@ def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
     if embeddings.numel() == 0:
         return []
 
+    # One population for the whole curve, set by the widest k anywhere in it. Costs
+    # the users who cannot supply that many windows, and is the only way the rows can
+    # be read against each other.
+    population_k = 1
+    for entry in ks:
+        if isinstance(entry, (int, float)):
+            population_k = max(population_k, int(entry))
+        else:
+            population_k = max(population_k, max(int(v) for v in entry))
+
     rows = []
     for entry in ks:
         # An entry is either a bare k (the symmetric diagonal, as before) or a
@@ -491,6 +524,7 @@ def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
 
         manifest = generate_template_manifest(
             sample_index, pairs_per_user=pairs_per_user, k=k_ref, k_probe=k_probe,
+            population_k=population_k,
             match_ratio=match_ratio, seed=seed,
             within_dataset_negatives=within_dataset_negatives,
         )
@@ -507,6 +541,7 @@ def window_curve(model, sample_index, device, ks=(1, 2, 4, 8, 16),
         rows.append({
             "k": k_ref,
             "k_probe": k_probe,
+            "population_k": population_k,
             "pairs": int(labels.numel()),
             "positive_fraction": float(labels.mean()),
             "auc": metrics["auc"],

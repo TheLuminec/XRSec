@@ -950,7 +950,68 @@ and the difference is not performance.
 The window length is the third mismatch and is the one that might be a real deficit;
 that is what `window_stride` now makes testable.
 
-### First identification numbers, and what they change
+### The identification number, measured properly
+
+**rank-1 identification on unseen users, 5 retrained leave-users-out folds**
+(`identity_softmax`, 343 identities, sweep `b732bee5c6`, evaluation split recovered
+from each checkpoint):
+
+| gallery | rank-1 | sd | chance | x chance |
+| --- | --- | --- | --- | --- |
+| **N=17** (matched to the published result) | **0.5700** | 0.0201 | 0.0588 | 9.7 |
+| N=48 | 0.4172 | 0.0313 | 0.0208 | 20.1 |
+| full (61-64) | 0.3852 | 0.0367 | 0.0160 | 24.1 |
+
+Verification on the same embeddings, k=1: AUC 0.7427, EER 0.3112.
+
+**Against the pre-registered band.** Before the number existed, 0.70+ was recorded as
+"units were the story", 0.40-0.70 as "units explain part, a real shortfall remains, and
+window length is the leading candidate", and below 0.40 as "units are not the story".
+**0.570 falls in the middle band.**
+
+So the units correction was worth a great deal and was not the whole story. Comparing
+0.669 verification against a published 78.5% rank-1 was meaningless; the honest
+comparison is **0.570 against 0.785 at matched metric and matched N**, and about 0.21
+of gap survives it. The remaining uncontrolled difference is window length - theirs is
+15s, ours 2-5s - which is what the window-length experiment tests.
+
+**0.570 is an upper bound, not a point estimate.** 10-12 users per fold (~17% of each
+gallery) have a single session, so their gallery and probe come from one recording and a
+correct match there can be session matching rather than identification. `mode=curve` now
+reports the cross-session-only figure beside it (`require_cross_session`); the gap
+between the two is how much of rank-1 is session matching, and the true cross-session
+number is below 0.570 by an unknown amount until that is run.
+
+### The k-curve was not interpretable across k (fixed)
+
+Worth recording because it is the fourth instance of one bug this project keeps
+producing. Measured on fold 0 before the fix:
+
+| k | pairs | AUC | users short of windows |
+| --- | --- | --- | --- |
+| 1 | 30720 | 0.7427 | 5 |
+| 4 | 27136 | 0.7424 | 12 |
+| 16 | 16384 | **0.6066** | **33** |
+
+AUC appears to collapse with k. But eligibility required a session to hold k windows, so
+the population collapsed with it - at k=16 more than half the enrolled users cannot
+supply 16 windows and the pair count falls 47%. The k=16 row scores a smaller,
+differently-composed set than the k=1 row, so the decline is at least partly the
+population changing rather than averaging failing. The same defect made every asymmetric
+`[k_ref, k_probe]` pair incomparable to every other.
+
+`window_curve` now fixes the population once, from the widest k anywhere in the sweep,
+and every row scores those same users. It costs the users who cannot supply that many
+windows - a narrow curve keeps more users than a wide one - which is the price of the
+rows meaning anything relative to each other.
+
+**No k>1 number recorded before this fix should be quoted**, including the asymmetric
+ones. The variance decomposition is unaffected because it is population-stable, and it
+predicts averaging buys little here anyway: fold 0 gives between-user 0.5179,
+between-session 0.1943, within-session 0.1761, signal/shift 2.67, plateau k~1. So the
+broken curve was probably not hiding a large gain.
+
+### First identification numbers (superseded, kept for the control it established)
 
 Measured on a **weak checkpoint** - `motion_tdnn`, `pair_bce`, `diff_linear`, 5s/20Hz,
 trained on 6 pooled datasets - scored on **Head_and_Gaze, which it never saw** (100

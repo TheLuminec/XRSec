@@ -392,3 +392,44 @@ def test_the_curve_accepts_pairs_as_well_as_bare_k():
     rows = window_curve(_model(), index, torch.device("cpu"),
                         ks=[1, (4, 1)], pairs_per_user=8, seed=2)
     assert [(r["k"], r["k_probe"]) for r in rows] == [(1, 1), (4, 1)]
+
+
+# --- the population must not move with k ---------------------------------------
+#
+# Measured on a real fold before this was fixed: k=1 scored 30720 pairs with 5 users
+# short of windows, k=16 scored 16384 pairs with 33 users short. AUC fell from 0.7427
+# to 0.6066, but the population fell with it, so the decline was partly a different,
+# smaller, differently-composed set rather than averaging failing.
+
+def test_every_k_in_a_curve_scores_the_same_users():
+    index = _index(users=6, sessions=2, per_session=8)
+    rows = window_curve(_model(), index, torch.device("cpu"), ks=[1, 4, 8],
+                        pairs_per_user=8, seed=1)
+    counts = {row["pairs"] for row in rows if row.get("pairs")}
+    assert len(counts) == 1, f"pair count moved with k: {counts}"
+
+
+def test_the_shared_population_is_set_by_the_widest_k():
+    index = _index(users=6, sessions=2, per_session=8)
+    rows = window_curve(_model(), index, torch.device("cpu"), ks=[1, (8, 2)],
+                        pairs_per_user=8, seed=1)
+    assert all(row["population_k"] == 8 for row in rows)
+
+
+def test_a_narrow_curve_keeps_more_users_than_a_wide_one():
+    """The cost of the fix, made explicit: a wide curve spends users."""
+    index = _index(users=6, sessions=2, per_session=8)
+    narrow = window_curve(_model(), index, torch.device("cpu"), ks=[1],
+                          pairs_per_user=8, seed=1)
+    wide = window_curve(_model(), index, torch.device("cpu"), ks=[1, 16],
+                        pairs_per_user=8, seed=1)
+    assert narrow[0]["pairs"] > 0
+    assert wide[0]["pairs"] < narrow[0]["pairs"]
+
+
+def test_population_k_can_be_set_directly_on_a_manifest():
+    index = _index(users=6, sessions=2, per_session=8)
+    restricted = generate_template_manifest(index, pairs_per_user=8, k=1,
+                                            population_k=8, seed=1)
+    unrestricted = generate_template_manifest(index, pairs_per_user=8, k=1, seed=1)
+    assert restricted["labels"].numel() <= unrestricted["labels"].numel()
