@@ -73,38 +73,7 @@ import torch
 import torch.nn as nn
 
 from feature_extractor import FeatureExtractor, register
-
-
-def _quaternion_angular_velocity(q: torch.Tensor) -> torch.Tensor:
-    """
-    Body-frame angular velocity from a (batch, 4, T) quaternion track in (x, y, z, w).
-
-    Uses the small-angle approximation of the relative rotation between consecutive
-    frames: omega ~= 2 * vec(q_t^-1 . q_t+1). The sign of the result is normalised for
-    the quaternion double cover (q and -q are the same rotation), without which the
-    derived velocity flips randomly and carries no usable signal.
-    """
-    q = q / (q.norm(dim=1, keepdim=True) + 1e-8)
-    previous, current = q[:, :, :-1], q[:, :, 1:]
-
-    # conj(previous) = (-x, -y, -z, w)
-    ax, ay, az, aw = -previous[:, 0], -previous[:, 1], -previous[:, 2], previous[:, 3]
-    bx, by, bz, bw = current[:, 0], current[:, 1], current[:, 2], current[:, 3]
-
-    rw = aw * bw - ax * bx - ay * by - az * bz
-    rx = aw * bx + ax * bw + ay * bz - az * by
-    ry = aw * by - ax * bz + ay * bw + az * bx
-    rz = aw * bz + ax * by - ay * bx + az * bw
-
-    sign = torch.where(rw < 0, -1.0, 1.0)
-    return 2.0 * torch.stack([rx * sign, ry * sign, rz * sign], dim=1)
-
-
-def _pad_front(x: torch.Tensor, width: int) -> torch.Tensor:
-    """Replicate the first frame so a differenced channel keeps the original length."""
-    if width <= 0:
-        return x
-    return torch.cat([x[:, :, :1].expand(-1, -1, width), x], dim=2)
+from extractors._kinematics import derived_channels, split_pose
 
 
 class _TdnnBlock(nn.Module):
@@ -162,7 +131,14 @@ class MotionTdnn(FeatureExtractor):
         self.use_pose = use_pose
         self.pool_max = pool_max
 
-        bank_channels = (7 if use_pose else 0) + (17 if use_derivatives else 0)
+        # Derived from one dummy pass rather than hardcoded, because the bank width
+        # depends on whether the input carries orientation: 7 + 17 with a quaternion,
+        # 3 + 10 for position-only data. Three timesteps is the minimum the
+        # second-difference channels need.
+        with torch.no_grad():
+            bank_channels = self._channel_bank(
+                torch.zeros(1, num_channels, max(int(seq_len), 3))
+            ).shape[1]
         self.input_norm = nn.BatchNorm1d(bank_channels)
 
         blocks = []
@@ -176,30 +152,25 @@ class MotionTdnn(FeatureExtractor):
         self.embed = nn.Linear(hidden * statistics, embedding_dim)
 
     def _channel_bank(self, x: torch.Tensor) -> torch.Tensor:
-        """Raw (batch, 7, T) -> stacked kinematic channels, all at length T."""
-        quaternion, position = x[:, :4], x[:, 4:]
+        """
+        Raw (batch, num_channels, T) -> stacked kinematic channels, all at length T.
+
+        Works for both channel sets. With ``channels=position`` there is no quaternion,
+        so the orientation channels are absent rather than zero-filled, and the bank is
+        3 + 10 wide instead of 7 + 17.
+        """
+        quaternion, position = split_pose(x, self.num_channels, owner=type(self).__name__)
         channels = []
 
         if self.use_pose:
-            normalised_q = quaternion / (quaternion.norm(dim=1, keepdim=True) + 1e-8)
-            channels += [normalised_q, position]
+            if quaternion is not None:
+                channels.append(quaternion / (quaternion.norm(dim=1, keepdim=True) + 1e-8))
+            channels.append(position)
 
         if self.use_derivatives:
-            omega = _quaternion_angular_velocity(quaternion)          # (B, 3, T-1)
-            alpha = omega[:, :, 1:] - omega[:, :, :-1]                # (B, 3, T-2)
-            velocity = position[:, :, 1:] - position[:, :, :-1]       # (B, 3, T-1)
-            accel = velocity[:, :, 1:] - velocity[:, :, :-1]          # (B, 3, T-2)
-            # Position relative to the window mean: posture/sway with the absolute
-            # offset removed, which the pose channels already carry.
-            centred = position - position.mean(dim=2, keepdim=True)
-
-            omega, velocity = _pad_front(omega, 1), _pad_front(velocity, 1)
-            alpha, accel = _pad_front(alpha, 2), _pad_front(accel, 2)
-            channels += [
-                omega, alpha, velocity, accel, centred,
-                omega.norm(dim=1, keepdim=True),
-                velocity.norm(dim=1, keepdim=True),
-            ]
+            # Includes window-centred position: posture/sway with the absolute offset
+            # removed, which the pose channels already carry.
+            channels += derived_channels(quaternion, position)
 
         return torch.cat(channels, dim=1)
 
