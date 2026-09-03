@@ -267,7 +267,9 @@ for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) use
 
 The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
-Getting a *new* dataset to that layout is currently the weakest link:
+**who-is-alyx** has its own converter, `prepare_who_is_alyx.py` (`--inspect` first, then convert). Worth knowing about the source: rotation columns are ordered **w,x,y,z** where this pipeline uses x,y,z,w, position is in **centimetres**, and `delta_time_ms` (not `timestamp`) is milliseconds since session start. Columns are read by name and the converter checks the mean quaternion norm, because a silent reordering produces a plausible-looking rotation. 76 players / 146 sessions / 6.74GB raw; most players have two ~45-minute sessions, so nearly all of them can form cross-session positives — unlike NJIT_6DOF.
+
+Getting any *other* new dataset to that layout is still the weakest link:
 
 - `formatter.py` expects `datasets/<name>/parser.py` exposing `parse(dataset_path)` yielding `(user_id, task_id, df)`, and writes to `datasets/<name>/processed_data/users/`.
 - That directory does not exist on `main` and neither does any parser — the eight working parsers were removed in commit `6421567` ("Data seperation") and survive only in git history (`git show normalization:datasets/<name>/parser.py`; the `normalization` branch is an ancestor of `main`, not pending work).
@@ -383,7 +385,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **204 passing, ~24s**.
+Current baseline: **214 passing, ~24s**.
 
 ## Performance notes
 
