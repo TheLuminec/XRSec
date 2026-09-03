@@ -30,6 +30,14 @@ identity_scale: 30.0
 # on the axis measured to be binding. identity_softmax only; off by default.
 balance_identities: false
 
+# Stop training when the validation-selected metric has not improved for this many
+# epochs. 0 disables it, which is the historical fixed budget. Across 304 recorded runs
+# the selected epoch has median 7 of 20 but p90 of 18 - most runs peak early and a real
+# tail is still improving when training stops - so a fixed budget is wrong in both
+# directions: truncating to 12 would cost 27% of runs their best epoch, while the 5%
+# that select epoch 19 or 20 are censored by the cap.
+early_stopping_patience: 0
+
 # Pair scoring head: diff_linear (original) or cosine.
 head: diff_linear
 

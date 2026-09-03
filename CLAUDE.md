@@ -470,6 +470,30 @@ Skip it and AUC looks fine while accuracy sits at chance for the wrong reason.
 `diff_linear` keeps the original `classifier.*` parameter names so older checkpoints
 still load. Identity training is standard-mode only; boosting stays pairwise.
 
+## The 20-epoch budget is wrong in both directions
+
+Measured over **304 recorded runs** that trained the full 20 epochs, the
+validation-selected epoch:
+
+| | |
+| --- | --- |
+| median | **7** |
+| p75 / p90 / p95 | 13 / 18 / 19 |
+| selected the final epoch | 4% |
+
+So most runs peak early - `identity_softmax` has a median of 5 - and a long tail is
+still improving when training stops. Both naive readings are wrong:
+
+- **"Train longer"** helps only the ~5% censored by the cap.
+- **"Truncate to save time"** is worse than it looks. Stopping at 12 epochs saves 40% of
+  training but would cost **27% of runs** their selected epoch. At 8 epochs it is 40% of
+  runs. The median is not the number that governs this - the tail is.
+
+`early_stopping_patience` handles both: early peakers stop, late ones keep going. 0 by
+default, so nothing already recorded changes. At patience ~6 most runs would stop around
+epoch 13 while the tail runs to the cap, which is the compute saving without the
+censoring - worth setting for sweeps, where run count is the binding cost.
+
 ## We spend a quarter of our identities choosing an epoch
 
 `val_user_fraction: 0.25` holds out a group of *training* users to select the epoch,
