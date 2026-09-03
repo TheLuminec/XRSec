@@ -602,6 +602,108 @@ poorly, which is the wrong trade when the entire task is generalising to identit
 never seen at all.
 
 `balance_identities: true` draws each window with probability inversely proportional to
+its identity's count, keeping the epoch the same size. Off by default.
+
+**Piloted, and it does not work.** 3 stratified folds on the pooled corpus,
+`identity_softmax`, `bilstm`, paired by fold (laptop pilot: `batch_size=256`, so the
+absolute numbers do not sit beside the main sweeps - the paired difference does):
+
+| | fold diffs (AUC) | mean | won |
+| --- | --- | --- | --- |
+| `sample_time=5` (what we run) | +0.008, **-0.070**, -0.027 | **-0.0296** | 1/3 |
+| `sample_time=2` | +0.003, +0.042, -0.032 | +0.0042 | 2/3 |
+
+The prediction registered beforehand was **+0.005 to +0.02**. The measured result at the
+configuration we actually run is **-0.030**, past the -0.01 threshold agreed for taking
+a negative seriously rather than shrugging at it. Both arms have fold sd ~0.039 on 3
+folds so neither is individually significant, and they disagree in sign - but there is
+no case here for spending 10 more runs on a positive.
+
+**Why it plausibly costs rather than pays**, and this was predicted before the pilot ran:
+inverse-frequency sampling draws *with replacement*, so a well-recorded identity's 1050
+windows get sampled far fewer times than they exist. The corpus's effective identity
+count rises, but the number of *distinct windows* the model sees per epoch falls. Fixing
+diversity by discarding data is not obviously a trade worth making, and measurement says
+it is not.
+
+If anyone returns to this, the variant to try is **sqrt-frequency weighting** rather than
+inverse - the standard compromise between uniform and balanced - or capping frequent
+identities without upsampling rare ones, which raises diversity without resampling
+anything. Neither is a priority.
+
+## Tried and measured at zero: adaptive score normalization
+
+`model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes
+one operating point serves every identity - and it does not, since some sit in a dense
+part of the space and score high against everyone. AS-Norm is the standard fix in
+speaker verification: rescale each score by how surprising it is for the two sides
+involved, using the top-k similarities of each against an impostor cohort. It needs no
+retraining and no new data, only embeddings already computed.
+
+**Measured, and it does nothing here.** Spare `pair_bce` checkpoint, 100 unseen
+Head_and_Gaze users, cosine scores, cohort built per-identity so window-count imbalance
+cannot dominate it:
+
+| cohort | best dAUC |
+| --- | --- |
+| training users, different dataset | **-0.0014** (negative at every top_k) |
+| domain-matched, users disjoint from the trials | **+0.0025** at top_k=200 |
+
++0.0025 on 13,200 pairs is inside the binomial error alone (~0.008), let alone the
+0.037 fold spread. Both readings are zero. The one real signal is that a cohort from a
+*different dataset* is actively worse than none, which is consistent with the
+cross-dataset normalization problems this corpus has everywhere else.
+
+**Do not spend sweep runs on this.** The one caveat worth keeping is that it was
+measured on the checkpoint whose own control scores 0.208 on users it was trained on -
+AS-Norm exploits embedding geometry, and that space is barely organised, so there may
+be nothing there to exploit rather than nothing to gain. It is post-hoc and costs zero
+training runs, so it is worth one line of curiosity next time a properly trained
+`identity_softmax` checkpoint is scored, and nothing more than that.
+
+## Two untuned levers on the objective
+
+The objective is the only thing measured to give a large gain (+6.5). Both of these
+sit inside it and neither has ever been varied.
+
+### `identity_margin` / `identity_scale` were never swept
+
+AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
+recorded runs** - they were not even columns in the results log until now. These are
+the two hyperparameters that decide how hard the objective pushes identities apart, and
+0.35/30 are the values the face-recognition literature tuned against corpora with tens
+of thousands of identities. We have 343. There is no reason to think the same setting
+is right, and it is the cheapest untested thing on the board.
+
+### Window counts per identity span 77x, and that costs ~38% of our identities
+
+`WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
+identity's influence on the gradient is proportional to how much data it happens to
+have. Measured on the pooled 7-dataset corpus, at both window lengths because window
+count is `floor(duration / sample_time)` and a short session can round down to nothing:
+
+| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
+| --- | --- | --- |
+| identities with windows | 312 | 312 |
+| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
+| max/min | 77.6x | **87.5x** |
+| top 10% hold | 23.6% | 23.9% |
+| bottom 50% hold | 19.1% | 18.6% |
+| **effective identity count** | 193 of 312 | **190 of 312** |
+
+No identity drops out at the longer window, and the imbalance is marginally *worse*
+there, so the effect is a property of the corpus rather than of one window length.
+
+The last row is the inverse participation ratio: the number of *evenly represented*
+identities this corpus is worth under uniform window sampling. **We are discarding
+about 39% of our identity diversity to sampling imbalance** - on the one axis that has
+been measured to bind, and for free, without needing a single new user.
+
+AM-Softmax with imbalanced classes separates frequent identities well and rare ones
+poorly, which is the wrong trade when the entire task is generalising to identities
+never seen at all.
+
+`balance_identities: true` draws each window with probability inversely proportional to
 its identity's count, keeping the epoch the same size. Off by default so existing
 comparisons stay like-for-like. **Untested - predict before running it.** Honest
 expectation: this is the same *kind* of intervention as raising identity count, which
