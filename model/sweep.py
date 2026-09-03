@@ -107,6 +107,28 @@ def resolve_axes(cfg, extractor: str) -> dict[str, list]:
     return axes
 
 
+def announce_corpus(cfg) -> None:
+    """
+    Say which corpus this sweep is about to run on, before it runs.
+
+    `data_dirs` defaults to a single dataset. A sweep launched with every other
+    override passed explicitly and this one left alone runs on 48 identities while its
+    author believes it is running on 343 - which happened, and invalidated a pilot
+    whose whole premise was a property of the pooled corpus. The only tell was a user
+    count buried in the loader's output.
+    """
+    dirs = list(getattr(cfg, "data_dirs", None) or [])
+    print("=" * 78)
+    print(f"CORPUS: {len(dirs)} dataset director{'y' if len(dirs) == 1 else 'ies'}")
+    for directory in dirs:
+        print(f"  {Path(directory).parent.name}")
+    if len(dirs) == 1:
+        print("  NOTE: one dataset. normalize=per_dataset and within_dataset_negatives")
+        print("        are no-ops here, and this is the config default - pass data_dirs")
+        print("        explicitly if you meant the pooled corpus.")
+    print("=" * 78)
+
+
 def build_folds(cfg, folds: int, seed: int) -> list[list[str]]:
     """
     Partition every user across all data_dirs into `folds` disjoint held-out groups,
@@ -477,6 +499,8 @@ def run_sweep(cfg, train_fn=None) -> dict:
         from train import train as train_fn
 
     configurations = build_configurations(cfg)
+
+    announce_corpus(cfg)
 
     folds = _sweep_setting(cfg, "folds")
     folds = int(folds) if folds else None

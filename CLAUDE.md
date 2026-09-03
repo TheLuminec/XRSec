@@ -92,6 +92,32 @@ Artifact stems include the extractor name plus a 6-char digest of any non-defaul
 
 Determinism runs through a single root `seed`. `derive_seed(seed, *parts)` in `train.py` hashes string/int parts into a sub-seed, so each manifest, loader, and round gets an independent but reproducible stream. Directory traversal is `sorted()` at every level so sample indices are stable across machines. Preserve both properties in any change to data loading — the reproducibility tests depend on them.
 
+## `data_dirs` defaults to ONE dataset
+
+`configs/config.yaml` ships `data_dirs` with a single entry - VR_User_Behavior - and
+the other six commented out. **Every pooled-corpus run must pass `data_dirs`
+explicitly.** A command that overrides ten other keys and leaves this one alone trains
+on 48 identities while its author believes it is on 343, and nothing in the results row
+says otherwise.
+
+This has now cost one pilot outright: balanced identity sampling was motivated by an
+87.5x window-count imbalance that exists only in the pooled corpus, and was measured on
+VR_User_Behavior, where `max/min` is **1.0x** and balancing is a mathematical no-op. The
+only tell was a user count in the loader's stdout.
+
+Two guards were added rather than a resolution to be careful:
+
+- `mode=sweep` prints a **CORPUS banner** naming every dataset before it runs, and says
+  explicitly when there is only one that this is the config default and that
+  `normalize=per_dataset` / `within_dataset_negatives` are no-ops.
+- `num_train_identities` is recorded per run, so the corpus a row was produced on is
+  visible in the results table instead of only in a log nobody kept.
+
+It is the same failure shape as the `mode=curve` split fallback and the `sweep_id`
+collision: a default silently standing in for the intended experiment and returning a
+plausible number. That is the recurring bug in this project, not any particular one of
+its instances.
+
 ## Sweep mode
 
 `model/sweep.py`, invoked with `mode=sweep`. Enumerates configurations, trains each, ranks them.

@@ -483,6 +483,16 @@ def _run_standard_training(args, device):
         if index is not None:
             history["same_session_fallback_users"] = count_single_session_users(index)
 
+    # How many identities this run actually trained and evaluated on. Recorded because
+    # a config default silently substituting a single dataset for the pooled corpus is
+    # invisible in every other column - it cost a whole pilot before it was noticed,
+    # and the only tell was a user count in stdout that nobody was reading.
+    train_source = train_loader.dataset
+    train_source = getattr(train_source, "dataset", train_source)
+    train_index = getattr(train_source, "sample_index", None)
+    if train_index is not None:
+        history["num_train_identities"] = int(getattr(train_index, "num_users", 0))
+
     # Realized label balance of the reported set, so a drift is visible in the record
     # rather than only in a log nobody kept.
     evaluated = test_loader.dataset

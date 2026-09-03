@@ -109,6 +109,7 @@ FIELDS = [
     "candidate_pairs_per_user",
     "match_ratio",
     "num_data_dirs",
+    "num_train_identities",
     "num_test_dirs",
     "num_excluded_users",
     "swap_data",

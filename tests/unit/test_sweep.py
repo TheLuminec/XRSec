@@ -609,3 +609,26 @@ def test_the_inflated_note_is_only_for_metrics_chosen_on_the_test_set(capsys):
     _print_ranking([{"status": "ok", "best_test_acc": 0.6, "metric": "best_test_acc",
                      "description": "d", "id": "i"}])
     assert "inflated" in capsys.readouterr().out
+
+
+def test_the_corpus_is_announced_before_a_sweep_runs(capsys):
+    """
+    data_dirs defaults to one dataset. A sweep with every other override passed
+    explicitly and this one left alone runs on 48 identities while its author believes
+    it is running on 343 - which happened and invalidated a pilot.
+    """
+    from omegaconf import OmegaConf
+
+    from sweep import announce_corpus
+
+    announce_corpus(OmegaConf.create({"data_dirs": ["p/OneDataset/users"]}))
+    out = capsys.readouterr().out
+    assert "CORPUS: 1 dataset directory" in out
+    assert "OneDataset" in out
+    assert "config default" in out, "a single-dataset run must say so explicitly"
+
+    announce_corpus(OmegaConf.create(
+        {"data_dirs": ["p/A/users", "p/B/users", "p/C/users"]}))
+    out = capsys.readouterr().out
+    assert "CORPUS: 3 dataset directories" in out
+    assert "config default" not in out
