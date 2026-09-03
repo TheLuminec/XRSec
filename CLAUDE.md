@@ -478,6 +478,51 @@ and the difference is not performance.
 The window length is the third mismatch and is the one that might be a real deficit;
 that is what `window_stride` now makes testable.
 
+### First identification numbers, and what they change
+
+Measured on a **weak checkpoint** - `motion_tdnn`, `pair_bce`, `diff_linear`, 5s/20Hz,
+trained on 6 pooled datasets - scored on **Head_and_Gaze, which it never saw** (100
+unseen users). This is a lower bound and a validation of the code, not a headline.
+
+| enrolment | probe | rank-1 @ N=17 |
+| --- | --- | --- |
+| 10s | 15s | 0.222 |
+| 20s | 15s | 0.261 |
+| 40s | 5s | 0.204 |
+| 40s | 15s | 0.269 |
+| 40s | 30s | 0.315 |
+| 80s | 15s | 0.401 |
+| 160s | 30s | **0.434** |
+
+Chance is 0.0588. Same checkpoint, same settings, on **seen, in-dataset** users scores
+0.208 against 0.204 unseen - so the implementation is sound (monotone in evidence,
+well above chance, ordered correctly across N) *and* this checkpoint's embedding space
+is barely organised for identification at all, seen users included.
+
+**Three things this establishes.**
+
+1. **Verification and identification are wildly different numbers for the same model.**
+   This checkpoint scores AUC 0.752 / acc@EER 0.69 on the same held-out data where its
+   rank-1 at the full 100-user gallery is 0.032. Quoting one against the other, which is
+   what comparing 0.669 to a published 78.5% was doing, is meaningless.
+2. **Enrolment dominates probe, as the literature says.** 8 to 16 gallery windows buys
+   +0.13; 1 to 6 probe windows buys +0.11 from a much lower base. `mode=curve` averages
+   k on *both* sides, so the symmetric diagonal is the wrong operating point and an
+   asymmetric `(gallery_k, probe_k)` is nearly free.
+3. **A real gap survives the units correction.** At matched N=17 and matched 15s of
+   probe, this checkpoint gets 0.269, saturating near 0.434 with far more evidence than
+   the published setup used. Against 0.785, the units mismatch explains a great deal and
+   does not explain everything.
+
+**The most likely remaining cause is the objective, and it is directly testable.** X
+§6.3 reports a classification model at **43.2%** where their similarity model gets
+78.5%. Our best-evidence pair_bce figure is **0.434**. Treat that as coincidence until
+`identity_softmax` is measured the same way - but it is the arm the briefing predicts,
+`identity_softmax` is already worth +6.5 on verification, and rank-1 is the metric an
+angular-margin embedding is actually trained to serve, so it should gain far more here
+than it did on verification. Running `mode=curve` on the 343-identity
+`identity_softmax` checkpoint is the single highest-value measurement outstanding.
+
 `gallery_k` / `probe_k` / `probes_per_user` set how much evidence each side gets.
 Enrolment size is worth more than probe size in the literature, and the asymmetry is
 free to test here.
