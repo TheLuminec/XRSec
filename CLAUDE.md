@@ -470,6 +470,41 @@ Skip it and AUC looks fine while accuracy sits at chance for the wrong reason.
 `diff_linear` keeps the original `classifier.*` parameter names so older checkpoints
 still load. Identity training is standard-mode only; boosting stays pairwise.
 
+## We spend a quarter of our identities choosing an epoch
+
+`val_user_fraction: 0.25` holds out a group of *training* users to select the epoch,
+which is what makes `selected_test_acc` honest. It is also expensive in the one currency
+this project is short of. At 419 identities over 5 folds:
+
+| `val_user_fraction` | test | validation | **training** |
+| --- | --- | --- | --- |
+| 0.25 (current) | 83 | 84 | **252** |
+| 0.15 | 83 | 50 | 286 |
+| 0.10 | 83 | 34 | **302** |
+| 0.0 (dishonest) | 83 | 0 | 336 |
+
+**We train on 252 of 336 available identities.** Identity count is the only data-side
+lever ever measured to work here - 48 to 343 is the difference between a behavioural
+signal and no signal at all - and a quarter of the pool is going to a decision that
+picks one number out of about twenty.
+
+Two ways to get them back, neither tried:
+
+1. **Cheap: lower the fraction.** 0.25 -> 0.10 returns 50 identities to training, a 20%
+   increase, at the cost of selecting on 34 users instead of 84. Whether that is a good
+   trade is empirical and depends on how flat the epoch curve is near its top - if the
+   top few epochs are within noise of each other, a noisier choice among them costs
+   almost nothing. 3 configs x 5 folds = 15 runs.
+2. **Principled: refit on train+val at the chosen epoch.** Standard practice - use the
+   validation users to pick the epoch count, then retrain on all 336 identities for that
+   many epochs and report on the untouched test users. Selection stays honest, the test
+   set is still never seen, and *no identity is spent*. Costs roughly double the
+   training time per configuration.
+
+The second is the right answer if identity count really is binding, and it also makes
+the first unnecessary. Worth testing (1) first, because it is a config change and its
+result tells you how much (2) could possibly be worth.
+
 ## Tried and measured at zero: adaptive score normalization
 
 `model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes

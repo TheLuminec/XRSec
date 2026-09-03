@@ -2,6 +2,70 @@
   "code_identity": "de15658e85",
   "config_identity": "6de2a9badf",
   "records": {
+    "1ae3b5c04e_f0": {
+      "best_test_acc": 0.6949883997440338,
+      "checkpoint": "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\pilot_balance5\\6de2a9badf\\runs\\bilstm_1ae3b5c04e_fold0\\best.pth",
+      "description": "bilstm [balance_identities=True]",
+      "extractor": "bilstm",
+      "fold": 0,
+      "held_out_users": [
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\10",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\14",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\15",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\17",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\23",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\25",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\29",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\3",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\30",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\38",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\4",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\43",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\44",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\5",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\7",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\9"
+      ],
+      "id": "1ae3b5c04e",
+      "key": "1ae3b5c04e_f0",
+      "metric": "selected_test_auc",
+      "overrides": {
+        "balance_identities": true
+      },
+      "status": "ok"
+    },
+    "1ae3b5c04e_f1": {
+      "best_test_acc": 0.649335503578186,
+      "checkpoint": "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\pilot_balance5\\6de2a9badf\\runs\\bilstm_1ae3b5c04e_fold1\\best.pth",
+      "description": "bilstm [balance_identities=True]",
+      "extractor": "bilstm",
+      "fold": 1,
+      "held_out_users": [
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\1",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\12",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\16",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\2",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\22",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\24",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\26",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\34",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\35",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\37",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\39",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\40",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\41",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\45",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\46",
+        "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\processed_datasets\\VR_User_Behavior_Dataset_(Spherical_Video_Streaming)\\users\\8"
+      ],
+      "id": "1ae3b5c04e",
+      "key": "1ae3b5c04e_f1",
+      "metric": "selected_test_auc",
+      "overrides": {
+        "balance_identities": true
+      },
+      "status": "ok"
+    },
     "65a04693fa_f0": {
       "best_test_acc": 0.6871119737625122,
       "checkpoint": "C:\\Users\\thelu\\Desktop\\GIT\\XRSec\\pilot_balance5\\6de2a9badf\\runs\\bilstm_65a04693fa_fold0\\best.pth",
