@@ -83,6 +83,12 @@ gallery_k: 8
 probe_k: 1
 probes_per_user: 16
 
+# Also report rank-1 restricted to a random gallery of N users, averaged over draws.
+# Ranking against 17 candidates is a different problem from ranking against 419, so an
+# external rank-1 can only be compared at the N it was measured on. 17 is there because
+# that is the gallery size of the closest published leave-users-out result (78.5%).
+gallery_sizes: [17, 48, 100]
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a

@@ -169,6 +169,7 @@ def window_curve_model(args, device=None):
         probe_k=int(getattr(args, "probe_k", 1)),
         probes_per_user=int(getattr(args, "probes_per_user", 16)),
         seed=getattr(args, "seed", 67),
+        gallery_sizes=tuple(int(n) for n in (getattr(args, "gallery_sizes", None) or [])),
     )
     print("\n" + format_cmc(identification))
 

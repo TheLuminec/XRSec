@@ -189,10 +189,27 @@ def score_templates(model, embeddings: torch.Tensor, manifest, device) -> torch.
 
 
 
+
+def _ranks_within(scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """
+    Rank of the correct user per probe, ties rank-averaged.
+
+    Same convention as roc_auc and for the same reason: an untrained model emits a
+    near-constant score, and breaking those ties by sort order would report either rank
+    1 or rank N for what is really no information at all. Averaged, a constant scorer
+    lands at (N+1)/2.
+    """
+    correct = scores[torch.arange(scores.shape[0]), labels]
+    greater = (scores > correct[:, None]).sum(dim=1)
+    tied = (scores == correct[:, None]).sum(dim=1)          # includes the correct one
+    return greater.float() + (tied.float() + 1.0) / 2.0
+
+
 @torch.no_grad()
 def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
               gallery_k: int = 8, probe_k: int = 1, probes_per_user: int = 16,
-              seed: int | None = None, batch_size: int = 256) -> dict:
+              seed: int | None = None, batch_size: int = 256,
+              gallery_sizes: tuple[int, ...] = (), subsets: int = 20) -> dict:
     """
     Closed-set identification: rank every held-out user against a probe.
 
@@ -211,6 +228,13 @@ def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
     Chance is 1/N and N is the number of enrolled users, so rank-1 is only meaningful
     beside the gallery size - both are returned, and a rank-1 quoted without its N says
     nothing.
+
+    `gallery_sizes` additionally reports rank-1 restricted to a random subset of N
+    enrolled users, averaged over `subsets` draws. That is what makes an external
+    result comparable: a paper reporting 78.5% rank-1 over 17 unseen users has not
+    beaten a lower number measured over 419, because ranking against 17 candidates is a
+    different problem. Scoring is done once and the subsets are column selections on
+    the result, so this costs almost nothing.
     """
     rng = np.random.default_rng(seed)
     normalise = getattr(model, "head", "diff_linear") == "cosine"
@@ -272,29 +296,44 @@ def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
 
     # Scored through the model's own head, so a cosine model is compared by cosine and
     # a diff_linear model by the layer it was actually trained with.
-    ranks = []
+    chunks = []
     for start in range(0, probes.shape[0], batch_size):
         chunk = probes[start:start + batch_size].to(device)
         rows = chunk.shape[0]
         left = chunk.repeat_interleave(users, dim=0)
         right = gallery.repeat(rows, 1)
-        scores = model.score(left, right).view(rows, users).detach().cpu()
+        chunks.append(model.score(left, right).view(rows, users).detach().cpu())
+    all_scores = torch.cat(chunks)
 
-        correct = scores[torch.arange(rows), labels[start:start + rows]]
-        # Ties are rank-averaged, the same convention roc_auc uses and for the same
-        # reason: an untrained model emits a near-constant score, and breaking those
-        # ties by sort order would report either rank 1 or rank N for what is really
-        # no information at all. Averaged, a constant scorer lands at (N+1)/2.
-        greater = (scores > correct[:, None]).sum(dim=1)
-        tied = (scores == correct[:, None]).sum(dim=1)      # includes the correct one
-        ranks.append(greater.float() + (tied.float() + 1.0) / 2.0)
-
-    rank = torch.cat(ranks)
+    rank = _ranks_within(all_scores, labels)
     cmc = [float((rank <= k).float().mean()) for k in range(1, users + 1)]
+
+    matched = {}
+    for size in sorted({int(n) for n in gallery_sizes if 1 < int(n) <= users}):
+        scores_at_size = []
+        for draw in range(subsets):
+            chosen = np.sort(rng.choice(users, size=size, replace=False))
+            keep = torch.from_numpy(np.isin(labels.numpy(), chosen))
+            if not keep.any():
+                continue
+            # Relabel into the subset's own index space before ranking.
+            remap = {int(user): position for position, user in enumerate(chosen)}
+            subset_labels = torch.tensor(
+                [remap[int(v)] for v in labels[keep].tolist()], dtype=torch.long)
+            subset_scores = all_scores[keep][:, torch.from_numpy(chosen)]
+            subset_rank = _ranks_within(subset_scores, subset_labels)
+            scores_at_size.append(float((subset_rank <= 1).float().mean()))
+        if scores_at_size:
+            matched[size] = {
+                "rank1": float(np.mean(scores_at_size)),
+                "sd": float(np.std(scores_at_size)),
+                "chance": 1.0 / size,
+            }
 
     return {
         "users": users,
         "probes": int(rank.numel()),
+        "rank1_at_gallery_size": matched,
         "gallery_k": gallery_k,
         "probe_k": probe_k,
         "rank1": cmc[0],
@@ -319,6 +358,13 @@ def format_cmc(result: dict) -> str:
         f"  rank-5 : {result['rank5']:.4f}",
         f"  mean rank {result['mean_rank']:.2f} of {result['users']}",
     ]
+    matched = result.get("rank1_at_gallery_size") or {}
+    if matched:
+        lines.append("  rank-1 restricted to a random gallery of N users:")
+        for size in sorted(matched):
+            entry = matched[size]
+            lines.append(f"    N={size:<4} {entry['rank1']:.4f} +/- {entry['sd']:.4f}"
+                         f"   (chance {entry['chance']:.4f})")
     if result.get("same_session_fallback_users"):
         lines.append(f"  WARNING: {result['same_session_fallback_users']} users had one session; "
                      f"their gallery and probe share it")

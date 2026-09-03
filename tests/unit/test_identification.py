@@ -127,3 +127,62 @@ def test_format_is_ascii_only():
                                 gallery_k=4, probe_k=1, probes_per_user=3, seed=8))
     text.encode("cp1252")
     assert "rank-1" in text and "chance" in text
+
+
+# --- matched gallery size -----------------------------------------------------
+#
+# An external rank-1 measured over 17 users is not comparable to one measured over
+# 419: chance is 1/N, and ranking against fewer candidates is an easier problem.
+
+def test_rank1_is_reported_at_a_restricted_gallery_size():
+    index, embeddings = _index(num_users=10)
+    noisy = embeddings + 0.8 * torch.randn_like(embeddings)
+    result = cmc_curve(_CosineModel(), noisy, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=8, seed=1,
+                       gallery_sizes=(3, 5), subsets=10)
+
+    matched = result["rank1_at_gallery_size"]
+    assert set(matched) == {3, 5}
+    assert matched[3]["chance"] == pytest.approx(1 / 3)
+    assert matched[5]["chance"] == pytest.approx(1 / 5)
+
+
+def test_a_smaller_gallery_is_an_easier_problem():
+    """The whole reason matched N matters: fewer candidates means higher rank-1."""
+    index, embeddings = _index(num_users=12)
+    noisy = embeddings + 1.2 * torch.randn_like(embeddings)
+    result = cmc_curve(_CosineModel(), noisy, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=12, seed=2,
+                       gallery_sizes=(2, 4, 12), subsets=20)
+
+    matched = result["rank1_at_gallery_size"]
+    assert matched[2]["rank1"] >= matched[4]["rank1"] >= matched[12]["rank1"] - 1e-9
+
+
+def test_the_full_gallery_size_agrees_with_the_headline_rank1():
+    index, embeddings = _index(num_users=8)
+    noisy = embeddings + 0.6 * torch.randn_like(embeddings)
+    result = cmc_curve(_CosineModel(), noisy, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=10, seed=3,
+                       gallery_sizes=(8,), subsets=5)
+    # N equal to the whole gallery is the same measurement, whatever subset is drawn.
+    assert result["rank1_at_gallery_size"][8]["rank1"] == pytest.approx(result["rank1"])
+    assert result["rank1_at_gallery_size"][8]["sd"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_impossible_gallery_sizes_are_ignored_not_fatal():
+    index, embeddings = _index(num_users=5)
+    result = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=4, seed=4,
+                       gallery_sizes=(1, 5, 50), subsets=5)
+    assert set(result["rank1_at_gallery_size"]) == {5}
+
+
+def test_matched_sizes_appear_in_the_formatted_output():
+    index, embeddings = _index(num_users=6)
+    result = cmc_curve(_CosineModel(), embeddings, index, torch.device("cpu"),
+                       gallery_k=4, probe_k=1, probes_per_user=4, seed=5,
+                       gallery_sizes=(3,), subsets=5)
+    text = format_cmc(result)
+    text.encode("cp1252")
+    assert "N=3" in text

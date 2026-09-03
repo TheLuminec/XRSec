@@ -457,6 +457,27 @@ k-curve already needs, so any existing checkpoint can be scored with no retraini
 - **Never quote rank-1 without N.** Chance moves with the gallery size, so rank-1 at 48
   identities and rank-1 at 419 are different questions. Both are in every row.
 
+**Matching N is half the comparison, and it is the half that is easy to forget.** The
+closest published leave-users-out result is **rank-1 closed-set identification over 17
+unseen users on a single 15-second window: 83.1% within-application, 78.5% averaged
+across applications** (`docs/LITERATURE_BRIEFING.md`, source X). Two mismatches with
+ours, not one:
+
+| | theirs | ours |
+| --- | --- | --- |
+| metric | rank-1 identification, chance 1/17 | pairwise verification, chance 0.50 |
+| gallery | 17 users | 343-419 users |
+| window | 15s | 2s |
+
+So 0.669 against 0.785 was never a like-for-like gap. `gallery_sizes` reports rank-1
+restricted to a random gallery of N users, averaged over draws, from the same scoring
+pass - `[17, 48, 100]` by default, with 17 there specifically to sit beside that
+result. Ranking against 17 candidates is an easier problem than ranking against 419,
+and the difference is not performance.
+
+The window length is the third mismatch and is the one that might be a real deficit;
+that is what `window_stride` now makes testable.
+
 `gallery_k` / `probe_k` / `probes_per_user` set how much evidence each side gets.
 Enrolment size is worth more than probe size in the literature, and the asymmetry is
 free to test here.
