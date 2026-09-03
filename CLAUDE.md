@@ -327,6 +327,37 @@ for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) use
 
 The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
+**BOXRR-23** (105,852 users, ~5.35TB) is the largest identity source available and
+identity count is our binding constraint, so it is the highest-value acquisition on the
+board. The user has agreed to its Data Use Agreement. **That agreement carries ongoing
+obligations, not just an access checkbox** - it is a HIPAA-style Limited Data Set
+agreement from UC Berkeley's Office of Technology Licensing, and these outlive the
+download:
+
+| clause | obligation |
+| --- | --- |
+| 9 | IRB or equivalent ethics approval **in advance of use** - a precondition, not a promise |
+| 4 | no further distribution without written consent; requests referred back to Berkeley |
+| 5 | **mandatory citation of Nair et al. 2023** in any public disclosure |
+| 10-11 | no deanonymization, no contacting subjects, no inferring sensitive attributes |
+| 13 | recipient indemnifies UC Berkeley |
+| 15 | Berkeley may terminate; all copies must then be destroyed, **including derived ones** |
+
+Consequences to build around rather than remember:
+
+- Clause 15 puts **`.cache/samples/` in scope** - cached windows are derived copies.
+- Clause 4 makes moving BOXRR-derived data between our three machines an open question.
+  Convert wherever the raw data lands; do not centralise then copy.
+- Clause 5 means the citation must travel with the data, not live in someone's memory.
+- Format is `.XROR`, one tarball per user, with a BSON metadata index that allows
+  selecting users by id before downloading - so a slice of N identities is possible
+  without chunk boundaries. Official reader: `github.com/MetaGuard/xror`.
+
+Take the **HMD track only**; the controllers are present and head-only is a deliberate
+project constraint. An earlier note here claiming "106 chunks of ~1,000 users at ~45GB"
+came from an automated page summary and was **wrong** - the repository shows per-user
+tarballs.
+
 **who-is-alyx** has its own converter, `prepare_who_is_alyx.py` (`--inspect` first, then convert). Worth knowing about the source: rotation columns are ordered **w,x,y,z** where this pipeline uses x,y,z,w, position is in **centimetres**, and `delta_time_ms` (not `timestamp`) is milliseconds since session start. Columns are read by name and the converter checks the mean quaternion norm, because a silent reordering produces a plausible-looking rotation. 76 players / 146 sessions / 6.74GB raw; most players have two ~45-minute sessions, so nearly all of them can form cross-session positives — unlike NJIT_6DOF.
 
 Getting any *other* new dataset to that layout is still the weakest link:
