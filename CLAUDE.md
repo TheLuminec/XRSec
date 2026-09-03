@@ -433,6 +433,34 @@ still load. Identity training is standard-mode only; boosting stays pairwise.
 
 Both are tracked per epoch into `history` (`test_auc`, `test_eer`) and recorded in `results/runs.csv` as `best_test_auc` / `best_test_eer`.
 
+## Identification vs verification (they are not the same number)
+
+Everything this project reports as a headline is **verification**: given two windows,
+same person or not - two classes, chance 0.50, and 0.669 is measured that way. Most of
+the XR biometrics literature reports **identification**: given a probe, rank a gallery
+of N enrolled users and check whether the right one is first - chance 1/N. A published
+rank-1 of 78.5% and our 0.669 are not on the same scale and never were, so the gap
+between them is not a gap in performance until both are measured the same way.
+
+`cmc_curve()` in `model/templates.py` computes the second from the same embeddings the
+k-curve already needs, so any existing checkpoint can be scored with no retraining.
+`mode=curve` prints it beside the verification numbers and records `rank1` /
+`gallery_users` per run.
+
+- Gallery and probe come from **different sessions**, as everywhere else here, so a
+  correct match cannot be session matching. Single-session users fall back to disjoint
+  windows of one session and are counted, exactly as cross-session pairing does.
+- Ties are **rank-averaged**, the convention `roc_auc` already uses and for the same
+  reason: an untrained model emits a near-constant score, and breaking those ties by
+  sort order would report either rank 1 or rank N for no information at all. A
+  constant scorer lands at rank (N+1)/2.
+- **Never quote rank-1 without N.** Chance moves with the gallery size, so rank-1 at 48
+  identities and rank-1 at 419 are different questions. Both are in every row.
+
+`gallery_k` / `probe_k` / `probes_per_user` set how much evidence each side gets.
+Enrolment size is worth more than probe size in the literature, and the asymmetry is
+free to test here.
+
 ## Results log
 
 `model/results_log.py` records one run per line. Paths are absolute, anchored to the repo root so `job.chdir` can't misplace them.

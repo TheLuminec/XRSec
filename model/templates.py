@@ -188,6 +188,144 @@ def score_templates(model, embeddings: torch.Tensor, manifest, device) -> torch.
     return model.score(left, right).view(-1).detach().cpu()
 
 
+
+@torch.no_grad()
+def cmc_curve(model, embeddings: torch.Tensor, sample_index, device,
+              gallery_k: int = 8, probe_k: int = 1, probes_per_user: int = 16,
+              seed: int | None = None, batch_size: int = 256) -> dict:
+    """
+    Closed-set identification: rank every held-out user against a probe.
+
+    This project reports *verification* - given two windows, same person or not, a
+    two-class decision at chance 0.50. Most of the XR biometrics literature reports
+    *identification* - given a probe, rank a gallery of N enrolled users and check
+    whether the right one comes first, at chance 1/N. Those are different tasks, and a
+    verification accuracy cannot be compared against a published rank-1 figure. This
+    computes the second so the comparison can actually be made.
+
+    Protocol matches the rest of the pipeline: the gallery template for each user comes
+    from one session and the probes from a different one, so a correct match cannot be
+    session matching. Users with a single session fall back to disjoint windows of the
+    same session and are counted, exactly as cross-session pairing does.
+
+    Chance is 1/N and N is the number of enrolled users, so rank-1 is only meaningful
+    beside the gallery size - both are returned, and a rank-1 quoted without its N says
+    nothing.
+    """
+    rng = np.random.default_rng(seed)
+    normalise = getattr(model, "head", "diff_linear") == "cosine"
+
+    def template(indices: torch.Tensor) -> torch.Tensor:
+        vectors = embeddings[indices]
+        if normalise:
+            vectors = F.normalize(vectors, dim=1)
+        pooled = vectors.mean(dim=0)
+        return F.normalize(pooled, dim=0) if normalise else pooled
+
+    gallery_vectors, probe_vectors, probe_labels = [], [], []
+    same_session_fallback = 0
+    skipped = 0
+
+    for user_index in range(sample_index.num_users):
+        windows = sample_index.user_sample_indices[user_index]
+        if windows.numel() < gallery_k + probe_k:
+            skipped += 1
+            continue
+
+        groups = _sessions_for_user(sample_index, user_index, minimum=1)
+        usable = [g for g in groups if g.numel() >= max(gallery_k, probe_k)]
+
+        if len(usable) >= 2:
+            first, second = rng.choice(len(usable), size=2, replace=False)
+            gallery_pool, probe_pool = usable[int(first)], usable[int(second)]
+        else:
+            # One session: split its windows so gallery and probe stay disjoint. The
+            # session shortcut is live for this user, which is why it is counted.
+            same_session_fallback += 1
+            shuffled = torch.as_tensor(rng.permutation(windows.numpy()))
+            gallery_pool = shuffled[:gallery_k]
+            probe_pool = shuffled[gallery_k:]
+            if probe_pool.numel() < probe_k:
+                skipped += 1
+                same_session_fallback -= 1
+                continue
+
+        label = len(gallery_vectors)
+        gallery_vectors.append(template(
+            torch.as_tensor(rng.choice(gallery_pool.numpy(), size=gallery_k, replace=False))))
+
+        for _ in range(probes_per_user):
+            picked = rng.choice(probe_pool.numpy(), size=probe_k,
+                                replace=probe_pool.numel() < probe_k)
+            probe_vectors.append(template(torch.as_tensor(picked)))
+            probe_labels.append(label)
+
+    users = len(gallery_vectors)
+    if users < 2 or not probe_vectors:
+        return {"users": users, "probes": 0, "rank1": float("nan"), "chance": float("nan"),
+                "same_session_fallback_users": same_session_fallback, "skipped_users": skipped,
+                "cmc": []}
+
+    gallery = torch.stack(gallery_vectors).to(device)
+    probes = torch.stack(probe_vectors)
+    labels = torch.tensor(probe_labels, dtype=torch.long)
+
+    # Scored through the model's own head, so a cosine model is compared by cosine and
+    # a diff_linear model by the layer it was actually trained with.
+    ranks = []
+    for start in range(0, probes.shape[0], batch_size):
+        chunk = probes[start:start + batch_size].to(device)
+        rows = chunk.shape[0]
+        left = chunk.repeat_interleave(users, dim=0)
+        right = gallery.repeat(rows, 1)
+        scores = model.score(left, right).view(rows, users).detach().cpu()
+
+        correct = scores[torch.arange(rows), labels[start:start + rows]]
+        # Ties are rank-averaged, the same convention roc_auc uses and for the same
+        # reason: an untrained model emits a near-constant score, and breaking those
+        # ties by sort order would report either rank 1 or rank N for what is really
+        # no information at all. Averaged, a constant scorer lands at (N+1)/2.
+        greater = (scores > correct[:, None]).sum(dim=1)
+        tied = (scores == correct[:, None]).sum(dim=1)      # includes the correct one
+        ranks.append(greater.float() + (tied.float() + 1.0) / 2.0)
+
+    rank = torch.cat(ranks)
+    cmc = [float((rank <= k).float().mean()) for k in range(1, users + 1)]
+
+    return {
+        "users": users,
+        "probes": int(rank.numel()),
+        "gallery_k": gallery_k,
+        "probe_k": probe_k,
+        "rank1": cmc[0],
+        "rank5": cmc[min(4, users - 1)],
+        "chance": 1.0 / users,
+        "mean_rank": float(rank.float().mean()),
+        "same_session_fallback_users": same_session_fallback,
+        "skipped_users": skipped,
+        "cmc": cmc,
+    }
+
+
+def format_cmc(result: dict) -> str:
+    """ASCII only - Windows consoles are cp1252 and crash on box drawing when piped."""
+    if not result.get("cmc"):
+        return "Identification: not enough users with usable sessions."
+
+    lines = [
+        f"Closed-set identification: {result['users']} enrolled users, "
+        f"{result['probes']} probes, gallery_k={result['gallery_k']}, probe_k={result['probe_k']}",
+        f"  rank-1 : {result['rank1']:.4f}   (chance {result['chance']:.4f})",
+        f"  rank-5 : {result['rank5']:.4f}",
+        f"  mean rank {result['mean_rank']:.2f} of {result['users']}",
+    ]
+    if result.get("same_session_fallback_users"):
+        lines.append(f"  WARNING: {result['same_session_fallback_users']} users had one session; "
+                     f"their gallery and probe share it")
+    if result.get("skipped_users"):
+        lines.append(f"  {result['skipped_users']} users skipped (too few windows)")
+    return "\n".join(lines)
+
 def variance_decomposition(embeddings: torch.Tensor, sample_index, normalise: bool = True) -> dict:
     """
     Split embedding variance into the three components that decide the k-curve.

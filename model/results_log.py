@@ -74,6 +74,8 @@ FIELDS = [
     "same_session_fallback_users",
     "eval_positive_fraction",
     "template_k",
+    "rank1",
+    "gallery_users",
     "center_position",
     "max_users",
     "selected_test_acc",

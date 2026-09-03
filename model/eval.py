@@ -151,11 +151,26 @@ def window_curve_model(args, device=None):
     # Printed before the curve, because it predicts the curve's shape: averaging can
     # only reduce the within-session component, so a flat result should be checked
     # against what this decomposition says to expect rather than argued about.
-    from templates import embed_all, format_decomposition, variance_decomposition
+    from templates import (cmc_curve, embed_all, format_cmc, format_decomposition,
+                           variance_decomposition)
 
     embeddings = embed_all(model, index, device, int(getattr(args, "batch_size", 512)))
     normalise = getattr(model, "head", "diff_linear") == "cosine"
     print("\n" + format_decomposition(variance_decomposition(embeddings, index, normalise)))
+
+    # Closed-set identification, from the same embeddings. This is the metric the XR
+    # biometrics literature reports, and it is not the one this project's headline is
+    # in: verification is a two-class decision at chance 0.50, identification ranks N
+    # enrolled users at chance 1/N. Reporting both is what makes a published rank-1
+    # figure comparable to anything here.
+    identification = cmc_curve(
+        model, embeddings, index, device,
+        gallery_k=int(getattr(args, "gallery_k", 8)),
+        probe_k=int(getattr(args, "probe_k", 1)),
+        probes_per_user=int(getattr(args, "probes_per_user", 16)),
+        seed=getattr(args, "seed", 67),
+    )
+    print("\n" + format_cmc(identification))
 
     print("\nWindows aggregated per side (k=1 is the single-window operating point):")
     print(format_curve(rows))
@@ -167,6 +182,10 @@ def window_curve_model(args, device=None):
     tag = str(getattr(args, "_dataset_tag", "") or "curve")
     for row in rows:
         if row.get("pairs"):
+            # A property of the checkpoint rather than of k, so it rides on every row
+            # and a reader grouping by run gets one consistent value.
+            row = dict(row, rank1=identification.get("rank1"),
+                       gallery_users=identification.get("users"))
             results_log.append_run(args, row, dataset_tag=tag)
     return rows
 

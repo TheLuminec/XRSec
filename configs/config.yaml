@@ -75,6 +75,14 @@ resample: nearest
 # self-match positive.
 window_stride: null
 
+# Closed-set identification, reported by mode=curve beside the verification numbers.
+# gallery_k windows enrol each user, probe_k windows form each probe, and the two come
+# from different sessions. Chance is 1/N where N is the number of enrolled users, so
+# rank-1 is only interpretable next to the gallery size the run reports.
+gallery_k: 8
+probe_k: 1
+probes_per_user: 16
+
 # Keep at most this many users, stratified proportionally across data_dirs. Exists to
 # separate identity count from dataset diversity: pooling seven corpora changed
 # identity count 48 -> 343, diversity 1 -> 7, and per-dataset normalisation from a
