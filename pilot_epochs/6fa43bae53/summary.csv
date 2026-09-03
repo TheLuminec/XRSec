@@ -1,0 +1,3 @@
+rank,best_test_acc,fold_std,folds_completed,fold_scores,extractor,overrides,status,checkpoint,error
+1,0.7001971900463104,0.013678807818043287,3,0.6871;0.7191;0.6944,bilstm,epochs=20,ok,C:\Users\thelu\Desktop\GIT\XRSec\pilot_epochs\6fa43bae53\runs\bilstm_bbf267adc9_fold0\best.pth,
+2,0.7001971900463104,0.013678807818043287,3,0.6871;0.7191;0.6944,bilstm,epochs=30,ok,C:\Users\thelu\Desktop\GIT\XRSec\pilot_epochs\6fa43bae53\runs\bilstm_ec128dcc46_fold0\best.pth,

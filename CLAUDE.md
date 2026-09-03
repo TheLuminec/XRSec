@@ -258,6 +258,50 @@ Under `within_dataset_negatives`, any user who is the sole member of their datas
 
 Verified with the random extractor at `val_user_fraction=0.25` over 3 seeds: max-over-epochs averaged 0.525 while the validation-selected figure averaged **0.502**, i.e. chance. Default is 0 (historical behaviour) so old comparisons stay like-for-like; set it for anything you intend to quote.
 
+### How many folds a question needs, and which questions are unaffordable
+
+Paired folds are far more sensitive than the raw fold spread suggests - the 0.037 sd is
+the spread of *absolute* accuracy across folds, while a paired test only sees the sd of
+the *difference*, which is small when an intervention acts consistently. Recovered from
+the t-statistics already recorded in this file:
+
+| result | difference | t(4) | paired sd |
+| --- | --- | --- | --- |
+| cross-session, bilstm | 0.0160 | 4.06 | **0.0088** |
+| cross-session, motion_tdnn | 0.0110 | 1.40 | 0.0176 |
+| center_position, bilstm | 0.1339 | 9.00 | 0.0333 |
+| center_position, motion_tdnn | 0.1348 | 10.27 | 0.0293 |
+
+So paired sd runs 0.009 to 0.033 depending on how systematic the effect is. Minimum
+detectable difference, two-sided p<0.05:
+
+| folds | sd=0.009 | sd=0.018 | sd=0.033 |
+| --- | --- | --- | --- |
+| 3 | 0.022 | 0.045 | 0.082 |
+| **5** | **0.011** | **0.022** | **0.041** |
+| 10 | 0.006 | 0.013 | 0.024 |
+| 15 | 0.005 | 0.010 | 0.018 |
+
+**Read this before designing an experiment, not after.** Three consequences:
+
+1. **A 3-fold pilot resolves almost nothing.** At the sd actually observed in the
+   balance pilot (0.039) it could only have detected a difference of ~0.097. The
+   hypothesis was +0.005 to +0.02. That pilot was incapable of confirming its own
+   premise and could only ever have caught a large effect - which is worth knowing
+   *before* spending the runs, and was not.
+2. **A 5-fold sweep resolves 0.011 to 0.041.** Fine for the objective (+0.065) and for
+   `center_position` (-0.134). Marginal for anything predicted under 0.02.
+3. **Some questions are simply unaffordable.** An intervention predicted at +0.005 to
+   +0.02 needs 10-15 folds, i.e. 20-30 runs for one comparison. That cost has to be
+   weighed against the prediction before running, and for most small-effect ideas the
+   honest answer is not to run them at all rather than to run them underpowered and
+   read the noise.
+
+The corollary is uncomfortable and worth stating plainly: **most of the remaining ideas
+in this project sit at or below the resolution of the evaluation we can afford.** The
+things that have moved this project - the objective, identity count, removing shortcuts -
+all moved it by 0.05 or more. Prefer interventions with that shape.
+
 ### The evaluation is noisier than it looks
 
 **Measured:** holding out a different random 5 users moves a training-free position probe from 0.631 to 0.746 — a **0.114 spread, sd 0.037** — while the binomial error bar on 2560 pairs is only ±0.019. The effective sample size is the number of held-out *users*, not pairs.
