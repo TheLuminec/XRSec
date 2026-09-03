@@ -150,6 +150,15 @@ def window_curve_model(args, device=None):
 
     print("\nWindows aggregated per side (k=1 is the single-window operating point):")
     print(format_curve(rows))
+
+    # One row per k. A curve that lived only in stdout would repeat the mistake
+    # results/runs.csv exists to prevent.
+    import results_log
+
+    tag = str(getattr(args, "_dataset_tag", "") or "curve")
+    for row in rows:
+        if row.get("pairs"):
+            results_log.append_run(args, row, dataset_tag=tag)
     return rows
 
 

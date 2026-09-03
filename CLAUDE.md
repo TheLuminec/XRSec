@@ -279,6 +279,7 @@ Getting any *other* new dataset to that layout is still the weakest link:
 
 | dataset | users | native Hz | notes |
 | --- | --- | --- | --- |
+| who_is_alyx | 76 | 22–98 (capped to 60 on conversion) | 70/76 have two ~45-min sessions, so nearly all can form cross-session positives |
 | Head_and_Gaze | 100 | 120 | **half the files (2630 `V1_*`) have no quaternion** — gaze rays only |
 | PanoSaliency | 99 | 16.5 | 25 single-row sessions (zero duration); below 20Hz |
 | VR_User_Behavior | 48 | 89.5 | the default dataset |
@@ -385,7 +386,7 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **214 passing, ~24s**.
+Current baseline: **231 passing, ~10s**.
 
 ## Performance notes
 

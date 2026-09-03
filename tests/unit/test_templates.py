@@ -234,3 +234,52 @@ def test_curve_notes_a_k_that_cannot_be_built():
                         pairs_per_user=8, seed=14)
     assert rows[-1]["pairs"] == 0 and "note" in rows[-1]
     assert "32" in format_curve(rows)
+
+
+# --- positive control ---------------------------------------------------------
+
+def test_aggregation_demonstrably_improves_a_signal_it_should_improve():
+    """
+    Positive control for the k-sweep itself.
+
+    A flat curve on real data is ambiguous: it is equally consistent with the
+    structural bound (templates come from one session, so averaging cannot touch the
+    between-session shift) and with a k-sweep that simply does not aggregate. This
+    pins down the second possibility. Here each user has a constant per-identity
+    offset plus independent per-window noise - exactly the case averaging must help -
+    so if AUC does not climb with k, the machinery is broken and any flat result on
+    real data means nothing.
+    """
+    torch.manual_seed(0)
+    users, sessions, per_session, dim = 8, 3, 24, 16
+
+    # Per-user signal, drowned in per-window noise that averaging can cancel.
+    identity = torch.randn(users, dim) * 1.0
+    embeddings = []
+    for user in range(users):
+        noise = torch.randn(sessions * per_session, dim) * 6.0
+        embeddings.append(identity[user].unsqueeze(0) + noise)
+    embeddings = torch.cat(embeddings)
+
+    index = _index(users=users, sessions=sessions, per_session=per_session)
+
+    class ConstantEmbedder(torch.nn.Module):
+        head = "cosine"
+
+        def score(self, left, right):
+            return torch.nn.functional.cosine_similarity(left, right, dim=1).unsqueeze(1)
+
+    model = ConstantEmbedder()
+
+    aucs = []
+    for k in (1, 8):
+        manifest = generate_template_manifest(index, pairs_per_user=48, k=k, seed=21)
+        scores = score_templates(model, embeddings, manifest, torch.device("cpu"))
+        from metrics import roc_auc
+        aucs.append(roc_auc(scores, manifest["labels"]))
+
+    assert aucs[1] > aucs[0] + 0.05, (
+        f"aggregation did not improve a signal it must improve (k=1 {aucs[0]:.3f}, "
+        f"k=8 {aucs[1]:.3f}); a flat curve on real data cannot be interpreted while "
+        "this fails"
+    )

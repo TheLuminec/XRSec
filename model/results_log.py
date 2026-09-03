@@ -41,6 +41,7 @@ FIELDS = [
     "cross_session_positives",
     "same_session_fallback_users",
     "eval_positive_fraction",
+    "template_k",
     "center_position",
     "max_users",
     "selected_test_acc",
@@ -176,7 +177,20 @@ def _last(values):
 
 
 def summarize(mode: str, result) -> dict:
-    """Flatten a train/boosted/test result into the metric columns."""
+    """Flatten a train/boosted/test/curve result into the metric columns."""
+    if mode == "curve":
+        # One row per k. A curve that only ever existed in stdout would repeat the
+        # mistake this file was written to fix.
+        return {
+            "template_k": result.get("k"),
+            "selected_test_auc": result.get("auc"),
+            "best_test_auc": result.get("auc"),
+            "selected_test_eer": result.get("eer"),
+            "best_test_eer": result.get("eer"),
+            "selected_test_acc": result.get("accuracy_at_eer"),
+            "eval_positive_fraction": result.get("positive_fraction"),
+        }
+
     if mode == "test":
         loss, accuracy, *rest = result
         metrics = rest[0] if rest else {}

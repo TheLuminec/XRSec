@@ -134,3 +134,25 @@ def test_stray_header_from_a_union_merge_is_not_treated_as_data(tmp_path, monkey
     rows = _rows(path)
     assert len(rows) == 2, "the duplicated header must be dropped, not migrated as data"
     assert all(row["mode"] == "train" for row in rows)
+
+
+def test_curve_rows_are_recorded_one_per_k(tmp_path):
+    """
+    A k-curve that only ever existed in stdout would repeat the mistake this file was
+    written to fix.
+    """
+    path = tmp_path / "runs.csv"
+    curve = [
+        {"k": 1, "pairs": 640, "positive_fraction": 0.5, "auc": 0.71,
+         "eer": 0.34, "accuracy_at_eer": 0.66},
+        {"k": 8, "pairs": 640, "positive_fraction": 0.5, "auc": 0.78,
+         "eer": 0.28, "accuracy_at_eer": 0.72},
+    ]
+    for row in curve:
+        results_log.append_run(_cfg(mode="curve"), row, dataset_tag="users", results_path=path)
+
+    rows = _rows(path)
+    assert [r["template_k"] for r in rows] == ["1", "8"]
+    assert float(rows[1]["selected_test_auc"]) == 0.78
+    assert float(rows[1]["selected_test_eer"]) == 0.28
+    assert float(rows[1]["eval_positive_fraction"]) == 0.5
