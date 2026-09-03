@@ -488,19 +488,24 @@ is right, and it is the cheapest untested thing on the board.
 
 `WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
 identity's influence on the gradient is proportional to how much data it happens to
-have. Measured on the pooled corpus at `sample_time=2` (312 identities with windows):
+have. Measured on the pooled 7-dataset corpus, at both window lengths because window
+count is `floor(duration / sample_time)` and a short session can round down to nothing:
 
-| | |
-| --- | --- |
-| windows per identity | min 34, median 777, max **2639** |
-| max/min | **77.6x** |
-| top 10% of identities | hold 23.6% of all windows |
-| bottom 50% | hold 19.1% between them |
-| **effective identity count** | **193 of 312** |
+| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
+| --- | --- | --- |
+| identities with windows | 312 | 312 |
+| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
+| max/min | 77.6x | **87.5x** |
+| top 10% hold | 23.6% | 23.9% |
+| bottom 50% hold | 19.1% | 18.6% |
+| **effective identity count** | 193 of 312 | **190 of 312** |
+
+No identity drops out at the longer window, and the imbalance is marginally *worse*
+there, so the effect is a property of the corpus rather than of one window length.
 
 The last row is the inverse participation ratio: the number of *evenly represented*
 identities this corpus is worth under uniform window sampling. **We are discarding
-about 38% of our identity diversity to sampling imbalance** - on the one axis that has
+about 39% of our identity diversity to sampling imbalance** - on the one axis that has
 been measured to bind, and for free, without needing a single new user.
 
 AM-Softmax with imbalanced classes separates frequent identities well and rare ones
@@ -511,7 +516,7 @@ never seen at all.
 its identity's count, keeping the epoch the same size. Off by default so existing
 comparisons stay like-for-like. **Untested - predict before running it.** Honest
 expectation: this is the same *kind* of intervention as raising identity count, which
-is the only data-side lever that has ever worked here, but 193 -> 312 effective is a
+is the only data-side lever that has ever worked here, but 190 -> 312 effective is a
 1.6x change where 48 -> 343 was 7x, so **+0.005 to +0.02** rather than anything
 dramatic. It is cheap and it is on the right axis.
 
