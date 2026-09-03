@@ -23,6 +23,13 @@ objective: pair_bce
 identity_margin: 0.35
 identity_scale: 30.0
 
+# Draw each window with probability inversely proportional to how many its identity
+# has, so every identity contributes equally to an epoch. Window counts span 77x on
+# the pooled corpus (34 to 2639), which leaves an effective identity count of 193
+# against 312 real ones - about 38% of our identity diversity discarded by sampling,
+# on the axis measured to be binding. identity_softmax only; off by default.
+balance_identities: false
+
 # Pair scoring head: diff_linear (original) or cosine.
 head: diff_linear
 

@@ -40,7 +40,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
 
 
 class WindowDataset(Dataset):
@@ -85,15 +85,65 @@ class AMSoftmaxHead(nn.Module):
         return (cosine - margin) * self.scale
 
 
-def create_window_loader(sample_index, batch_size: int, device, seed: int, num_workers: int = 0):
+def identity_sample_weights(labels: torch.Tensor, num_classes: int) -> torch.Tensor:
+    """One over the number of windows that identity has, per window."""
+    counts = torch.bincount(labels, minlength=num_classes).clamp(min=1).to(torch.float64)
+    return (1.0 / counts)[labels]
+
+
+def effective_identity_count(labels: torch.Tensor, num_classes: int) -> float:
+    """
+    How many evenly-represented identities this corpus is worth.
+
+    Inverse participation ratio of the per-identity window counts: N identities each
+    contributing equally gives N, and one identity dominating gives 1. Measured on the
+    pooled 7-dataset corpus at sample_time=2 it is 193 against 312 real identities -
+    so uniform sampling over windows discards about 38% of the identity diversity we
+    have, on the one axis measured to bind.
+    """
+    counts = torch.bincount(labels, minlength=num_classes).to(torch.float64)
+    counts = counts[counts > 0]
+    if counts.numel() == 0:
+        return 0.0
+    return float(counts.sum() ** 2 / (counts ** 2).sum())
+
+
+def create_window_loader(sample_index, batch_size: int, device, seed: int, num_workers: int = 0,
+                         balance_identities: bool = False):
+    """
+    Windows as examples, optionally sampled so every identity contributes equally.
+
+    Window counts per user span 77x on the pooled corpus (34 to 2639), so uniform
+    sampling over windows lets the best-represented tenth of users supply a quarter of
+    every epoch's gradient while the bottom half supply a fifth between them.
+    AM-Softmax then separates frequent identities well and rare ones poorly, which is
+    the wrong trade when the whole task is generalising to identities never seen.
+
+    `balance_identities` draws each window with probability inversely proportional to
+    how many its identity has, keeping the epoch the same size. Off by default so
+    existing comparisons stay like-for-like.
+    """
     pin_memory = device.type == "cuda" if device else False
+    dataset = WindowDataset(sample_index)
+    generator = torch.Generator().manual_seed(int(seed))
+
+    sampler = None
+    if balance_identities:
+        weights = identity_sample_weights(dataset.labels, dataset.num_classes)
+        sampler = WeightedRandomSampler(
+            weights, num_samples=len(dataset), replacement=True, generator=generator)
+        effective = effective_identity_count(dataset.labels, dataset.num_classes)
+        print(f"  balanced identity sampling: {dataset.num_classes} identities, "
+              f"effective {effective:.0f} before balancing")
+
     return DataLoader(
-        WindowDataset(sample_index),
+        dataset,
         batch_size=batch_size,
-        shuffle=True,
+        shuffle=sampler is None,
+        sampler=sampler,
         num_workers=num_workers,
         pin_memory=pin_memory,
-        generator=torch.Generator().manual_seed(int(seed)),
+        generator=generator,
     )
 
 
@@ -208,6 +258,7 @@ def build_identity_trainer(model, sample_index, train_manifest, device, args):
         device=device,
         seed=int(getattr(args, "seed", 67)),
         num_workers=int(getattr(args, "num_workers", 0)),
+        balance_identities=bool(getattr(args, "balance_identities", False)),
     )
 
     print(f"Identity objective: {sample_index.num_users} classes, "

@@ -190,3 +190,67 @@ def test_identity_objective_forces_the_cosine_head():
 
     args = types.SimpleNamespace(objective="pair_bce", head="diff_linear")
     assert _resolve_head(args) == "diff_linear"
+
+
+# --- balanced identity sampling -----------------------------------------------
+#
+# Window counts per user span 77x on the pooled corpus (34 to 2639), leaving an
+# effective identity count of 193 against 312 real ones. Identity count is the axis
+# measured to bind, so that is ~38% of our diversity lost to sampling.
+
+def _lopsided_index(counts=(100, 10, 1)):
+    import types
+    total = sum(counts)
+    offsets, start = [], 0
+    for count in counts:
+        offsets.append(torch.arange(start, start + count))
+        start += count
+    return types.SimpleNamespace(
+        samples=torch.randn(total, 7, 10),
+        sample_count=total,
+        num_users=len(counts),
+        user_sample_indices=offsets,
+    )
+
+
+def test_effective_identity_count_measures_the_imbalance():
+    from identity_train import WindowDataset, effective_identity_count
+
+    balanced = WindowDataset(_lopsided_index((50, 50, 50)))
+    assert effective_identity_count(balanced.labels, 3) == pytest.approx(3.0)
+
+    lopsided = WindowDataset(_lopsided_index((100, 10, 1)))
+    # One identity dominates, so this corpus is worth well under three.
+    assert effective_identity_count(lopsided.labels, 3) < 1.5
+
+
+def test_balanced_sampling_evens_out_who_the_model_sees():
+    from identity_train import create_window_loader
+
+    index = _lopsided_index((100, 10, 1))
+    loader = create_window_loader(index, batch_size=37, device=None, seed=3,
+                                  balance_identities=True)
+    seen = torch.cat([labels for _, labels in loader])
+    counts = torch.bincount(seen, minlength=3).float()
+    # Each identity should appear roughly a third of the time despite the 100:1 split.
+    assert (counts / counts.sum()).min() > 0.20
+
+
+def test_unbalanced_sampling_is_still_the_default():
+    from identity_train import create_window_loader
+
+    index = _lopsided_index((100, 10, 1))
+    seen = torch.cat([labels for _, labels in
+                      create_window_loader(index, batch_size=37, device=None, seed=3)])
+    counts = torch.bincount(seen, minlength=3).float()
+    assert counts[0] / counts.sum() > 0.85, "default must stay uniform over windows"
+    assert int(seen.numel()) == 111, "an epoch must still cover every window exactly once"
+
+
+def test_balanced_sampling_keeps_the_epoch_the_same_size():
+    from identity_train import create_window_loader
+
+    index = _lopsided_index((100, 10, 1))
+    loader = create_window_loader(index, batch_size=16, device=None, seed=5,
+                                  balance_identities=True)
+    assert sum(int(labels.numel()) for _, labels in loader) == 111

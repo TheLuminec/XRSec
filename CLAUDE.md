@@ -470,6 +470,51 @@ Skip it and AUC looks fine while accuracy sits at chance for the wrong reason.
 `diff_linear` keeps the original `classifier.*` parameter names so older checkpoints
 still load. Identity training is standard-mode only; boosting stays pairwise.
 
+## Two untuned levers on the objective
+
+The objective is the only thing measured to give a large gain (+6.5). Both of these
+sit inside it and neither has ever been varied.
+
+### `identity_margin` / `identity_scale` were never swept
+
+AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
+recorded runs** - they were not even columns in the results log until now. These are
+the two hyperparameters that decide how hard the objective pushes identities apart, and
+0.35/30 are the values the face-recognition literature tuned against corpora with tens
+of thousands of identities. We have 343. There is no reason to think the same setting
+is right, and it is the cheapest untested thing on the board.
+
+### Window counts per identity span 77x, and that costs ~38% of our identities
+
+`WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
+identity's influence on the gradient is proportional to how much data it happens to
+have. Measured on the pooled corpus at `sample_time=2` (312 identities with windows):
+
+| | |
+| --- | --- |
+| windows per identity | min 34, median 777, max **2639** |
+| max/min | **77.6x** |
+| top 10% of identities | hold 23.6% of all windows |
+| bottom 50% | hold 19.1% between them |
+| **effective identity count** | **193 of 312** |
+
+The last row is the inverse participation ratio: the number of *evenly represented*
+identities this corpus is worth under uniform window sampling. **We are discarding
+about 38% of our identity diversity to sampling imbalance** - on the one axis that has
+been measured to bind, and for free, without needing a single new user.
+
+AM-Softmax with imbalanced classes separates frequent identities well and rare ones
+poorly, which is the wrong trade when the entire task is generalising to identities
+never seen at all.
+
+`balance_identities: true` draws each window with probability inversely proportional to
+its identity's count, keeping the epoch the same size. Off by default so existing
+comparisons stay like-for-like. **Untested - predict before running it.** Honest
+expectation: this is the same *kind* of intervention as raising identity count, which
+is the only data-side lever that has ever worked here, but 193 -> 312 effective is a
+1.6x change where 48 -> 343 was 7x, so **+0.005 to +0.02** rather than anything
+dramatic. It is cheap and it is on the right axis.
+
 ## Verification metrics
 
 `model/metrics.py`. Accuracy is measured at the fixed `logit > 0` threshold, which conflates ranking quality with operating-point placement — a model can sit at 0.50 accuracy while still ranking pairs usefully. `evaluate(..., return_metrics=True)` adds:
