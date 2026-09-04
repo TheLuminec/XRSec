@@ -177,7 +177,13 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   alyx 0.119; height alone never above 0.34 except ViewGauss k=3. Implied values held on
   alyx only and undershot the seated corpora (non-Gaussian scores: placement within a
   sitting is near-constant per person). Both sets of predictions scored, mostly wrong.
-  BOXRR and the dyn columns next.
+  BOXRR and the dyn columns next. **Coordinator's prediction for the deployment-facing
+  combination, registered 21:40 before it is scored:** on alyx at N=17, k=16, the `dyn`
+  checkpoint's cosine (LODO, alyx held out) lands at 0.10-0.16 (its pairwise AUC there is
+  0.51-0.53), and y-only plus dyn combined (rank fusion or z-scored sum) at 0.15-0.22 -
+  above either alone, below 0.25. On BOXRR held-out, dyn alone 0.35-0.55 (pairwise ~0.80).
+  Falsifier: y+dyn on alyx above 0.30 would mean the two cues are far more complementary
+  than their AUCs suggest.
 
 ## GPU queue
 
