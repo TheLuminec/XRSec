@@ -214,39 +214,54 @@ than the exception it would be fixing.
 If it does not, the rotation is wrong. Secondary checks: mean transformed `HmdPosition.y`
 near standing head height (BOXRR measures 1.602m), and mean \|q\| still 1.0000.
 
-### Half the corpus has no absolute head height at all
+### Four datasets store a DIRECTION VECTOR in `HmdPosition`, not a position
 
-The anthropometric cue - the strongest single thing this model uses - **does not exist in
-every dataset**. Mean `HmdPosition` per axis, sampled across users:
+Verified independently on raw CSVs - `|HmdPosition|` per dataset, over 25 users x 3 files:
 
-| dataset | mean x | mean y | mean z | absolute height? |
-| --- | --- | --- | --- | --- |
-| ViewGauss | 0.436 | **1.564** | 0.420 | yes |
-| NJIT_6DOF | 3.011 | **1.587** | 2.252 | yes (room-scale) |
-| VR_User_Behavior | 0.024 | **1.162** | -0.258 | yes (seated) |
-| Head_and_Gaze | 0.181 | **0.822** | 0.222 | yes (low origin) |
-| PanoSaliency | -0.536 | -0.008 | 0.195 | **no** |
-| EyeNavGS | -0.184 | 0.214 | 0.601 | **no** |
-| Panonut360 | -0.251 | 0.043 | -0.324 | **no** |
-| 360_em | -0.074 | 0.147 | 0.463 | **no** |
-| **BOXRR-23** | | **1.602** (sd 0.141) | | **yes, standing** |
+| dataset | mean \|pos\| | sd | what it is |
+| --- | --- | --- | --- |
+| PanoSaliency | **1.0000** | 1.7e-16 | **unit direction vector** |
+| 360_em | **1.0000** | 8.7e-17 | **unit direction vector**, and no quaternion column at all |
+| Head_and_Gaze `V1_*` | **1.0000** | 8.0e-17 | **unit direction vector** |
+| Panonut360 | **1.0000** | 7.1e-05 | **unit direction vector** |
+| VR_User_Behavior | 1.2403 | 9.6e-02 | real position |
+| EyeNavGS | 1.6955 | 9.7e-01 | real position (virtual-camera scene units) |
+| ViewGauss | 1.7208 | 1.4e-01 | real position |
+| NJIT_6DOF | 4.2727 | 1.3e+00 | real position, room-scale |
 
-Four of eight record position relative to a seated origin, so no axis carries a height.
-Those users cannot be separated by anthropometry at all, and whatever the model achieves
-on them is posture and behaviour.
+A norm of exactly 1 to machine epsilon is not a coordinate convention, it is a different
+quantity in the same column. **These datasets carry orientation, encoded in the position
+slot.**
 
-**This qualifies the "~78% is absolute head position" finding rather than overturning it.**
-That figure was measured on the pooled corpus, where it is an average over datasets that
-carry the cue and datasets that cannot. The per-dataset picture is far more uneven than a
-single number suggests, and any future anthropometry claim should say which datasets it
-rests on.
+**This corrects an earlier entry in this file.** A previous version said these datasets
+record "position relative to a seated origin" - inferred from their per-axis means sitting
+near zero. That inference was wrong: direction vectors average toward zero when the
+directions are spread, which produces the same signature. The mechanism matters, because a
+seated-origin position still carries posture while a direction vector carries none.
 
-Height discriminability, between-user sd over within-user sd on the height axis (a
-scale-free ratio, so comparable even where the frames differ):
+**It also corrects the `channels=position` recovery.** `360_em` going from 0 to 2,360
+windows was reported here as recovering a position dataset. Its source columns are
+`x_head, y_head, angle_deg_head, GazeRay.*` with no position field anywhere, and its
+`HmdPosition` is unit-norm, so what `channels=position` recovered was **13 identities of
+direction data**, not position. Still 13 identities; not the thing the entry implied.
 
-| ViewGauss | BOXRR-23 | NJIT | VR_User_Behavior | the four centred datasets |
-| --- | --- | --- | --- | --- |
-| 4.03 | **2.36** | 1.97 | 1.61 | 0.21-0.42 (no height axis) |
+**And it sharpens the "~78% is absolute head position" qualification.** That figure comes
+from `center_position` on the pooled corpus, which includes PanoSaliency and Panonut360 -
+where centring removes the mean of a *direction vector*, not a height. So the measurement
+"centring the position channels costs 0.134" stands; the interpretation "that 0.134 is
+height and posture" holds only for the datasets that actually carry position. Any
+anthropometry claim must name its datasets.
+
+**Provisional per-dataset held-out AUC** from a 7-dataset `identity_softmax` model (fold 0
+only, other folds pending) tracks the semantics exactly:
+
+| ViewGauss | Head_and_Gaze | VR_User_Behavior | NJIT | PanoSaliency | Panonut360 | EyeNavGS | pooled |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.942 | 0.929 | 0.711 | 0.682 | 0.568 | 0.492 | 0.495 | 0.738 |
+
+**The pooled headline is an average of near-perfect verification where real head position
+exists and chance where it does not.** That is the single most important thing to know
+before reading any pooled number in this file.
 
 ### A confound to weigh before reading the identity-count curve
 
