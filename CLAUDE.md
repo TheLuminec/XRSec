@@ -278,44 +278,64 @@ whether the acquisition transfers, and is the number that decides whether it was
 it. If the first is strong and the second flat, the honest conclusion is that we bought
 an easier corpus rather than a better model.
 
-### A three-number lookup matches the trained model (UNDER REVIEW)
+### A three-number lookup matches the trained model (CONFIRMED)
 
 Measured on all 5 folds of `b732bee5c6`, on the **same held-out users and the same pair
-manifests** the model was scored on. The probe is a training-free **mean position** - three
-numbers per window, z-scored per dataset, Euclidean distance:
+manifests**, with the lookup using **each checkpoint's own training-fitted
+`ChannelNormalizer`** - the exact transform the model receives. The probe is a
+training-free **mean position**: three numbers per window, Euclidean distance.
 
-| | pooled | H&G | ViewGauss | VR_UB | NJIT | PanoSal | Panonut | EyeNavGS | **unseen alyx** |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| lookup | **0.730** +-0.018 | 0.869 | 0.921 | 0.716 | 0.678 | 0.583 | 0.51 | 0.49 | **0.593** |
-| model | **0.726** +-0.014 | ~0.91 | ~0.95 | ~0.68 | ~0.63 | 0.57 | 0.50 | 0.49 | **0.566** |
+| | pooled | ViewGauss | H&G | VR_UB | NJIT | PanoSal | Panonut | EyeNavGS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| lookup | **0.726** +-0.017 | 0.932 | 0.868 | **0.716** | **0.674** | 0.583 | 0.508 | 0.493 |
+| model | **0.723** +-0.014 | 0.938 | 0.898 | 0.689 | 0.611 | 0.580 | 0.504 | 0.490 |
 
-**The model beats the lookup on the two best-conditioned corpora and loses everywhere else,
-and on genuinely unseen data the lookup transfers better.** A model that transfers worse
-than three z-scored numbers is not transferring anything of its own.
+An earlier pass fitted the lookup's statistics on the held-out cohort, which would have
+handed it information the model was denied. Redone properly the result is unchanged, and
+the reason is worth keeping: **with Euclidean distance the per-channel mean cancels in
+`a - b`**, so the only cohort information the flawed version ever used was three per-axis
+scales.
 
-**One check outstanding before this is accepted**: whether the lookup's per-dataset
-z-scoring is fitted on training users only or on the evaluation data. The model's
-`ChannelNormalizer` is deliberately training-only so the test set cannot shape its own
-transform; if the probe used evaluation statistics it was handed cohort information the
-model was denied, and part of the parity is that asymmetry. Recorded here as under review
-until that is answered.
+**The model wins on the two best-conditioned corpora and loses on the next two.** Pooled,
+it is inside the fold spread of three numbers requiring no training at all.
 
-**Why it matters more than a caveat, if it holds.** This project has been here before and
-got the opposite answer - a trivial descriptor scored 0.712 against a trained 0.656 on the
-old protocol, and the corrected protocol reversed it to 0.562 against 0.669. That reversal
-is load-bearing for the current headline. The new measurement is a stronger test than
-either, being paired on identical manifests across five folds, so it re-opens a question
-recorded as settled rather than merely qualifying it.
+### But there IS a learned component - it just does not transfer
 
-It also answers a question left hanging by the anthropometry result. Centring the position
-channels costs 0.134, which was recorded as "~78% is absolute head position" - and the
-implicit assumption was that the model captured the remaining 22%. These per-dataset numbers
-say it mostly does not.
+The decisive contrast, from an 8-dataset model with alyx identities in training
+(`31751868df`, ~15 alyx users held out per fold):
 
-**Consequence, regardless of the z-scoring answer**: the mean-position lookup should become
-a permanent per-dataset baseline reported beside every model, not a probe someone runs
-occasionally. It has now been discovered twice, by going looking, that the trivial baseline
-is competitive. It should be in the results table by default so there is no third time.
+| | AUC on alyx |
+| --- | --- |
+| 8-dataset model, alyx **in domain** | **0.725** +-0.073 |
+| static lookup on alyx | ~0.59 |
+| 7-dataset model, alyx **never seen** | **0.566** |
+| random control | 0.496 |
+
+In domain the model beats the static lookup by roughly **+0.13**. That is the first
+evidence anywhere in these numbers of a learned non-static component - and it is **exactly
+the component that disappears on transfer**: unseen, the model drops to 0.566, below the
+lookup's 0.593 on the same corpus.
+
+So the picture is coherent and uncomfortable:
+
+- the **static cue transfers** (lookup: 0.593 unseen, and it needs no model)
+- the **learned cue is real but dataset-specific** (+0.13 in domain, gone when unseen)
+- the unseen-dataset cost on alyx is about **0.16 AUC**
+
+That is a sharper statement of the generalisation problem than "the model does not
+generalise". It generalises exactly as far as the static cue does, and the part it actually
+learns is the part that does not survive a change of corpus.
+
+**Two caveats on the in-domain figure.** Its spread is +-0.073 against +-0.014 pooled,
+because only ~15 alyx users are held out per fold, so the 0.16 gap is about 2.2 sd -
+real but not tight. And the two numbers come from different checkpoints scored on
+*different* evaluation sets: ~15 held-out alyx users against all 76. Gallery composition
+has already been shown to matter here, so the like-for-like version - both models on the
+same ~15 users per fold - is the one to quote.
+
+**Standing consequence**: the mean-position lookup is a permanent per-dataset baseline
+reported beside every model, not a probe someone runs occasionally. It has now been found
+competitive twice, both times only because someone went looking.
 
 ### How much is the model actually adding?
 
