@@ -403,29 +403,49 @@ stats on the held-out corpora, random control 0.498 pooled:
 Identity count was the only data-side lever ever measured to work here. It works
 **within** a domain and does not cross one.
 
-### `dyn`: the first transferable learned component (PROVISIONAL - censored)
+### `dyn`: the learned component that does transfer, and the only thing identity count moves
 
 `encoding=dyn` removes every static cue - position centred per window *and* orientation
-taken relative to the window's mean heading, gravity kept. The lookup scores **0.506** on
-it by construction, so anything above chance is behaviour, measured rather than simulated.
+taken relative to the window's mean heading, gravity kept. The lookup scores **0.506** on it
+by construction, so anything above chance is behaviour, measured rather than simulated by
+`center_position` (which leaves absolute orientation in, and the mean quaternion alone
+recovers 0.54-0.79 of static posture).
 
-| | pooled | tier 1 range |
-| --- | --- | --- |
-| dyn, BOXRR+alyx -> the seven | **0.581** +-0.002 | 0.517-0.538, all 4-40 sd above 0.5 |
+**Identity-count curve, BOXRR+alyx -> the seven held-out corpora**, `epochs=120`,
+`patience=15`:
 
-**A transferable dynamics component exists and it is small.** That is the first evidence in
-this project of a learned signal that survives a change of corpus - the static cue transfers
-but needs no model, and the earlier learned component was in-domain only.
+| identities | pooled | Head_and_Gaze | ViewGauss | NJIT | VR_UB |
+| --- | --- | --- | --- | --- | --- |
+| 419 (5 seeds) | 0.582 +-0.001 | 0.537 | 0.523 | 0.522 | 0.515 |
+| 1000 (2 seeds) | **0.600** +-0.001 | | | | |
+| 2096 (1 seed) | 0.598 | **0.570** | **0.571** | 0.540 | 0.521 (flat) |
 
-**Censored, so this is a floor rather than a measurement**: all five runs selected epoch 29
-or 30 of 30. Re-queued at `epochs=120, patience=15` - the axis is now characterised as slow
-and monotone, which is the condition for using patience safely.
+**This is the only thing in the project that identity count moves across a domain
+boundary.** Raw transfer is flat to three decimals over the same range (0.672 / 0.672 /
+0.671); `dyn` gains +0.016 pooled and +0.03 to +0.05 on the two best-conditioned corpora -
+the pre-registered band, held. All of the gain is between 419 and 1000. It only appears
+where the corpus has a stable real head pose: VR_User_Behavior, PanoSaliency and EyeNavGS
+are flat.
 
-**PanoSaliency scores 0.724 under `dyn`**, far above the tier-1 corpora. Its position column
-is a viewing-direction vector, so the model is reading the direction *sweep* as head
-translation and separating users on it. A behavioural signal recovered across a semantic
-mismatch - and the strongest argument yet for the `channels=orientation` mode deferred
-earlier.
+**Not budget-limited.** The 120-epoch budget changed transfer at 419 by 0.001 against the
+30-epoch runs, even though those selected epoch 29-30 of 30. The censoring mattered for the
+in-domain figure, not the transfer one.
+
+**The ceiling on the seated corpora is theirs, not the model's.** In domain on the
+8-dataset corpus (5 folds, uncensored at epochs 5-10, control 0.499) the seated corpora
+reach 0.53-0.55 - and the BOXRR-trained branch **matches or exceeds that from outside**:
+Head_and_Gaze 0.570 out of domain against 0.551 in, ViewGauss 0.571 against 0.528. Training
+on a corpus does not beat training on Beat Saber and transferring in.
+
+**The learned component is activity-bound, and it is the activity rather than the share.**
+Unseen Beat Saber players separate at ~0.80 on movement alone; unseen alyx players at 0.53.
+Raising alyx from 3.6% to 18% of training identities left it at 0.530 +-0.007 - unchanged.
+Free FPS locomotion with cross-day sessions is simply less stereotyped than content-locked
+rhythm-game movement.
+
+**Fusion is retired for transfer.** Weighting the lookup with `dyn` drags tier 1 below the
+lookup under an in-domain weight, and a leave-one-corpus-out weight (0.15-0.35, never the
+target's labels) leaves every tier-1 corpus at or below it.
 
 ### Yaw canonicalisation: predicted correctly per corpus, worth nothing pooled
 
