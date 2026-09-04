@@ -104,9 +104,18 @@ prediction is scored as made.
   positives, target-fit, three seeds. Prediction: 0.52-0.56 at 419; +0.00 to +0.02 with
   identity count; +0.01 to +0.03 from longer windows. Falsifiers: below 0.51 everywhere
   (VR dynamics do not carry to glasses), above 0.60 (first strong cross-device transfer,
-  needs the leak check). Harness check in the table: lookup on the `dyn` windows reads
-  0.50 +-0.01 on the same pairs, else the encoding leaks location and nothing is read.
-  One-sitting caveat beside every number.
+  needs the leak check). **Measured 17:10**: 419 ids 0.5286 +-0.002 (5 seeds), 1000 ids 0.5328 (2), 2096 ids
+  0.5415 (2 checkpoints), random 0.5025 - inside the registered band, no falsifier
+  fired. The 0.50 +-0.01 harness check **failed by construction** (0.547): float32
+  rounding of a residual at 30 m SLAM coordinates leaves a micrometre window-mean that
+  still orders pairs by distance from the origin, and even a 1e-14 m float64 residue
+  scores 0.557. Replaced, by ruling, with: residual window-mean below 1e-4 m (met, max
+  3.6e-5) and corr(model score, raw location lookup) within +-0.03 (met, +0.012 overall,
+  -0.006 among negatives). The 0.547 stays in the table with its explanation. Queued
+  code change: compute the `dyn` residual in float64 before casting; acceptance is a
+  ~1e-14 m residue and one existing dyn checkpoint reproducing every held-out row within
+  1e-4 AUC. Section 9.11 with Model Generalization. One-sitting caveat beside every
+  number.
 
 ## GPU queue
 
