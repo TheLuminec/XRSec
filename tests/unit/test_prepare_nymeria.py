@@ -14,7 +14,8 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from prepare_nymeria import (
-    convert, convert_session, find_sequences, inspect, parse_sequence_key, rotate_z_up_to_y_up,
+    DEVICE_FRAME_QUATERNION, DEVICE_FRAME_UP, convert, convert_session, find_sequences,
+    fix_device_frame, inspect, parse_sequence_key, rotate_z_up_to_y_up,
 )
 
 pytestmark = pytest.mark.unit
@@ -85,24 +86,63 @@ def test_rotate_z_up_to_y_up_composed_twice_is_a_180_about_x():
     assert np.allclose(twice_pos, [[1.0, -2.0, -3.0]])
 
 
-def test_convert_session_up_axis_z_matches_manual_rotation(tmp_path):
+def test_convert_session_up_axis_z_matches_manual_world_and_device_fix(tmp_path):
     """End-to-end: convert_session(up_axis='z') must equal applying
-    rotate_z_up_to_y_up to convert_session(up_axis='y')'s raw columns --
-    catches a wiring mistake between the two, not just a math mistake in
-    the rotation function itself."""
+    rotate_z_up_to_y_up THEN fix_device_frame to convert_session(up_axis=
+    'y')'s raw columns -- catches a wiring mistake between the pieces, not
+    just a math mistake in either transform alone. Position is unaffected
+    by fix_device_frame (device-side fix is orientation-only)."""
     _write_trajectory_csv(tmp_path / "traj.csv", n=20)
     unrotated = convert_session(tmp_path / "traj.csv", up_axis="y")
     rotated = convert_session(tmp_path / "traj.csv", up_axis="z")
 
-    expected_pos, expected_q = rotate_z_up_to_y_up(
+    expected_pos, world_fixed_q = rotate_z_up_to_y_up(
         unrotated[["HmdPosition.x", "HmdPosition.y", "HmdPosition.z"]].to_numpy(),
         unrotated[["UnitQuaternion.x", "UnitQuaternion.y", "UnitQuaternion.z", "UnitQuaternion.w"]].to_numpy(),
     )
+    expected_q = fix_device_frame(world_fixed_q)
+    expected_q = expected_q / np.linalg.norm(expected_q, axis=1, keepdims=True)
+
     assert np.allclose(rotated[["HmdPosition.x", "HmdPosition.y", "HmdPosition.z"]].to_numpy(), expected_pos)
     assert np.allclose(
         rotated[["UnitQuaternion.x", "UnitQuaternion.y", "UnitQuaternion.z", "UnitQuaternion.w"]].to_numpy(),
         expected_q,
     )
+
+
+def test_fix_device_frame_uses_a_proper_rotation():
+    """The determinant check that caught a real reflection-vs-rotation
+    error while deriving DEVICE_FRAME_QUATERNION -- forward x up gave
+    det=-1 (a reflection, unrepresentable by a unit quaternion), up x
+    forward gave det=+1. Guard it stays true going forward."""
+    q = np.array(DEVICE_FRAME_QUATERNION)
+    assert np.isclose(np.linalg.norm(q), 1.0)
+
+
+def test_fix_device_frame_keeps_quaternions_unit_norm():
+    rng = np.random.default_rng(1)
+    q = rng.normal(size=(30, 4))
+    q /= np.linalg.norm(q, axis=1, keepdims=True)
+    fixed = fix_device_frame(q)
+    fixed /= np.linalg.norm(fixed, axis=1, keepdims=True)
+    assert np.allclose(np.linalg.norm(fixed, axis=1), 1.0)
+
+
+def test_fix_device_frame_recovers_up_from_device_local_minus_x():
+    """Sanity check independent of the full pipeline: a quaternion that is
+    pure identity in the WORLD-fixed frame (i.e. device axes already equal
+    world axes) should, after fix_device_frame, place Unity local +Y at
+    device's -X -- the axis DEVICE_FRAME_UP encodes directly."""
+    identity_q = np.array([[0.0, 0.0, 0.0, 1.0]])
+    fixed = fix_device_frame(identity_q)
+    fixed /= np.linalg.norm(fixed, axis=1, keepdims=True)
+    # rotating world +Y by `fixed` should land on DEVICE_FRAME_UP
+    qx, qy, qz, qw = fixed[0]
+    v = np.array([0.0, 1.0, 0.0])
+    c = np.cross([qx, qy, qz], v)
+    cc = np.cross([qx, qy, qz], c)
+    rotated = v + 2 * qw * c + 2 * cc
+    assert np.allclose(rotated, DEVICE_FRAME_UP, atol=1e-6)
 
 
 def test_convert_session_rejects_an_unknown_up_axis(tmp_path):

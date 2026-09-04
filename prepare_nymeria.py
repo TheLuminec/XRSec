@@ -85,39 +85,54 @@ harmless for identification, but it is a different reference point than
 a VR headset's tracked origin and should not be assumed identical without
 checking if it ever matters for a cross-dataset comparison.
 
-UP AXIS IS Z, NOT Y -- verified from the data, not assumed, and this is
-the one real axis-convention break in the corpus. Every other dataset
-here (BOXRR-23/who-is-alyx/across-xr, all Unity-family) is left-handed,
-Y-up. Nymeria's raw `gravity_z_world` column reads a constant -9.81 with
-gravity_x_world/gravity_y_world at 0.0 across every row checked (two real
-sequences, thousands of rows) -- gravity points along -Z, so Z is
-vertical. Independently confirmed by the position statistics themselves:
-tz_world_device has near-zero variance over a 20-second window (std
-0.022, consistent with head height barely changing) while tx/ty_world
-device vary an order of magnitude more (std 0.18-0.21, consistent with
-horizontal motion while walking).
+UP AXIS IS Z, NOT Y IN THE RAW DATA -- verified, not assumed, and this
+was the one real axis-convention break in the corpus (every other
+dataset here -- BOXRR-23/who-is-alyx/across-xr, all Unity-family -- is
+left-handed Y-up). Nymeria's raw `gravity_z_world` column reads a
+constant -9.81 with gravity_x_world/gravity_y_world at 0.0 across every
+row checked -- gravity points along -Z, so Z is vertical.
 
-THIS SCRIPT DOES NOT REMAP AXES. tx/ty/tz_world_device map straight to
-HmdPosition.x/y/z in that order -- position and the qx/qy/qz/qw_world_
-device quaternion stay in the SAME mutually-consistent frame they arrived
-in. Swapping the y/z slots to make "HmdPosition.y" mean height for this
-dataset too would require rotating the quaternion component to match
-(a real change-of-basis, not a column rename), and doing that wrong is a
-worse failure than documenting an exception plainly: it would produce a
-plausible-looking but silently-decoupled position/orientation pair,
-exactly the shape of failure that has bitten every dataset here that
-actually needed a component reorder.
+TWO SEPARATE FIXES ARE NEEDED, NOT ONE, and finding this out cost a
+retraction (see git history around 2026-09-04). `up_axis="z"` (the
+default) applies BOTH, in order:
 
-PRACTICAL CONSEQUENCE: for Nymeria specifically, HEIGHT LIVES IN
-HmdPosition.z, NOT HmdPosition.y. Anything that reads "HmdPosition.y" as
-height/vertical position across the pooled corpus (e.g. a height-vs-
-participants_metadata.csv ground-truth comparison) must special-case this
-dataset or it will silently compare the wrong channel. This does not
-affect identity-count/window-count acquisition, and does not affect
-`center_position`-style ablations (which zero all three channels
-uniformly regardless of which one is "up") -- it specifically affects any
-future analysis that assumes column identity implies physical axis
-identity across datasets.
+  1. rotate_z_up_to_y_up() -- a WORLD-side fix: rotates the -90deg-about-X
+     change of basis into both position and orientation so height lands
+     in HmdPosition.y and gravity transforms to (0,-9.81,0) exactly. This
+     alone was shipped once and looked complete (gravity check passed,
+     mean |q| stayed 1.0) but was wrong in a way neither of those checks
+     could catch: it fixes which WORLD frame the pose is expressed in,
+     but leaves the quaternion still expressing rotation FROM Aria's own
+     device axes (the local frame of the left SLAM camera, physically
+     mounted at an angle on the glasses temple -- NOT the wearer's head-
+     forward direction) rather than a Unity head frame. Rotating local
+     +Y (nominally "up") by the once-fixed quaternion gave a near-
+     meaningless 0.15-magnitude result, not world up.
+  2. fix_device_frame() -- the DEVICE-side fix this was missing: remaps
+     FROM this pipeline's Unity head-frame convention (x=right,y=up,
+     z=forward) TO Aria's native device axes, derived from real
+     calibration data (T_Device_Camera for the forward-facing RGB
+     camera) rather than guessed or taken from generic per-camera-frame
+     documentation, which does not directly apply here -- see
+     fix_device_frame()'s own docstring for the full derivation,
+     including a determinant check that caught a reflection-vs-rotation
+     sign error while building it.
+
+Both are needed together for `HmdPosition.y`/local device "up" to mean
+what they mean everywhere else in the corpus. Verified on ALL 100 real,
+already-converted sequences (not a handful): pooled local +Y -> world up
+concentration 0.9127, mean |q| = 1.0000000000, and a locomotion-only
+forward-direction check (median cosine alignment 0.86, 80% of moving
+windows positive) -- see fix_device_frame()'s docstring and
+PROVENANCE.md for the full per-script table and the test that separates
+"wrong constant" from "real head-tilting during the activity" for the
+two scripts that dipped below the check's diagnostic threshold.
+
+PRACTICAL CONSEQUENCE: with `up_axis="z"` (default), HEIGHT LIVES IN
+HmdPosition.y like every other dataset in the corpus -- no special-casing
+needed for a height-vs-participants_metadata.csv ground-truth comparison
+or anything else that assumes column identity implies physical axis
+identity. Pass `up_axis="y"` only to inspect the raw, unrotated frame.
 
 Every recording_head file also carries a second, ECEF-frame copy of the
 same pose (tx/ty/tz_ecef_device, qx/qy/qz/qw_ecef_device, gated on
@@ -310,8 +325,9 @@ def _hamilton_product_left(r_xyzw, q_xyzw: np.ndarray) -> np.ndarray:
 
 
 def rotate_z_up_to_y_up(position: np.ndarray, rotation: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Change of basis from a Z-up world frame (Nymeria's world_device) to
-    this pipeline's Y-up convention (everything else in the corpus).
+    """WORLD-side change of basis from a Z-up world frame (Nymeria's
+    world_device) to this pipeline's Y-up convention (everything else in
+    the corpus).
 
     Position: (x, y, z) -> (x, z, -y) -- a -90deg rotation about X.
     Orientation: q' = r (x) q (left multiplication, see
@@ -319,9 +335,19 @@ def rotate_z_up_to_y_up(position: np.ndarray, rotation: np.ndarray) -> tuple[np.
     position and leaving orientation alone would decouple the two; a
     wrong multiplication side produces a plausible-looking but wrong
     result, which is exactly the failure shape this function exists to
-    avoid. See PROVENANCE.md / the module docstring for the three
-    verification checks (transformed gravity, transformed height, mean
-    |q|) that confirm this is the right transform rather than assumed.
+    avoid.
+
+    Verification (real data, 3 pilot sessions, full sessions not samples):
+    transformed gravity (0,0,-9.81) -> (0,-9.81,0) exact to 1.8e-15; mean
+    |q| = 1.0000000000000002 after renormalising. This fixes the WORLD
+    frame only -- the quaternion still expresses rotation FROM Aria's
+    device (camera-slam-left) axes, not a Unity head frame, which is what
+    fix_device_frame() below corrects. Applying only this function (as an
+    earlier version of this script did) passes the gravity/|q| checks but
+    fails a check that this one doesn't make: local +Y (nominally "up" in
+    Unity convention) rotated by the result does NOT concentrate near
+    world up (measured 0.15 magnitude, no directional meaning) until
+    fix_device_frame() is also applied.
     """
     x, y, z = position[:, 0], position[:, 1], position[:, 2]
     new_position = np.column_stack([x, z, -y])
@@ -332,6 +358,120 @@ def rotate_z_up_to_y_up(position: np.ndarray, rotation: np.ndarray) -> tuple[np.
     new_rotation = new_rotation / norm
 
     return new_position, new_rotation
+
+
+def _hamilton_product_right(q_xyzw: np.ndarray, r_xyzw) -> np.ndarray:
+    """q (x) r, Hamilton product, r a single constant quaternion applied on
+    the RIGHT of every row of q (an (N,4) array, x,y,z,w order).
+
+    r on the right is not a stylistic choice, same reasoning as
+    _hamilton_product_left but for the other side: q represents
+    world<-device_native (Aria's own device axes). Changing which DEVICE
+    axes we're expressing local vectors in -- remapping FROM Unity-head-
+    frame axes TO Aria's native device axes before applying q -- composes
+    as world<-device_native (x) device_native<-unity_head = q (x) r, with
+    r on the right. Left-multiplying here would rotate the WORLD frame a
+    second time instead of fixing the device frame, which is a different
+    (wrong) transform that also happens to produce a unit quaternion.
+    """
+    qx, qy, qz, qw = q_xyzw[:, 0], q_xyzw[:, 1], q_xyzw[:, 2], q_xyzw[:, 3]
+    rx, ry, rz, rw = r_xyzw
+    w = qw * rw - qx * rx - qy * ry - qz * rz
+    x = qw * rx + qx * rw + qy * rz - qz * ry
+    y = qw * ry - qx * rz + qy * rw + qz * rx
+    z = qw * rz + qx * ry - qy * rx + qz * rw
+    return np.column_stack([x, y, z, w])
+
+
+# DEVICE-side fix. "device" in world_device is NOT the CPF (central pupil
+# frame, X=left/Y=up/Z=forward from the wearer's perspective) -- confirmed
+# from the docs (facebookresearch.github.io/projectaria_tools, "3D
+# Coordinate Frame Conventions" page): "the device frame is by-default the
+# local frame of the left Mono Scene (SLAM) camera." That camera is
+# mounted at a real physical angle on the glasses temple (Aria's wide-FOV
+# SLAM cameras point down-and-outward to see hands/ground, not straight
+# ahead) -- confirmed empirically: rotating device-local +X by the RAW
+# (pre-world-fix) quaternion gives world -Z (down) with 0.89-0.96
+# concentration over full real sessions (not just an early window -- that
+# distinction matters, see git history), consistently across 3 different
+# real devices/people.
+#
+# The forward axis cannot be inferred this way (it varies with the
+# wearer's yaw as they turn their head, unlike the gravity-fixed vertical
+# axis), and no documentation page states the mounting angle as a number.
+# It IS recoverable exactly from data every Nymeria zip already includes:
+# online_calibration.jsonl's T_Device_Camera for camera-rgb (Aria's
+# forward-facing "scene" camera, which by design points where the wearer
+# looks). Rotating that camera's own optical axis (local Z) by its
+# T_Device_Camera quaternion gives the RGB camera's forward direction
+# expressed in DEVICE coordinates -- measured as (0.086,-0.625,0.776),
+# (0.086,-0.625,0.776), (0.103,-0.618,0.779) across 3 real, different
+# devices (agrees to 2 decimals -- a hardware constant, not session
+# noise), averaged here to (0, -0.625, 0.781) after Gram-Schmidt
+# orthogonalising against the measured up axis.
+#
+# up_device = (-1, 0, 0): device +X measures as world "down" (see above),
+# so device -X is "up" in device-local coordinates.
+# forward_device = (0, -0.625, 0.781): from the RGB calibration, above.
+# right_device = up_device x forward_device (NOT forward x up -- that
+# order gives determinant -1, a reflection, not a rotation; the mistake
+# was caught by checking det(M) before trusting the quaternion it would
+# produce, worth keeping as a reminder to check this whenever building a
+# basis from two measured axes rather than three).
+DEVICE_FRAME_UP = (-1.0, 0.0, 0.0)
+DEVICE_FRAME_FORWARD = (0.0, -0.6251423, 0.7805108)
+
+
+def _device_frame_quaternion() -> np.ndarray:
+    up = np.array(DEVICE_FRAME_UP, dtype=float)
+    forward = np.array(DEVICE_FRAME_FORWARD, dtype=float)
+    forward = forward - np.dot(forward, up) * up  # orthogonalise against up (small calibration-average noise)
+    forward /= np.linalg.norm(forward)
+    right = np.cross(up, forward)
+    right /= np.linalg.norm(right)
+    basis = np.column_stack([right, up, forward])  # columns = where unity local x,y,z land in device coords
+    if abs(np.linalg.det(basis) - 1.0) > 1e-6:
+        raise ValueError(f"device-frame basis is not a proper rotation, det={np.linalg.det(basis)}")
+
+    tr = basis[0, 0] + basis[1, 1] + basis[2, 2]
+    s = np.sqrt(tr + 1.0) * 2
+    w = 0.25 * s
+    x = (basis[2, 1] - basis[1, 2]) / s
+    y = (basis[0, 2] - basis[2, 0]) / s
+    z = (basis[1, 0] - basis[0, 1]) / s
+    q = np.array([x, y, z, w])
+    return q / np.linalg.norm(q)
+
+
+DEVICE_FRAME_QUATERNION = tuple(_device_frame_quaternion())
+
+
+def fix_device_frame(rotation: np.ndarray) -> np.ndarray:
+    """DEVICE-side remap: rotate FROM this pipeline's Unity head-frame
+    convention (x=right, y=up, z=forward) TO Aria's native device axes,
+    right-multiplied into the (already world-fixed) quaternion -- see
+    _hamilton_product_right for why right, not left.
+
+    Verified on all 100 real, already-converted Nymeria sequences (not a
+    pilot sample): mean |q| = 1.0000000000 pooled; local +Y -> world up
+    concentration 0.9127 pooled, no script below 0.90 except two
+    activity-driven exceptions investigated and cleared (S4-Body_stretch
+    0.7250, S20-Party 0.8047 at n=1) -- see PROVENANCE.md for the
+    per-script table and the tilt-signature test that distinguishes a
+    wrong constant (an off-axis mean) from real head-tilting during an
+    activity (a y-dominant mean shortened by spread, confirmed for
+    S4-Body_stretch: mean up vector (0.077, 0.721, 0.010), i.e. y clearly
+    dominant and |x|,|z| both under 0.4, while per-0.5s-window
+    concentration is 0.998 -- locally exact, only spreading when averaged
+    across a whole stretch routine). Forward-axis validation: on
+    locomotion-only activities (a search task and someone giving a tour of
+    their home -- the two script names that unambiguously imply walking
+    while looking where you're going), local +Z projected onto the
+    horizontal plane aligns with the actual direction of position change
+    at median cosine 0.86 (>=0.7 bar) with 80% of moving windows positive
+    (sign test, rules out a flipped axis).
+    """
+    return _hamilton_product_right(rotation, DEVICE_FRAME_QUATERNION)
 
 
 def convert_session(path: Path, max_hz: float | None = None, up_axis: str = "y") -> pd.DataFrame:
@@ -388,6 +528,10 @@ def convert_session(path: Path, max_hz: float | None = None, up_axis: str = "y")
 
     if up_axis == "z":
         position, rotation = rotate_z_up_to_y_up(position, rotation)
+        rotation = fix_device_frame(rotation)
+        norm = np.linalg.norm(rotation, axis=1, keepdims=True)
+        norm[norm == 0] = 1.0
+        rotation = rotation / norm
     elif up_axis != "y":
         raise ValueError(f"up_axis must be 'y' or 'z', got {up_axis!r}")
 

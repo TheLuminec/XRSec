@@ -236,16 +236,45 @@ documentation:
 question and verified before answering.** Every other dataset here (BOXRR-23, who-is-alyx,
 across-xr) is Unity-family, left-handed, **Y-up**. Nymeria's `world_device` frame is
 **Z-up**: `gravity_z_world` reads a constant -9.81 with `gravity_x/y_world` at 0.0 across
-every row checked, and `tz_world_device` has an order of magnitude less variance than
-`tx/ty` over a 20-second window - both confirm Z is vertical. `prepare_nymeria.py`
-deliberately does **not** remap columns to compensate: swapping the y/z output slots to put
-height back in `HmdPosition.y` would need the quaternion rotated to match (a real
-change-of-basis), and a wrong version of that silently decouples position from orientation,
-which is worse than documenting an exception. **For Nymeria specifically, height lives in
-`HmdPosition.z`, not `HmdPosition.y`** - anything reading "column y = height" across the
-pooled corpus (most importantly the height-vs-ground-truth comparison two paragraphs down)
-must special-case this dataset. Does not affect `center_position`, which zeros all three
-channels uniformly regardless of which is "up".
+every row checked - Z is vertical. `prepare_nymeria.py` rotates it (`up_axis="z"`, the
+default), so `HmdPosition.y` means height like everywhere else in the corpus.
+
+**That rotation shipped once as world-side only and was wrong in a way its own checks
+couldn't catch.** Rotating position and orientation to fix which WORLD frame the pose lives
+in (gravity -> `(0,-9.81,0)` exact, mean `|q|` stayed 1.0) left the quaternion still
+expressing rotation FROM Aria's own device axes - the local frame of the **left SLAM
+camera**, physically mounted at an angle on the glasses temple, not the wearer's head-
+forward direction (confirmed: `facebookresearch.github.io/projectaria_tools`'s "3D
+Coordinate Frame Conventions" page states "the device frame is by-default the local frame
+of the left Mono Scene (SLAM) camera"). Local `+Y` (nominally "up") rotated by the
+once-fixed quaternion gave a near-meaningless 0.15-magnitude result, not world up - caught
+by a peer session's independent audit (`audit_frames.py`) before anyone scored the dataset.
+
+**The fix needed a second, device-side rotation, derived from real calibration data rather
+than guessed.** No documentation page states the SLAM camera's mounting angle numerically.
+It's recoverable exactly from `online_calibration.jsonl` (already in every `recording_head`
+zip): `T_Device_Camera` for `camera-rgb` (Aria's forward-facing "scene" camera) gives that
+camera's own optical axis in device coordinates - measured `(0.086,-0.625,0.776)`,
+`(0.086,-0.625,0.776)`, `(0.103,-0.618,0.779)` across 3 real, different devices (agrees to
+2 decimals - a hardware constant). Building the third basis axis as `forward x up` gave
+**determinant -1** (a reflection, unrepresentable by a quaternion); `up x forward` gave
+**+1** - the kind of sign slip this whole exercise exists to catch, caught by checking the
+determinant before trusting the quaternion it would produce.
+
+**Verified on all 100 real, already-converted sequences, not a handful.** Pooled `local +Y
+-> world up` concentration **0.9127**, mean `|q|` **1.0000000000**. Forward axis validated
+on locomotion-only scripts (a search task and someone giving a tour of their home - the two
+names that unambiguously imply walking while looking where you're going): median cosine
+alignment with actual direction of travel **0.86** (>=0.7 bar), **80%** of moving windows
+positive (sign test - rules out a flipped axis). Two scripts dipped below a 0.85 per-script
+diagnostic (not gating): `S4-Body_stretch` at 0.725 and `S20-Party` at 0.805 (n=1). A single
+constant being wrong would miss on every script by the same amount; 15 of 17 sitting at
+0.89-0.97 rules that out, so a per-script deficit is more likely the check's own assumption
+failing for that activity than the constant. Tested directly for `S4-Body_stretch`: mean up
+vector `(0.077, 0.721, 0.010)` - y clearly dominant, `|x|`/`|z|` both under 0.4 - while
+per-0.5s-window concentration is **0.998** (locally exact). That's the signature of real
+head-tilting during stretches spreading the SESSION mean, not a wrong axis, which would
+instead show a comparable off-axis component.
 
 **Download cost, from the manifest's own `file_size_bytes` rather than estimated:**
 `recording_head` averages **689MB per sequence** (min 361, max 1964) across all 1,100.
