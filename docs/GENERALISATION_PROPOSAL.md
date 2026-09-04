@@ -677,6 +677,35 @@ What this settles:
   `dyn`); and longer windows for the dynamics branch specifically, since free
   locomotion may need more than five seconds to show a person.
 
+## 10. Next steps, ranked (written 2026-09-04 after section 9)
+
+The night answered the question it was asked: identity count does not move transfer
+for the pipeline as it stands, because the transferable signal is static and has no
+training set, and the learned signal is bound to the activity it was trained on. What
+is left is a short list, each with the question it answers, its cost, and the
+prediction registered now.
+
+| # | step | question it answers | cost | prediction |
+| --- | --- | --- | --- | --- |
+| 1 | **Leave-one-corpus-out over the 8 corpora, `raw` and `dyn`** (train on seven, test on the eighth, every corpus in turn) | Does *diversity* of training corpora buy transfer where 2000 same-activity identities did not? And what is the transfer cost per corpus, not just alyx? | 16 runs, ~2.5 h. **Launched.** | `raw` lands at the lookup +-0.03 on tier 1 (the alyx point was -0.03); `dyn` 0.52-0.58, near its in-domain values. If `raw` beats the lookup on two or more tier-1 corpora, diversity is the lever and the BOXRR-heavy design should change. |
+| 2 | **Window length for the dynamics branch**: `dyn`, `sample_time` 10 and 20 with `window_stride=5`, 419 identities, seeds 1-5 | Does free locomotion need more than five seconds to show a person? alyx at 0.53 and the +0.02 window-length result on `raw` both point here. | 10 runs, ~2 h (cache exists at 10 s) | +0.01 to +0.03 on tier 1 and on alyx in domain; if alyx moves above 0.60 the activity-bound reading softens to window-bound. |
+| 3 | **A learned static branch** (CPU): mean pose, within-window std and mean orientation as a 10-20 number descriptor, a metric learned across corpora (LDA/PLDA-style or a two-layer scorer), evaluated leave-one-corpus-out against the three-number lookup | Can *any* learned static scorer beat the lookup out of domain, or is the three-number lookup already the ceiling of the static cue? | one afternoon, no GPU | +0.00 to +0.03 on tier 1. A gain would be the first learned thing to beat the lookup across corpora. |
+| 4 | **Across-XR** (49 users x 5 applications, converter ready, download WAF-blocked from AVALON; retry from another machine or ask the authors) | The activity-bound finding measured directly: same users, same rig, different application. Cross-app `dyn` AUC is the number. | download 5.4 GB, one conversion, scoring only | cross-app `dyn` well below within-app; the size of that gap is the paper's second claim. |
+| 5 | **`channels=orientation`**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and it would make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
+| 6 | **The static cue as an enrolment system**: templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | scoring only | rank-1 at N=17 in the 0.4-0.6 range on tier 1, below published head+controller figures. |
+
+**Retired by section 9, do not re-run:** the identity-count curve on the `raw`
+pipeline as a headline (it measures the lookup); fusion of lookup and `dyn`; `yawc` as
+an arm; label-free embedding adaptation.
+
+**What the paper can claim now**, in one paragraph: on head pose alone, unseen users
+are verified across capture rigs primarily through cohort-relative head position, which
+three numbers capture without training and which no trained model in this repository
+beats out of domain; a learned movement component exists, is small on seated viewing,
+strong on rhythm-game play, rises with training identities up to about a thousand, and
+does not carry across activities. Across-XR (step 4) is what turns the last clause from
+an inference across corpora into a measurement.
+
 ## Appendix: reproduction
 
 All CPU, from `.cache/samples` and the sweep checkpoints on DESKTOP-C.
