@@ -95,7 +95,11 @@ nothing landed. Open: whether laptop-c's successful pull this morning was from t
 public IP (which would explain the block and rule out the laptop too), whether a mirror
 exists, and otherwise asking the authors - the user's message to send. Do not probe that
 host again from any of our machines until one of those resolves; each probe extends the
-block.
+block. **No mirror exists** (checked 14:00): the Frontiers data-availability statement
+names only go.uniwue.de -> that GitLab, and the cschell Hugging Face catalogue has no
+entry for it. Remaining paths, in order: fetch from a public IP the WAF has never seen
+(phone hotspot, university VPN, or the laptop if it sits on a different network); wait
+for the block to age out; ask the authors for a copy - the user's message to send.
 
 ## For XRSec Trainer (xrsec-a1)
 
