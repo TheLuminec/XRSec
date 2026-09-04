@@ -122,8 +122,10 @@ coordinator closer, Trainer's re-centring-only mechanism lost as stated; seated 
 lateral 0.71-0.90 - **both wrong** (0.195 m within vs 0.404 m between, distinguishable
 positions in a shared rig); Trainer's VR_User_Behavior height > 0.8 wrong (0.661, below
 its lateral); alyx both right (0.552 / 0.743); Nymeria lateral. BOXRR's between-participant
-lateral median is 0.200 m against 0.109 m within: the decision table's third row (re-centred
-frame, person-specific standing offset) is leading, pending median |xz|. Head_and_Gaze
+lateral median is 0.200 m against 0.109 m within: **resolved 18:50 to the decision table's third row**:
+median |xz| 0.125 m (re-centred frame) with P 0.685 - a person-specific standing offset,
+both registered predictions wrong, named in CLAUDE.md with the behavioural-vs-procedural
+question left open. Head_and_Gaze
 tier flag from three raw V1 files retracted by measurement: V1 |pos| 1.0000 no quaternion,
 V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
 

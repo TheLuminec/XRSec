@@ -72,7 +72,7 @@ the 5s@20Hz cache, P(within-participant separation < between-participant), all /
 | ViewGauss | 35 | 0.896 | 0.878 | 0.918 | placement and height |
 | Head_and_Gaze V2 | 100 | 0.911 | 0.900 | 0.722 | placement |
 | VR_User_Behavior | 48 | 0.715 | 0.711 | 0.661 | placement, not height |
-| BOXRR | 4009 | 0.765 | 0.685 | **0.828** | height first, plus a lateral component (mechanism pending) |
+| BOXRR | 4009 | 0.765 | 0.685 | **0.828** | height first, plus a **standing offset** (below) |
 | alyx (two days) | 70 | 0.575 | 0.552 | **0.743** | height, not room |
 | Nymeria | 50 | 0.846 | 0.844 | 0.659 | shared map |
 | EyeNavGS | 22 | 0.499 | 0.507 | 0.482 | nothing (virtual camera) |
@@ -83,19 +83,32 @@ Predictions registered before the table: both the coordinator and Trainer said t
 corpora would sit near 0.5 laterally ("one chair for everyone") and **both were wrong** -
 within-participant session means are 0.195 m apart against 0.404 m between, so
 participants occupy distinguishable positions in a shared rig, and that is what the
-lookup reads. On BOXRR the between-participant lateral median is only 0.200 m, which says
-the tracking frame is re-centred per session, yet within (0.109 m) still beats between at
-0.685 - the leading reading is a person-specific standing offset that survives
-re-centring, neither room nor height, awaiting Trainer's origin-distance statistic. BOXRR's
-height P of 0.828 says most of its static cue is height, the legitimate part. Head_and_Gaze
+lookup reads. **BOXRR resolved to the case neither prediction named.** Median |xz| of a session mean
+is **0.125 m** against a between-participant lateral median of 0.200 m (Nymeria, where the
+origin really is a room, reads 3.73 / 6.29 m): across 4009 players in different homes every
+session mean sits within about 12 cm of a common origin, so the frame *is* re-centred per
+session - Trainer's mechanism - and yet within (0.109 m) still beats between at P=0.685 -
+the coordinator's consequence. Small offset with P above 0.65 is a **person-specific
+standing offset**: it survives re-centring, it is neither the room nor height, and under
+the rule it still contaminates `raw` identity counts because it is a per-participant
+constant rather than anything learned about how someone moves. Two qualifications travel
+with it: BOXRR's height P (0.828) exceeds its lateral (0.685), so most of BOXRR's static cue
+is height, the legitimate part, and the offset is the smaller share - "BOXRR is a room
+count" is the wrong sentence; and **whether the offset is behavioural or procedural is
+open** - a player who draws their guardian boundary the same way each time reproduces the
+same observable without standing anywhere characteristic, and geometry alone cannot
+separate the two. EyeNavGS, at chance on every axis, is the one translation-frame corpus
+with no static cue at all - the corpus to use when the static cue must be absent, which
+Nymeria turned out not to be. Head_and_Gaze
 was checked for the direction-vector trap: its V1 files are unit vectors with no
 quaternion, its V2 files (the only ones the loader takes) are real positions, |pos| 1.30.
 
 Three consequences. (1) The "~78% is absolute head position" finding from
 `center_position` stands as a measurement, but "height and seated posture" was the wrong
 gloss on the seated corpora: it is mostly placement. (2) **Every `raw` identity-count
-result on BOXRR carries a room-fingerprint caveat**, per the rule registered before the
-number existed, and the `dyn` results are the clean ones. (3) Only corpora with sessions
+result on BOXRR carries a placement caveat** - a person-specific standing offset, not the
+room - per the rule registered before the number existed, and the `dyn` results are the
+clean ones. (3) Only corpora with sessions
 on different days (alyx, BOXRR in part) can say anything about anthropometry at all; a
 single-sitting corpus cannot separate a person from where they were put. Trainer's
 co-location geometry (per-axis within- vs between-participant separation of session means)
