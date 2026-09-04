@@ -241,6 +241,20 @@ def convert_session(path: Path) -> pd.DataFrame:
     if frames.size == 0:
         return pd.DataFrame(columns=OUTPUT_COLUMNS)
 
+    # Column offsets come from the DECLARED device list, so if the frame width
+    # disagrees with that declaration the offsets are wrong and every column read is
+    # off by some amount - which means reading a controller's channels as the head's.
+    # Nothing downstream would catch it: a controller quaternion is also unit-norm, and
+    # hand motion correlates with head motion enough to look like plausible data. Fail
+    # instead of guessing.
+    expected = 1 + sum(len(d.get("axes", [])) for d in devices)
+    if frames.ndim != 2 or frames.shape[1] != expected:
+        raise ValueError(
+            f"{path.name}: frame width {frames.shape[1] if frames.ndim == 2 else '?'} "
+            f"does not match the {expected} columns declared by "
+            f"{[d.get('type', '?') for d in devices]}. Column offsets would be wrong, "
+            f"so the HMD track cannot be located safely.")
+
     seconds = frames[:, 0]
     columns = {"SessionTime": seconds}
     for out_col in OUTPUT_COLUMNS[1:]:
