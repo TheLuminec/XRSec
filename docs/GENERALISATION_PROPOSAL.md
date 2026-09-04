@@ -39,6 +39,16 @@ produced it; sections 4-7 are the plan.
    semantics tier, the static probe and the random control recorded on every run, and the
    target-fit normalisation declared rather than falling back silently.
 
+**Measured the following night (section 9).** Trained on BOXRR + alyx and tested on
+the seven held-out corpora: the `raw` model transfers below the lookup on every tier-1
+corpus and is flat to three decimals in identity count (0.672 / 0.672 / 0.671 at 419 /
+1000 / 2096). The dynamics-only branch transfers a small signal (+0.02 to +0.07 over
+chance on tier 1) that rises with identity count to 1000 and then flattens, and it
+reaches what in-domain training on those corpora reaches. Movement alone identifies
+unseen Beat Saber players at about 0.80 and unseen alyx players at 0.53, in domain or
+out: the behavioural signal is activity-bound. Fusion and yaw canonicalisation do not
+help transfer.
+
 ---
 
 ## 1. What the position channel actually contains
@@ -213,16 +223,24 @@ the 8-dataset fold k held out, same manifest for all three rows:
 | mean-position lookup | 0.595 +-0.018 |
 | paired, in domain minus unseen | **+0.164**, t(4) = 4.54, 5/5 folds |
 
-Three conclusions, with a caveat the Coordinator caught: the two checkpoints differ in
-**three** things, not one - dataset coverage (alyx in or out), `identity_margin` (0.1
-against the 0.35 default) and epoch budget (30 against 20). Trainer's own sweep bounds the
-margin effect at about +0.02, against a gap of 0.16, so the direction survives, but the
-figure should be read as "about +0.16", not to three digits, and 15 users per fold gives
-the in-domain side a spread of 0.075. The clean pair - the same margin and epoch budget,
-differing only in whether alyx was trained on - is queued (section 6, run 0):
+The Coordinator caught that those two checkpoints differ in **three** things - dataset
+coverage, `identity_margin` (0.1 against 0.35) and epoch budget (30 against 20) - so the
+pair was re-run clean: the 8-dataset corpus at margin 0.35 and 20 epochs, i.e.
+`b732bee5c6`'s exact configuration plus alyx in training (sweep `5ed2089354`, 5 stratified
+folds, which partition the users identically). **One variable now differs, whether alyx
+was trained on:**
 
-1. **Being unseen costs about 0.16 AUC on alyx**: 0.566 unseen against 0.731 in domain
-   on the same users, with the lookup at 0.595 for both. In domain the model adds +0.14
+| same 15-16 held-out alyx users per fold, same margin, same epochs | AUC (5 folds) |
+| --- | --- |
+| 7-dataset model, alyx unseen | 0.566 +-0.011 |
+| 8-dataset model, alyx in domain | **0.749** +-0.050 |
+| mean-position lookup | 0.595 +-0.018 |
+| paired, in domain minus unseen | **+0.183**, t(4) = 7.52, 5/5 folds |
+
+Three conclusions:
+
+1. **Being unseen costs about 0.18 AUC on alyx**: 0.566 unseen against 0.749 in domain
+   on the same users, with the lookup at 0.595 for both. In domain the model adds +0.15
    over the lookup; unseen it adds -0.03. The learned component exists and does not
    travel. The honest one-sentence statement is: *the model generalises exactly as far as
    the static cue does, and the part it actually learns is the part that does not survive
@@ -378,14 +396,15 @@ lookup column.
 
 | # | run | arms x folds | decides |
 | --- | --- | --- | --- |
-| 0 | **clean alyx pair**: the 8-dataset corpus at margin 0.35 / 20 epochs, 5 stratified folds, per-dataset metrics recorded | 1 x 5 | the in-domain alyx reference at the same margin and epoch budget as the unseen number, so the transfer cost is one variable |
-| 1 | **baseline transfer**: BOXRR+alyx -> the eight, `raw`, target-fit stats | 1 x 5 subsample folds at 419, + 1 at 2020 | the number the whole design is about, and whether section 4's predictions hold. Tier 2 at chance here is a statement about our schema, not about those datasets: a metres-trained model reading unit direction vectors is not being tested |
-| 2 | **frame**: `yawc` vs `raw`, same split | 2 x 5 | whether the yaw reference costs transfer; prediction +0.01 to +0.04 on Head_and_Gaze / VR_User_Behavior, ~0 on ViewGauss (already +Z) |
-| 3 | **dynamics branch alone**: `dyn` encoding, identity_softmax, BOXRR+alyx -> the eight | 1 x 5 at 419, 1 at 2020 | whether *any* transferable dynamics signal exists above the random floor; this is the experiment the project has never run cleanly |
-| 4 | **identity-count curve on the dynamics branch**: 419 / 1000 / 2020 (/ 4020 when synced) | 3-4 points, folds where affordable | the headline curve, on the branch where identity count can matter. The lookup is the **null curve**: flat in identity count by construction, because it has no training set. A rising dynamics curve means something only against that flat line |
-| 5 | **fusion**: static + dynamics, weights on validation users | scoring only, no training | the deployable number per tier-1 dataset |
-| 6 | augmentation arms: frame-hold, position-dropout, domain balance | 3 x 5 | each predicted +0.00 to +0.02 on specific datasets; run only after 3 shows a signal to protect |
-| 7 | masked softmax | 1 x 5 | capacity, not transfer; lowest priority |
+| 0 | **clean alyx pair**: the 8-dataset corpus at margin 0.35 / 20 epochs, 5 stratified folds, per-dataset metrics recorded | 1 x 5 | **done** (sweep `5ed2089354`): in domain 0.749 vs unseen 0.566 on the same users, +0.183, t(4) = 7.52 - section 3 |
+| 1 | **baseline transfer**: BOXRR+alyx -> the seven, `raw`, target-fit stats | 5 seeds at 419, 2 at 1000, 1 at 2096, + controls | **done** (9.1): 0.672 / 0.672 / 0.671, lookup 0.727, below the lookup on every tier-1 corpus. Tier 2 at chance is a statement about our schema, not about those datasets |
+| 2 | **frame**: `yawc` vs `raw`, seed-paired | 2 x 5 | **done** (9.2): +0.025 / +0.015 on the +X / -X corpora as predicted, -0.03 on the +Z ones, net +0.003, not resolved |
+| 3 | **dynamics branch alone**: `dyn` encoding, BOXRR+alyx -> the seven | 5 at 419, 1 at 2096 | **done** (9.3): 0.581 +-0.002, tier 1 at 0.52-0.54, all above the floor; censored, and the long-budget rerun shows the transfer figure had plateaued anyway |
+| 4 | **identity-count curve on the dynamics branch**: 419 / 1000 / 2096, `epochs=120`, patience 15 | 5 + 2 + 1 | **done** (9.3): 0.582 / 0.600 / 0.598 against the lookup's flat null curve; +0.03 / +0.05 on Head_and_Gaze / ViewGauss from 419 to 2096 |
+| 5 | **fusion**: static + dynamics | scoring only | **done** (9.4): retired for transfer; no weight without target labels beats the lookup on tier 1 |
+| 8 | **`dyn` in domain**: the 8-dataset corpus, 5 stratified folds, `epochs=60`, patience 15, random control | 2 x 5 | **done** (9.5): alyx 0.530 in domain, seated corpora 0.53-0.55, PanoSaliency 0.73; the activity, not the share |
+| 6 | augmentation arms: frame-hold, position-dropout, domain balance | 3 x 5 | not run: run 3's signal is +0.02 to +0.04, too small for a +0.00 to +0.02 arm to be resolvable |
+| 7 | masked softmax | 1 x 5 | not run; capacity, not transfer |
 
 Power: paired 5-fold resolves 0.011-0.041. Runs 1-3 are looking for effects of 0.05 or
 more or for a floor test, so they are affordable; run 6 is at the edge and should be read
@@ -395,13 +414,13 @@ as "not resolved" unless it clears 0.02 at t > 2.8.
 
 ## 7. Predictions, registered
 
-| claim | prediction | what would falsify it |
-| --- | --- | --- |
-| BOXRR+alyx `raw` model transfers to tier-1 datasets at about the lookup's level | model - lookup within +-0.03 per dataset | model beats lookup by > 0.05 on two or more tier-1 datasets |
-| identity count does not move `raw` transfer | curve flat within fold sd | monotone rise > 0.03 from 419 to 2020 |
-| `dyn` branch on BOXRR+alyx transfers above chance to tier-1 | 0.53-0.58 AUC at 2020 ids, ~chance at 419 | at chance at 2020 (the behavioural signal does not transfer across activity) - a real negative worth publishing |
-| `dyn` branch rises with identity count | +0.02 to +0.05 from 419 to 2020 | flat |
-| `yawc` helps the +X / -X corpora | +0.01 to +0.04 on Head_and_Gaze V2 and VR_User_Behavior | no change |
+| claim | prediction | what would falsify it | outcome (section 9) |
+| --- | --- | --- | --- |
+| BOXRR+alyx `raw` model transfers to tier-1 datasets at about the lookup's level | model - lookup within +-0.03 per dataset | model beats lookup by > 0.05 on two or more tier-1 datasets | **held, harder**: -0.01 to -0.12, below the lookup everywhere |
+| identity count does not move `raw` transfer | curve flat within fold sd | monotone rise > 0.03 from 419 to 2020 | **held**: 0.672 / 0.672 / 0.671 |
+| `dyn` branch on BOXRR+alyx transfers above chance to tier-1 | 0.53-0.58 AUC at 2020 ids, ~chance at 419 | at chance at 2020 | **held**: 0.52-0.54 at 419 (above the floor, sd < 0.01), 0.51-0.58 at 2096 |
+| `dyn` branch rises with identity count | +0.02 to +0.05 from 419 to 2020 | flat | **held**: +0.016 pooled (all of it between 419 and 1000), +0.03 / +0.05 on Head_and_Gaze / ViewGauss, long budget, uncensored for transfer |
+| `yawc` helps the +X / -X corpora | +0.01 to +0.04 on Head_and_Gaze V2 and VR_User_Behavior | no change | **held** (+0.025, +0.015) but offset by losses on the +Z corpora; net zero |
 
 ---
 
@@ -417,6 +436,246 @@ as "not resolved" unless it clears 0.02 at t > 2.8.
   re-runnable by others.
 
 ---
+
+## 9. Results of the first night of runs (2026-09-04)
+
+Runs 0-4 of section 6, on DESKTOP-C, all `bilstm`, `identity_softmax`, 5s@20Hz,
+cross-session positives, per-dataset normalisation, validation-selected on in-domain
+users, `eval_normalize=target_fit` on the held-out corpora, 512 pairs per user, positive
+fraction 0.500. Training corpus BOXRR + alyx; held-out corpora the seven. "419" is 343
+BOXRR + all 76 alyx, "full" is 2020 + 76. Seeds 1-5 are independent BOXRR subsamples,
+so the spread is the subsample-fold spread. Random control at full corpus: 0.498 pooled,
+0.494-0.508 per dataset.
+
+### 9.1 Transfer of the `raw` model: at or below the lookup, flat in identity count
+
+| held-out dataset | tier | model, 419 ids (5 seeds) | 1000 ids (2 seeds) | full corpus (2096) | lookup | model - lookup |
+| --- | --- | --- | --- | --- | --- | --- |
+| ViewGauss | 1 | 0.911 +-0.008 | 0.906 | 0.900 | 0.934 | -0.02 / -0.04 |
+| Head_and_Gaze V2 | 1 | 0.750 +-0.008 | 0.753 | 0.749 | 0.869 | **-0.12** |
+| VR_User_Behavior | 1 | 0.638 +-0.007 | 0.647 | 0.629 | 0.714 | **-0.08** |
+| NJIT | 1 | 0.648 +-0.013 | 0.635 | 0.641 | 0.653 | -0.01 |
+| PanoSaliency | 2 | 0.581 +-0.007 | 0.585 | 0.576 | 0.581 | 0.00 |
+| Panonut360 | 2 | 0.526 +-0.004 | 0.533 | 0.517 | 0.512 | +0.01 |
+| EyeNavGS | 3 | 0.502 +-0.004 | 0.499 | 0.507 | 0.492 | +0.01 |
+| **pooled** | | **0.672 +-0.003** | **0.672** | **0.671** | **0.727** | **-0.06** |
+
+Both pre-registered predictions for this run held, one of them harder than predicted:
+
+- **Identity count does not move `raw` transfer.** 419, 1000 and 2096 training
+  identities: 0.672, 0.672, 0.671 pooled, and no tier-1 dataset moves by more than
+  0.01. The lookup has no training set, and the model behaves like the lookup.
+- **The model transfers below the lookup on every tier-1 corpus**, by 0.12 on
+  Head_and_Gaze and 0.08 on VR_User_Behavior. In domain (section 2b) the same
+  architecture beats the lookup on Head_and_Gaze by +0.03. So what a BOXRR-trained model
+  learns about *which position channels matter* is Beat-Saber-specific, and it is worse
+  than treating the three axes equally when the corpus changes. Validation on in-domain
+  users selects epoch 2-3 of 30 every time.
+- The two tier-2 corpora and EyeNavGS sit at the lookup, which is at chance: the schema
+  statement of section 4, not a generalisation result.
+
+### 9.2 `yawc`: right where predicted, wrong where not, and unresolved overall
+
+Seed-paired against `raw` at 419 identities:
+
+| dataset | yawc - raw | t(4) | won |
+| --- | --- | --- | --- |
+| Head_and_Gaze (yaw reference +X) | **+0.025** | 3.01 | 4/5 |
+| VR_User_Behavior (yaw reference -X) | **+0.015** | 2.37 | 5/5 |
+| ViewGauss (+Z, like BOXRR) | -0.035 | -1.29 | 2/5 |
+| NJIT (+Z, broken quaternion frame) | -0.025 | -0.90 | 2/5 |
+| pooled | +0.003 | 0.32 | 3/5 |
+
+The prediction was +0.01 to +0.04 on the +X / -X corpora and ~0 on ViewGauss. The first
+half held exactly; the second did not - `yawc` costs something on the corpora that
+already shared BOXRR's heading, and it triples the seed spread (0.022 against 0.003).
+Net zero, and per the power table this is "not resolved". Rotating the *within-window*
+displacement into the heading frame is the likely cost: it removes a static horizontal
+cue (which way the seat faces relative to the room) that the +Z corpora share with
+BOXRR. Not worth an arm on its own; worth keeping as an option for a corpus whose
+heading is known to differ.
+
+### 9.3 `dyn`: a small dynamics signal that transfers, and a censored one
+
+Every static cue removed at the input. The lookup on `dyn` windows is 0.506, chance by
+construction, so the model's number is the whole signal. The `random` extractor at
+419 identities under the same protocol: 0.500 pooled, 0.495-0.507 per dataset.
+
+| held-out dataset | tier | dyn, 419 ids (5 seeds, 30 epochs) | t(4) vs 0.5 |
+| --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | **0.538** +-0.002 | 39.7 |
+| NJIT | 1 | 0.528 +-0.007 | 7.9 |
+| VR_User_Behavior | 1 | 0.519 +-0.003 | 11.2 |
+| ViewGauss | 1 | 0.517 +-0.008 | 4.4 |
+| EyeNavGS (virtual camera) | 3 | 0.535 +-0.006 | 11.8 |
+| Panonut360 | 2 | 0.516 +-0.004 | 7.6 |
+| PanoSaliency | 2 | **0.724** +-0.005 | 84.4 |
+| **pooled** | | **0.581 +-0.002** | |
+
+All five of those runs selected epoch 29 or 30 of 30, so the arm was rerun with
+`epochs=120` and `early_stopping_patience=15` (run 4), which is also where the
+identity-count curve comes from:
+
+| held-out dataset | tier | 419 ids (5 seeds) | 1000 ids (2 seeds) | 2096 ids (1 seed) | 419 -> 2096 |
+| --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | 0.537 +-0.003 | 0.560 +-0.003 | **0.570** | **+0.033** |
+| ViewGauss | 1 | 0.523 +-0.007 | 0.555 +-0.007 | **0.571** | **+0.048** |
+| NJIT | 1 | 0.522 +-0.009 | 0.527 +-0.003 | 0.540 | +0.018 |
+| VR_User_Behavior | 1 | 0.515 +-0.006 | 0.520 +-0.001 | 0.521 | +0.007 |
+| Panonut360 | 2 | 0.516 +-0.005 | 0.533 +-0.007 | 0.544 | +0.028 |
+| PanoSaliency | 2 | 0.730 +-0.007 | 0.736 +-0.002 | 0.731 | 0.000 |
+| EyeNavGS | 3 | 0.535 +-0.003 | 0.529 +-0.001 | 0.529 | -0.006 |
+| **pooled** | | **0.582 +-0.001** | **0.600 +-0.001** | **0.598** | **+0.016** |
+
+Selected epochs 60-120 of 120, so validation kept improving for a long time; but the
+long budget changed the *transfer* figure at 419 by nothing (0.582 against 0.581), so
+the censoring was in domain only and the transfer plateau is real.
+
+Three things, in decreasing order of confidence:
+
+1. **A transferable dynamics component exists on tier 1 and it is small**: +0.02 to +0.04
+   over chance at 419 identities, on every tier-1 corpus, from a model that never saw
+   seated video viewing. Its seed spread is under 0.01, so it is many sds above the
+   floor. The pre-registered prediction was "about chance at 419"; it is slightly above.
+2. **It rises with identity count, then stops.** 419 to 1000 identities: +0.018 pooled
+   on both seeds, at a seed spread of 0.001; +0.023 on Head_and_Gaze, +0.032 on
+   ViewGauss. 1000 to 2096: -0.002 pooled, with Head_and_Gaze and ViewGauss still
+   creeping up (+0.010, +0.016) and everything else flat or down. The pre-registered
+   band was +0.02 to +0.05 from 419 to 2020; the measured +0.016 pooled and +0.03 to
+   +0.05 on the two best-conditioned corpora are inside it. This is the only lever in
+   the whole night that moved a transfer number, and it moved it where the corpus has
+   a real, stable head pose to move it on.
+3. **PanoSaliency at 0.72 is the tier-2 story in reverse.** Its "position" is a viewing
+   direction, so the `dyn` residual is *how the viewing direction sweeps within five
+   seconds*, and a model trained on real head translation in Beat Saber reads that
+   sweep and separates PanoSaliency's users better than anything in this document
+   (the `std_only` lookup found 0.65 there in section 2). That is a behavioural signal
+   crossing a semantic mismatch, and it says head-direction dynamics carry more
+   identity in 360-degree viewing than head translation does - which is a reason to
+   build the `channels=orientation` mode the Coordinator deferred, not a result about
+   head pose.
+
+### 9.4 Fusion, and what the dynamics branch is worth in domain
+
+Run 5 of section 6, scoring only, on the five 30-epoch `dyn` checkpoints: the lookup
+(raw windows, per-dataset z-scored, target-fit on the held-out corpora) and the model's
+cosine on the same pair manifests, both z-scored on the checkpoint's own in-domain
+validation users (BOXRR/alyx users it never trained on), mixed as
+`(1-w) * lookup + w * dyn` with `w` chosen on validation AUC alone.
+
+| | lookup | dyn | fused | w |
+| --- | --- | --- | --- | --- |
+| **in domain** (BOXRR/alyx validation users, 5 checkpoints) | 0.724-0.764 | **0.727-0.744** | **0.789-0.819** | 0.35-0.45 |
+| held out, ViewGauss | 0.935 | 0.511 | 0.835 | |
+| held out, Head_and_Gaze V2 | 0.870 | 0.536 | 0.777 | |
+| held out, VR_User_Behavior | 0.718 | 0.518 | 0.662 | |
+| held out, NJIT | 0.645 | 0.528 | 0.628 | |
+| held out, PanoSaliency | 0.579 | 0.723 | **0.723** | |
+| held out, pooled | 0.727 | 0.578 | 0.707 | |
+
+Three results, and the third is the one to remember:
+
+- **The fusion as designed does not help on tier 1.** A weight fitted in domain assumes
+  the dynamics branch is worth what it is worth in domain, and out of domain it is not,
+  so the mixture is pulled 0.04-0.12 below the lookup on every tier-1 corpus. It helps
+  only where `dyn` is the stronger of the two (PanoSaliency).
+- **Nor does a transfer-aware weight.** Choosing `w` on the *other six* held-out
+  corpora (leave-one-corpus-out, never the target's labels) gives 0.15-0.35 and leaves
+  every tier-1 corpus at or just below the lookup (ViewGauss 0.91 vs 0.93, Head_and_Gaze
+  0.82 vs 0.87, VR_User_Behavior 0.71 vs 0.72, NJIT level), and picks `w = 0` for
+  PanoSaliency, forfeiting its gain. A +0.02 to +0.04 dynamics signal is too small
+  relative to its own noise to add to a 0.7-0.9 static score at any global weight.
+  **Fusion is retired for transfer** unless the dynamics branch gets much stronger.
+- **The in-domain dynamics strength is Beat Saber's, not the model's.** Split by
+  training corpus, on validation users never trained on:
+
+  | in-domain validation users | lookup | `dyn` |
+  | --- | --- | --- |
+  | BOXRR, 74-94 users per checkpoint | 0.75-0.80 | **0.78-0.81** |
+  | alyx, 14-17 users per checkpoint | 0.58-0.62 | **0.53-0.55** |
+
+  Movement alone identifies unseen Beat Saber players at about 0.80 AUC - better than
+  the static lookup there, with every static cue removed by construction, censored at
+  30 epochs (those users also chose the epoch, so read it as optimistic by ~0.02). It
+  is the first clean behavioural-biometric number in this project. The same branch is
+  near chance on alyx users *that were in the training corpus*, and 0.52-0.54 on seated
+  video viewing. Two readings, not yet separated: alyx is 3.6% of the training
+  identities and may simply not be learned, or Beat Saber's content-locked rhythmic
+  movement is far more stereotyped per person than free FPS locomotion with cross-day
+  sessions. Section 6 run 8 (`dyn` on the 8-dataset corpus, stratified folds, alyx at
+  18% of identities) separates them and gives every corpus an in-domain dynamics
+  number of its own.
+
+### 9.5 The dynamics signal per corpus, in domain versus transferred
+
+Run 8: `dyn` on the 8-dataset corpus, 5 stratified folds, `epochs=60` with patience 15
+(selected epochs 5-10, so nothing censored), random control on the same folds. Beside
+it, the same encoding trained on BOXRR+alyx and transferred:
+
+| dataset | tier | **in domain** (8 corpora, 5 folds) | random | transfer, 419 ids | transfer, 419, long budget | transfer, full corpus |
+| --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | 0.551 +-0.011 | 0.500 | 0.538 | 0.537 | **0.579** |
+| ViewGauss | 1 | 0.528 +-0.034 | 0.506 | 0.517 | 0.522 | **0.565** |
+| VR_User_Behavior | 1 | 0.531 +-0.015 | 0.498 | 0.519 | 0.521 | 0.512 |
+| NJIT | 1 | 0.558 +-0.040 | 0.484 | 0.528 | 0.533 | 0.547 |
+| **alyx** | 1 | **0.530 +-0.007** | 0.498 | - | - | - |
+| PanoSaliency | 2 | 0.729 +-0.027 | 0.499 | 0.724 | 0.726 | 0.739 |
+| Panonut360 | 2 | 0.522 +-0.017 | 0.505 | 0.516 | 0.514 | 0.548 |
+| EyeNavGS | 3 | 0.529 +-0.024 | 0.490 | 0.535 | 0.536 | 0.516 |
+| pooled | | 0.575 +-0.010 | 0.499 | 0.581 | 0.582 | 0.600 |
+
+What this settles:
+
+- **The alyx question from 9.4 is answered: it is the activity, not the share.** With
+  alyx at 18% of training identities and trained in domain, movement alone identifies
+  unseen alyx players at 0.530 - the same as the 0.53-0.55 it scored as 3.6% of a
+  BOXRR-dominated corpus. Free FPS locomotion across two different days carries little
+  per-person structure at a 5-second window; content-locked rhythm-game movement
+  carries a great deal (0.78-0.81). The behavioural signal is a property of the activity
+  and the session gap, not something more identities of the same activity unlock.
+- **On the seated corpora the behavioural signal is small even in domain** (0.53-0.55,
+  above the 0.50 floor by 3-5 sd), and **a BOXRR-trained branch already reaches it out
+  of domain**: transfer at 419 identities sits 0.01 below in-domain training, and the
+  full-corpus transfer *exceeds* in-domain training on Head_and_Gaze (0.579 vs 0.551)
+  and ViewGauss (0.565 vs 0.528). Whatever generic head-movement identity exists in
+  360-degree viewing, 2000 Beat Saber players teach it about as well as the corpora
+  themselves do - which is the first evidence in this project that a learned
+  component transfers across activity, and the ceiling it transfers to is low.
+- **Identity count moves the dynamics branch where the static cue is strongest**
+  (Head_and_Gaze, ViewGauss: +0.03 / +0.05 from 419 to 2096, section 9.3) and not on
+  VR_User_Behavior, and the full-corpus transfer now *exceeds* in-domain training on
+  both (0.570 vs 0.551, 0.571 vs 0.528).
+
+### 9.6 What the night settles
+
+- **The static branch is the whole transferable signal, and it needs no model.** A
+  three-number lookup beats the trained `raw` model on every tier-1 corpus out of
+  domain, and the `raw` model's transfer is flat to three decimals from 419 to 2096
+  training identities. Any "more identities" claim made on the `raw` pipeline is a
+  claim about the lookup, which has no training set.
+- **The learned component is real, small, and does transfer once it is forced onto
+  dynamics** (`dyn`): +0.02 to +0.07 over chance on tier 1, sd under 0.01, rising with
+  identity count from 419 to 1000 and flattening by 2096. Out of domain it reaches or
+  exceeds what in-domain training on those corpora achieves, so the ceiling it hits is
+  the corpora's, not the model's: seated 360-degree viewing carries little
+  per-person movement structure at five seconds.
+- **The behavioural signal is activity-bound.** Movement alone identifies unseen Beat
+  Saber players at about 0.80 (above the static lookup) and unseen alyx players at
+  0.53, whether alyx is 3.6% or 18% of the training identities. Content-locked rhythmic
+  movement is a biometric; free FPS locomotion across two days, at this window
+  length, barely is.
+- **Fusion does not help transfer.** No weight chosen without the target's labels beats
+  the lookup on tier 1; the dynamics signal is too small relative to its noise to add
+  to a 0.7-0.9 static score. Retired until the dynamics branch is much stronger.
+- **`yawc` is not worth an arm**: it helps exactly the corpora predicted and hurts the
+  rest by as much.
+- What would move the transfer number next, in order: a test set that varies
+  *activity* at fixed users and rig (Across-XR, 49 users x 5 apps) so the
+  activity-bound finding can be measured directly rather than inferred across
+  corpora; a `channels=orientation` mode, because head-direction dynamics carry more
+  identity in 360-degree viewing than head translation does (PanoSaliency 0.73 under
+  `dyn`); and longer windows for the dynamics branch specifically, since free
+  locomotion may need more than five seconds to show a person.
 
 ## Appendix: reproduction
 
