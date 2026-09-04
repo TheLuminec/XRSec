@@ -320,6 +320,30 @@ whether the acquisition transfers, and is the number that decides whether it was
 it. If the first is strong and the second flat, the honest conclusion is that we bought
 an easier corpus rather than a better model.
 
+### Nymeria is the one place the static baseline cannot win
+
+The lookup below depends on absolute position being comparable between two recordings of
+one person. **On Nymeria it is not**: the SLAM origin is set per recording, so the two
+halves of a positive pair sit in different arbitrary frames and the static cue is absent
+between them. The lookup should therefore sit at **chance on Nymeria and nowhere else**.
+
+That makes it the cleanest instrument available for the question this project is stuck on.
+Everywhere else the static cue is present and dominates, so the learned component is
+measured only by subtraction. On Nymeria it is structurally disabled, so whatever the model
+scores above chance there **is** the behavioural component - measured directly rather than
+simulated by `center_position`, which has since been shown to be a leaky simulation (the
+mean quaternion alone recovers 0.54-0.79 of static-posture performance).
+
+Two consequences: expect Nymeria transfer numbers to be low, and do not read that as
+failure - low is the prediction. The question is whether the model beats the lookup there,
+and on Nymeria alone that is a fair fight.
+
+Acquired: **50 participants, 100 sequences, 47.1GB transfer, 20,778 windows at 5s@20Hz
+(415.6 per identity, above the corpus median of 295), 17 distinct scripts so every positive
+pair is cross-activity by construction.** Held at 50 rather than 100: the second half costs
+another ~47GB to buy identities in a dataset whose value is device and activity diversity,
+where BOXRR supplies identities 300x cheaper.
+
 ### A three-number lookup matches the trained model (CONFIRMED)
 
 Measured on all 5 folds of `b732bee5c6`, on the **same held-out users and the same pair
