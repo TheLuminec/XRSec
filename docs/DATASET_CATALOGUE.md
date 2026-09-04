@@ -73,6 +73,25 @@ right_hand_...,left_hand_...,take_id,user_id,game_id
 one sitting**, not by days - so this contributes cross-*application* pairs, not evidence
 about temporal persistence.
 
+**Their train/valid/test split is deterministic and now known exactly.** From
+`data_selection_slm.py` in their preprocessing repo - no seed, no shuffle, purely numeric
+user id:
+
+| split | users | ids |
+| --- | --- | --- |
+| train | 23 | 0-22 |
+| valid | 9 | 23-31 |
+| **test** | **17** | **32-48** |
+
+Reproduces their reported 23/9/17 exactly. **Evaluate on ids 32-48** and the comparison
+against their published 78.5% rank-1 becomes a measurement rather than an argument.
+
+Their preprocessing uses `data_encoding: BRV` at 30fps. Body-relative velocity is the
+encoding our own screen measured as *losing* to raw by 0.13 AUC over 40 runs - not a
+contradiction but the same fact from the other side: body-relative encodings need a body
+frame derived from head **and both controllers**, which they have and we do not. Their
+coordinate system (forward z, right x, up y) matches ours, so no axis remap.
+
 ### The XR Motion Dataset Catalogue is the single most valuable find
 
 Entries 4–9 all live in one HuggingFace repository [C0], already standardized to a single
