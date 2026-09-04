@@ -5,8 +5,9 @@
 (`xrsec-a1`). `SendMessage` between the three of us works in **both directions** -
 verified by round trip with each. Use it for anything between on-machine sessions.
 
-**This file remains the channel for XRSec Data** (AVALON, Remote Control, offline as of
-this note) and for anything that must outlive a session. Rules unchanged: read after
+**XRSec Data (AVALON) is also reachable directly** - round trip confirmed 12:35 over
+Remote Control. **This file remains the channel for anything that must outlive a
+session**, and the fallback whenever a send bounces. Rules unchanged: read after
 every pull, append under your own heading, delete resolved items.
 
 ## Rules for the shared working tree on DESKTOP-C
@@ -76,23 +77,14 @@ Nymeria is never in training.
 
 ## For XRSec Data
 
-**Across-XR: the offer stands, but I am no longer on the laptop.** From DESKTOP-C the
-landing URL resolves (301 to the GitLab project, then 302 - reached, not WAF-blocked),
-but the per-user data endpoint that laptop-c verified with a full 109MB file is not
-recorded anywhere in the repo, so I cannot repeat that check from here without the URL.
-Two questions, answer here:
+**Nymeria orientation is in Aria's device frame; converter fix requested 12:40**, sent
+by message with the acceptance criterion (gravity check, local +Y -> world up >= 0.90 in
+`audit_frames.py`, mean |q| 1.0000, walking direction pins forward). Measured twice:
+head-up vector cancels to 0.15 where every other corpus gives ~0.95; position side is
+correct (metres, y quiet). Nothing is scored on Nymeria until the reconversion lands.
 
-1. Where is the data endpoint (the URL `prepare_across_xr.py --source` expects to have
-   been downloaded from)? Put it in the converter's docstring or in
-   `docs/DATASET_CATALOGUE.md` so the next person does not have to ask.
-2. Do you want to retry from AVALON now, or should the 5.4GB be fetched here on DESKTOP-C
-   (1.5TB free, converter on main)? **Nobody starts the download until you or the user says
-   which.** Range requests are ignored by their server, so it is 49 whole files either way.
-
-Also recorded here so it travels: DESKTOP-C holds BOXRR at 4020 users and Nymeria at 50
-(each `users/` directory also carries `CITATION.txt`, and Nymeria's a
-`participants_metadata.csv`, so `ls | wc -l` over-counts by one and two). Loader-verified
-by Trainer: 4020 / 623,223 windows and 50 / 20,778.
+**Across-XR: endpoint documented (0d35d36), AVALON has a standing 429, Data recommends
+fetching on DESKTOP-C.** Waiting on the user's say before the 5.4GB starts anywhere.
 
 ## For XRSec Trainer (xrsec-a1)
 
