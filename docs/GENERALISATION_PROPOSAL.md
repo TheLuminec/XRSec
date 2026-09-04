@@ -930,6 +930,54 @@ between-participant separation of session means, per axis, per corpus, on the sa
 as the table above - lands under this section when it is done. Until it does, the
 placement reading rests on the lookup-by-axis figures and the section 1 audit only.
 
+### 9.11 Nymeria under `dyn`: the dynamics branch carries to AR glasses at the same small size
+
+The prediction was registered before the run (0.52-0.56 at 419 identities; +0.00 to +0.02
+with identity count; falsifiers below 0.51 and above 0.60). Scoring only: the 9.3
+long-budget `dyn` checkpoints on all 50 Nymeria users, `exclude_users=[]`,
+cross-sequence positives, within-dataset negatives, 25,600 pairs at 0.500, target-fit
+standardisation through each checkpoint's own normaliser, three manifest seeds drawn as
+the pipeline draws them. Nymeria was never in any training set.
+
+| training identities | checkpoints | Nymeria AUC (one sitting, cross-activity positives) |
+| --- | --- | --- |
+| 419 (343 BOXRR + 76 alyx) | 5 seeds | **0.529 +-0.002** |
+| 1000 | 2 seeds | 0.533 +-0.004 |
+| 2096 | 2 (30- and 120-epoch) | **0.541 +-0.001** |
+| random extractor, 2096 | 1 | 0.502 |
+| lookup on the `dyn`-encoded windows, Nymeria (coordinates ~7 m from the origin) | - | 0.547 +-0.002, registered criterion 0.50 +-0.01: **failed by construction**, see below |
+| the same lookup on `dyn`-encoded alyx windows (~0.4-1.6 m from the origin), control | - | 0.503 +-0.004 |
+| the same on `dyn`-encoded BOXRR windows (~0.1-1.6 m), control | - | 0.508 +-0.002 |
+
+Inside the band at 419, +0.013 from 419 to 2096 inside the registered +0.00 to +0.02,
+neither falsifier fires. **Head-movement dynamics learned from VR carry to real AR
+glasses in daily life at about the same small size as to seated video viewing**
+(0.52-0.57 there, 9.3), on the one corpus where the `raw` lookup is a location match
+(9.9). Every Nymeria number carries the one-sitting caveat: positives are cross-activity
+within one sitting on one day, so no cross-day cost is paid.
+
+**The harness check, and why it had to change.** The registered rule was that the
+lookup on the `dyn`-encoded windows must read 0.50 +-0.01 on the same pairs. It read 0.547
+on every checkpoint - **failed by construction**, recorded as such rather than replaced
+silently - and the cause is the check, not a leak: the `dyn` residual's window-mean is
+float32 rounding residue (median 1.7e-7 m, max 3.6e-5 m; 1e-14 m in float64), uncorrelated
+with motion amplitude but correlated +0.62 with the real location lookup, because rounding
+error scales with the absolute coordinate and Nymeria's SLAM coordinates run to 30 m.
+Even the float64 residual at 1e-14 m scores 0.557, since any residue orders pairs by
+distance from the origin. The control rows make the mechanism visible: the identical
+lookup on `dyn`-encoded alyx windows, whose coordinates sit within a metre or two of
+the origin, reads 0.503, and on BOXRR 0.508, with the same 1e-7 m residual medians -
+only the corpus 7 m from its origin departs from chance. The criteria that do the job,
+and the ones this and every future `dyn` cross-corpus table are read against: the
+residual window-mean below 1e-4 m in metres (met, 30x margin over the maximum), and the
+model's scores independent of location, corr(model score, raw location lookup) within
++-0.03 overall and among negatives - measured +0.012 over 25,600 pairs and -0.006 among
+negatives. A float64 residual in
+`input_encoding.dyn` is queued for the next code window to remove the residue at source,
+with an acceptance fixed now: afterwards the Nymeria residue reads ~1e-14 m and one
+existing `dyn` checkpoint scores every held-out corpus within 1e-4 AUC of its recorded
+rows; anything larger is a re-baseline and is said to be one.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
