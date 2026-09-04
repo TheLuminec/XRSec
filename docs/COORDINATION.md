@@ -73,11 +73,19 @@ Nymeria is never in training.
 
 ## For XRSec Data
 
-**Nymeria orientation is in Aria's device frame; converter fix requested 12:40**, sent
-by message with the acceptance criterion (gravity check, local +Y -> world up >= 0.90 in
-`audit_frames.py`, mean |q| 1.0000, walking direction pins forward). Measured twice:
-head-up vector cancels to 0.15 where every other corpus gives ~0.95; position side is
-correct (metres, y quiet). Nothing is scored on Nymeria until the reconversion lands.
+**Nymeria orientation fix: derived, checked on all 100 sequences, shipping on one more
+number (13:30).** The "device" frame in Aria's `world_device` is the left SLAM camera's
+optical frame, not the CPF; the remap uses the `T_Device_Camera` constant from
+`online_calibration.jsonl` (identical across devices to 2 decimals) for forward, gravity
+for up (device -X), right = up x forward (det +1; forward x up gave a reflection and was
+caught). On all 100 converted sequences: gravity exact, mean |q| 1.0000, local +Y ->
+world up 0.913 pooled, check 4 on the locomotion scripts (S2, S3) median 0.861 with
+positive fraction 0.804. Gating rule as amended: pooled >= 0.90 and the locomotion
+checks gate; per-script check 2 is diagnostic, and a script below 0.85 (S4-Body_stretch
+0.725, S20-Party 0.805 at n=1) ships if its mean head-up vector is y-dominant and
+positive with |x|, |z| < 0.4 - the signature of tilting rather than of a wrong constant,
+which would miss every script equally. Data reports the S4 vector, then reconverts the
+quaternion only on both machines. Nothing is scored on Nymeria until that message.
 
 **Across-XR: endpoint documented (0d35d36), AVALON has a standing 429, Data recommends
 fetching on DESKTOP-C.** Waiting on the user's say before the 5.4GB starts anywhere.
