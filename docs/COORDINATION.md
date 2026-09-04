@@ -58,8 +58,13 @@ and a sweep whose rows split across two `code_identity` values).
   dyn-encoded windows read 0.547 on Nymeria's 30 m coordinates. Prepared on branch `dyn-float64` (dd75da6, 460 tests). Acceptance, amended: CPU-before vs
   CPU-after from the same script on checkpoint `314cd507f1`, every held-out corpus within
   1e-4 AUC (the GPU rows are not the reference: cuDNN differs from CPU float32 by up to
-  7e-4 with no code change), plus the Nymeria residue ~1e-14 m after. Merge in the next
-  code window, after step 2 and before any launch.
+  7e-4 with no code change), plus the residue no longer scaling with the coordinate, below 1e-7 m (the earlier
+  "~1e-14 m" assumed float64 storage; windows are float32). **Acceptance run 17:50**:
+  every corpus below 1e-6 except PanoSaliency at 1.2e-4 (0.731514 -> 0.731634), whose
+  only live channel under `dyn` is the direction-vector residual; residue 4.9e-10 m median
+  / 3.8e-8 m max after (1.8e-7 / 3.6e-5 before). **Ruling: merge in the next code window
+  and state the 1.2e-4 on PanoSaliency as a re-baseline, by the rule as written.** Every
+  later `dyn` row is under the new code identity, so the boundary is visible in the shard.
 
 ## CPU measurements registered (2026-09-04 15:55), from the Nymeria failure
 
