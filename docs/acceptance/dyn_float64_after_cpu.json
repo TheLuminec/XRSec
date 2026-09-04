@@ -1,0 +1,26 @@
+{
+ "checkpoint": "C:\\Users\\TheLu\\Desktop\\GIT\\XRSec\\sweeps\\314cd507f1\\runs\\bilstm_dbc29cfc5f\\best.pth",
+ "code_root": "C:\\Users\\TheLu\\Desktop\\GIT\\XRSec-dyn64",
+ "before_cpu": {
+  "VR_User_Behavior": 0.521389,
+  "ViewGauss": 0.570754,
+  "Head_and_Gaze": 0.56959,
+  "NJIT": 0.539575,
+  "PanoSaliency": 0.731514,
+  "Panonut360": 0.543486,
+  "EyeNavGS": 0.528596
+ },
+ "after_cpu": {
+  "VR_User_Behavior": 0.521389,
+  "ViewGauss": 0.570754,
+  "Head_and_Gaze": 0.56959,
+  "NJIT": 0.539576,
+  "PanoSaliency": 0.731637,
+  "Panonut360": 0.543486,
+  "EyeNavGS": 0.528596
+ },
+ "largest_gap": 0.00012293998924173266,
+ "pass": false,
+ "nymeria_residual_median_m": 4.928975561035998e-10,
+ "nymeria_residual_max_m": 3.814697180359872e-08
+}
