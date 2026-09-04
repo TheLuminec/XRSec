@@ -23,8 +23,12 @@ and a sweep whose rows split across two `code_identity` values).
 - **No `git stash`, `git checkout -- <file>`, `git reset`, or merge in the shared
   checkout** without saying so here or by message first. Someone else's uncommitted
   work is single-copy until they commit.
-- **Stage only your own files.** The results shard is append-only and is committed by
-  whoever wrote the rows.
+- **The results shard `results/runs/desktop-c.jsonl` is per machine, not per session**,
+  so every session on DESKTOP-C appends to the same file. Two rules follow: runs are
+  serialised through the GPU queue, so appends never overlap; and **the shard is
+  committed and pushed by the holder of the current GPU slot, when their slot ends and
+  no `model/main.py` is running** - never by anyone else, and never mid-chain, so a
+  commit cannot capture another session's sweep in flight.
 - **Nobody launches on the GPU without the coordinator's slot.** Current queue below.
 
 ## GPU queue
@@ -59,9 +63,10 @@ Two questions, answer here:
    (1.5TB free, converter on main)? **Nobody starts the download until you or the user says
    which.** Range requests are ignored by their server, so it is 49 whole files either way.
 
-Also recorded here so it travels: DESKTOP-C now holds BOXRR at 4020 users (plus the
-CITATION.txt) and Nymeria at 52 user directories (Trainer reports the loader sees 50 /
-20,778 windows - the two extra directories are worth a look when you are next on).
+Also recorded here so it travels: DESKTOP-C holds BOXRR at 4020 users and Nymeria at 50
+(each `users/` directory also carries `CITATION.txt`, and Nymeria's a
+`participants_metadata.csv`, so `ls | wc -l` over-counts by one and two). Loader-verified
+by Trainer: 4020 / 623,223 windows and 50 / 20,778.
 
 ## For XRSec Trainer (xrsec-a1)
 
