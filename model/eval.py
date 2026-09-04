@@ -187,6 +187,19 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
     return loss, accuracy, metrics
 
 
+def excluded_users_under_eval_dirs(eval_dirs, exclude_users) -> list:
+    """Excluded user paths that resolve under one of the evaluation directories."""
+    from pathlib import Path
+    import os
+    roots = [str(Path(d).resolve()) for d in ([eval_dirs] if isinstance(eval_dirs, str) else list(eval_dirs or []))]
+    out = []
+    for user in (exclude_users or []):
+        resolved = str(Path(user).resolve())
+        if any(resolved == r or resolved.startswith(r + os.sep) for r in roots):
+            out.append(user)
+    return out
+
+
 def _resolve_eval_split(args, checkpoint):
     """
     Decide which users to evaluate on, and say so out loud.
@@ -207,6 +220,17 @@ def _resolve_eval_split(args, checkpoint):
         on_excluded = bool(split.get("test_on_excluded", False))
         print(f"Evaluation split recovered from the checkpoint: "
               f"{len(exclude_users)} named users, test_on_excluded={on_excluded}")
+        # Reproducing the evaluation a checkpoint was selected on is the honest thing
+        # to do, even when that evaluation silently lost users to the training split's
+        # exclude list (the config default names five VR_User_Behavior users). So it is
+        # not refused here - but it is said, so a 43-user figure is never read as 48.
+        dropped = excluded_users_under_eval_dirs(eval_dirs, exclude_users) if not on_excluded else []
+        if dropped:
+            listed = ", ".join(str(__import__("pathlib").Path(u).name) for u in dropped[:5])
+            more = f" and {len(dropped) - 5} more" if len(dropped) > 5 else ""
+            print(f"  NOTE: {len(dropped)} excluded user(s) lie under the evaluation corpus and are "
+                  f"DROPPED from it ({listed}{more}); the reported figure is on the remaining users, "
+                  f"exactly as at training time")
         for key in ("sample_time", "sample_rate", "encoding", "resample", "center_position"):
             recorded, current = split.get(key), getattr(args, key, None)
             if recorded is not None and current is not None and str(recorded) != str(current):
