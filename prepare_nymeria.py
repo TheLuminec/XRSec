@@ -283,7 +283,58 @@ def find_sequences(source: Path):
             yield fake_name, act_id, csv_path
 
 
-def convert_session(path: Path, max_hz: float | None = None) -> pd.DataFrame:
+# Z-up -> Y-up is a rotation of -90 degrees about X. Quaternion for that
+# rotation, in this pipeline's x,y,z,w order (scalar last):
+#   r = (sin(-45deg), 0, 0, cos(-45deg)) = (-0.70710678, 0, 0, 0.70710678)
+UP_AXIS_Z_TO_Y_QUATERNION = (-0.70710678118, 0.0, 0.0, 0.70710678118)
+
+
+def _hamilton_product_left(r_xyzw, q_xyzw: np.ndarray) -> np.ndarray:
+    """r (x) q, Hamilton product, r a single constant quaternion applied on
+    the LEFT of every row of q (an (N,4) array, x,y,z,w order).
+
+    r on the left is not a stylistic choice: the trajectory's quaternion is
+    world<-device, so changing the WORLD frame by a rotation R composes as
+    new_world<-device = R (x) world<-device -- R multiplies on the left.
+    Multiplying on the right would rotate the DEVICE frame instead, which
+    is a different (wrong) transform that happens to also produce a unit
+    quaternion, so nothing downstream would catch the mistake.
+    """
+    rx, ry, rz, rw = r_xyzw
+    qx, qy, qz, qw = q_xyzw[:, 0], q_xyzw[:, 1], q_xyzw[:, 2], q_xyzw[:, 3]
+    w = rw * qw - rx * qx - ry * qy - rz * qz
+    x = rw * qx + rx * qw + ry * qz - rz * qy
+    y = rw * qy - rx * qz + ry * qw + rz * qx
+    z = rw * qz + rx * qy - ry * qx + rz * qw
+    return np.column_stack([x, y, z, w])
+
+
+def rotate_z_up_to_y_up(position: np.ndarray, rotation: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Change of basis from a Z-up world frame (Nymeria's world_device) to
+    this pipeline's Y-up convention (everything else in the corpus).
+
+    Position: (x, y, z) -> (x, z, -y) -- a -90deg rotation about X.
+    Orientation: q' = r (x) q (left multiplication, see
+    _hamilton_product_left), then renormalised -- rotating only the
+    position and leaving orientation alone would decouple the two; a
+    wrong multiplication side produces a plausible-looking but wrong
+    result, which is exactly the failure shape this function exists to
+    avoid. See PROVENANCE.md / the module docstring for the three
+    verification checks (transformed gravity, transformed height, mean
+    |q|) that confirm this is the right transform rather than assumed.
+    """
+    x, y, z = position[:, 0], position[:, 1], position[:, 2]
+    new_position = np.column_stack([x, z, -y])
+
+    new_rotation = _hamilton_product_left(UP_AXIS_Z_TO_Y_QUATERNION, rotation)
+    norm = np.linalg.norm(new_rotation, axis=1, keepdims=True)
+    norm[norm == 0] = 1.0  # guard a degenerate all-zero input row, not otherwise reachable
+    new_rotation = new_rotation / norm
+
+    return new_position, new_rotation
+
+
+def convert_session(path: Path, max_hz: float | None = None, up_axis: str = "y") -> pd.DataFrame:
     """One closed_loop_trajectory.csv -> a DataFrame in the pipeline's schema.
 
     max_hz optionally decimates, same convention and same rationale as
@@ -299,6 +350,18 @@ def convert_session(path: Path, max_hz: float | None = None) -> pd.DataFrame:
     hosted zips via the URL list, so a future resample=bin retest (see
     module docstring) means re-fetching, not something this local copy
     needs to preserve.
+
+    up_axis: "y" (default, no-op) or "z" -- Nymeria's world_device frame is
+    Z-up (verified: gravity_z_world reads a constant -9.81 with
+    gravity_x/y_world at 0.0), unlike every other dataset in this corpus.
+    "z" applies rotate_z_up_to_y_up() so height lands in HmdPosition.y like
+    everywhere else, which matters for more than tidiness: the model reads
+    a fixed channel order, and if the anthropometric cue -- the single
+    strongest thing it uses -- sits in a different channel for one dataset,
+    cross-dataset transfer breaks for a reason that has nothing to do with
+    generalisation. Named and explicit (an argument, not an always-on
+    branch inside the Nymeria path) so the next Z-up dataset found is one
+    flag, not a rediscovery.
     """
     frame = pd.read_csv(path, usecols=lambda name: name in REQUIRED)
     missing = [column for column in REQUIRED if column not in frame.columns]
@@ -323,6 +386,11 @@ def convert_session(path: Path, max_hz: float | None = None) -> pd.DataFrame:
             step = max(1, int(round(native / max_hz)))
             seconds, position, rotation = seconds[::step], position[::step], rotation[::step]
 
+    if up_axis == "z":
+        position, rotation = rotate_z_up_to_y_up(position, rotation)
+    elif up_axis != "y":
+        raise ValueError(f"up_axis must be 'y' or 'z', got {up_axis!r}")
+
     output = pd.DataFrame(
         np.column_stack([seconds, rotation, position]),
         columns=OUTPUT_COLUMNS,
@@ -346,7 +414,7 @@ def describe(frame: pd.DataFrame) -> dict:
     }
 
 
-def inspect(source: Path, max_hz: float | None = None, limit: int = 4) -> int:
+def inspect(source: Path, max_hz: float | None = None, limit: int = 4, up_axis: str = "y") -> int:
     sequences = list(find_sequences(source))
     users = sorted({name for name, _, _ in sequences})
     print(f"{len(users)} participants, {len(sequences)} activity recordings found")
@@ -363,17 +431,20 @@ def inspect(source: Path, max_hz: float | None = None, limit: int = 4) -> int:
 
     print(f"\nsampling {min(limit, len(sequences))} recordings:")
     for name, act_id, path in sequences[:: max(1, len(sequences) // max(limit, 1))][:limit]:
-        stats = describe(convert_session(path, max_hz))
+        stats = describe(convert_session(path, max_hz, up_axis))
         print(f"  {name:<20} act{act_id}  rows={stats['rows']:>8} "
               f"{stats['duration']:>8.1f}s  {stats['hz']:>7.1f}Hz  "
               f"|q|={stats['quat_norm']:.6f}")
     print("\n|q| must be ~1.000000. Anything else means the rotation columns are "
           "being read in the wrong order or are not a unit quaternion.")
+    if up_axis == "z":
+        print("up_axis=z: HmdPosition.y should now read close to standing head height "
+              "(compare against the rest of the corpus, ~1.6m).")
     return 0
 
 
 def convert(source: Path, out: Path, metadata_csv: Path | None = None,
-            max_hz: float | None = None) -> int:
+            max_hz: float | None = None, up_axis: str = "y") -> int:
     sequences = list(find_sequences(source))
     if not sequences:
         print(f"ERROR: no closed_loop_trajectory.csv found under {source}")
@@ -393,7 +464,7 @@ def convert(source: Path, out: Path, metadata_csv: Path | None = None,
 
     for fake_name, act_id, path in sequences:
         try:
-            frame = convert_session(path, max_hz)
+            frame = convert_session(path, max_hz, up_axis)
         except Exception as exc:
             print(f"  SKIP {fake_name} act{act_id}: {type(exc).__name__}: {exc}")
             skipped += 1
@@ -452,6 +523,12 @@ def main() -> int:
                              "prepare_who_is_alyx.py). Native is ~1029Hz; nothing in the "
                              "pipeline samples above 20Hz, so storing the full rate is "
                              "mostly discarded at load time. 0 disables.")
+    parser.add_argument("--up-axis", choices=["y", "z"], default="z",
+                        help="Which raw axis is vertical. Nymeria's world_device frame is "
+                             "verified Z-up (gravity_z_world is a constant -9.81); default "
+                             "'z' rotates it to this pipeline's Y-up convention so height "
+                             "lands in HmdPosition.y like every other dataset. Pass 'y' only "
+                             "to inspect/keep the raw, unrotated frame.")
     args = parser.parse_args()
 
     if args.fetch:
@@ -468,8 +545,8 @@ def main() -> int:
         return 1
 
     max_hz = args.max_hz if args.max_hz and args.max_hz > 0 else None
-    return (inspect(args.source, max_hz) if args.inspect
-            else convert(args.source, args.out, args.participants_metadata, max_hz))
+    return (inspect(args.source, max_hz, up_axis=args.up_axis) if args.inspect
+            else convert(args.source, args.out, args.participants_metadata, max_hz, args.up_axis))
 
 
 if __name__ == "__main__":

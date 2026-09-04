@@ -13,7 +13,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from prepare_nymeria import convert, convert_session, find_sequences, inspect, parse_sequence_key
+from prepare_nymeria import (
+    convert, convert_session, find_sequences, inspect, parse_sequence_key, rotate_z_up_to_y_up,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -42,6 +44,71 @@ def _write_trajectory_csv(path, n=50, dt_us=972, quat_norm=1.0):
         })
         rows.append(row)
     pd.DataFrame(rows, columns=RAW_COLUMNS).to_csv(path, index=False)
+
+
+def test_rotate_z_up_to_y_up_transforms_gravity_correctly():
+    """The decisive check: apply the SAME transform to a gravity vector.
+    Z-up gravity (0,0,-9.81) must become Y-up gravity (0,-9.81,0). If this
+    doesn't hold the rotation is wrong, full stop -- this is not a
+    tolerance check, it should be exact to floating point."""
+    gravity = np.array([[0.0, 0.0, -9.81]])
+    identity_quat = np.array([[0.0, 0.0, 0.0, 1.0]])  # rotation is irrelevant to this check
+    rotated_gravity, _ = rotate_z_up_to_y_up(gravity, identity_quat)
+    assert np.allclose(rotated_gravity, [[0.0, -9.81, 0.0]])
+
+
+def test_rotate_z_up_to_y_up_keeps_quaternions_unit_norm():
+    rng = np.random.default_rng(0)
+    q = rng.normal(size=(50, 4))
+    q /= np.linalg.norm(q, axis=1, keepdims=True)
+    position = rng.normal(size=(50, 3))
+    _, rotated_q = rotate_z_up_to_y_up(position, q)
+    assert np.allclose(np.linalg.norm(rotated_q, axis=1), 1.0)
+
+
+def test_rotate_z_up_to_y_up_position_matches_the_documented_formula():
+    """(x, y, z) -> (x, z, -y) -- a -90deg rotation about X."""
+    position = np.array([[1.0, 2.0, 3.0], [0.0, 0.0, 1.0]])
+    identity_quat = np.tile([0.0, 0.0, 0.0, 1.0], (2, 1))
+    rotated_position, _ = rotate_z_up_to_y_up(position, identity_quat)
+    assert np.allclose(rotated_position, [[1.0, 3.0, -2.0], [0.0, 1.0, 0.0]])
+
+
+def test_rotate_z_up_to_y_up_composed_twice_is_a_180_about_x():
+    """A sign-error smoke test: applying it twice should NOT be identity
+    (that would mean the rotation angle or axis is wrong) -- two -90deg
+    turns about the same axis make a 180, which negates y and z."""
+    position = np.array([[1.0, 2.0, 3.0]])
+    q = np.array([[0.0, 0.0, 0.0, 1.0]])
+    once_pos, once_q = rotate_z_up_to_y_up(position, q)
+    twice_pos, twice_q = rotate_z_up_to_y_up(once_pos, once_q)
+    assert np.allclose(twice_pos, [[1.0, -2.0, -3.0]])
+
+
+def test_convert_session_up_axis_z_matches_manual_rotation(tmp_path):
+    """End-to-end: convert_session(up_axis='z') must equal applying
+    rotate_z_up_to_y_up to convert_session(up_axis='y')'s raw columns --
+    catches a wiring mistake between the two, not just a math mistake in
+    the rotation function itself."""
+    _write_trajectory_csv(tmp_path / "traj.csv", n=20)
+    unrotated = convert_session(tmp_path / "traj.csv", up_axis="y")
+    rotated = convert_session(tmp_path / "traj.csv", up_axis="z")
+
+    expected_pos, expected_q = rotate_z_up_to_y_up(
+        unrotated[["HmdPosition.x", "HmdPosition.y", "HmdPosition.z"]].to_numpy(),
+        unrotated[["UnitQuaternion.x", "UnitQuaternion.y", "UnitQuaternion.z", "UnitQuaternion.w"]].to_numpy(),
+    )
+    assert np.allclose(rotated[["HmdPosition.x", "HmdPosition.y", "HmdPosition.z"]].to_numpy(), expected_pos)
+    assert np.allclose(
+        rotated[["UnitQuaternion.x", "UnitQuaternion.y", "UnitQuaternion.z", "UnitQuaternion.w"]].to_numpy(),
+        expected_q,
+    )
+
+
+def test_convert_session_rejects_an_unknown_up_axis(tmp_path):
+    _write_trajectory_csv(tmp_path / "traj.csv", n=5)
+    with pytest.raises(ValueError):
+        convert_session(tmp_path / "traj.csv", up_axis="x")
 
 
 def test_parses_a_real_sequence_key():
