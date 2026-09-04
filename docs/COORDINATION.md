@@ -48,8 +48,8 @@ and a sweep whose rows split across two `code_identity` values).
 | order | who | what | status |
 | --- | --- | --- | --- |
 | 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
-| 2 | Trainer | reproduction of grid cell 0.1/15, all 5 folds, under current code (stop on any digit differing from sweep `31751868df`), then 0.35/30 @ epochs=30 x 5 folds | **running since 11:47**, corpus verified as the 8 grid datasets |
-| 3 | Model Generalization | proposal section 10 step 2, `dyn` window length | after 2, unless 9.7 changes the ranking |
+| 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **running**; the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand |
+| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | prepared, launches when Trainer releases the slot and has committed the shard |
 
 ---
 

@@ -1754,6 +1754,18 @@ free to test here.
 
 JSONL removes the class instead of patching it - a union of self-describing records is correct whatever schema either side used, adding a field is a non-event, and appending never rewrites a line. `run_id` makes every line unique so union can't coalesce two runs that agree on all fields. Tests cover the property, not just the writing: `test_union_merging_two_schemas_keeps_every_field_on_the_right_row` reproduces the exact merge that corrupted the file. **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
 
+**`code_identity` invalidation was tested once, and the trade held (2026-09-04).** The
+margin/scale grid ran at `67c63fa767`; eight `model/*.py` files changed afterwards (the
+lookup baseline, per-dataset metrics, EER, checkpoint serialisation) and the tree hashed
+to `6ac797f158`. Re-running one grid cell over all five folds under the new identity
+reproduced every recorded field on `repr` - `selected_test_auc`, `selected_test_acc`,
+`best_epoch`, `best_test_auc`, `final_train_loss` - so the whole optimisation trajectory
+was identical and those commits changed no training numerics. The invalidation was
+unnecessary in hindsight and cost five runs to prove; the alternative silently reuses
+results across a numerics change. **Do not loosen the digest** because of this. Rows at the
+two identities are comparable, and any comparison across a code change should be earned
+the same way: one cell, every fold, identical on `repr`.
+
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 
 The 95 pre-existing runs under `runs/` are not in this file; they can be backfilled from checkpoint `history` dicts plus each run's `.hydra/config.yaml`.
