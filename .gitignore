@@ -13,3 +13,6 @@ model/__pycache__/*
 
 # Derived view of the results log, rebuilt after every run (results/runs/ is the record).
 results/runs_all.csv
+
+# Any other sweep artifact root (checkpoints; the numbers live in results/runs/)
+/sweeps_*/
