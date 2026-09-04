@@ -163,7 +163,16 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   held-out validation users recorded in the five 9.1-setup checkpoints Model Generalization
   scored, named in the table; raw-metres xyz and xz columns beside the standardised ones,
   since per-dataset standardisation upweights height and the y-vs-xz split is partly the
-  normaliser's.
+  normaliser's. **First row (alyx, 21:00): xyz 0.119 / y 0.135 / xz 0.075 at N=17, k=16,
+  whole-session ceiling 0.162; k=1 to k=16 flat.** Both Trainer's alyx predictions and the
+  coordinator's 0.4-0.6 band fail there. Confirmed by a second route: rank-1 implied by the
+  measured pairwise AUCs under a Gaussian score model is 0.103 / 0.149 / 0.075, within 0.01
+  of the harness. **Implied rank-1 at N=17 for the remaining rows, registered before they
+  land (xyz / y / xz):** Head_and_Gaze 0.44 / 0.17 / 0.45; VR_User_Behavior 0.20 / 0.13 /
+  0.18; ViewGauss 0.63 / 0.48 / 0.45; BOXRR 0.25 / 0.33 / 0.17; k=16 expected within +0.03
+  of k=1 everywhere. Lesson: P(within<between) is pairwise and does not translate into
+  16-way rank-1; the static cue is limited by between-session shift, which enrolment
+  evidence cannot remove.
 
 ## GPU queue
 
