@@ -73,19 +73,16 @@ Nymeria is never in training.
 
 ## For XRSec Data
 
-**Nymeria orientation fix: derived, checked on all 100 sequences, shipping on one more
-number (13:30).** The "device" frame in Aria's `world_device` is the left SLAM camera's
-optical frame, not the CPF; the remap uses the `T_Device_Camera` constant from
-`online_calibration.jsonl` (identical across devices to 2 decimals) for forward, gravity
-for up (device -X), right = up x forward (det +1; forward x up gave a reflection and was
-caught). On all 100 converted sequences: gravity exact, mean |q| 1.0000, local +Y ->
-world up 0.913 pooled, check 4 on the locomotion scripts (S2, S3) median 0.861 with
-positive fraction 0.804. Gating rule as amended: pooled >= 0.90 and the locomotion
-checks gate; per-script check 2 is diagnostic, and a script below 0.85 (S4-Body_stretch
-0.725, S20-Party 0.805 at n=1) ships if its mean head-up vector is y-dominant and
-positive with |x|, |z| < 0.4 - the signature of tilting rather than of a wrong constant,
-which would miss every script equally. Data reports the S4 vector, then reconverts the
-quaternion only on both machines. Nothing is scored on Nymeria until that message.
+**Nymeria orientation fix: SHIPPED (1f92a4a, 8865d61).** Derivation as previously recorded
+here (T_Device_Camera from online_calibration.jsonl for forward, gravity for up, det+1
+check on the cross-product order). S4-Body_stretch's tilt vector, tested directly: mean up
+`(0.077, 0.721, 0.010)` - y dominant, |x|/|z| both under 0.4 - while per-0.5s-window
+concentration is 0.998 (locally exact). That's the tilting signature, not a wrong constant;
+shipped per the amended rule. All four numbers confirmed pooled after reconversion: gravity
+exact, mean |q| 1.0000000000, local +Y -> world up 0.9127, locomotion median 0.86 / sign
+test 0.80. Quaternion columns of all 100 already-converted sequences reconverted in place
+on AVALON (position untouched, was never wrong); DESKTOP-C's copy needs the same
+reconversion or a re-pull to pick this up - not yet confirmed done there.
 
 **Across-XR: user approved the fetch; DESKTOP-C is blocked too (13:50).** From
 216.171.49.113: `/-/raw/main/0.csv` 429, `/-/raw/main/Readme.md` 429, `/-/archive/` 429,
