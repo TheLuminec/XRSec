@@ -10,6 +10,85 @@ claim could not be checked it says so rather than guessing.
 
 ---
 
+## Everything we can reach, at a glance
+
+Identities, sessions and activities for all data we **can access**, not just what is on
+disk. Session counts are per identity. Read the tiers below for licences, caveats and
+access routes.
+
+### A. Downloaded and in use
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| BOXRR-23 (our slice) | **2,020** | 4.45 recordings | Beat Saber | VR |
+| Head_and_Gaze | 100 | many videos | 360-degree video | VR |
+| PanoSaliency | 99 | 22 median | 360-degree video | VR |
+| Who Is Alyx | 76 | **2, different days** | Half-Life: Alyx | VR |
+| VR_User_Behavior | 48 | 18 | 360-degree video | VR |
+| ViewGauss | 35 | 4 | 4D Gaussian video | VR |
+| EyeNavGS | 22 | 12 | 3DGS navigation | VR |
+| Panonut360 | 21 | 15 | 360-degree video | VR |
+| NJIT_6DOF | 18 | **1** | room-scale walking | VR |
+| 360_em | 13 | 15 median | position-only, 0 windows at `channels=full` | VR |
+| **total** | **2,452** (2,439 with windows) | | **~5 activity types** | |
+
+### B. Open access, retrievable now, not yet fetched
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| BOXRR-23, rest of corpus | **79,349 more** (81,369 eligible) | ~45 recordings | Beat Saber | VR |
+| BOXRR-23 aligned [C2] | 11,927 | many | Beat Saber | VR |
+| **Nymeria** | **236** | 4.66 recordings, **one sitting** | **daily life in the wild**, 50 locations | **AR glasses** |
+| Across XR Applications | 49 | 5 apps x takes | Superhot, Alyx, Beat Saber, Synth Riders, Social VR | VR |
+| MooreCrossDomain23 | 45 | 2 builds | two distinct VR builds | VR |
+| VR.net | 21 | varies | **7 apps** incl. Pottery, VR ROME, Traffic Cop | VR |
+| LiebersHand22 | 16 | 2, x8 scenes | AR/VR hand + button tasks | AR + VR |
+| LiebersLabStudy21 | 16 | 2 | Archery, Bowling | VR |
+| LiebersBeatSaber23 | 15 | 25 | Beat Saber | VR |
+| CREATTIVE3D | to confirm | multiple scenarios | VR road crossing, incl. low vision | VR |
+| 3D-ARM-Gaze | to confirm | multiple trials | seated arm reaching | VR |
+| **total (excl. BOXRR)** | **~398** | | **~20 distinct activities** | |
+
+### C. Available on request
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| Stanford Longitudinal Social VR | **232** | **8, weekly** | social VR | VR |
+| OpenNEEDS | 44 | 2 | reading, drawing, shooting, manipulation | VR |
+| Cross-system ball throwing | 41 | **6, >=1 day apart** | ball throwing on **3 headsets** | VR x3 |
+| mmWave XR Mobility | not stated | 45h total | Alyx, Wrench, Pistol Whip | VR |
+| NTHU 6-DoF Privacy | not stated | not stated | 3D virtual world | VR |
+| Cognitive-State XR Motion | not stated | not stated | reading, confusion, hesitation | VR |
+| **total (known)** | **317** | | **~10 activities** | |
+
+### What the totals mean
+
+| | identities |
+| --- | --- |
+| on disk now | **2,439** |
+| + open, unfetched, excluding BOXRR | **~2,840** |
+| + the rest of BOXRR-23 | **~82,200** |
+| + everything granted on request | **~82,500** |
+
+**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 2,439
+to over 80,000 with no new permission, and the practical ceiling becomes conversion and
+training time rather than availability. What B and C actually buy is **activity coverage**:
+roughly 5 activity types on disk today against 30-plus reachable, spanning rhythm games,
+FPS, social VR, painting, pottery, archery, bowling, road crossing, arm reaching, ball
+throwing, room-scale walking, 360-degree video and unscripted daily life.
+
+**Three properties are scarce and worth targeting deliberately**, because almost nothing has
+them:
+
+| property | who has it |
+| --- | --- |
+| **cross-day sessions** | Who Is Alyx (2 days), Stanford (8 weekly), ball throwing (6, >=1 day) |
+| **multiple headsets** | ball throwing only (Quest / Vive / Cosmos) |
+| **real AR glasses** | Nymeria only |
+
+Everything else is one sitting on one device. Those three are what a generalisation claim
+rests on, and two of the three need a request.
+
 ## What we actually need
 
 Applied as a filter throughout. A dataset failing 1 or 2 is not usable by this pipeline at
