@@ -62,6 +62,18 @@ more tier-1 corpora means the static cue is learnable across corpora and becomes
 ceiling of the static cue; step 3 retired and added to the do-not-re-run list, step 6
 enrols with the lookup. Delete this entry once the result is in the proposal.
 
+**Nymeria, lookup first (added 12:20, from Trainer via Data).** "The static lookup sits at
+chance on Nymeria" is a prediction from the per-recording SLAM-origin argument, not a
+measurement. It is measured in the step 3 harness before any model is scored on Nymeria:
+(1) `audit_frames.py` row for Nymeria (position not unit-norm, local +Y at world up ~0.95,
+mean |q| 1.0000, else stop); (2) lookup AUC on Nymeria pairs, three seeds, random control,
+plus same-participant vs different-participant mean-position distance. Criterion: lookup
+within 0.50 +-0.02 and same-participant distance no smaller than different-participant.
+At or above 0.55 the premise is wrong and CLAUDE.md's "clean instrument" paragraph is
+retracted before anything else is built on it. Every Nymeria number carries the caveat:
+cross-activity positives within one sitting, so it cannot pay the cross-session cost.
+Nymeria is never in training.
+
 ## For XRSec Data
 
 **Across-XR: the offer stands, but I am no longer on the laptop.** From DESKTOP-C the
