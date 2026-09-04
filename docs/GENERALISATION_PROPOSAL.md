@@ -922,16 +922,56 @@ predicted - xz 0.784 above xyz, y high for the wrong reason (9.9).
   second. That does not touch the leave-users-out protocol (a held-out user's seat is
   still theirs), but it changes what "identified by head position" means there.
 - **BOXRR's xz-only lookup is 0.680, above the 0.6 line the Coordinator set in advance**:
-  every `raw` identity-count result on BOXRR carries a room-fingerprint caveat - part of
+  every `raw` identity-count result on BOXRR carries a placement (standing offset) caveat - part of
   what separates unseen Beat Saber players is where they stood in the play space - and
   the `dyn` results, where mean position is removed by construction, are the clean ones.
 - The lookup as the step 6 enrolment model should be reported by axis, and a
   deployment claim should rest on y (plus `dyn`), not on xz.
 
-**Placeholder, pending:** Trainer's co-location geometry table - within- against
-between-participant separation of session means, per axis, per corpus, on the same rows
-as the table above - lands under this section when it is done. Until it does, the
-placement reading rests on the lookup-by-axis figures and the section 1 audit only.
+**Trainer's co-location geometry, the companion table.** Does a participant's separate
+sessions sit in the same *place*? Session means from the 5s@20Hz cache;
+P(within-participant separation < between-participant separation) over all
+session-mean pairs, three ways; calibration gate passed on Nymeria first (2.138 / 6.445 /
+0.846 against the two independent 2.13 / 6.44 / 0.847 measurements).
+
+| dataset | participants | all | lateral | height | median \|xz\| of session means (m) | between-participant lateral median (m) | reading |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 100 | 0.911 | 0.900 | 0.722 | 0.232 | 0.339 | seated, lateral dominant |
+| ViewGauss | 35 | 0.896 | 0.878 | **0.918** | 0.553 | 0.479 | room and height |
+| Nymeria | 50 | 0.846 | 0.844 | 0.659 | 3.734 | 6.292 | room, confirmed |
+| BOXRR | 4009 | 0.765 | 0.685 | **0.828** | **0.125** | **0.200** | standing offset, below |
+| VR_User_Behavior | 48 | 0.715 | 0.711 | 0.661 | 0.363 | 0.404 | lateral, not height |
+| alyx | 70 | 0.575 | 0.552 | **0.743** | 0.244 | 0.345 | height, not room |
+| Panonut360 | 21 | 0.529 | 0.522 | 0.529 | - | - | tier 2, not read |
+| PanoSaliency | 65 | 0.518 | 0.513 | 0.515 | - | - | tier 2, not read |
+| EyeNavGS | 22 | 0.499 | 0.507 | 0.482 | 1.561 | 1.883 | at chance on every axis |
+| NJIT | - | - | - | - | - | - | not testable, single session |
+
+It agrees with the lookup-by-axis table on every corpus: the seated corpora are lateral
+(0.195 m within against 0.404 m between on VR_User_Behavior - distinguishable positions
+in a shared rig, not one chair), alyx is the only corpus that keeps height and loses the
+room, and ViewGauss has both.
+
+**BOXRR resolved to the case neither registered prediction named.** The median |xz| of a
+session mean is 0.125 m against a between-participant lateral median of 0.200 m (Nymeria,
+a real room origin, reads 3.73 / 6.29 m), so across 4009 players in different homes the
+frame *is* re-centred per session - Trainer's mechanism - yet within-participant
+separation (0.109 m) still beats between at P = 0.685 - the Coordinator's consequence.
+Name it a **person-specific standing offset**: it survives re-centring, it is neither the
+room nor height, and it is still a per-participant constant, so under the registered rule
+it contaminates `raw` identity counts. Two qualifications in the same breath: BOXRR's
+height P of 0.828 exceeds its lateral 0.685, so most of its static cue is height and
+"room count" is the wrong sentence; and whether the offset is behavioural or procedural -
+a habitual guardian-centre placement gives the same observable - is open and not
+resolvable from geometry.
+
+**Both registered predictions scored.** On the seated corpora both were wrong (the
+Coordinator's "y carries nearly all, xz near 0.5", and Trainer's "lateral 0.71-0.90 as a
+persistent room": 0.195 m within against 0.404 m between is distinguishable positions,
+not a room fingerprint); on BOXRR's mechanism both were wrong (a standing offset in a
+re-centred frame, not a room and not pure height); on alyx both were right (0.552 lateral,
+0.743 height). EyeNavGS is the only translation-frame corpus at chance on every axis: the
+corpus where the static cue is genuinely absent.
 
 ### 9.11 Nymeria under `dyn`: the dynamics branch carries to AR glasses at the same small size
 
@@ -1012,7 +1052,7 @@ domain - and that cue is **placement in the tracking space** on the same-sitting
 A learned movement component exists, is small on seated viewing, strong on rhythm-game
 play, and does not carry across activities; it rises with training identities up to
 about a thousand, with the caveat that every `raw` identity-count result on BOXRR
-carries part of the play-space placement (xz-only lookup 0.68) and only the `dyn`
+carries part of a person-specific standing offset (xz-only lookup 0.68; placement, not the room) and only the `dyn`
 curve is clean of it. Across-XR (step 4) is what turns the activity clause from an
 inference across corpora into a measurement.
 
