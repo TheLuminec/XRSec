@@ -154,7 +154,7 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
 | --- | --- | --- | --- |
 | 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
 | 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **done**, shard pushed (`2be095c`); the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand and the three model/ commits between the trees changed no numerics |
-| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | **running** since Trainer released the slot (guard merged first, `c34fb5d`); shard committed by Model Generalization when it ends |
+| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | **10 s arm done 19:20**: +0.0174 pooled over 5 s by seed, t(4) 15.6, 5/5, inside the registered band on every tier-1 corpus (verified from the shard by the coordinator); 5 s baseline rows predate the guard (VR_User_Behavior 43 users) and are being re-scored with `exclude_users=[]` before pairing is final. 20 s arm running; in-domain alyx test and Nymeria rows pending |
 
 ---
 
