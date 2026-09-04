@@ -1111,6 +1111,31 @@ dramatic. It is cheap and it is on the right axis.
 
 Both are tracked per epoch into `history` (`test_auc`, `test_eer`) and recorded in `results/runs.csv` as `best_test_auc` / `best_test_eer`.
 
+## Head-only is the scope, not a limitation
+
+This project uses head motion alone - quaternion plus HMD position - because the target
+is **all of XR, including XR/AR glasses, which have head tracking and no hands at all**.
+A model that needs controller channels cannot run on that device class. This buys
+generality; it is not a handicap being tolerated.
+
+**It changes how three findings should be read**, and none of them are deficits:
+
+1. **The comparison against published rank-1 figures.** Rack 2023, Schach 2026 and Nair
+   2023 all use head **plus both controllers**. Their absolute accuracies bound a
+   *different sensor set covering a narrower device class*. The gap between our 0.570 at
+   N=17 and their 0.785 is therefore part scope and part performance, and the two cannot
+   be separated by matching metric and gallery size alone.
+2. **Why the literature's encoding order inverts here.** `br`/`brv`/`bra` derive a body
+   frame from head *and* both controllers. A head-only rig cannot build one, so those
+   encodings only strip the absolute position that carries most of our signal and return
+   nothing in its place. Raw beat all three by 0.13 AUC over 40 runs; their own pipeline
+   uses `BRV`. Same fact, both sides.
+3. **Dataset selection.** Controller channels are never a reason to prefer a dataset, and
+   a dataset that records only head pose is not thereby inferior for our purposes.
+
+**Never** propose hand/controller or eye channels as a way to raise scores, and do not
+attribute weak movement-only results to the missing hands.
+
 ## Identification vs verification (they are not the same number)
 
 Everything this project reports as a headline is **verification**: given two windows,
