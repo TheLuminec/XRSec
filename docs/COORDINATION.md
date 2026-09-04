@@ -183,7 +183,12 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   0.51-0.53), and y-only plus dyn combined (rank fusion or z-scored sum) at 0.15-0.22 -
   above either alone, below 0.25. On BOXRR held-out, dyn alone 0.35-0.55 (pairwise ~0.80).
   Falsifier: y+dyn on alyx above 0.30 would mean the two cues are far more complementary
-  than their AUCs suggest.
+  than their AUCs suggest. **Trainer's, beside it (21:50):** dyn alone 0.10-0.20, fused
+  0.20-0.30 (near-independent weak cues compound but stay small); above 0.35 they are more
+  complementary than thought, below 0.18 dyn adds nothing to height on an unseen corpus.
+  Fusion by summed z-scored distances over the impostor distribution, no learned weight.
+  Distance-ratio table (median genuine / median impostor) recorded in CLAUDE.md: seated xz
+  0.13-0.18, alyx xz 0.947 / y 0.487.
 
 ## GPU queue
 

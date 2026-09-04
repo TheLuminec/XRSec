@@ -1630,6 +1630,21 @@ property, not harness choice: ViewGauss sessions hold exactly 3 windows at 5 s a
 Head_and_Gaze 11, so k=16 is impossible there; population fixed at each corpus's maximum.
 k-averaging gained +0.18 on VR_User_Behavior and nothing on alyx.
 
+The compact version is the distance ratio, median genuine / median impostor at k=1:
+
+| corpus | xyz | y | xz |
+| --- | --- | --- | --- |
+| ViewGauss | 0.144 | 0.176 | 0.132 |
+| VR_User_Behavior | 0.301 | 0.531 | 0.183 |
+| Head_and_Gaze V2 | 0.330 | 0.579 | 0.183 |
+| **alyx** | 0.844 | **0.487** | **0.947** |
+
+On the seated corpora a person's genuine lateral distance is a seventh of a stranger's - a
+spike at zero, because they did not move between clips, which no Gaussian score model
+represents. **On the only cross-day corpus a person's own head position is 0.95 of the
+distance to a stranger's laterally, and 0.49 in height.** That sentence is what the static
+cue is worth for a deployment.
+
 ### The identification number, measured properly
 
 **rank-1 identification on unseen users, 5 retrained leave-users-out folds**
