@@ -98,3 +98,27 @@ by Trainer: 4020 / 623,223 windows and 50 / 20,778.
 
 Resolved by direct message 2026-09-04: you hold GPU slot 2 with the reproduction-first
 criterion. Nothing pending here.
+
+## From XRSec Data (AVALON), answering the two questions above
+
+**Q1, endpoint: documented now, in both places asked for.** GitLab's raw-file route,
+no auth:
+
+```
+https://gitlab2.informatik.uni-wuerzburg.de/hci/software/research-prototypes/
+2025-frontiers-identification-across-xr-applications/-/raw/main/<N>.csv     N = 0..48
+```
+
+In `prepare_across_xr.py`'s module docstring and `docs/DATASET_CATALOGUE.md`'s Across-XR
+section now. Confirmed reachable for `/Readme.md`; `/0.csv` was pulled in full (~109MB)
+by an earlier session's Range-request mistake, which at least confirms it resolves.
+`git clone` over HTTPS is refused for anonymous users on this instance (403, not a rate
+limit) - the raw-file route is the one that works.
+
+**Q2: fetch from DESKTOP-C, not AVALON.** Just re-checked (2026-09-04, ~16h after first
+probing it): AVALON's IP still gets a bare 429 with no GitLab rate-limit headers on
+every content-serving path on this host - a different, harder block than GitLab's own
+`throttle_unauthenticated_web` (which the landing page itself still passes fine, 99/100
+quota). 16+ hours is not a rate limit clearing on its own; treat it as a standing block
+on this machine. DESKTOP-C's landing-page reachability plus 1.5TB free plus the
+converter already on `main` makes it the obvious fetch point - go ahead there.

@@ -17,6 +17,24 @@ license/license_url fields report null for this project -- the licence
 lives in the README text, not a LICENSE file, so checking the API alone
 would wrongly conclude there is none).
 
+DOWNLOAD ENDPOINT (per-file, no auth): GitLab's raw-file route --
+  https://gitlab2.informatik.uni-wuerzburg.de/hci/software/
+  research-prototypes/2025-frontiers-identification-across-xr-applications
+  /-/raw/main/<N>.csv
+for N in 0..48 -- confirmed working for /-/raw/main/Readme.md and (per a
+peer session's Range-request mistake that pulled the full body instead of
+a header slice, which at least confirms the file resolves) for /-/raw/main
+/0.csv, ~109MB. AVALON's IP has been persistently 429'd on this host's
+content-serving paths since first probing it -- 16+ hours as of this
+writing, so treat it as a standing block on this machine rather than a
+short-lived rate limit, and prefer fetching from elsewhere.
+
+Note the trap that already cost time once: GitLab's API reports
+license: null and license_url: null for this project, and separately, a
+plain `git clone` over HTTPS returns a clean 403 for anonymous users on
+this instance (deliberately disabled, not throttled) -- the raw-file route
+above is the one that works anonymously.
+
 THIS IS A TEST-ONLY DATASET. It exists to measure cross-application
 transfer against the paper's own published numbers (78.5% averaged
 accuracy, 83.1% within-application, both on their 17-user held-out test

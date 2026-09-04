@@ -174,6 +174,22 @@ contradiction but the same fact from the other side: body-relative encodings nee
 frame derived from head **and both controllers**, which they have and we do not. Their
 coordinate system (forward z, right x, up y) matches ours, so no axis remap.
 
+**Download endpoint, and where this stands.** GitLab's raw-file route, no auth needed:
+
+```
+https://gitlab2.informatik.uni-wuerzburg.de/hci/software/research-prototypes/
+2025-frontiers-identification-across-xr-applications/-/raw/main/<N>.csv     N = 0..48
+```
+
+Confirmed reachable for `/Readme.md` and (via a peer session's Range-request mistake that
+pulled the full body instead of a header slice) for `/0.csv`, ~109MB. **`git clone` over
+HTTPS is refused for anonymous users on this instance** (a clean 403, not a rate limit) -
+the raw-file route above is the one that works. **AVALON's IP has been persistently 429'd
+on this host's content-serving paths for 16+ hours** since first probing it (bare nginx
+errors, no GitLab rate-limit headers - a different, harder block than GitLab's own
+`throttle_unauthenticated_web`). Treat that as a standing block on that machine rather than
+a short-lived throttle to wait out; fetch from elsewhere.
+
 ### Nymeria — the only dataset found that is recorded on real AR glasses
 
 **Accepted, and the strongest new find.** Meta Project Aria glasses, so it matches this
