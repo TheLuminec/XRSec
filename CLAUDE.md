@@ -1720,6 +1720,16 @@ no gain.
 Note the ms/step column rises with batch size while windows/s also rises - throughput is
 the figure that matters for epoch time, not per-step latency.
 
+## CPU and GPU scoring differ by up to 7e-4 AUC
+
+Measured 2026-09-04: scoring a `dyn` checkpoint (`314cd507f1`) on CPU against its recorded
+GPU rows gives per-corpus gaps of 4e-6 to 7.1e-4 (PanoSaliency 0.7315 vs 0.7308) with no
+code change, because cuDNN's BiLSTM arithmetic differs from CPU float32 at that level. So
+a `mode=test` figure produced on the other device from the training run is not a
+reproduction check, and any before/after acceptance for a numerics-touching change must
+be same-device, same script, same checkpoint. Differences below ~1e-3 between devices
+are arithmetic, not results.
+
 ## Performance notes
 
 Keep `num_workers: 0` unless benchmarked: the whole sample tensor lives in memory inside the Dataset, and Windows spawn-based workers pickle it per worker.

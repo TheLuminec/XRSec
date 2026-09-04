@@ -55,9 +55,11 @@ and a sweep whose rows split across two `code_identity` values).
 
 - **`dyn` residual in float64 before casting** (Model Generalization, worktree, merged in
   a GPU window). Removes the micrometre window-mean residue that lets a lookup on
-  dyn-encoded windows read 0.547 on Nymeria's 30 m coordinates. Acceptance: residue
-  ~1e-14 m on Nymeria, and one existing `dyn` checkpoint reproduces every held-out row
-  within 1e-4 AUC; anything larger is a re-baseline and is said so.
+  dyn-encoded windows read 0.547 on Nymeria's 30 m coordinates. Prepared on branch `dyn-float64` (dd75da6, 460 tests). Acceptance, amended: CPU-before vs
+  CPU-after from the same script on checkpoint `314cd507f1`, every held-out corpus within
+  1e-4 AUC (the GPU rows are not the reference: cuDNN differs from CPU float32 by up to
+  7e-4 with no code change), plus the Nymeria residue ~1e-14 m after. Merge in the next
+  code window, after step 2 and before any launch.
 
 ## CPU measurements registered (2026-09-04 15:55), from the Nymeria failure
 
