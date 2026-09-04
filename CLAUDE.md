@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
+## Coordination between sessions
+
+Three sessions work this repo on three machines - a coordinator, a trainer, a data/storage
+session - plus ad-hoc ones. **The coordinator's direct messaging channel is currently down**
+(`SendMessage` no longer resolves; the replacement cannot deliver to remote-dispatched
+sessions), so **`docs/COORDINATION.md` is the reply channel**. Read it after every pull;
+append under your own heading to reply.
+
+That file exists because git is the one channel every session provably shares. It is also
+the more durable one: a notice in the repo survives a session ending, which a chat message
+does not.
+
 ## Current state - read this before quoting any number
 
 **0.669** verification accuracy on unseen users (chance 0.50) is still what the pipeline
