@@ -6,7 +6,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
-Current state: the defensible headline is **0.669** on unseen users (chance = 0.50) — `bilstm`, `objective=identity_softmax`, cross-session positives, validation-selected epoch, averaged over 5 leave-users-out folds on VR_User_Behavior. That is the only figure that has survived all three corrections below; earlier numbers in this file and in `results/runs.csv` predate one or more of them. The historical 0.85 is **explained and reproduced**: it was a *seen-user* number. Our lineage never held users out — the MS thesis this repo descends from splits pairs randomly across users ("each video contains sensor data from all users who watched it") and reports **0.8364 on VR_User_Behavior**, the dataset we still use. Verified here directly: the same protocol on our own code (`test_on_excluded=false`, `pair_bce`, `bilstm`, 2s@20Hz) reaches **0.810**, against 0.62–0.67 for the identical configuration with leave-users-out. So it is not a target, not a regression, and not comparable to anything in this file — every number here is leave-users-out.
+## Current state - read this before quoting any number
+
+**0.669** verification accuracy on unseen users (chance 0.50) is still what the pipeline
+measures: `bilstm`, `identity_softmax`, cross-session positives, validation-selected epoch,
+5 leave-users-out folds. It survived three protocol corrections and it is not wrong. But
+four findings, all from the same day of auditing, change what it *means*:
+
+| finding | consequence |
+| --- | --- |
+| Per-dataset held-out AUC is **0.93+** where a real head position exists and **~0.49** where the position column holds a unit direction vector | any pooled figure averages near-perfect verification with chance |
+| A **training-free three-number lookup** (mean position, Euclidean distance) scores **0.726** where the model scores **0.723**, same folds, same manifests | most of what the pooled model does needs no model |
+| The model beats that lookup **in domain by +0.14** on alyx, and **loses to it by 0.03** on an unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
+| Every published comparison uses head **plus both controllers**; we are head-only by scope, so the model runs on glasses | part of the gap to published figures is sensor set, not performance |
+
+**The honest one-sentence version.** We identify unseen users well where absolute head
+position is recorded - and most of that is head height, which three numbers capture without
+training. The component the model actually learns is real, worth about +0.14 in domain, and
+does not survive a change of corpus.
+
+**What follows for anyone working here.** Report per dataset with its semantics, never
+pooled alone. The mean-position lookup is computed on every run (`lookup_auc`) and is the
+number to beat, not the model's previous score. The open problem is not accuracy, it is
+building a learned component that transfers - which is what
+`docs/GENERALISATION_PROPOSAL.md` is for.
+
+**Identification is a separate scale.** rank-1 **0.570** at a 17-user gallery (chance
+0.059), against a published 0.785 at the same gallery size. Never compare a verification
+figure to a published rank-1; they are different tasks.
+
+The historical 0.85 is **explained and reproduced**: it was a *seen-user* number. Our
+lineage never held users out - the MS thesis this repo descends from splits pairs randomly
+across users and reports **0.8364 on VR_User_Behavior**. Verified here directly: the same
+protocol on our own code reaches **0.810**, against 0.62-0.67 for the identical
+configuration with leave-users-out. Not a target, not a regression, not comparable to
+anything in this file - every number here is leave-users-out.
 
 What moved it, measured with paired folds:
 
