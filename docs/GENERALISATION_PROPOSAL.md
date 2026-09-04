@@ -755,15 +755,25 @@ enrolment model.**
 
 What the table adds beyond the verdict:
 
-- **The in-domain / out-of-domain reversal holds for the static branch too.** Out of
-  domain, learned weights on the 3 position numbers are at or above learned weights on
-  all 17 on every tier-1 corpus (Head_and_Gaze +0.015, NJIT +0.010, alyx +0.008,
-  VR_User_Behavior +0.003, ViewGauss level). In domain, the 17-number scorer beats the
-  same-half lookup on Head_and_Gaze (+0.008), NJIT (+0.10), alyx (+0.07), PanoSaliency
-  (+0.14) and EyeNavGS (+0.04). So the 14 orientation and spread numbers carry identity
-  *within* a corpus and cost accuracy *across* corpora. That is the frame problem showing
-  in the static branch - four yaw references across the corpora, and |a-b| is invariant
-  to an offset but not to a rotation - not evidence that orientation carries no identity.
+- **A post-hoc reading, labelled as post-hoc so nobody rediscovers it as a win.** The
+  3-number learned scorer (`learned, 3`) would clear the two-corpus +0.03 threshold if it
+  were substituted for the registered 17-number arm (NJIT +0.058, alyx +0.031). It was
+  not the registered arm; it loses 0.046 on Head_and_Gaze where the cue is strongest;
+  NJIT is 18 users on an unrepaired frame; and alyx clears the threshold in the third
+  decimal. The sentence that survives all of that: **no learned static scorer beats the
+  lookup uniformly; the arm that comes closest wins where the frame is broken or the cue
+  is weak, and loses where the cue is strong.**
+- **The in-domain / out-of-domain reversal holds for the static branch too.** In domain
+  the 14 orientation and spread numbers are worth +0.04 to +0.14 over the same-half
+  lookup (Head_and_Gaze +0.008, NJIT +0.10, alyx +0.07, PanoSaliency +0.14, EyeNavGS
+  +0.04); out of domain they cost 0.00 to 0.06, and learned weights on the 3 position
+  numbers are at or above learned weights on all 17 on every tier-1 corpus
+  (Head_and_Gaze +0.015, NJIT +0.010, alyx +0.008, VR_User_Behavior +0.003, ViewGauss
+  level). So those numbers carry identity *within* a corpus and cost accuracy *across*
+  corpora. That supports per-corpus yaw references as the cause - |a-b| is invariant to
+  an offset but not to a rotation, and the corpora have four of them - not "orientation
+  carries no identity". It **strengthens** section 10 step 5 (`channels=orientation` in a
+  common frame) rather than retiring it.
 - **Even learned weights on the three position numbers lose 0.046 on Head_and_Gaze**, the
   corpus where the static cue is strongest. Any cross-corpus weighting of the axes is
   worse there than treating them equally; the seat cue lives on axes the other corpora do
@@ -773,10 +783,17 @@ What the table adds beyond the verdict:
 - **Controls.** Digit-exact reproduction of the lookup on 8 of 8 corpora is the harness
   validation. The shuffled-label control averages 0.51 across corpora but sits at
   0.55 +-0.07 on ViewGauss and 0.56 +-0.08 on PanoSaliency, outside the letter of the
-  0.50 +-0.02 criterion: a random-direction linear scorer over |a-b| features is not a
-  chance scorer where the features themselves separate pairs at 0.93, its AUC is
+  0.50 +-0.02 criterion: a random-weight linear scorer over |a-b| features is not a
+  chance scorer where the features themselves separate pairs at 0.93; its AUC is
   symmetric about 0.5 with a large spread, which the +-0.07 shows. The control was
-  designed too weakly, and is recorded as such rather than hidden.
+  designed too weakly and is recorded as such rather than hidden. A failed control of
+  this kind cannot have produced a negative result: it could only have hidden a positive,
+  and there is none to hide. **Methods note:** do not use shuffled-label linear scorers as
+  chance controls on strongly separating features; use a random-direction scorer averaged
+  over many draws, or the sign-symmetric spread itself, if a control is wanted.
+- PanoSaliency's quaternion is a constant identity on every row, so after per-dataset
+  standardisation it is a dead channel (aligned mean |q| = 0): a measured fact about that
+  tier-2 corpus, not a scoring artefact.
 - The mean |q| of the hemisphere-aligned mean quaternion is 0.80-0.92 on every corpus
   with a real quaternion, and 0 on PanoSaliency, whose constant identity quaternion is a
   dead channel after standardisation.
@@ -803,14 +820,16 @@ prediction registered now.
 | --- | --- | --- | --- | --- |
 | 1 | **Leave-one-corpus-out over the 8 corpora, `raw` and `dyn`** (train on seven, test on the eighth, every corpus in turn) | Does *diversity* of training corpora buy transfer where 2000 same-activity identities did not? And what is the transfer cost per corpus, not just alyx? | 16 runs, ~2.5 h. **Launched.** | `raw` lands at the lookup +-0.03 on tier 1 (the alyx point was -0.03); `dyn` 0.52-0.58, near its in-domain values. If `raw` beats the lookup on two or more tier-1 corpora, diversity is the lever and the BOXRR-heavy design should change. |
 | 2 | **Window length for the dynamics branch**: `dyn`, `sample_time` 10 and 20 with `window_stride=5`, 419 identities, seeds 1-5 | Does free locomotion need more than five seconds to show a person? alyx at 0.53 and the +0.02 window-length result on `raw` both point here. | 10 runs, ~2 h (cache exists at 10 s) | +0.01 to +0.03 on tier 1 and on alyx in domain; if alyx moves above 0.60 the activity-bound reading softens to window-bound. |
-| 3 | **A learned static branch** (CPU): mean pose, within-window std and mean orientation as a 10-20 number descriptor, a metric learned across corpora (LDA/PLDA-style or a two-layer scorer), evaluated leave-one-corpus-out against the three-number lookup | Can *any* learned static scorer beat the lookup out of domain, or is the three-number lookup already the ceiling of the static cue? | one afternoon, no GPU | +0.00 to +0.03 on tier 1. A gain would be the first learned thing to beat the lookup across corpora. |
+| 3 | **A learned static branch** (CPU): a 17-number static descriptor with per-axis weights learned across corpora, leave-one-corpus-out against the three-number lookup | Can *any* learned static scorer beat the lookup out of domain? | done | **Retired (9.8).** Rule not met: +0.048 on NJIT only, -0.061 on Head_and_Gaze. The three-number lookup is the ceiling of the static cue across corpora; orientation and spread help in domain and cost out of domain (the frame problem). |
 | 4 | **Across-XR** (49 users x 5 applications, converter ready, download WAF-blocked from AVALON; retry from another machine or ask the authors) | The activity-bound finding measured directly: same users, same rig, different application. Cross-app `dyn` AUC is the number. | download 5.4 GB, one conversion, scoring only | cross-app `dyn` well below within-app; the size of that gap is the paper's second claim. |
-| 5 | **`channels=orientation`**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and it would make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
-| 6 | **The static cue as an enrolment system**: templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | scoring only | rank-1 at N=17 in the 0.4-0.6 range on tier 1, below published head+controller figures. |
+| 5 | **`channels=orientation` in a common frame**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and 9.8 says orientation carries identity within a corpus and is lost across corpora to the frame - so the common frame is the point. It would also make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
+| 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | scoring only | rank-1 at N=17 in the 0.4-0.6 range on tier 1, below published head+controller figures. |
 
 **Retired by section 9, do not re-run:** the identity-count curve on the `raw`
 pipeline as a headline (it measures the lookup); fusion of lookup and `dyn`; `yawc` as
-an arm; label-free embedding adaptation.
+an arm; label-free embedding adaptation; a learned static scorer over window
+descriptors (9.8: the three-number lookup is the ceiling of the static cue across
+corpora, and the 3-number learned variant is a post-hoc near-miss, not a win).
 
 **What the paper can claim now**, in one paragraph: on head pose alone, unseen users
 are verified across capture rigs primarily through cohort-relative head position, which
