@@ -205,20 +205,52 @@ and accepting the licence. No DUA text and no IRB question - closer to a normal 
 BOXRR's Limited Data Set agreement - but it is still an account and a terms acceptance, so
 it has to be done by the user rather than on their behalf.
 
-**Selective download is coarser than it looks - an earlier claim here was wrong.**
-`download.py` selects `DataGroups`, but groups are **packed one zip per group per
-sequence**, so there is no per-file choice inside one. RGB does stay out
-(`data.vrs` is in the separate `recording_head_data_data_vrs` group), but the base
-`recording_head` zip carries `et.vrs` - 30fps eye-tracking video over a ~1,220-second
-sequence - plus `motion.vrs`, `semidense_points.csv.gz`, both trajectories, calibration and
-gaze CSVs. `dataset_metadata.json` has no size fields, so this cannot be bounded without
-pulling one zip; the realistic figure is **hundreds of MB per sequence, so 100-500GB for
-all 1,100**, not the "few GB" first recorded here.
+**Format is the cleanest in the corpus** - verified against real trajectory files, not
+documentation:
 
-**So take a subset.** The explorer has sequence-level filters. Roughly 100 participants at
-3 sequences each is ~300 sequences, keeps cross-activity pairing intact, and should land in
-the tens of GB. Nothing about our thresholds needs all 236 participants or all 1,100
-sequences.
+| | |
+| --- | --- |
+| quaternion | `qx/qy/qz/qw_world_device` - **already x,y,z,w**, no reorder |
+| position | `tx/ty/tz_world_device` - **already metres** |
+| mean \|q\| | 0.99999999997 over 1,000 real rows |
+| timestamp | **`tracking_timestamp_us`** - *not* `utc_timestamp_ns`, which has only 584 distinct values across 20,001 rows and is a batch marker, not a per-frame clock. Using it would have collapsed the apparent rate 34x with no error raised. |
+| native rate | **~1029Hz** (mean inter-row delta 971.9us), monotonic |
+
+**Download cost, from the manifest's own `file_size_bytes` rather than estimated:**
+`recording_head` averages **689MB per sequence** (min 361, max 1964) across all 1,100.
+Groups are packed one zip per group per sequence with no per-file choice, and Range
+requests are refused by this CDN as they were by GitLab, so there is no partial-zip trick.
+Two earlier estimates in this file ("a few GB", then "tens of GB") were both wrong and are
+retracted.
+
+The waste is smaller than the bundling suggests, though: `closed_loop_trajectory.csv` is
+itself the **largest** member at ~370-390MB, because 1029Hz over a 20-minute session is a
+lot of rows. So pulling the whole zip to get one CSV wastes about 30%, not 90%.
+
+**Cost per identity, measured, is what decides the subset:**
+
+| | identities | transfer | per identity |
+| --- | --- | --- | --- |
+| BOXRR-23 | 2,020 | 9.0GB | **4.6 MB** |
+| Nymeria | 100 | ~135GB | **~1,380 MB** |
+
+300x. So **Nymeria is not an identity-count acquisition** - BOXRR answers that axis far more
+cheaply. It is worth having for three things nothing else has: real AR glasses, ground-truth
+measured height, and unscripted daily life. None of those need all 236 people.
+
+**Target: 100 participants x 2 sequences**, selecting the two *smallest* qualifying
+sequences with *different* `script` values - sizes span 5.4x, and two 20-minute sequences
+already give ~480 windows per identity against our corpus median of 295, so there is
+headroom to spend on smaller files. Different scripts make every positive pair
+cross-activity by construction. Stream it - fetch, extract, convert, delete - so the ~100GB
+is transfer rather than stored corpus; at `sample_rate=20` we keep **1.9%** of the rows.
+
+**One regime we have never tested.** 1029Hz to 20Hz is a **50:1 decimation**, against 12:1
+for the next worst (NJIT at 250Hz). Our screen measured `resample=bin` losing to `nearest`
+at roughly 4x, which is why `nearest` is the default - but that conclusion was not measured
+anywhere near 50x, and a nearest decimation at this ratio discards 98% of samples with no
+anti-aliasing. Convert with `nearest` to match the corpus, and re-check `bin` on Nymeria
+specifically before trusting either.
 
 **The limitation, stated precisely.** Every participant appears in exactly **one date and
 one session**; the 4.66 recordings are different *activities* within one sitting. So
