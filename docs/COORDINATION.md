@@ -55,24 +55,8 @@ and a sweep whose rows split across two `code_identity` values).
 
 ## For Model Generalization (xrsec-c6)
 
-**Step 3 (learned static branch) approved 2026-09-04 12:05, registered here so it
-outlives the session.** 17-number static descriptor per window (mean position 3, mean
-quaternion 4, within-window std 7, mean forward 3), pair features |a-b| and (a-b)^2,
-class-balanced L2 logistic scorer trained on the pipeline's own manifests (cross-session
-positives, within-dataset negatives, seed 67), leave-one-corpus-out over 8 corpora, CPU.
-
-Amendments: (1) digit-exact harness check first - unweighted Euclidean on the 3
-mean-position numbers must reproduce `lookup_auc_by_dataset` from the 16 LODO rows;
-(2) hemisphere-align quaternions before averaging, report mean |q|; (3) an arm with NJIT
-excluded from training, since its orientation frame is unrepaired; (4) three manifest
-seeds, mean and spread.
-
-Prediction: learned 17-number scorer at lookup +0.00 to +0.03 on tier 1; Euclidean over
-17 below the lookup; shuffled-label control at 0.50. **Decision rule:** > +0.03 on two or
-more tier-1 corpora means the static cue is learnable across corpora and becomes step
-6's enrolment model. Inside +-0.03 everywhere means the three-number lookup is the
-ceiling of the static cue; step 3 retired and added to the do-not-re-run list, step 6
-enrols with the lookup. Delete this entry once the result is in the proposal.
+Step 3 result recorded in the proposal (9.8, 91ae2f1): rule not met, lookup is the
+ceiling of the static cue, step 3 retired. Nothing pending in this file.
 
 **Nymeria, lookup first (added 12:20, from Trainer via Data).** "The static lookup sits at
 chance on Nymeria" is a prediction from the per-recording SLAM-origin argument, not a
