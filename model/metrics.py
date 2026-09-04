@@ -91,3 +91,47 @@ def pair_metrics(scores: torch.Tensor, labels: torch.Tensor) -> dict:
     """AUC, EER and the EER threshold for one set of pair scores."""
     eer, threshold = equal_error_rate(scores, labels)
     return {"auc": roc_auc(scores, labels), "eer": eer, "eer_threshold": threshold}
+
+
+def per_dataset_metrics(scores, labels, dataset_ids, dataset_names=None) -> dict:
+    """
+    AUC and EER split by the dataset each pair came from.
+
+    A pooled number here is an average over corpora that differ in KIND, not merely in
+    difficulty: measured held-out AUC runs 0.93+ where a real head position exists and
+    0.49-0.58 where the position column holds a unit direction vector instead. Reporting
+    only the pooled figure averages near-perfect verification with chance and hides both.
+    """
+    import torch as _torch
+
+    out = {}
+    ids = _torch.as_tensor(dataset_ids)
+    for dataset_id in sorted(set(int(i) for i in ids.tolist())):
+        mask = ids == dataset_id
+        if int(mask.sum()) < 2:
+            continue
+        subset_labels = labels[mask]
+        # AUC is undefined without both classes present.
+        if float(subset_labels.min()) == float(subset_labels.max()):
+            continue
+        name = (dataset_names[dataset_id]
+                if dataset_names and dataset_id < len(dataset_names) else str(dataset_id))
+        metrics = pair_metrics(scores[mask], subset_labels)
+        out[name] = {"auc": metrics["auc"], "eer": metrics["eer"],
+                     "pairs": int(mask.sum())}
+    return out
+
+
+def static_position_lookup(left_positions, right_positions):
+    """
+    The training-free baseline: distance between two windows' MEAN POSITION.
+
+    Three numbers per window, no model. Measured on five folds against the same held-out
+    users and the same pair manifests, this scores pooled AUC 0.726 where the trained
+    model scores 0.723 - and on an unseen dataset it transfers BETTER (0.593 against
+    0.566). It has now been found competitive twice, both times only because someone went
+    looking, so it is computed on every run rather than left as an occasional probe.
+
+    Returns a similarity, so higher means more alike and it can be scored like any other.
+    """
+    return -(left_positions - right_positions).norm(dim=1)

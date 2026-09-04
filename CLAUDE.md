@@ -169,6 +169,48 @@ Predicted beforehand from data alone: between-session position spread is compara
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
+### NJIT's orientation is in a different frame from its position - and is repairable
+
+Its quaternion and position disagree. Measured across all 8 datasets by rotating the
+device's local +Y axis into world coordinates and averaging - for an upright head this
+should point at world up:
+
+| dataset | local +Y -> world | dataset | local +Y -> world |
+| --- | --- | --- | --- |
+| ViewGauss | (0.05, **0.97**, -0.11) | VR_User_Behavior | (0.01, **0.95**, 0.02) |
+| EyeNavGS | (-0.07, **0.93**, 0.13) | Panonut360 | (0.06, **0.95**, 0.05) |
+| **NJIT_6DOF** | (0.01, **0.05**, 0.00) | | |
+
+Every dataset puts the headset's up axis at world up around 0.95. **NJIT puts it
+nowhere** - and its local +Z lands on world +Z at 0.97, meaning its quaternions are
+rotations *about Z* while its position is Y-up. That matches the deleted parser, which
+built the quaternion with `R.from_euler('ZYX', [yaw, pitch, roll])` - a Z-up yaw
+convention applied to Y-up position data.
+
+**Unlike Nymeria's Z-up frame, this is not a source convention.** Nymeria's was confirmed
+by its gravity vector, an actual physical fact about the recording. NJIT is room-scale VR
+with no reason for orientation and position to disagree, so this is our own parser bug.
+
+**It is repairable from the processed data - the raw source is not needed.** Tested three
+candidates against the corpus-wide invariant:
+
+| candidate | local +Y -> world | up |
+| --- | --- | --- |
+| as-is | (0.00, 0.06, 0.01) | 0.063 |
+| `r (x) q` - world frame only | (0.00, 0.01, -0.06) | 0.006 |
+| **`r (x) q (x) r^-1`** - full basis change | (-0.01, **0.97**, 0.00) | **0.975** |
+
+with `r = (-0.70711, 0, 0, 0.70711)`, the same -90-degree rotation about X used for
+Nymeria. The full conjugation is what is needed, because both the world *and* device
+frames are Z-up in the parser's output. The acceptance criterion is not a guess: 0.975
+matches what every other dataset measures.
+
+**Not yet applied.** NJIT is 18 users and 414 windows at 5s, the smallest and least
+valuable dataset here, and applying it means rewriting processed CSVs on three machines.
+Recorded so whoever re-parses NJIT - or decides to patch it in place - has the verified
+transform and the test that confirms it. **Until then NJIT's orientation channel should
+not be trusted cross-dataset.**
+
 ### Every dataset is Y-up except Nymeria
 
 Verified rather than assumed, using the fact that the vertical axis moves least during

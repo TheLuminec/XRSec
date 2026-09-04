@@ -6,8 +6,8 @@ Loads a trained model checkpoint and evaluates accuracy on the dataset.
 
 import torch
 import torch.nn as nn
-from dataset import create_dataloader_from_path
-from metrics import pair_metrics
+from dataset import create_dataloader_from_path, position_channel_slice
+from metrics import pair_metrics, static_position_lookup
 from normalization import ChannelNormalizer
 from utils import load_checkpoint
 
@@ -37,6 +37,7 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
     all_scores = []
     score_chunks = []
     label_chunks = []
+    lookup_chunks = []
 
     with torch.no_grad():
         for batch_x, batch_y in loader:
@@ -56,6 +57,14 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
             if return_metrics:
                 score_chunks.append(output.detach().cpu())
                 label_chunks.append(batch_y.detach().cpu())
+                # The training-free baseline, on the exact same pairs. Computed here
+                # rather than in a separate pass so it cannot drift onto a different
+                # manifest than the model was scored on - which is the only way the
+                # comparison stays honest.
+                channels = position_channel_slice(batch_x1.shape[1])
+                lookup_chunks.append(static_position_lookup(
+                    batch_x1[:, channels].mean(dim=2),
+                    batch_x2[:, channels].mean(dim=2)).detach().cpu())
 
             if return_preds:
                 all_preds.extend(predicted.cpu().tolist())
@@ -67,7 +76,18 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
     metrics = {}
     if return_metrics:
         import torch as _torch
-        metrics = pair_metrics(_torch.cat(score_chunks), _torch.cat(label_chunks))
+        all_labels_t = _torch.cat(label_chunks)
+        metrics = pair_metrics(_torch.cat(score_chunks), all_labels_t)
+        if lookup_chunks:
+            lookup = pair_metrics(_torch.cat(lookup_chunks), all_labels_t)
+            metrics["lookup_auc"] = lookup["auc"]
+            metrics["lookup_eer"] = lookup["eer"]
+            # Loud, because a model that does not beat three numbers is the single most
+            # important thing to notice about a run and the easiest to skim past.
+            if lookup["auc"] >= metrics["auc"]:
+                print(f"  NOTE: the training-free mean-position lookup scored "
+                      f"{lookup['auc']:.4f} AUC against the model's {metrics['auc']:.4f} "
+                      f"- the model is not beating it on this set")
 
     if return_preds and return_metrics:
         return avg_loss, accuracy, all_preds, all_labels, metrics
