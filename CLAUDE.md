@@ -1661,9 +1661,20 @@ there - its pairwise AUC of 0.514 (9.7) implies exactly this rank-1. **On the on
 corpus, scored by the only model that never saw it, the best system a glasses deployment
 could honestly use identifies at 0.13 among 17 candidates and 0.03 among 70, and head
 height alone does the same.** Everything above 0.4 in this table is same-sitting placement.
-The regime a deployment actually runs in - unseen users of a *seen* activity, the
-in-domain `dyn` figures of 0.53-0.66 - is the pending row, predicted at 0.09-0.14 for
-`dyn` alone and 0.13-0.19 fused.
+The regime a deployment actually runs in - unseen users of a *seen* activity - was
+measured next, on the held-out alyx users of the in-domain `dyn` folds (sweep
+`ddc9b964e5`, 11-16 users per fold, k=16, so the "N=17" gallery is the whole fold and
+chance is 1/users, 0.06-0.09): `dyn` alone **0.147**, height alone **0.198**, fused
+**0.197** (per fold: dyn 0.086-0.200, y 0.087-0.309). The model roughly doubles its
+contribution in domain (0.082 -> 0.147; predicted 0.09-0.14, just under) and **fusion is
+still a wash** - 0.198 against 0.197, as 0.135 against 0.132 out of domain. The per-fold
+columns say why: dyn and height are anti-correlated across folds (fold 2 is height's best
+and dyn's second worst, fold 3 the reverse), so no fixed weight beats both, and a weight
+fitted to 70 users would be the test set. **The best alyx number in the whole table, 0.198
+on unseen users of a seen activity, is head height alone and needs no model.** Small
+populations, large per-fold spread, pooled means only; and the two alyx rows are on
+different galleries (70 users at N=17 against whole folds of 11-16), so compare each
+against its own chance, not against each other.
 
 ### The identification number, measured properly
 
