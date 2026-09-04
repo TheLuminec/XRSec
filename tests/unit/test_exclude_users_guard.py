@@ -69,3 +69,19 @@ def test_test_on_excluded_true_is_not_the_trap():
     # offenders is the refusal itself:
     with pytest.raises(ValueError):
         refuse_excluded_users_under_test_dirs(str(FIXTURE_USERS_DIR), [str(FIXTURE_USERS_DIR / "2")])
+
+
+def test_mode_test_says_when_the_recorded_split_drops_evaluation_users(capsys):
+    """Old checkpoints reproduce the evaluation they were selected on; the omission is printed."""
+    from types import SimpleNamespace
+
+    from eval import _resolve_eval_split
+
+    checkpoint = {"eval_split": {"data_dirs": ["x"], "test_dirs": [str(FIXTURE_USERS_DIR)],
+                                 "exclude_users": [str(FIXTURE_USERS_DIR / "1")],
+                                 "swap_data": False, "test_on_excluded": False}}
+    eval_dirs, exclude_users, _, on_excluded = _resolve_eval_split(SimpleNamespace(use_checkpoint_split=True), checkpoint)
+    out = capsys.readouterr().out
+    assert "1 excluded user(s) lie under the evaluation corpus and are DROPPED" in out
+    assert "(1)" in out
+    assert eval_dirs == [str(FIXTURE_USERS_DIR)] and on_excluded is False
