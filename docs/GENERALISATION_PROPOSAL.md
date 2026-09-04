@@ -453,12 +453,15 @@ so the spread is the subsample-fold spread. Random control at full corpus: 0.498
 | --- | --- | --- | --- | --- | --- | --- |
 | ViewGauss | 1 | 0.911 +-0.008 | 0.906 | 0.900 | 0.934 | -0.02 / -0.04 |
 | Head_and_Gaze V2 | 1 | 0.750 +-0.008 | 0.753 | 0.749 | 0.869 | **-0.12** |
-| VR_User_Behavior | 1 | 0.638 +-0.007 | 0.647 | 0.629 | 0.714 | **-0.08** |
+| VR_User_Behavior (43 users) | 1 | 0.638 +-0.007 | 0.647 | 0.629 | 0.714 | **-0.08** |
 | NJIT | 1 | 0.648 +-0.013 | 0.635 | 0.641 | 0.653 | -0.01 |
 | PanoSaliency | 2 | 0.581 +-0.007 | 0.585 | 0.576 | 0.581 | 0.00 |
 | Panonut360 | 2 | 0.526 +-0.004 | 0.533 | 0.517 | 0.512 | +0.01 |
 | EyeNavGS | 3 | 0.502 +-0.004 | 0.499 | 0.507 | 0.492 | +0.01 |
 | **pooled** | | **0.672 +-0.003** | **0.672** | **0.671** | **0.727** | **-0.06** |
+
+Every VR_User_Behavior figure in 9.1-9.7 is on **43 users**: the config-default
+`exclude_users` (users 1-5) was never overridden in the cross-corpus commands; see 9.8.
 
 Both pre-registered predictions for this run held, one of them harder than predicted:
 
@@ -505,7 +508,7 @@ construction, so the model's number is the whole signal. The `random` extractor 
 | --- | --- | --- | --- |
 | Head_and_Gaze V2 | 1 | **0.538** +-0.002 | 39.7 |
 | NJIT | 1 | 0.528 +-0.007 | 7.9 |
-| VR_User_Behavior | 1 | 0.519 +-0.003 | 11.2 |
+| VR_User_Behavior (43 users) | 1 | 0.519 +-0.003 | 11.2 |
 | ViewGauss | 1 | 0.517 +-0.008 | 4.4 |
 | EyeNavGS (virtual camera) | 3 | 0.535 +-0.006 | 11.8 |
 | Panonut360 | 2 | 0.516 +-0.004 | 7.6 |
@@ -521,7 +524,7 @@ identity-count curve comes from:
 | Head_and_Gaze V2 | 1 | 0.537 +-0.003 | 0.560 +-0.003 | **0.570** | **+0.033** |
 | ViewGauss | 1 | 0.523 +-0.007 | 0.555 +-0.007 | **0.571** | **+0.048** |
 | NJIT | 1 | 0.522 +-0.009 | 0.527 +-0.003 | 0.540 | +0.018 |
-| VR_User_Behavior | 1 | 0.515 +-0.006 | 0.520 +-0.001 | 0.521 | +0.007 |
+| VR_User_Behavior (43 users) | 1 | 0.515 +-0.006 | 0.520 +-0.001 | 0.521 | +0.007 |
 | Panonut360 | 2 | 0.516 +-0.005 | 0.533 +-0.007 | 0.544 | +0.028 |
 | PanoSaliency | 2 | 0.730 +-0.007 | 0.736 +-0.002 | 0.731 | 0.000 |
 | EyeNavGS | 3 | 0.535 +-0.003 | 0.529 +-0.001 | 0.529 | -0.006 |
@@ -568,7 +571,7 @@ validation users (BOXRR/alyx users it never trained on), mixed as
 | **in domain** (BOXRR/alyx validation users, 5 checkpoints) | 0.724-0.764 | **0.727-0.744** | **0.789-0.819** | 0.35-0.45 |
 | held out, ViewGauss | 0.935 | 0.511 | 0.835 | |
 | held out, Head_and_Gaze V2 | 0.870 | 0.536 | 0.777 | |
-| held out, VR_User_Behavior | 0.718 | 0.518 | 0.662 | |
+| held out, VR_User_Behavior (43 users) | 0.718 | 0.518 | 0.662 | |
 | held out, NJIT | 0.645 | 0.528 | 0.628 | |
 | held out, PanoSaliency | 0.579 | 0.723 | **0.723** | |
 | held out, pooled | 0.727 | 0.578 | 0.707 | |
@@ -616,7 +619,7 @@ it, the same encoding trained on BOXRR+alyx and transferred:
 | --- | --- | --- | --- | --- | --- | --- |
 | Head_and_Gaze V2 | 1 | 0.551 +-0.011 | 0.500 | 0.538 | 0.537 | **0.579** |
 | ViewGauss | 1 | 0.528 +-0.034 | 0.506 | 0.517 | 0.522 | **0.565** |
-| VR_User_Behavior | 1 | 0.531 +-0.015 | 0.498 | 0.519 | 0.521 | 0.512 |
+| VR_User_Behavior (48 in domain; 43 in the transfer columns) | 1 | 0.531 +-0.015 | 0.498 | 0.519 | 0.521 | 0.512 |
 | NJIT | 1 | 0.558 +-0.040 | 0.484 | 0.528 | 0.533 | 0.547 |
 | **alyx** | 1 | **0.530 +-0.007** | 0.498 | - | - | - |
 | PanoSaliency | 2 | 0.729 +-0.027 | 0.499 | 0.724 | 0.726 | 0.739 |
@@ -687,7 +690,7 @@ every row is a single run. Registered prediction: `raw` at the lookup +-0.03 on 
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | ViewGauss | 1 | 0.9325 | 0.9152 | -0.0174 | 0.911 | 0.5265 | 0.528 +-0.034 |
 | Head_and_Gaze V2 | 1 | 0.8670 | 0.6877 | **-0.1793** | 0.750 | 0.5520 | 0.551 +-0.011 |
-| VR_User_Behavior | 1 | 0.7114 | 0.6385 | **-0.0729** | 0.638 | 0.5257 | 0.531 +-0.015 |
+| VR_User_Behavior (43 users) | 1 | 0.7114 | 0.6385 | **-0.0729** | 0.638 | 0.5257 | 0.531 +-0.015 |
 | NJIT | 1 | 0.6459 | 0.5956 | **-0.0503** | 0.648 | 0.5364 | 0.558 +-0.040 |
 | alyx | 1 | 0.5895 | 0.5681 | -0.0214 | - | 0.5142 | 0.530 +-0.007 |
 | PanoSaliency | 2 | 0.5756 | 0.5881 | +0.0125 | 0.581 | **0.6715** | 0.729 +-0.027 |
@@ -717,6 +720,76 @@ every row is a single run. Registered prediction: `raw` at the lookup +-0.03 on 
   against 0.530 +-0.007 in domain). Single runs, both.
 - Single runs throughout; the seed spread measured on the same corpora in 9.1 and 9.3 is
   0.003 to 0.008, so the tier-1 shortfalls of 0.05 to 0.18 are far outside it.
+
+### 9.8 A learned static branch does not beat three numbers across corpora
+
+Section 10 step 3, CPU only, protocol and acceptance fixed with the Coordinator before
+the first number. Descriptor per window: mean position (3), hemisphere-aligned mean
+quaternion (4), per-channel std (7), mean world forward vector (3). Pair features
+|a-b| and (a-b)^2; scorer a class-balanced L2 logistic regression, i.e. learned
+per-axis weights. Leave-one-corpus-out, the pipeline's own manifests (three manifest
+seeds per fold, the first being the seed the LODO chain used), per-dataset
+standardisation fitted on the seven training corpora and target-fit on the held-out
+one. Harness check: unweighted Euclidean on the three mean-position numbers reproduced
+the pipeline's recorded `lookup_auc` **to the digit on all eight corpora** - for
+VR_User_Behavior on the 43 users the pipeline evaluated (0.7114; see the note after the
+table), while the table row below scores all 48 with `exclude_users=[]`.
+
+| held-out corpus | tier | lookup | Euclid, 17 | learned, 3 | **learned, 17** | learned17 - lookup | without NJIT in training | in domain: learned 17 | in domain: lookup, same half |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ViewGauss | 1 | 0.933 +-0.001 | 0.919 | 0.948 +-0.001 | 0.949 +-0.000 | +0.016 | 0.947 | 0.937 +-0.030 | 0.938 +-0.026 |
+| Head_and_Gaze V2 | 1 | 0.870 +-0.002 | 0.783 | 0.824 +-0.003 | 0.809 +-0.003 | **-0.061** | 0.812 | 0.876 +-0.005 | 0.868 +-0.003 |
+| VR_User_Behavior (all 48) | 1 | 0.719 +-0.001 | 0.676 | 0.716 +-0.001 | 0.714 +-0.002 | -0.004 | 0.716 | 0.702 +-0.005 | 0.707 +-0.003 |
+| NJIT | 1 | 0.653 +-0.005 | 0.638 | 0.711 +-0.007 | 0.701 +-0.006 | **+0.048** | - | 0.804 +-0.022 | 0.701 +-0.028 |
+| alyx | 1 | 0.593 +-0.003 | 0.578 | 0.624 +-0.003 | 0.616 +-0.002 | +0.023 | 0.606 | 0.676 +-0.004 | 0.607 +-0.012 |
+| PanoSaliency | 2 | 0.579 +-0.003 | 0.605 | 0.578 +-0.004 | 0.549 +-0.002 | -0.030 | 0.543 | 0.714 +-0.007 | 0.576 +-0.014 |
+| Panonut360 | 2 | 0.515 +-0.001 | 0.523 | 0.519 +-0.003 | 0.527 +-0.001 | +0.012 | 0.526 | 0.525 +-0.014 | 0.515 +-0.007 |
+| EyeNavGS | 3 | 0.489 +-0.006 | 0.496 | 0.487 +-0.005 | 0.488 +-0.005 | -0.001 | 0.488 | 0.534 +-0.005 | 0.495 +-0.022 |
+
+**Verdict against the rule fixed in advance** (learned 17 beats the lookup by more than
+0.03 on two or more tier-1 corpora): **not met**. One corpus clears it (NJIT, +0.048, 18
+users, unrepaired orientation frame); Head_and_Gaze loses 0.061 and VR_User_Behavior
+0.005. The registered negative entry applies: **the three-number lookup is the ceiling of
+the static cue across corpora; step 3 is retired; step 6 uses the lookup as its
+enrolment model.**
+
+What the table adds beyond the verdict:
+
+- **The in-domain / out-of-domain reversal holds for the static branch too.** Out of
+  domain, learned weights on the 3 position numbers are at or above learned weights on
+  all 17 on every tier-1 corpus (Head_and_Gaze +0.015, NJIT +0.010, alyx +0.008,
+  VR_User_Behavior +0.003, ViewGauss level). In domain, the 17-number scorer beats the
+  same-half lookup on Head_and_Gaze (+0.008), NJIT (+0.10), alyx (+0.07), PanoSaliency
+  (+0.14) and EyeNavGS (+0.04). So the 14 orientation and spread numbers carry identity
+  *within* a corpus and cost accuracy *across* corpora. That is the frame problem showing
+  in the static branch - four yaw references across the corpora, and |a-b| is invariant
+  to an offset but not to a rotation - not evidence that orientation carries no identity.
+- **Even learned weights on the three position numbers lose 0.046 on Head_and_Gaze**, the
+  corpus where the static cue is strongest. Any cross-corpus weighting of the axes is
+  worse there than treating them equally; the seat cue lives on axes the other corpora do
+  not emphasise.
+- Leaving NJIT out of training moves nothing by more than 0.010 (alyx), so its broken
+  frame did not shape the other results.
+- **Controls.** Digit-exact reproduction of the lookup on 8 of 8 corpora is the harness
+  validation. The shuffled-label control averages 0.51 across corpora but sits at
+  0.55 +-0.07 on ViewGauss and 0.56 +-0.08 on PanoSaliency, outside the letter of the
+  0.50 +-0.02 criterion: a random-direction linear scorer over |a-b| features is not a
+  chance scorer where the features themselves separate pairs at 0.93, its AUC is
+  symmetric about 0.5 with a large spread, which the +-0.07 shows. The control was
+  designed too weakly, and is recorded as such rather than hidden.
+- The mean |q| of the hemisphere-aligned mean quaternion is 0.80-0.92 on every corpus
+  with a real quaternion, and 0 on PanoSaliency, whose constant identity quaternion is a
+  dead channel after standardisation.
+
+**A trap found by the digit check, affecting every VR_User_Behavior number in this
+section.** `configs/config.yaml` ships `exclude_users` with VR_User_Behavior users 1-5,
+and none of the cross-corpus commands in section 9 overrode it. With
+`test_on_excluded=false` those five users are silently dropped from the evaluation set,
+so every VR_User_Behavior figure in 9.1-9.7 was scored on **43 users** (22016 pairs), not
+48. Comparisons within section 9 are unaffected (every run made the same omission) and
+the in-domain fold sweeps are unaffected (`sweep.folds` ignores `exclude_users`); the
+absolute VR_User_Behavior figures are on 43 users. Any cross-corpus command must carry
+`exclude_users=[]` explicitly; the CLAUDE.md command shape has been corrected.
 
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
