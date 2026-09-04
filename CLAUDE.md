@@ -361,6 +361,15 @@ A norm of exactly 1 to machine epsilon is not a coordinate convention, it is a d
 quantity in the same column. **These datasets carry orientation, encoded in the position
 slot.**
 
+**PanoSaliency's quaternion column is a constant identity `(0, 0, 0, 1)` on every row**
+(verified 2026-09-04 on 25 of its 1583 files: per-file std 0.0, one distinct value per
+column). So it has one orientation signal, in the position slot, and four dead channels
+where orientation should be; after per-dataset standardisation the dead channels are
+zero. Any orientation-derived feature on PanoSaliency (mean quaternion, `dyn`'s heading,
+a future `channels=orientation`) is reading nothing there unless the direction vector is
+moved into the quaternion slot first. The other tier-2 corpora should be checked the same
+way before any orientation claim is made on them.
+
 **This corrects an earlier entry in this file.** A previous version said these datasets
 record "position relative to a seated origin" - inferred from their per-axis means sitting
 near zero. That inference was wrong: direction vectors average toward zero when the
