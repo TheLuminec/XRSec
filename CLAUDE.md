@@ -783,23 +783,32 @@ is right, and it is the cheapest untested thing on the board.
 
 `WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
 identity's influence on the gradient is proportional to how much data it happens to
-have. Measured on the pooled 7-dataset corpus, at both window lengths because window
-count is `floor(duration / sample_time)` and a short session can round down to nothing:
+have. **Measured on AVALON, which holds the full corpus** (5s@20Hz, effective =
+`sum^2 / sum-of-squares` of the per-identity window counts):
 
-| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
+| | pre-BOXRR | with BOXRR |
 | --- | --- | --- |
-| identities with windows | 312 | 312 |
-| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
-| max/min | 77.6x | **87.5x** |
-| top 10% hold | 23.6% | 23.9% |
-| bottom 50% hold | 19.1% | 18.6% |
-| **effective identity count** | 193 of 312 | **190 of 312** |
+| real identities | 419 | **2439** |
+| windows | 216,951 | 532,084 |
+| min / median / max | | 0 / 158 / 1260 |
+| **effective identities** | **254.0 (60.6%)** | **1138.9 (46.7%)** |
 
-No identity drops out at the longer window, and the imbalance is marginally *worse*
-there, so the effect is a property of the corpus rather than of one window length.
+**Effective identities rose 4.48x** - the real gain from BOXRR - while the effective
+*fraction* fell from 60.6% to 46.7%, because 2020 fairly uniform users at ~156 windows
+sit beside a long right tail reaching 1260. Adding balanced identities next to an
+unbalanced corpus does not rebalance it.
 
-The last row is the inverse participation ratio: the number of *evenly represented*
-identities this corpus is worth under uniform window sampling. **We are discarding
+**The 419 pre-BOXRR identities are 17.2% of the corpus and hold 40.8% of all windows.**
+Under uniform window sampling they therefore supply four times their share of every
+epoch's gradient, and the 2020 new identities are correspondingly under-weighted.
+
+*An earlier version of this section said "190 effective of 312". That was measured on
+the coordinator's laptop, which holds 8 datasets and **not** `who_is_alyx` - a
+343-identity corpus, not 419. The numbers above supersede it, and the discrepancy is
+exactly the per-machine hazard this file warns about under "Data".*
+
+The effective count is the inverse participation ratio: the number of *evenly
+represented* identities the corpus is worth under uniform window sampling. **We are discarding
 about 39% of our identity diversity to sampling imbalance** - on the one axis that has
 been measured to bind, and for free, without needing a single new user.
 
@@ -822,7 +831,13 @@ silently standing in for the intended experiment, producing a plausible number w
 nothing to flag it. **Pass `data_dirs` explicitly for any pooled-corpus run** - the
 default is single-dataset and always has been.
 
-Rerunning on the pooled 7-dataset corpus, where the 87.5x imbalance actually lives.
+**The premise now holds on the real corpus, and did not when this was piloted.** Post-
+BOXRR the imbalance is measured, large, and structurally lopsided: 17.2% of identities
+hold 40.8% of the windows. Balanced sampling is worth an arm in the first full-corpus
+sweep - but prefer the **capping** variant (take at most ~median windows per identity
+per epoch) over inverse-frequency weighting, because capping raises the effective
+identity count without resampling with replacement, which is the mechanism that made
+the original proposal suspect.
 Until that lands this is **untested**, and the prediction registered beforehand
 (+0.005 to +0.02) still stands unmeasured.
 
