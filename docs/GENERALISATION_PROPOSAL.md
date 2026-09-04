@@ -213,10 +213,13 @@ the 8-dataset fold k held out, same manifest for all three rows:
 | mean-position lookup | 0.595 +-0.018 |
 | paired, in domain minus unseen | **+0.164**, t(4) = 4.54, 5/5 folds |
 
-Three conclusions, with the caveat that the in-domain reference is a different training
-configuration (eight corpora, other margin and scale, 30 epochs) and that 15 users per
-fold gives it a spread of 0.075, so the gap is real (about 2.2 sd, 5/5 folds) but not
-tight:
+Three conclusions, with a caveat the Coordinator caught: the two checkpoints differ in
+**three** things, not one - dataset coverage (alyx in or out), `identity_margin` (0.1
+against the 0.35 default) and epoch budget (30 against 20). Trainer's own sweep bounds the
+margin effect at about +0.02, against a gap of 0.16, so the direction survives, but the
+figure should be read as "about +0.16", not to three digits, and 15 users per fold gives
+the in-domain side a spread of 0.075. The clean pair - the same margin and epoch budget,
+differing only in whether alyx was trained on - is queued (section 6, run 0):
 
 1. **Being unseen costs about 0.16 AUC on alyx**: 0.566 unseen against 0.731 in domain
    on the same users, with the lookup at 0.595 for both. In domain the model adds +0.14
@@ -375,6 +378,7 @@ lookup column.
 
 | # | run | arms x folds | decides |
 | --- | --- | --- | --- |
+| 0 | **clean alyx pair**: the 8-dataset corpus at margin 0.35 / 20 epochs, 5 stratified folds, per-dataset metrics recorded | 1 x 5 | the in-domain alyx reference at the same margin and epoch budget as the unseen number, so the transfer cost is one variable |
 | 1 | **baseline transfer**: BOXRR+alyx -> the eight, `raw`, target-fit stats | 1 x 5 subsample folds at 419, + 1 at 2020 | the number the whole design is about, and whether section 4's predictions hold. Tier 2 at chance here is a statement about our schema, not about those datasets: a metres-trained model reading unit direction vectors is not being tested |
 | 2 | **frame**: `yawc` vs `raw`, same split | 2 x 5 | whether the yaw reference costs transfer; prediction +0.01 to +0.04 on Head_and_Gaze / VR_User_Behavior, ~0 on ViewGauss (already +Z) |
 | 3 | **dynamics branch alone**: `dyn` encoding, identity_softmax, BOXRR+alyx -> the eight | 1 x 5 at 419, 1 at 2020 | whether *any* transferable dynamics signal exists above the random floor; this is the experiment the project has never run cleanly |

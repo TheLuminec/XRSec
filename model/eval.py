@@ -6,10 +6,68 @@ Loads a trained model checkpoint and evaluates accuracy on the dataset.
 
 import torch
 import torch.nn as nn
-from dataset import create_dataloader_from_path, position_channel_slice
-from metrics import pair_metrics, static_position_lookup
+from dataset import create_dataloader_from_path, dataset_tier, position_channel_slice
+from metrics import pair_metrics, per_dataset_metrics, static_position_lookup
 from normalization import ChannelNormalizer
 from utils import load_checkpoint
+
+
+def _pair_datasets(loader, count: int):
+    """
+    (dataset id per pair, dataset names) for a manifest-backed evaluation loader, or None.
+
+    Pairs are attributed to their anchor user's dataset. Only valid when the loader
+    walks the manifest in order - a shuffled or random-split loader cannot be aligned
+    with its manifest, so it is reported pooled only rather than wrongly split.
+    """
+    dataset = getattr(loader, "dataset", None)
+    manifest = getattr(dataset, "manifest", None)
+    index = getattr(dataset, "sample_index", None)
+    if manifest is None or index is None or hasattr(dataset, "indices"):
+        return None
+    sampler = getattr(loader, "sampler", None)
+    if sampler is not None and not isinstance(sampler, torch.utils.data.SequentialSampler):
+        return None
+    anchors = manifest["anchor_user_ids"].view(-1)
+    if anchors.numel() != count:
+        return None
+    user_dataset_ids = list(getattr(index, "user_dataset_ids", []) or [])
+    if len(user_dataset_ids) < int(index.num_users):
+        return None
+    ids = torch.tensor([user_dataset_ids[int(user)] for user in anchors.tolist()], dtype=torch.long)
+    return ids, list(getattr(index, "dataset_names", []) or [])
+
+
+def split_metrics_by_dataset(loader, scores, labels, lookup_scores=None) -> dict:
+    """
+    Per-dataset AUC/EER for the model and the lookup, each tagged with its semantics tier.
+
+    Returns {} when the loader cannot be attributed. Pooling across tiers is announced,
+    because a pooled figure over tier 1 and tier 2 averages near-perfect verification
+    with chance and reads like neither.
+    """
+    attributed = _pair_datasets(loader, int(labels.numel()))
+    if attributed is None:
+        return {}
+    ids, names = attributed
+    by_dataset = per_dataset_metrics(scores, labels, ids, dataset_names=names)
+    lookup = (per_dataset_metrics(lookup_scores, labels, ids, dataset_names=names)
+              if lookup_scores is not None else {})
+    for name, entry in by_dataset.items():
+        entry["tier"] = dataset_tier(name)
+        if name in lookup:
+            entry["lookup_auc"] = lookup[name]["auc"]
+            entry["lookup_eer"] = lookup[name]["eer"]
+    tiers = sorted({entry["tier"] for entry in by_dataset.values() if entry["tier"] is not None})
+    unaudited = sorted(name for name, entry in by_dataset.items() if entry["tier"] is None)
+    if unaudited:
+        print(f"  NOTE: {len(unaudited)} evaluation dataset(s) have no semantics tier "
+              f"({', '.join(unaudited)}); run audit_frames.py on them and add them to "
+              "dataset.DATASET_TIERS")
+    if len(tiers) > 1:
+        print(f"  NOTE: the pooled figure mixes semantics tiers {tiers} - read the "
+              "per-dataset numbers, not the average")
+    return by_dataset
 
 
 def evaluate(model, loader, criterion, device, return_preds=False, return_metrics=False):
@@ -77,9 +135,12 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
     if return_metrics:
         import torch as _torch
         all_labels_t = _torch.cat(label_chunks)
-        metrics = pair_metrics(_torch.cat(score_chunks), all_labels_t)
+        all_scores_t = _torch.cat(score_chunks)
+        metrics = pair_metrics(all_scores_t, all_labels_t)
+        all_lookup_t = None
         if lookup_chunks:
-            lookup = pair_metrics(_torch.cat(lookup_chunks), all_labels_t)
+            all_lookup_t = _torch.cat(lookup_chunks)
+            lookup = pair_metrics(all_lookup_t, all_labels_t)
             metrics["lookup_auc"] = lookup["auc"]
             metrics["lookup_eer"] = lookup["eer"]
             # Loud, because a model that does not beat three numbers is the single most
@@ -88,6 +149,9 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
                 print(f"  NOTE: the training-free mean-position lookup scored "
                       f"{lookup['auc']:.4f} AUC against the model's {metrics['auc']:.4f} "
                       f"- the model is not beating it on this set")
+        # Per dataset, with its semantics tier, on the same scores. A pooled number over
+        # several corpora is an average of things that differ in kind.
+        metrics["by_dataset"] = split_metrics_by_dataset(loader, all_scores_t, all_labels_t, all_lookup_t)
 
     if return_preds and return_metrics:
         return avg_loss, accuracy, all_preds, all_labels, metrics
@@ -108,16 +172,19 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
         test_size: Number of samples in the test dataset
         device: Device to evaluate on
     """
-    loss, accuracy, preds, labels = evaluate(model, test_loader, criterion, device, return_preds=True)
+    loss, accuracy, preds, labels, metrics = evaluate(
+        model, test_loader, criterion, device, return_preds=True, return_metrics=True)
 
     # ASCII only: Windows consoles default to cp1252, so box-drawing characters
     # crash the run with UnicodeEncodeError whenever stdout is piped or redirected.
     print(f"\n{'-' * 40}")
     print(f"  Test Loss    : {loss:.4f}")
     print(f"  Test Accuracy: {accuracy:.2%}  ({int(accuracy * test_size)}/{test_size} correct)")
+    print(f"  Test AUC     : {metrics.get('auc', float('nan')):.4f}   EER {metrics.get('eer', float('nan')):.3f}"
+          f"   lookup AUC {metrics.get('lookup_auc', float('nan')):.4f}")
     print(f"{'-' * 40}")
-        
-    return loss, accuracy
+
+    return loss, accuracy, metrics
 
 
 def _resolve_eval_split(args, checkpoint):
@@ -184,7 +251,8 @@ def window_curve_model(args, device=None):
 
     seq_len = getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10)
     model, checkpoint = load_checkpoint(args.model_path, device, seq_len, return_checkpoint=True)
-    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'))
+    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'),
+                                              unseen=getattr(args, "eval_normalize", None))
     print(normalizer.describe())
 
     eval_dirs, exclude_users, swap, on_excluded = _resolve_eval_split(args, checkpoint)
@@ -298,8 +366,10 @@ def evaluate_model(args, device=None):
     seq_len = getattr(args, "sample_time", 1) * getattr(args, "sample_rate", 10)
     model, checkpoint = load_checkpoint(args.model_path, device, seq_len, return_checkpoint=True)
     # The transform the model was trained under; refitting it here would let the
-    # evaluation set shape its own normalisation.
-    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'))
+    # evaluation set shape its own normalisation. An unseen corpus follows the policy
+    # the run names, and the run records which datasets that applied to.
+    normalizer = ChannelNormalizer.from_state(checkpoint.get('normalizer'),
+                                              unseen=getattr(args, "eval_normalize", None))
     print(normalizer.describe())
     
     eval_dirs = getattr(args, "test_dirs", None) or getattr(args, "data_dirs", None) or getattr(args, "data_dir", None)
@@ -322,11 +392,28 @@ def evaluate_model(args, device=None):
         normalize=getattr(args, "normalize", "none"),
         normalizer=normalizer if normalizer.enabled else None,
         channels=checkpoint.get("channels", str(getattr(args, "channels", "full") or "full")),
+        eval_normalize=str(getattr(args, "eval_normalize", "target_fit") or "target_fit"),
     )
     test_size = len(test_loader.dataset)
 
     criterion = nn.BCEWithLogitsLoss()
-    
+
     loss, accuracy, metrics = run_evaluation(model, test_loader, criterion, test_size, device)
+    metrics = dict(metrics or {})
+    metrics["unseen_datasets"] = dict(normalizer.unseen_datasets)
+    if metrics.get("by_dataset"):
+        print(format_by_dataset(metrics["by_dataset"]))
 
     return loss, accuracy, metrics
+
+
+def format_by_dataset(by_dataset: dict) -> str:
+    """One line per evaluation dataset: tier, model AUC/EER, lookup AUC, pair count."""
+    lines = [f"  {'dataset':<44} {'tier':>4} {'model AUC':>10} {'EER':>7} {'lookup AUC':>11} {'pairs':>7}"]
+    for name, entry in sorted(by_dataset.items(), key=lambda kv: (kv[1].get("tier") or 9, kv[0])):
+        tier = entry.get("tier")
+        lookup = entry.get("lookup_auc")
+        lines.append(f"  {name[:44]:<44} {('-' if tier is None else tier):>4} {entry['auc']:>10.4f} "
+                     f"{entry['eer']:>7.3f} {('-' if lookup is None else f'{lookup:.4f}'):>11} "
+                     f"{entry.get('pairs', 0):>7}")
+    return "\n".join(lines)

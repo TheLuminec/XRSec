@@ -92,6 +92,11 @@ FIELDS = [
     "best_test_eer",
     "lookup_auc",
     "lookup_eer",
+    "test_auc_by_dataset",
+    "lookup_auc_by_dataset",
+    "eval_tiers",
+    "eval_normalize",
+    "unseen_datasets",
     "best_epoch",
     "final_train_acc",
     "final_test_acc",
@@ -214,6 +219,15 @@ def _params(params) -> str:
         return str(params)
 
 
+def _by_dataset(by_dataset: dict, key: str) -> str:
+    """Per-dataset metric as `name=value;...`, four decimals, datasets sorted."""
+    try:
+        return ";".join(f"{name}={float(entry[key]):.4f}" for name, entry in sorted(by_dataset.items())
+                        if entry.get(key) is not None)
+    except Exception:
+        return ""
+
+
 def _last(values):
     return values[-1] if values else None
 
@@ -259,9 +273,19 @@ def summarize(mode: str, result) -> dict:
         }
 
     history = result if isinstance(result, dict) else {}
+    by_dataset = history.get("selected_test_by_dataset") or {}
     return {
         "best_test_acc": history.get("best_test_acc"),
         "selected_test_acc": history.get("selected_test_acc"),
+        "lookup_auc": history.get("lookup_auc"),
+        "lookup_eer": history.get("lookup_eer"),
+        # Compact `name=value;...` strings, sortable in a spreadsheet and lossless in
+        # JSONL, so a pooled figure never travels without its per-dataset split.
+        "test_auc_by_dataset": _by_dataset(by_dataset, "auc"),
+        "lookup_auc_by_dataset": _by_dataset(by_dataset, "lookup_auc"),
+        "eval_tiers": ",".join(str(t) for t in sorted({e.get("tier") for e in by_dataset.values()
+                                                       if e.get("tier") is not None})),
+        "unseen_datasets": _params(history.get("unseen_datasets")),
         "same_session_fallback_users": history.get("same_session_fallback_users"),
         "eval_positive_fraction": history.get("eval_positive_fraction"),
         "best_val_acc": history.get("best_val_acc"),
@@ -440,7 +464,11 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "within_dataset_negatives": getattr(cfg, "within_dataset_negatives", ""),
             "cross_session_positives": getattr(cfg, "cross_session_positives", ""),
             "center_position": getattr(cfg, "center_position", ""),
-            "max_users": getattr(cfg, "max_users", ""),
+            # An int, or a per-dataset mapping rendered `name=count;...`.
+            "max_users": (_params(getattr(cfg, "max_users", None))
+                          if hasattr(getattr(cfg, "max_users", None), "items")
+                          else getattr(cfg, "max_users", "")),
+            "eval_normalize": getattr(cfg, "eval_normalize", ""),
             "seed": cfg.seed,
             "sample_time": cfg.sample_time,
             "sample_rate": cfg.sample_rate,

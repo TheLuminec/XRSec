@@ -275,6 +275,13 @@ def run_training(
             # insensitive to pair balance, which is where accuracy has failed twice.
             history["selected_test_auc"] = metrics["auc"]
             history["selected_test_eer"] = metrics["eer"]
+            # The training-free baseline on the same manifest, and the per-dataset
+            # split with its semantics tiers, both at the selected epoch. The lookup
+            # does not depend on the epoch, but recording it here keeps every figure
+            # in the row from one evaluation pass.
+            history["lookup_auc"] = metrics.get("lookup_auc")
+            history["lookup_eer"] = metrics.get("lookup_eer")
+            history["selected_test_by_dataset"] = metrics.get("by_dataset") or {}
             if val_loader is not None:
                 history["best_val_acc"] = selection_metric
             save_checkpoint(
@@ -320,6 +327,11 @@ def run_training(
     if val_loader is not None:
         print(f"Test accuracy at the validation-selected epoch {best_epoch}: "
               f"{history.get('selected_test_acc', 0.0):.2%}  <- report this one")
+    if history.get("selected_test_by_dataset"):
+        from eval import format_by_dataset
+        print(f"Selected-epoch AUC {history.get('selected_test_auc', float('nan')):.4f} against the "
+              f"mean-position lookup {history.get('lookup_auc') or float('nan'):.4f}, per dataset:")
+        print(format_by_dataset(history["selected_test_by_dataset"]))
     if history.get("test_acc"):
         print(f"Final-epoch test accuracy: {history['test_acc'][-1]:.2%}")
     print(f"Model saved to: {save_path}")
@@ -413,6 +425,7 @@ def _run_standard_training(args, device):
         val_user_fraction=float(getattr(args, "val_user_fraction", 0.0) or 0.0),
         return_val=True,
         return_normalizer=True,
+        eval_normalize=str(getattr(args, "eval_normalize", "target_fit") or "target_fit"),
     )
 
     model, criterion, optimizer, start_epoch, history, _ = prepare_training_round(args, device, round_idx=0)
@@ -505,6 +518,11 @@ def _run_standard_training(args, device):
     manifest = getattr(evaluated, "manifest", None)
     if manifest is not None and manifest["labels"].numel():
         history["eval_positive_fraction"] = float(manifest["labels"].mean())
+
+    # Which evaluation datasets had no training statistics, and what was done about
+    # it. For a cross-corpus run this is the only thing bridging the frame gap, so the
+    # number has to carry it.
+    history["unseen_datasets"] = dict(getattr(normalizer, "unseen_datasets", {}) or {})
 
     return history
 

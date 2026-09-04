@@ -75,6 +75,10 @@ center_position: false
 #   br   pose relative to the window's first frame (head-only approximation)
 #   brv  frame-to-frame delta rotation and linear velocity
 #   bra  the same differencing twice
+#   yawc rotate each window about world up so its mean facing is +Z; keeps height,
+#        pitch, roll and absolute position, removes the per-corpus yaw reference
+#   dyn  pose relative to the window's MEAN pose: every static cue (height, seat,
+#        posture) removed by construction; invariant to the capture frame
 encoding: raw
 
 # How raw samples become fixed-rate frames.
@@ -121,6 +125,9 @@ use_checkpoint_split: true
 # no-op to active, all at once. Subsampling the pooled corpus back to 48 identities
 # spread across the same seven datasets holds diversity fixed and varies only count.
 # null keeps every user and costs nothing.
+# May also be a mapping that caps only the named datasets and keeps every user of the
+# others, e.g. max_users={BOXRR-23_Dataset:343} for an identity-count curve over BOXRR
+# that keeps all 76 alyx users at every point. Never applied to test_dirs.
 max_users: null
 
 # Fraction of TRAINING users held out to choose the best epoch, disjoint from both
@@ -145,6 +152,16 @@ samples_per_user: 512
 # none:        raw values, as before
 # Statistics are fitted on training users only and stored in the checkpoint.
 normalize: per_dataset
+
+# How an EVALUATION dataset that the normaliser never saw is brought into the training
+# frame - the only mechanism bridging the frame gap in a cross-corpus run, so it is
+# named here and recorded on the run rather than applied as a silent fallback.
+#   target_fit  fit per-channel statistics on the evaluation data itself (unsupervised,
+#               the cohort normalisation; best of the label-free options, 0.566 on alyx)
+#   session     each session standardised by its own statistics (corpus-agnostic, but
+#               removes absolute position; measured at chance)
+#   none        leave it unstandardised (a bound, not a method)
+eval_normalize: target_fit
 
 # Draw negative pairs only from users in the same dataset. A positive pair is always
 # the same user and so always the same dataset; without this, 79% of negatives become

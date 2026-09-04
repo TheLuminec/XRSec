@@ -32,6 +32,42 @@ def _seed_value(seed: int | None, offset: int = 0) -> int:
     return int(np.random.SeedSequence([base_seed, int(offset)]).generate_state(1, dtype=np.uint32)[0])
 
 
+#: What the position column of each dataset actually holds, audited on raw CSVs
+#: (docs/GENERALISATION_PROPOSAL.md section 1; reproduce with audit_frames.py):
+#:   1  true head pose in metres
+#:   2  a UNIT VIEWING-DIRECTION VECTOR stored in HmdPosition - not a position at all
+#:   3  a real position that is not a human head in metres (EyeNavGS: virtual camera)
+#: A pooled metric across tiers averages 0.93+ verification where a real head position
+#: exists with chance where it does not, which is why the tier rides on every per-dataset
+#: number and pooling across tiers is announced. Keys are dataset directory names; a
+#: prefix match covers converters that stamp a version into the name.
+DATASET_TIERS = {
+    "BOXRR-23_Dataset": 1,
+    "who_is_alyx": 1,
+    "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": 1,
+    "ViewGauss_Head-Movement_Dataset": 1,
+    "Head_and_Gaze_Behavior_Dataset": 1,   # V2 files; the V1 files are tier 2 and only load at channels=position
+    "NJIT_6DOF_VR_Navigation_Dataset": 1,  # position is real; its quaternion frame is broken until re-parsed
+    "Nymeria": 1,
+    "Across_XR": 1,
+    "across_xr": 1,
+    "EyeNavGS_6-DoF_Navigation_Dataset": 3,
+    "360-degree_Saliency_Dataset_(PanoSaliency)": 2,
+    "Panonut360_Dataset": 2,
+    "360_em_dataset": 2,
+}
+
+
+def dataset_tier(name: str) -> int | None:
+    """Semantics tier of a dataset directory name, or None if it has never been audited."""
+    if name in DATASET_TIERS:
+        return DATASET_TIERS[name]
+    for key, tier in DATASET_TIERS.items():
+        if name.lower().startswith(key.lower()):
+            return tier
+    return None
+
+
 def _empty_pair_manifest() -> dict[str, torch.Tensor]:
     return {
         "x1_indices": torch.empty(0, dtype=torch.long),
@@ -767,8 +803,21 @@ def select_user_subset(data_dir, max_users: int | None, seed: int | None) -> lis
     subset mirrors the corpus rather than over-representing whichever dataset happens
     to sort first. Returns None when no subsampling is needed, which keeps the
     filtering cost at zero for ordinary runs.
+
+    `max_users` may also be a mapping {dataset directory name: count}, which caps only
+    the named datasets and keeps every user of the others. That is what an
+    identity-count curve over BOXRR needs: proportional apportionment of 419 across
+    BOXRR (2020) and alyx (76) would leave 15 alyx users, so the "few activities" half of
+    the training corpus would vanish at the low end of the curve.
     """
-    if not max_users or max_users <= 0:
+    if max_users is None or max_users is False:
+        return None
+    per_dataset = None
+    if hasattr(max_users, "items"):
+        per_dataset = {str(key): int(value) for key, value in max_users.items()}
+        if not per_dataset:
+            return None
+    elif int(max_users) <= 0:
         return None
 
     by_dataset: dict[str, list[str]] = {}
@@ -782,15 +831,26 @@ def select_user_subset(data_dir, max_users: int | None, seed: int | None) -> lis
             by_dataset[directory] = users
 
     total = sum(len(users) for users in by_dataset.values())
-    if max_users >= total:
-        return None
+    if per_dataset is not None:
+        names = {d: SampleDataset._dataset_name(d) for d in by_dataset}
+        unknown = sorted(set(per_dataset) - set(names.values()))
+        if unknown:
+            raise ValueError(f"max_users names datasets not in data_dirs: {unknown}; "
+                             f"known: {sorted(names.values())}")
+        quota = {d: min(per_dataset.get(names[d], len(u)), len(u)) for d, u in by_dataset.items()}
+        if all(quota[d] >= len(by_dataset[d]) for d in by_dataset):
+            return None
+    else:
+        max_users = int(max_users)
+        if max_users >= total:
+            return None
 
-    # Largest-remainder apportionment, so the quotas sum to exactly max_users.
-    exact = {d: len(u) * max_users / total for d, u in by_dataset.items()}
-    quota = {d: int(value) for d, value in exact.items()}
-    remaining = max_users - sum(quota.values())
-    for directory in sorted(by_dataset, key=lambda d: (-(exact[d] - quota[d]), d))[:remaining]:
-        quota[directory] += 1
+        # Largest-remainder apportionment, so the quotas sum to exactly max_users.
+        exact = {d: len(u) * max_users / total for d, u in by_dataset.items()}
+        quota = {d: int(value) for d, value in exact.items()}
+        remaining = max_users - sum(quota.values())
+        for directory in sorted(by_dataset, key=lambda d: (-(exact[d] - quota[d]), d))[:remaining]:
+            quota[directory] += 1
 
     rng = np.random.default_rng(_seed_value(seed, 31))
     kept: list[str] = []
@@ -914,6 +974,7 @@ def create_dataloader_from_path(
     return_normalizer: bool = False,
     val_user_fraction: float = 0.0,
     return_val: bool = False,
+    eval_normalize: str = "target_fit",
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -956,6 +1017,9 @@ def create_dataloader_from_path(
             evaluations. Selecting on a disjoint group removes that.
         return_val: Return (train, val, test) instead of (train, test). `val` is None
             when val_user_fraction is 0.
+        eval_normalize: How an evaluation dataset with no training statistics is
+            brought into the training frame - "target_fit", "session" or "none". See
+            normalization.UNSEEN_POLICIES. Recorded on the run.
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
@@ -987,7 +1051,8 @@ def create_dataloader_from_path(
         )
         # Evaluation never fits its own statistics when a training-time normalizer is
         # available; doing so would let the held-out distribution shape the transform.
-        eval_normalizer = normalizer if normalizer is not None else ChannelNormalizer(normalize).fit(dataset.sample_index)
+        eval_normalizer = (normalizer if normalizer is not None
+                           else ChannelNormalizer(normalize, unseen=eval_normalize).fit(dataset.sample_index))
         eval_normalizer.transform(dataset.sample_index)
         test_loader = DataLoader(
             dataset,
@@ -1026,7 +1091,7 @@ def create_dataloader_from_path(
 
     # Fit on the training users only, then apply the same transform everywhere.
     if normalizer is None:
-        normalizer = ChannelNormalizer(normalize).fit(train_dataset.sample_index)
+        normalizer = ChannelNormalizer(normalize, unseen=eval_normalize).fit(train_dataset.sample_index)
     normalizer.transform(train_dataset.sample_index)
     if normalizer.enabled:
         print(normalizer.describe())

@@ -32,6 +32,19 @@ import torch
 
 
 MODES = ("none", "per_dataset", "global")
+#: What to do with a dataset that was never seen during fitting - an unseen corpus at
+#: evaluation time. Chosen explicitly and recorded per run, because it is the ONLY
+#: mechanism bringing an unseen corpus into the training frame and a reader has to know
+#: which one produced the number.
+#:   target_fit  fit per-channel statistics on the evaluation data itself. Unsupervised
+#:               (no labels), the standard cohort normalisation, and what the pipeline
+#:               always did as a silent fallback. Measured on who_is_alyx it is the best
+#:               of the label-free options (0.566 AUC against 0.504-0.547 for the rest).
+#:   session     standardise each session by its own statistics. Fully corpus-agnostic
+#:               and needs no cohort, but removes absolute position: measured at chance
+#:               on alyx.
+#:   none        leave the unseen data untouched. A bound, not a method.
+UNSEEN_POLICIES = ("target_fit", "session", "none")
 GLOBAL_KEY = "__global__"
 _CHUNK = 4096
 
@@ -44,13 +57,20 @@ class ChannelNormalizer:
         mode: "per_dataset" fits one set of statistics per dataset (removes the
             cross-dataset shortcut), "global" fits one set over everything (fixes
             channel scale only), "none" is a no-op.
+        unseen: policy for a dataset with no fitted statistics; see UNSEEN_POLICIES.
     """
 
-    def __init__(self, mode: str = "per_dataset"):
+    def __init__(self, mode: str = "per_dataset", unseen: str = "target_fit"):
         if mode not in MODES:
             raise ValueError(f"normalize must be one of {MODES}, got {mode!r}.")
+        if unseen not in UNSEEN_POLICIES:
+            raise ValueError(f"eval_normalize must be one of {UNSEEN_POLICIES}, got {unseen!r}.")
         self.mode = mode
+        self.unseen = unseen
         self.statistics: dict[str, tuple[torch.Tensor, torch.Tensor]] = {}
+        #: Datasets that had no training statistics when transformed, and how they
+        #: were handled. Recorded per run so the number carries its own qualification.
+        self.unseen_datasets: dict[str, str] = {}
 
     @property
     def enabled(self) -> bool:
@@ -110,13 +130,22 @@ class ChannelNormalizer:
         for name, indices in groups:
             statistics = self.statistics.get(name)
             if statistics is None:
-                # A dataset never seen during fitting - e.g. evaluating a trained model
-                # on a new corpus. Deriving statistics from the target data is
-                # unsupervised (no labels are used) and is the standard way to bring a
-                # new coordinate frame into the training frame, but it is not the
-                # training-time transform, so say so.
-                print(f"WARNING: no training statistics for dataset '{name}'; "
-                      "fitting them from the evaluation data instead.")
+                # A dataset never seen during fitting - evaluating a trained model on a
+                # new corpus. Nothing here is the training-time transform, so whichever
+                # policy applies is announced and recorded rather than silently used.
+                self.unseen_datasets[name] = self.unseen
+                if self.unseen == "none":
+                    print(f"NOTE: no training statistics for dataset '{name}'; "
+                          "eval_normalize=none leaves it unstandardised.")
+                    continue
+                if self.unseen == "session":
+                    print(f"NOTE: no training statistics for dataset '{name}'; "
+                          "eval_normalize=session standardises each session by itself.")
+                    self._transform_per_session(sample_index, name)
+                    continue
+                print(f"NOTE: no training statistics for dataset '{name}'; "
+                      "eval_normalize=target_fit derives them from the evaluation data "
+                      "(unsupervised, recorded on the run).")
                 statistics = self._channel_statistics(sample_index.samples, indices)
                 self.statistics[name] = statistics
 
@@ -128,12 +157,27 @@ class ChannelNormalizer:
                 sample_index.samples[block] = (sample_index.samples[block] - mean) / std
         return self
 
+    def _transform_per_session(self, sample_index, dataset_name: str) -> None:
+        """Standardise every (user, session) of one dataset by its own statistics."""
+        sessions = getattr(sample_index, "window_session_ids", None)
+        dataset_id = list(sample_index.dataset_names).index(dataset_name)
+        user_dataset_ids = getattr(sample_index, "user_dataset_ids", []) or []
+        for user, windows in enumerate(sample_index.user_sample_indices):
+            if windows.numel() == 0 or (user < len(user_dataset_ids) and user_dataset_ids[user] != dataset_id):
+                continue
+            groups = ([windows] if sessions is None or sessions.numel() == 0
+                      else [windows[sessions[windows] == s] for s in torch.unique(sessions[windows])])
+            for group in groups:
+                mean, std = self._channel_statistics(sample_index.samples, group)
+                sample_index.samples[group] = (sample_index.samples[group] - mean.view(1, -1, 1)) / std.view(1, -1, 1)
+
     def fit_transform(self, sample_index) -> "ChannelNormalizer":
         return self.fit(sample_index).transform(sample_index)
 
     def state_dict(self) -> dict:
         return {
             "mode": self.mode,
+            "unseen": self.unseen,
             "statistics": {
                 name: {"mean": mean.tolist(), "std": std.tolist()}
                 for name, (mean, std) in self.statistics.items()
@@ -141,11 +185,17 @@ class ChannelNormalizer:
         }
 
     @classmethod
-    def from_state(cls, state: dict | None) -> "ChannelNormalizer":
-        """Rebuild from a checkpoint. A missing state means an unnormalised model."""
+    def from_state(cls, state: dict | None, unseen: str | None = None) -> "ChannelNormalizer":
+        """
+        Rebuild from a checkpoint. A missing state means an unnormalised model.
+
+        `unseen` overrides the stored policy, so an evaluation run can choose how an
+        unseen corpus is handled without retraining.
+        """
         if not state:
             return cls(mode="none")
-        normalizer = cls(mode=state.get("mode", "none"))
+        normalizer = cls(mode=state.get("mode", "none"),
+                         unseen=unseen or state.get("unseen", "target_fit"))
         for name, entry in (state.get("statistics") or {}).items():
             normalizer.statistics[name] = (
                 torch.tensor(entry["mean"], dtype=torch.float32),
@@ -156,4 +206,7 @@ class ChannelNormalizer:
     def describe(self) -> str:
         if not self.enabled:
             return "normalization: none"
-        return f"normalization: {self.mode} over {len(self.statistics)} dataset(s)"
+        note = ""
+        if self.unseen_datasets:
+            note = "; unseen: " + ", ".join(f"{name}={policy}" for name, policy in sorted(self.unseen_datasets.items()))
+        return f"normalization: {self.mode} over {len(self.statistics)} dataset(s){note}"

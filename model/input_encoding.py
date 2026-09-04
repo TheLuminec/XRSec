@@ -39,6 +39,28 @@ controllers. This corpus is head-only, so:
         frame.
   bra   the same differencing applied twice.
 
+Two more exist because of the cross-dataset audit (docs/GENERALISATION_PROPOSAL.md):
+
+  yawc  gravity-preserving YAW CANONICALISATION. Each window is rotated about the
+        world up axis (Y) so that its mean facing direction is +Z. Height, pitch, roll
+        and the absolute position all survive; only the content-referenced heading is
+        removed. Measured yaw references differ per corpus (+Z for BOXRR, ViewGauss and
+        NJIT, +X for Head_and_Gaze, -X for VR_User_Behavior, none for alyx), which is
+        a rotation that per-channel standardisation cannot undo. The horizontal
+        position is rotated about the window's own mean position, so the static
+        position cue is untouched and only the within-window displacement is expressed
+        in the head's heading frame. Assumes Y-up, which every dataset here is after
+        conversion except NJIT's broken quaternion.
+  dyn   DYNAMICS ONLY: pose relative to the window's MEAN pose. Orientation becomes
+        q_mean^-1 . q_t and position becomes the residual (p_t - p_mean) rotated into
+        the mean-pose body frame. Every static cue - mean position, i.e. height and
+        seat, and mean orientation, i.e. posture - is removed by construction, and the
+        result is invariant to any rigid transform of the capture frame, so it needs no
+        up axis. This is what `center_position` was meant to be: centring left the
+        absolute quaternion in, and mean orientation alone scores 0.54-0.81 AUC of
+        static posture, so the "behavioural" arm was never only behaviour. `br` is the
+        same idea referenced to the noisy first frame instead of the mean.
+
 Channel count is preserved (7 stays 7, 3 stays 3) so every extractor's contract holds:
 the rotation block of a velocity encoding is the *delta rotation*, which is still a
 unit quaternion, not a componentwise difference of two quaternions.
@@ -48,7 +70,7 @@ from __future__ import annotations
 
 import torch
 
-ENCODINGS = ("raw", "br", "brv", "bra")
+ENCODINGS = ("raw", "br", "brv", "bra", "yawc", "dyn")
 
 
 def _quaternion_multiply(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
@@ -107,6 +129,59 @@ def _delta_once(quaternion, position):
     return _pad_front(relative * sign, 1), _pad_front(linear, 1)
 
 
+def _mean_quaternion(quaternion: torch.Tensor) -> torch.Tensor:
+    """
+    Per-window mean rotation, (batch, 4, 1).
+
+    Frames are first put in the hemisphere of the window's first frame - q and -q are
+    one rotation, and averaging across the sign flip cancels instead of averaging - then
+    the components are averaged and renormalised. Exact for small spreads, which is what
+    a five-second head window has.
+    """
+    reference = quaternion[:, :, :1]
+    sign = torch.where((quaternion * reference).sum(dim=1, keepdim=True) < 0, -1.0, 1.0)
+    return _normalise((quaternion * sign).mean(dim=2, keepdim=True))
+
+
+def _heading_quaternion(quaternion: torch.Tensor) -> torch.Tensor:
+    """
+    The rotation about world Y that turns the window's mean facing direction to +Z.
+
+    The facing direction is the head's local +Z rotated into the world by each frame and
+    averaged; its yaw is atan2(x, z). Rotating about +Y by theta sends (sin a, 0, cos a)
+    to (sin(a + theta), 0, cos(a + theta)), so theta = -yaw. Returned as (batch, 4, 1).
+    """
+    forward = torch.zeros_like(quaternion[:, :3])
+    forward[:, 2] = 1.0
+    facing = _rotate(quaternion, forward).mean(dim=2)                  # (batch, 3)
+    yaw = torch.atan2(facing[:, 0], facing[:, 2])
+    half = -yaw / 2.0
+    zeros = torch.zeros_like(half)
+    return torch.stack([zeros, torch.sin(half), zeros, torch.cos(half)], dim=1).unsqueeze(2)
+
+
+def _yaw_canonical(quaternion, position):
+    """yawc: rotate the window about world up so its mean facing is +Z."""
+    centre = position.mean(dim=2, keepdim=True)
+    if quaternion is None:
+        # Nothing says which way the head faced; the position is left as it is.
+        return None, position
+    heading = _heading_quaternion(quaternion).expand(-1, -1, position.shape[2])
+    return (_quaternion_multiply(heading, quaternion),
+            centre + _rotate(heading, position - centre))
+
+
+def _dynamics_only(quaternion, position):
+    """dyn: pose relative to the window's mean pose, every static cue removed."""
+    residual = position - position.mean(dim=2, keepdim=True)
+    if quaternion is None:
+        return None, residual
+    inverse = _quaternion_conjugate(_mean_quaternion(quaternion)).expand(-1, -1, position.shape[2])
+    relative = _quaternion_multiply(inverse, quaternion)
+    sign = torch.where(relative[:, 3:4] < 0, -1.0, 1.0)
+    return relative * sign, _rotate(inverse, residual)
+
+
 def apply_encoding(samples: torch.Tensor, encoding: str) -> torch.Tensor:
     """
     Transform windows in place-compatible fashion, preserving the channel count.
@@ -121,6 +196,13 @@ def apply_encoding(samples: torch.Tensor, encoding: str) -> torch.Tensor:
         return samples
 
     quaternion, position = _split(samples)
+
+    if encoding in ("yawc", "dyn"):
+        quaternion, position = (_yaw_canonical if encoding == "yawc" else _dynamics_only)(
+            quaternion, position)
+        if quaternion is None:
+            return position
+        return torch.cat([quaternion, position], dim=1)
 
     if encoding == "br":
         reference = quaternion[:, :, :1] if quaternion is not None else None
