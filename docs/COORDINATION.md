@@ -112,9 +112,15 @@ session means against the between-participant lateral median, with lateral P:
 | small | > 0.65 | **both wrong**: re-centred frame but each player stands at a characteristic offset from their own play-space centre - a postural habit, neither room nor height, still a per-participant constant that contaminates raw identity counts |
 | large | ~ 0.5 | incoherent; the row is uninterpretable, not read |
 
-Prior after the per-axis lookup: alyx losing xz (0.539) while keeping y is what re-centring
-looks like, BOXRR keeping xz (0.680) is what it does not; Trainer expects to lose and the
-prediction is scored as made.
+**Table landed 18:20, in CLAUDE.md's opening section.** Scored: BOXRR lateral 0.685 -
+coordinator closer, Trainer's re-centring-only mechanism lost as stated; seated corpora
+lateral 0.71-0.90 - **both wrong** (0.195 m within vs 0.404 m between, distinguishable
+positions in a shared rig); Trainer's VR_User_Behavior height > 0.8 wrong (0.661, below
+its lateral); alyx both right (0.552 / 0.743); Nymeria lateral. BOXRR's between-participant
+lateral median is 0.200 m against 0.109 m within: the decision table's third row (re-centred
+frame, person-specific standing offset) is leading, pending median |xz|. Head_and_Gaze
+tier flag from three raw V1 files retracted by measurement: V1 |pos| 1.0000 no quaternion,
+V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
 
 - **Model Generalization: Nymeria `dyn` transfer** (scoring only, CPU, registered 16:05):
   the 9.3 long-budget `dyn` checkpoints (419 x 5 seeds, 1000 x 2, 2096 x 1) and step 2's

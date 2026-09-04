@@ -63,6 +63,34 @@ survives a day and is a biometric; placement is a same-sitting rig artefact that
 seated corpora, and part of BOXRR (xz-only 0.680, above the pre-registered 0.6 line), are
 scoring. Nymeria's lateral figure is the shared SLAM map (see its section).
 
+**The co-location geometry agrees (Trainer, same day).** Per-session mean positions from
+the 5s@20Hz cache, P(within-participant separation < between-participant), all / lateral
+(x,z) / height (y):
+
+| corpus | participants | all | lateral | height | reading |
+| --- | --- | --- | --- | --- | --- |
+| ViewGauss | 35 | 0.896 | 0.878 | 0.918 | placement and height |
+| Head_and_Gaze V2 | 100 | 0.911 | 0.900 | 0.722 | placement |
+| VR_User_Behavior | 48 | 0.715 | 0.711 | 0.661 | placement, not height |
+| BOXRR | 4009 | 0.765 | 0.685 | **0.828** | height first, plus a lateral component (mechanism pending) |
+| alyx (two days) | 70 | 0.575 | 0.552 | **0.743** | height, not room |
+| Nymeria | 50 | 0.846 | 0.844 | 0.659 | shared map |
+| EyeNavGS | 22 | 0.499 | 0.507 | 0.482 | nothing (virtual camera) |
+| Panonut360, PanoSaliency | | | | | direction vectors, not read |
+| NJIT | | | | | single session, untestable |
+
+Predictions registered before the table: both the coordinator and Trainer said the seated
+corpora would sit near 0.5 laterally ("one chair for everyone") and **both were wrong** -
+within-participant session means are 0.195 m apart against 0.404 m between, so
+participants occupy distinguishable positions in a shared rig, and that is what the
+lookup reads. On BOXRR the between-participant lateral median is only 0.200 m, which says
+the tracking frame is re-centred per session, yet within (0.109 m) still beats between at
+0.685 - the leading reading is a person-specific standing offset that survives
+re-centring, neither room nor height, awaiting Trainer's origin-distance statistic. BOXRR's
+height P of 0.828 says most of its static cue is height, the legitimate part. Head_and_Gaze
+was checked for the direction-vector trap: its V1 files are unit vectors with no
+quaternion, its V2 files (the only ones the loader takes) are real positions, |pos| 1.30.
+
 Three consequences. (1) The "~78% is absolute head position" finding from
 `center_position` stands as a measurement, but "height and seated posture" was the wrong
 gloss on the seated corpora: it is mostly placement. (2) **Every `raw` identity-count
