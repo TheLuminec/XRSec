@@ -80,7 +80,23 @@ value of the measurement: above 0.7 and raw BOXRR identity-count results are par
 counts; near 0.5 and BOXRR's static cue is height, which is legitimate. Harness details:
 session means from the 5s@20Hz cache (present for all ten datasets), tier 2 detected by
 unit-norm session means rather than by name, Nymeria calibration gate 2.13 / 6.44 / 0.847
-before any other row is read.
+before any other row is read. **Calibration passed 16:45**: Nymeria 2.138 / 6.445 / 0.846;
+per axis, lateral P 0.844 and height 0.659, so Nymeria's co-location is almost entirely
+lateral.
+
+**BOXRR decision table (Trainer, registered before the row landed).** Read median |xz| of
+session means against the between-participant lateral median, with lateral P:
+
+| median \|xz\| of session means | lateral P | reading |
+| --- | --- | --- |
+| large (comparable to between) | > 0.7 | persistent room origin: coordinator right, raw BOXRR identity counts are partly room counts |
+| small | ~ 0.5 | per-session re-centring, no residual: Trainer right, BOXRR's static cue is height, and the 0.680 lateral lookup needs another explanation |
+| small | > 0.65 | **both wrong**: re-centred frame but each player stands at a characteristic offset from their own play-space centre - a postural habit, neither room nor height, still a per-participant constant that contaminates raw identity counts |
+| large | ~ 0.5 | incoherent; the row is uninterpretable, not read |
+
+Prior after the per-axis lookup: alyx losing xz (0.539) while keeping y is what re-centring
+looks like, BOXRR keeping xz (0.680) is what it does not; Trainer expects to lose and the
+prediction is scored as made.
 
 - **Model Generalization: Nymeria `dyn` transfer** (scoring only, CPU, registered 16:05):
   the 9.3 long-budget `dyn` checkpoints (419 x 5 seeds, 1000 x 2, 2096 x 1) and step 2's
