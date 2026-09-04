@@ -1260,14 +1260,40 @@ training runs, so it is worth one line of curiosity next time a properly trained
 The objective is the only thing measured to give a large gain (+6.5). Both of these
 sit inside it and neither has ever been varied.
 
-### `identity_margin` / `identity_scale` were never swept
+### `identity_margin` / `identity_scale`: the default is beaten by +0.016, and kept
 
-AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
-recorded runs** - they were not even columns in the results log until now. These are
-the two hyperparameters that decide how hard the objective pushes identities apart, and
-0.35/30 are the values the face-recognition literature tuned against corpora with tens
-of thousands of identities. We have 343. There is no reason to think the same setting
-is right, and it is the cheapest untested thing on the board.
+AM-Softmax's margin (0.35) and scale (30.0) were the face-recognition defaults, tuned
+against corpora with tens of thousands of identities, unchanged across 312 runs. Measured
+2026-09-04 on 8 datasets, 419 identities, `bilstm`, `identity_softmax`, epochs 30, 5
+stratified folds, all cells under one code identity (`6ac797f158`; the grid's 13 earlier
+rows were reproduced bit-identically first, see the results-log section):
+
+| margin / scale | folds | mean AUC | paired vs 0.35/30 | fold sd | t | won |
+| --- | --- | --- | --- | --- | --- | --- |
+| **0.35 / 30 (default)** | 5 | 0.7248 | - | | | |
+| 0.1 / 30 | 5 | 0.7326 | +0.0077 | 0.0067 | 2.56 | 4/5 |
+| **0.1 / 15** | 5 | **0.7409** | **+0.0160** | 0.0083 | **4.31** | **5/5** |
+| 0.2 / 15 | 3 | 0.7410 | +0.0161 | 0.0103 | 2.71 | 3/3 |
+
+Both levers point the same way and separate: a lower margin helps at fixed scale, and a
+lower scale helps on top of it. The premise held - defaults tuned for tens of thousands of
+identities push too hard at 419.
+
+**Read it as "beaten by +0.016 on 4 of 8 cells", not as a tuned optimum.** 0.2/30, 0.5/15
+and 0.5/30 never ran (the sweep was stopped to free the GPU), so 0.1/15 is the best of
+four measured cells and biased upward; the 0.2/15 row is three folds and its missing two
+are not missing at random. +0.016 is the size of the cross-session correction and a
+quarter of the objective gain.
+
+**The default stays at 0.35/30, deliberately.** Changing `configs/config.yaml` mid-programme
+would put every subsequent run on a different footing from the 300+ rows it is compared
+against, for a gain below the noise of most of those comparisons. Two consequences to
+carry: every run at 0.35/30 is knowingly ~0.016 AUC below what the configuration can do,
+so no 0.35/30 figure is a ceiling; and if a result ever lands within ~0.016 of a target,
+the first question is whether the margin change closes it, not whether the idea failed.
+Switching the default is a single deliberate decision, made once, with a note in every
+table that straddles it - and the remaining 22 cells are the price of calling any setting
+"best".
 
 ### Window counts per identity span 77x, and that costs ~38% of our identities
 
@@ -1358,190 +1384,6 @@ number of *distinct* windows seen per epoch falls. Fixing diversity by discardin
 may not be a trade worth making. If it does fail on the pooled corpus, the variants that
 avoid the mechanism are sqrt-frequency weighting - the standard compromise - or capping
 frequent identities without upsampling rare ones.
-
-## Tried and measured at zero: adaptive score normalization
-
-`model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes
-one operating point serves every identity - and it does not, since some sit in a dense
-part of the space and score high against everyone. AS-Norm is the standard fix in
-speaker verification: rescale each score by how surprising it is for the two sides
-involved, using the top-k similarities of each against an impostor cohort. It needs no
-retraining and no new data, only embeddings already computed.
-
-**Measured, and it does nothing here.** Spare `pair_bce` checkpoint, 100 unseen
-Head_and_Gaze users, cosine scores, cohort built per-identity so window-count imbalance
-cannot dominate it:
-
-| cohort | best dAUC |
-| --- | --- |
-| training users, different dataset | **-0.0014** (negative at every top_k) |
-| domain-matched, users disjoint from the trials | **+0.0025** at top_k=200 |
-
-+0.0025 on 13,200 pairs is inside the binomial error alone (~0.008), let alone the
-0.037 fold spread. Both readings are zero. The one real signal is that a cohort from a
-*different dataset* is actively worse than none, which is consistent with the
-cross-dataset normalization problems this corpus has everywhere else.
-
-**Do not spend sweep runs on this.** The one caveat worth keeping is that it was
-measured on the checkpoint whose own control scores 0.208 on users it was trained on -
-AS-Norm exploits embedding geometry, and that space is barely organised, so there may
-be nothing there to exploit rather than nothing to gain. It is post-hoc and costs zero
-training runs, so it is worth one line of curiosity next time a properly trained
-`identity_softmax` checkpoint is scored, and nothing more than that.
-
-## Two untuned levers on the objective
-
-The objective is the only thing measured to give a large gain (+6.5). Both of these
-sit inside it and neither has ever been varied.
-
-### `identity_margin` / `identity_scale` were never swept
-
-AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
-recorded runs** - they were not even columns in the results log until now. These are
-the two hyperparameters that decide how hard the objective pushes identities apart, and
-0.35/30 are the values the face-recognition literature tuned against corpora with tens
-of thousands of identities. We have 343. There is no reason to think the same setting
-is right, and it is the cheapest untested thing on the board.
-
-### Window counts per identity span 77x, and that costs ~38% of our identities
-
-`WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
-identity's influence on the gradient is proportional to how much data it happens to
-have. Measured on the pooled 7-dataset corpus, at both window lengths because window
-count is `floor(duration / sample_time)` and a short session can round down to nothing:
-
-| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
-| --- | --- | --- |
-| identities with windows | 312 | 312 |
-| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
-| max/min | 77.6x | **87.5x** |
-| top 10% hold | 23.6% | 23.9% |
-| bottom 50% hold | 19.1% | 18.6% |
-| **effective identity count** | 193 of 312 | **190 of 312** |
-
-No identity drops out at the longer window, and the imbalance is marginally *worse*
-there, so the effect is a property of the corpus rather than of one window length.
-
-The last row is the inverse participation ratio: the number of *evenly represented*
-identities this corpus is worth under uniform window sampling. **We are discarding
-about 39% of our identity diversity to sampling imbalance** - on the one axis that has
-been measured to bind, and for free, without needing a single new user.
-
-AM-Softmax with imbalanced classes separates frequent identities well and rare ones
-poorly, which is the wrong trade when the entire task is generalising to identities
-never seen at all.
-
-`balance_identities: true` draws each window with probability inversely proportional to
-its identity's count, keeping the epoch the same size. Off by default.
-
-**Piloted: no measurable benefit at either window length, and a possible cost at the one we run.** 3 stratified folds on the pooled corpus,
-`identity_softmax`, `bilstm`, paired by fold (laptop pilot: `batch_size=256`, so the
-absolute numbers do not sit beside the main sweeps - the paired difference does):
-
-| | fold diffs (AUC) | mean | won |
-| --- | --- | --- | --- |
-| `sample_time=5` (what we run) | +0.008, **-0.070**, -0.027 | **-0.0296** | 1/3 |
-| `sample_time=2` | +0.003, +0.042, -0.032 | +0.0042 | 2/3 |
-
-The prediction registered beforehand was **+0.005 to +0.02**. The measured result at the
-configuration we actually run is **-0.030**, past the -0.01 threshold agreed for taking
-a negative seriously. **The two arms disagree in sign at a fold sd of 0.039**, so the
-defensible statement is "no measurable benefit at either window length, and a possible
-cost at the one we run" - *not* that balancing hurts. The mechanism below is what makes
-the negative plausible; the measurement alone does not establish it. Either way there is
-no case for spending 10 more runs hunting a positive.
-
-**Why it plausibly costs rather than pays**, and this was predicted before the pilot ran:
-inverse-frequency sampling draws *with replacement*, so a well-recorded identity's 1050
-windows get sampled far fewer times than they exist. The corpus's effective identity
-count rises, but the number of *distinct windows* the model sees per epoch falls. Fixing
-diversity by discarding data is not obviously a trade worth making, and measurement says
-it is not.
-
-If anyone returns to this, the variant to try is **sqrt-frequency weighting** rather than
-inverse - the standard compromise between uniform and balanced - or capping frequent
-identities without upsampling rare ones, which raises diversity without resampling
-anything. Neither is a priority.
-
-## Tried and measured at zero: adaptive score normalization
-
-`model/score_norm.py`. Accuracy is read at a fixed `logit > 0` threshold, which assumes
-one operating point serves every identity - and it does not, since some sit in a dense
-part of the space and score high against everyone. AS-Norm is the standard fix in
-speaker verification: rescale each score by how surprising it is for the two sides
-involved, using the top-k similarities of each against an impostor cohort. It needs no
-retraining and no new data, only embeddings already computed.
-
-**Measured, and it does nothing here.** Spare `pair_bce` checkpoint, 100 unseen
-Head_and_Gaze users, cosine scores, cohort built per-identity so window-count imbalance
-cannot dominate it:
-
-| cohort | best dAUC |
-| --- | --- |
-| training users, different dataset | **-0.0014** (negative at every top_k) |
-| domain-matched, users disjoint from the trials | **+0.0025** at top_k=200 |
-
-+0.0025 on 13,200 pairs is inside the binomial error alone (~0.008), let alone the
-0.037 fold spread. Both readings are zero. The one real signal is that a cohort from a
-*different dataset* is actively worse than none, which is consistent with the
-cross-dataset normalization problems this corpus has everywhere else.
-
-**Do not spend sweep runs on this.** The one caveat worth keeping is that it was
-measured on the checkpoint whose own control scores 0.208 on users it was trained on -
-AS-Norm exploits embedding geometry, and that space is barely organised, so there may
-be nothing there to exploit rather than nothing to gain. It is post-hoc and costs zero
-training runs, so it is worth one line of curiosity next time a properly trained
-`identity_softmax` checkpoint is scored, and nothing more than that.
-
-## Two untuned levers on the objective
-
-The objective is the only thing measured to give a large gain (+6.5). Both of these
-sit inside it and neither has ever been varied.
-
-### `identity_margin` / `identity_scale` were never swept
-
-AM-Softmax's margin (0.35) and scale (30.0) are the defaults, unchanged across **312
-recorded runs** - they were not even columns in the results log until now. These are
-the two hyperparameters that decide how hard the objective pushes identities apart, and
-0.35/30 are the values the face-recognition literature tuned against corpora with tens
-of thousands of identities. We have 343. There is no reason to think the same setting
-is right, and it is the cheapest untested thing on the board.
-
-### Window counts per identity span 77x, and that costs ~38% of our identities
-
-`WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
-identity's influence on the gradient is proportional to how much data it happens to
-have. Measured on the pooled 7-dataset corpus, at both window lengths because window
-count is `floor(duration / sample_time)` and a short session can round down to nothing:
-
-| | `sample_time=2` | `sample_time=5` (what the sweeps run) |
-| --- | --- | --- |
-| identities with windows | 312 | 312 |
-| windows per identity | 34 / 777 / 2639 | 12 / 295 / 1050 |
-| max/min | 77.6x | **87.5x** |
-| top 10% hold | 23.6% | 23.9% |
-| bottom 50% hold | 19.1% | 18.6% |
-| **effective identity count** | 193 of 312 | **190 of 312** |
-
-No identity drops out at the longer window, and the imbalance is marginally *worse*
-there, so the effect is a property of the corpus rather than of one window length.
-
-The last row is the inverse participation ratio: the number of *evenly represented*
-identities this corpus is worth under uniform window sampling. **We are discarding
-about 39% of our identity diversity to sampling imbalance** - on the one axis that has
-been measured to bind, and for free, without needing a single new user.
-
-AM-Softmax with imbalanced classes separates frequent identities well and rare ones
-poorly, which is the wrong trade when the entire task is generalising to identities
-never seen at all.
-
-`balance_identities: true` draws each window with probability inversely proportional to
-its identity's count, keeping the epoch the same size. Off by default so existing
-comparisons stay like-for-like. **Untested - predict before running it.** Honest
-expectation: this is the same *kind* of intervention as raising identity count, which
-is the only data-side lever that has ever worked here, but 190 -> 312 effective is a
-1.6x change where 48 -> 343 was 7x, so **+0.005 to +0.02** rather than anything
-dramatic. It is cheap and it is on the right axis.
 
 ## Verification metrics
 
