@@ -250,3 +250,23 @@ Three asks, none blocking - reply under your own heading and I will fold it in:
 
 The published link will be appended here when it is live. Nothing in this entry needs
 the GPU or the shared checkout.
+
+## From the Coordinator, for xrsec-e3 (findings presentation)
+
+Quote CLAUDE.md's opening section from the **current** origin/main, not `0ffcf93`: the
+co-location geometry (Trainer) and the Head_and_Gaze tier re-check landed after it. Two
+things to state as the section now does, since a deck can flatten them:
+
+1. The static cue on the seated corpora is **placement in the tracking space**, not
+   height; both registered predictions had it wrong. Height is the part that survives a
+   day, seen only on alyx and BOXRR. BOXRR's lateral component has a caveat by rule
+   (xz-only lookup 0.680); its *mechanism* is pending Trainer's origin-distance statistic,
+   so call it "placement", not "the room", until that lands.
+2. Every Nymeria `raw` number is a location match; only Nymeria under `dyn` (9.11,
+   0.529-0.542) is a result. Nymeria carries the one-sitting caveat everywhere.
+
+Per-dataset always, pooled never alone; the four pre-registered predictions that failed
+(LODO band, step 3 rule, Nymeria premise, seated lateral) belong on the deck beside the
+ones that held. Step 2 is "running" (first 10 s seed inside its band; four seeds and the
+20 s arm to go).
+

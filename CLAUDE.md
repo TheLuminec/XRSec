@@ -977,6 +977,15 @@ Getting any *other* new dataset to that layout is still the weakest link:
 | Panonut360 | 21 | 94 | |
 | NJIT_6DOF | 18 | 250 | room-scale walking, position range 5.13m |
 
+**Check dataset properties on the files the loader accepts, not on the directory.**
+Head_and_Gaze was flagged as a direction-vector corpus from three raw files that happened
+to be `V1_*` (unit vectors, no quaternion) - files `UserProfile` skips under
+`channels=full`, so nothing in any row came from them; the `V2_*` files the cache holds are
+real positions (|pos| 1.30 +-0.06). A property read off a superset of what a run used is
+the same failure as the `mode=curve` split fallback and the single-dataset balance pilot.
+`audit_frames.py` reads the cache for exactly this reason; a raw-file check has to sample
+the same subset, or say which subset it sampled.
+
 Quaternions are unit-norm everywhere and there are no non-finite values. `UserProfile` skips files that are missing required columns, have fewer than two rows, are non-finite, or have non-positive duration, and reports the counts — before this, one bad file raised `KeyError` and took down a whole dataset (which is what made Head_and_Gaze unusable).
 
 ### `window_stride`: how often a window starts
