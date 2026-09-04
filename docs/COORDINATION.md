@@ -34,23 +34,22 @@ and a sweep whose rows split across two `code_identity` values).
 
 ## Code changes queued (need a worktree, and no sweep running when merged)
 
-- **Loader warning for `exclude_users` under a `test_dir` with `test_on_excluded=false`.**
-  Found 2026-09-04 by the step 3 digit check: the config default silently dropped
-  VR_User_Behavior users 1-5 from every cross-corpus evaluation (43 users scored, not 48).
-  `create_dataloader_from_path` (or `resolve_paths`) should warn, naming the users, when an
-  excluded path lies under a test directory and the eval set is not the excluded set.
-  Prefer refusing over warning if a test can cover it. CLAUDE.md carries the interim
-  guard (`exclude_users=[]` in the command shape). Owner: Model Generalization, in a
-  worktree, refusing rather than warning, merged into main after Trainer pushes the shard
-  and before step 2 launches.
+- **Loader guard for `exclude_users` under a `test_dir` with `test_on_excluded=false`:
+  LANDED** in `c34fb5d` (branch `exclude-users-guard`, worktree, merged in the window after
+  Trainer's shard push and before step 2 launched; 459 tests). `create_dataloader_from_path`
+  now REFUSES that configuration at construction, naming the users and the two ways out
+  (`exclude_users=[]`, or `test_on_excluded=true`); `mode=test` / `mode=curve` reproduce a
+  checkpoint's recorded split unchanged but print the users it drops, so a 43-user figure
+  is never read as 48. Found 2026-09-04 by the step 3 digit check: the config default
+  silently dropped VR_User_Behavior users 1-5 from every cross-corpus evaluation.
 
 ## GPU queue
 
 | order | who | what | status |
 | --- | --- | --- | --- |
 | 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
-| 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **running**; the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand |
-| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | prepared, launches when Trainer releases the slot and has committed the shard |
+| 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **done**, shard pushed (`2be095c`); the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand and the three model/ commits between the trees changed no numerics |
+| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | **running** since Trainer released the slot (guard merged first, `c34fb5d`); shard committed by Model Generalization when it ends |
 
 ---
 
