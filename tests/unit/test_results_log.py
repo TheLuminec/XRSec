@@ -273,3 +273,20 @@ def test_a_damaged_line_does_not_hide_the_rest(tmp_path, monkeypatch, capsys):
 
     assert len(results_log.load_runs()) == 2
     assert "unreadable line" in capsys.readouterr().out
+
+
+def test_the_fold_index_is_recorded(tmp_path):
+    """
+    Paired fold comparisons had to pair by row order, which is correct only while fold
+    assignment never changes. Recording the fold makes the pairing explicit instead of
+    an undeclared dependency.
+    """
+    path = _shard(tmp_path)
+    results_log.append_run(_cfg(fold=3), _history(), dataset_tag="users", results_path=path)
+    assert _lines(path)[0]["fold"] == 3
+
+
+def test_a_run_outside_a_sweep_has_no_fold(tmp_path):
+    path = _shard(tmp_path)
+    results_log.append_run(_cfg(), _history(), dataset_tag="users", results_path=path)
+    assert _lines(path)[0]["fold"] == ""

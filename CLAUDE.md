@@ -485,7 +485,10 @@ download:
 
 Consequences to build around rather than remember:
 
-- Clause 15 puts **`.cache/samples/` in scope** - cached windows are derived copies.
+- Clause 15 puts **`.cache/samples/` in scope at EVERY resolution** - cached windows are
+  derived copies, entries are keyed per user per `sample_time`/`sample_rate`, and each
+  new combination writes its own set. Destruction means all of them on every machine,
+  not one named directory.
 - Clause 4 makes moving BOXRR-derived data between our three machines an open question.
   Convert wherever the raw data lands; do not centralise then copy.
 - Clause 5 means the citation must travel with the data, not live in someone's memory.
@@ -561,6 +564,68 @@ Overlapping windows are correlated, so 5x the windows is nowhere near 5x the
 information, and correlated examples can overfit faster. Honest expectation at fixed
 `sample_time`: **-0.01 to +0.02**. Its value is in making the `sample_time` sweep
 interpretable, not in the extra windows.
+
+### Window length: measured, real, and far too small to be the gap
+
+5 arms, 30 runs, 5 stratified folds, 419 identities, `bilstm`, `identity_softmax`. The
+design separates window length from example count, because raising `sample_time` also cuts
+the window count unless a stride compensates:
+
+| arm | `sample_time` | `window_stride` | selected AUC |
+| --- | --- | --- | --- |
+| A | 2 | 2 | 0.7146 +-0.013 |
+| A | 2 | 2 | **0.4980** (random control) |
+| B | 5 | 5 | 0.7248 +-0.019 |
+| C | 5 | 2 | 0.7222 +-0.009 |
+| D | 10 | 10 | **0.7331** +-0.018 |
+| D | 10 | 10 | **0.4989** (random control) |
+| E | 10 | 2 | 0.7296 +-0.014 |
+
+**The control is flat across `seq_len`** - 0.4980 at 2s against 0.4989 at 10s - so the
+floor does not move with window length and cross-arm comparison is valid. That is what the
+controls on the two extreme arms were for.
+
+Paired by fold:
+
+| contrast | 2s -> 5s | 5s -> 10s | 2s -> 10s |
+| --- | --- | --- | --- |
+| non-overlapping (A/B/D) | +0.0102, t=2.76, 5/5 | +0.0082, t=0.94, 4/5 | **+0.0185, t=2.91, 5/5** |
+| constant count (A/C/E) | +0.0076, t=2.58, 5/5 | +0.0073, t=1.43, 4/5 | +0.0149, t=2.76, 4/5 |
+| redundancy only | 5s stride 5->2: **-0.0026**, t=-0.42 | 10s stride 10->2: **-0.0035**, t=-0.88 | |
+
+**Three conclusions.**
+
+1. **Longer windows help, and it is length rather than example count.** The gain appears
+   along *both* tracks - with the window count falling (A/B/D) and with it held constant
+   (A/C/E) - which is what the 5-arm design existed to separate.
+2. **Overlapping windows buy nothing.** Both redundancy contrasts are flat-to-negative and
+   neither is resolved. The stride bought the ability to *ask* the question, not an
+   improvement - exactly the prediction recorded before `window_stride` was written.
+3. **The effect is marginal and saturating.** +0.019 AUC from 2s to 10s at t=2.91 on 5
+   folds sits right at the edge of what the power table says is resolvable, and the
+   5s->10s step alone (+0.008, t=0.94) is not resolved at all.
+
+### Window length is retired as the explanation for the identification gap
+
+It was the leading candidate, and it cannot carry the weight. Going from our 2s to the
+published 15s is worth roughly **+0.02 AUC**; the shortfall to explain is about **0.2 of
+rank-1**. Even granting that identification is more sensitive to window length than
+verification, that is an order of magnitude short.
+
+What remains, in the order worth investigating:
+
+1. **The sensor set, which is a scope decision and not a deficiency.** Every published
+   comparison uses head **plus both controllers**; we are head-only so the model runs on
+   glasses. This is likely the largest single term and we are not going to change it.
+2. **Gallery composition.** Their 17 users are one dataset and one activity; our 62 are
+   seven pooled corpora. Note this probably cuts *against* us rather than for us - a
+   gallery spanning several capture setups may be easier to rank within than one drawn
+   from a single session of a single study, so our N=17 figure may be flattered rather
+   than penalised.
+3. **`gallery_k=8` is our choice, not theirs.** Enrolment dominates probe, and their
+   enrolment protocol differs from the default we happened to pick.
+
+Model changes come after those three, not before.
 
 ### `resample`: how a window is built from raw frames
 
