@@ -890,7 +890,10 @@ normaliser. Lookup AUC on xyz (as recorded), y only, xz only:
 | EyeNavGS (virtual camera) | 22 | - | 0.489 | 0.488 | 0.498 |
 
 Seed spreads are 0.001-0.008 everywhere except BOXRR, where the spread shown is across
-checkpoints.
+checkpoints. Head_and_Gaze here is its **V2 files only** (100 users, 28,661 windows at
+5s@20Hz, read from the sample cache): the loader requires the quaternion columns at
+`channels=full`, so the V1 direction-vector files (|position| = 1.0000, no quaternion)
+never reach a lookup row; the V2 positions are real (|position| 1.30 +-0.06 m).
 
 **The registered prediction failed for the seated corpora, in the opposite direction.**
 It said y-only would carry nearly all of the seated lab corpora's AUC and xz-only would
