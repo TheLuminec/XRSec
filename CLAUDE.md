@@ -1014,6 +1014,17 @@ the same failure as the `mode=curve` split fallback and the single-dataset balan
 `audit_frames.py` reads the cache for exactly this reason; a raw-file check has to sample
 the same subset, or say which subset it sampled.
 
+**State each column's invariances before running; they partition the bugs.** The step 6
+enrolment harness failed its digit-exact gate on its first run with y-only matching exactly
+on every seed while xyz and xz were off by 0.002-0.018. y-only is invariant to per-channel
+scaling and the other two are not, so the user set, manifests, pair seeds and AUC code
+were all ruled out at once - only the normaliser could do that, and the checkpoint-to-seed
+mapping had been transcribed in the wrong order. Two registered caveats paid for themselves
+as diagnostics that day (this one, and the Nymeria at-chance prediction that was measured
+first and failed); a caveat written before the number is a test, one written after is an
+excuse. Corollary: a scale-invariant column's standardised and raw-metres values are
+identical by construction, so report it once and say so.
+
 Quaternions are unit-norm everywhere and there are no non-finite values. `UserProfile` skips files that are missing required columns, have fewer than two rows, are non-finite, or have non-positive duration, and reports the counts — before this, one bad file raised `KeyError` and took down a whole dataset (which is what made Head_and_Gaze unusable).
 
 ### `window_stride`: how often a window starts
