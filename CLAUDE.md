@@ -152,6 +152,31 @@ collision: a default silently standing in for the intended experiment and return
 plausible number. That is the recurring bug in this project, not any particular one of
 its instances.
 
+## Cross-corpus evaluation: what every run now records
+
+Added for the unseen-dataset programme (`docs/GENERALISATION_PROPOSAL.md`), so a
+transfer number never travels without the three things that qualify it:
+
+| column / key | meaning |
+| --- | --- |
+| `test_auc_by_dataset`, `lookup_auc_by_dataset` | AUC per evaluation dataset for the model and for the mean-position lookup, on the same scores, as `name=value;...` |
+| `eval_tiers` | the semantics tiers present in the evaluation set (`dataset.DATASET_TIERS`: 1 head pose in metres, 2 direction vector, 3 other). `evaluate()` announces when a pooled figure mixes tiers |
+| `eval_normalize` | how a dataset the normaliser never saw was brought into the training frame: `target_fit` (statistics fitted on the evaluation data, unsupervised, the default and the best label-free option measured), `session` (each session by its own statistics; at chance), `none` (a bound). Replaces what used to be a silent WARNING fallback |
+| `unseen_datasets` | which evaluation datasets that policy actually applied to |
+| `max_users` | an int as before, or a mapping `{dataset_dir_name: count}` that caps only the named datasets - `max_users={BOXRR-23_Dataset:343}` keeps all 76 alyx users at every point of an identity-count curve. Never applied to `test_dirs` |
+
+Two encodings exist for the frame problem (per-corpus yaw references of +Z / +X / -X /
+none, a rotation per-channel standardisation cannot undo): `encoding=yawc` rotates each
+window about world up so its mean facing is +Z and keeps everything else; `encoding=dyn`
+expresses pose relative to the window's *mean* pose, removing every static cue (height,
+seat, posture) and is invariant to any rigid transform of the capture frame. `dyn` is what
+`center_position` should have been - centring left the absolute quaternion in, and mean
+orientation alone is 0.54-0.81 AUC of static posture.
+
+The command shape for a cross-corpus run: `data_dirs` = training corpora, `test_dirs` =
+the held-out corpora, **`test_on_excluded=false`**, and any path with parentheses quoted
+inside the Hydra list.
+
 ## Sweep mode
 
 `model/sweep.py`, invoked with `mode=sweep`. Enumerates configurations, trains each, ranks them.
