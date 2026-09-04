@@ -87,8 +87,15 @@ positive with |x|, |z| < 0.4 - the signature of tilting rather than of a wrong c
 which would miss every script equally. Data reports the S4 vector, then reconverts the
 quaternion only on both machines. Nothing is scored on Nymeria until that message.
 
-**Across-XR: endpoint documented (0d35d36), AVALON has a standing 429, Data recommends
-fetching on DESKTOP-C.** Waiting on the user's say before the 5.4GB starts anywhere.
+**Across-XR: user approved the fetch; DESKTOP-C is blocked too (13:50).** From
+216.171.49.113: `/-/raw/main/0.csv` 429, `/-/raw/main/Readme.md` 429, `/-/archive/` 429,
+`/api/v4/projects/<path>` 404 to anonymous callers. Bare nginx 429 pages, the same
+signature Data saw on AVALON for 16+ hours. One attempt per path, nothing retried,
+nothing landed. Open: whether laptop-c's successful pull this morning was from this same
+public IP (which would explain the block and rule out the laptop too), whether a mirror
+exists, and otherwise asking the authors - the user's message to send. Do not probe that
+host again from any of our machines until one of those resolves; each probe extends the
+block.
 
 ## For XRSec Trainer (xrsec-a1)
 
