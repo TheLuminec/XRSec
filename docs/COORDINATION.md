@@ -48,6 +48,12 @@ and a sweep whose rows split across two `code_identity` values).
   is never read as 48. Found 2026-09-04 by the step 3 digit check: the config default
   silently dropped VR_User_Behavior users 1-5 from every cross-corpus evaluation.
 
+- **`dyn` residual in float64 before casting** (Model Generalization, worktree, merged in
+  a GPU window). Removes the micrometre window-mean residue that lets a lookup on
+  dyn-encoded windows read 0.547 on Nymeria's 30 m coordinates. Acceptance: residue
+  ~1e-14 m on Nymeria, and one existing `dyn` checkpoint reproduces every held-out row
+  within 1e-4 AUC; anything larger is a re-baseline and is said so.
+
 ## CPU measurements registered (2026-09-04 15:55), from the Nymeria failure
 
 The three-number lookup mixes head height (a real anthropometric cue) with lateral
