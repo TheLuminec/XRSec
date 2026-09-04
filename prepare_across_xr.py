@@ -44,7 +44,16 @@ Also real, also worth carrying forward:
     zero-basing per output session is still required.
   - Native rate is ~90Hz (rows ~11ms apart), not the 30fps quoted in the
     paper -- that 30fps is the paper's OWN preprocessing step, not a
-    property of the released data.
+    property of the released data. Their own config also applies a BRV
+    (body-relative-velocity) encoding before training, which we do not
+    reproduce here -- this script emits raw position + quaternion, this
+    pipeline's standard schema. BRV needs a body frame built from head AND
+    both controllers; on our own head-only extractor sweeps, encodings
+    that drop absolute position lost by ~0.13 AUC to raw. Their using BRV
+    successfully on a controller-equipped rig and raw winning on ours are
+    the same fact from both sides, not a contradiction.
+  - Coordinate system is right-x, up-y, forward-z -- same family as the
+    rest of this corpus. No axis remap needed.
 
 Session structure: game_id (1=Superhot VR, 2=Half-Life: Alyx, 3=Beat
 Saber, 4=Synth Riders, 5=Social VR Scenario) and take_id (continuous
@@ -56,17 +65,33 @@ label is the entire point of this dataset and must not get lost in
 conversion the way it would if sessions were merged or renamed generically.
 
 Split preservation: the paper trains on 23 users, validates on 9, tests
-on the remaining 17 -- their headline 78.5%/83.1% numbers are measured
-on exactly those 17. THIS SCRIPT DOES NOT YET KNOW WHICH 17 USER IDS
-THOSE ARE -- that list has to come from the paper's code repository or
-supplementary material, not be reconstructed by guessing a split rule.
-Do not re-split on our own choosing; that turns a measurement back into
-an argument. See PROVENANCE.md's open-question note.
+on the remaining 17 -- their headline 78.5%/83.1% numbers are measured on
+exactly those 17. The split rule is read from their own
+data_selection_slm.py (dataset-preprocessing repo, same GitLab group), not
+guessed: participant CSVs sorted numerically by id, then
+
+    train while user_id <  n_users * 0.45
+    valid while user_id <  n_users * 0.65
+    test  thereafter
+
+No seed, no shuffle -- it is a pure id-ordered cut. For n_users=49 that is
+train=0-22 (23 users), valid=23-31 (9 users), test=32-48 (17 users),
+reproducing their reported 23/9/17 exactly -- a third independent
+confirmation of this being the right dataset, after the 78.5%/83.1%/100%
+number matches. `split_for_user()` implements this rule directly rather
+than hard-coding the id list, so it stays correct if the dataset is ever
+re-released with a different participant count. `convert()` writes the
+assignment both as a `split` column in every session CSV and as a
+top-level `splits.json` manifest, so "give me exactly their 17 test
+users" doesn't require re-deriving the rule or scanning CSVs. Do not
+re-split on our own choosing -- that is what turns this from a
+measurement back into an argument.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -118,6 +143,21 @@ GAME_NAMES = {
     4: "synth_riders",
     5: "social_vr",
 }
+
+# From the source's own data_selection_slm.py (dataset-preprocessing repo):
+# participant CSVs sorted numerically by id, no seed, no shuffle -- a pure
+# id-ordered cut. Reproduces their reported 23/9/17 exactly at n_users=49.
+TRAIN_FRACTION = 0.45
+VALID_FRACTION = 0.20  # cumulative boundary is TRAIN_FRACTION + VALID_FRACTION
+
+
+def split_for_user(user_id: int, n_users: int) -> str:
+    """'train' / 'valid' / 'test', matching the paper's own split exactly."""
+    if user_id < n_users * TRAIN_FRACTION:
+        return "train"
+    if user_id < n_users * (TRAIN_FRACTION + VALID_FRACTION):
+        return "valid"
+    return "test"
 
 
 def find_user_csvs(source: Path):
@@ -192,6 +232,12 @@ def inspect(source: Path, limit: int = 4) -> int:
     if not users:
         return 0
 
+    n_users = len(users)
+    splits = [split_for_user(int(user_id), n_users) for user_id, _ in users]
+    counts = {name: splits.count(name) for name in ("train", "valid", "test")}
+    print(f"split (from data_selection_slm.py's own rule, n_users={n_users}): "
+          f"train={counts['train']} valid={counts['valid']} test={counts['test']}")
+
     print(f"\nsampling {min(limit, len(users))} users:")
     shown = 0
     for user_id, path in users[:: max(1, len(users) // max(limit, 1))]:
@@ -201,16 +247,14 @@ def inspect(source: Path, limit: int = 4) -> int:
         sessions = list(split_sessions(raw))
         games = sorted({g for g, _, _ in sessions})
         stats = describe(sessions[0][2]) if sessions else describe(pd.DataFrame(columns=OUTPUT_COLUMNS))
-        print(f"  user {user_id:>3}  {len(sessions)} (game,take) sessions, "
+        split = split_for_user(int(user_id), n_users)
+        print(f"  user {user_id:>3} [{split:>5}]  {len(sessions)} (game,take) sessions, "
               f"games seen: {[GAME_NAMES.get(g, g) for g in games]}, "
               f"first session: rows={stats['rows']:>6} {stats['duration']:>6.1f}s "
               f"{stats['hz']:>5.1f}Hz |q|={stats['quat_norm']:.4f}")
         shown += 1
     print("\n|q| must be ~1.0000. Anything else means the rotation columns are being "
           "read in the wrong order or are not a unit quaternion.")
-    print("\nSPLIT WARNING: this script does not know the paper's 23/9/17 "
-          "train/val/test user split. Do not treat any subset chosen here as "
-          "'their test set' without that list confirmed from their code repo.")
     return 0
 
 
@@ -220,8 +264,22 @@ def convert(source: Path, out: Path) -> int:
         print(f"ERROR: no <id>.csv files found under {source}")
         return 1
 
+    n_users = len(users)
+    split_by_user = {user_id: split_for_user(int(user_id), n_users) for user_id, _ in users}
+
     out.mkdir(parents=True, exist_ok=True)
     (out / "CITATION.txt").write_text(CITATION_TEXT)
+
+    splits_manifest = {
+        "rule": "user_id sorted numerically; train if id < n*0.45, "
+                "valid if id < n*0.65, else test (from the source's own "
+                "data_selection_slm.py -- no seed, no shuffle)",
+        "n_users": n_users,
+        "train": sorted((u for u, s in split_by_user.items() if s == "train"), key=int),
+        "valid": sorted((u for u, s in split_by_user.items() if s == "valid"), key=int),
+        "test": sorted((u for u, s in split_by_user.items() if s == "test"), key=int),
+    }
+    (out.parent / "splits.json").write_text(json.dumps(splits_manifest, indent=2))
 
     written = skipped = 0
     rows_total = 0
@@ -235,6 +293,7 @@ def convert(source: Path, out: Path) -> int:
             skipped += 1
             continue
 
+        split = split_by_user[user_id]
         for game_id, take_id, frame in split_sessions(raw):
             stats = describe(frame)
             if stats["rows"] < 2 or stats["duration"] <= 0:
@@ -245,6 +304,12 @@ def convert(source: Path, out: Path) -> int:
             if not (0.99 < stats["quat_norm"] < 1.01):
                 bad_quaternions.append((user_id, game_id, take_id, stats["quat_norm"]))
 
+            # 'split' rides along in the CSV too (harmless extra column --
+            # the loader selects only its required columns by name) so the
+            # assignment survives even if splits.json goes missing.
+            frame = frame.copy()
+            frame["split"] = split
+
             destination = out / user_id
             destination.mkdir(parents=True, exist_ok=True)
             game_name = GAME_NAMES.get(game_id, f"game{game_id}")
@@ -254,6 +319,9 @@ def convert(source: Path, out: Path) -> int:
 
     print(f"\nwrote {written} sessions ({rows_total:,} rows), skipped {skipped}")
     print(f"output: {out}")
+    print(f"split manifest: {out.parent / 'splits.json'} "
+          f"(train={len(splits_manifest['train'])} valid={len(splits_manifest['valid'])} "
+          f"test={len(splits_manifest['test'])})")
     if bad_quaternions:
         print(f"\nWARNING: {len(bad_quaternions)} session(s) have a mean quaternion norm "
               "outside [0.99, 1.01]; the rotation columns may be misread:")

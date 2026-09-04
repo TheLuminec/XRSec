@@ -12,7 +12,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from prepare_across_xr import convert, find_user_csvs, inspect, load_user_frame, split_sessions
+import json
+
+from prepare_across_xr import convert, find_user_csvs, inspect, load_user_frame, split_for_user, split_sessions
 
 pytestmark = pytest.mark.unit
 
@@ -123,5 +125,43 @@ def test_inspect_runs_without_writing_anything(tmp_path, capsys):
     rc = inspect(tmp_path)
     assert rc == 0
     assert not (tmp_path / "out").exists()
-    out = capsys.readouterr().out
-    assert "23/9/17" in out, "the split-unknown warning must not be silently dropped"
+
+
+def test_split_for_user_reproduces_the_papers_23_9_17_at_n49():
+    """From data_selection_slm.py: sorted by id, no seed, no shuffle.
+    train while id < n*0.45, valid while id < n*(0.45+0.2), test after.
+    At n_users=49 that must land on their reported 23/9/17 exactly, and on
+    the precise boundary ids (22/23 and 31/32)."""
+    n = 49
+    counts = {"train": 0, "valid": 0, "test": 0}
+    for user_id in range(n):
+        counts[split_for_user(user_id, n)] += 1
+    assert counts == {"train": 23, "valid": 9, "test": 17}
+
+    assert split_for_user(22, n) == "train"
+    assert split_for_user(23, n) == "valid"
+    assert split_for_user(31, n) == "valid"
+    assert split_for_user(32, n) == "test"
+    assert split_for_user(48, n) == "test"
+
+
+def test_convert_writes_a_splits_manifest_and_a_split_column(tmp_path):
+    """The 17 test users have to be recoverable without re-deriving the rule
+    or scanning every session CSV -- splits.json is the machine-readable
+    source of truth, and the per-row 'split' column is a redundant copy
+    that survives even if the manifest goes missing."""
+    for user_id in range(49):
+        _write_user_csv(tmp_path / f"{user_id}.csv", user_id, [(3, 0)], n=3)
+    out = tmp_path / "out"
+    rc = convert(tmp_path, out)
+    assert rc == 0
+
+    manifest = json.loads((out.parent / "splits.json").read_text())
+    assert manifest["train"] == [str(i) for i in range(23)]
+    assert manifest["valid"] == [str(i) for i in range(23, 32)]
+    assert manifest["test"] == [str(i) for i in range(32, 49)]
+
+    test_session = pd.read_csv(out / "32" / "beat_saber_take0.csv")
+    assert (test_session["split"] == "test").all()
+    train_session = pd.read_csv(out / "0" / "beat_saber_take0.csv")
+    assert (train_session["split"] == "train").all()
