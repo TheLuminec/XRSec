@@ -72,6 +72,7 @@ FIELDS = [
     "resample",
     "window_stride",
     "sweep_id",
+    "fold",
     "normalize",
     "within_dataset_negatives",
     "cross_session_positives",
@@ -428,6 +429,11 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "window_stride": getattr(cfg, "window_stride", ""),
             "extractor_params": _params(getattr(cfg, "extractor_params", None)),
             "sweep_id": getattr(cfg, "sweep_id", ""),
+            # Which cross-validation fold this run held out. Without it, paired
+            # analyses have to pair by ROW ORDER, which works only while fold
+            # assignment never changes - an undeclared dependency under every
+            # paired comparison in this project.
+            "fold": getattr(cfg, "fold", ""),
             "normalize": getattr(cfg, "normalize", ""),
             "within_dataset_negatives": getattr(cfg, "within_dataset_negatives", ""),
             "cross_session_positives": getattr(cfg, "cross_session_positives", ""),

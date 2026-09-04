@@ -127,6 +127,9 @@ class SampleDataset:
         self.user_dataset_ids: list[int] = []
         self.session_ids: list[torch.Tensor] = []
         self.start_times: list[torch.Tensor] = []
+        #: The user directories actually loaded. Recorded so a train/eval split can be
+        #: checked against what was read from disk rather than against config intent.
+        self.user_dirs: list[str] = []
         self.skipped_files: dict[str, int] = {}
 
         # Users are filtered before loading rather than after: excluded users cost
@@ -146,6 +149,7 @@ class SampleDataset:
                         continue
 
                 self.num_users += 1
+                self.user_dirs.append(user_dir)
                 self.user_dataset_ids.append(dataset_id)
                 user_samples, user_sessions, user_starts = self._load_user_samples(user_dir)
                 self.sample_count += int(user_samples.shape[0])
@@ -776,6 +780,55 @@ def select_validation_users(data_dir, exclude_users, fraction: float, seed: int 
     return sorted(candidates[int(i)] for i in chosen)
 
 
+
+def _user_dirs_of(dataset) -> set[str]:
+    """User directories behind a SiameseDataset, however it is wrapped."""
+    inner = getattr(dataset, "dataset", dataset)
+    index = getattr(inner, "sample_index", None)
+    return {str(Path(d).resolve()) for d in getattr(index, "user_dirs", []) or []}
+
+
+def assert_evaluation_users_are_unseen(train_dataset, test_dataset,
+                                       allow_seen_user_eval: bool = False) -> int:
+    """
+    Refuse to evaluate on identities the model trained on.
+
+    With `test_on_excluded=True` disjointness is guaranteed by construction. The
+    cross-corpus protocol - train on one corpus, evaluate on another - needs
+    `test_on_excluded=False`, and there disjointness is pure assumption: a dataset left
+    in both `data_dirs` and `test_dirs`, or a `test_dirs` that silently falls back to
+    `data_dirs`, evaluates the model on people it has already seen. That produces a
+    much higher and entirely plausible number, which is the failure this project keeps
+    finding by accident rather than by check.
+
+    Seen-user evaluation is sometimes deliberate - it is how the historical 0.85 was
+    reproduced and shown to be a seen-user figure - so it is available, but it has to
+    be asked for.
+    """
+    train_users = _user_dirs_of(train_dataset)
+    test_users = _user_dirs_of(test_dataset)
+    if not train_users or not test_users:
+        return 0                                  # nothing recorded; nothing to check
+
+    shared = train_users & test_users
+    if not shared:
+        return 0
+
+    listed = ", ".join(sorted(Path(u).name for u in list(shared)[:5]))
+    more = f" and {len(shared) - 5} more" if len(shared) > 5 else ""
+    if allow_seen_user_eval:
+        print(f"  NOTE: evaluating on {len(shared)} SEEN users ({listed}{more}) - "
+              f"allowed explicitly, so this is not a leave-users-out result")
+        return len(shared)
+
+    raise ValueError(
+        f"{len(shared)} of {len(test_users)} evaluation users were also trained on "
+        f"({listed}{more}). This is not a leave-users-out result and the accuracy would "
+        f"be inflated in the flattering direction. Check that test_dirs and data_dirs "
+        f"are disjoint, or set allow_seen_user_eval=true if seen-user evaluation is "
+        f"what you intend.")
+
+
 def create_dataloader_from_path(
     data_dir,
     batch_size: int,
@@ -790,6 +843,7 @@ def create_dataloader_from_path(
     exclude_users=None,
     swap_data: bool = False,
     test_on_excluded: bool = False,
+    allow_seen_user_eval: bool = False,
     seed: int | None = None,
     normalize: str = "none",
     within_dataset_negatives: bool = False,
@@ -921,6 +975,7 @@ def create_dataloader_from_path(
     if normalizer.enabled:
         print(normalizer.describe())
 
+    checked_overlap = False
     if test_dir is None:
         if test_on_excluded:
             test_dataset = SiameseDataset(
@@ -942,6 +997,13 @@ def create_dataloader_from_path(
             )
             normalizer.transform(test_dataset.sample_index)
         else:
+            # A random split of PAIRS, not of users: train and test share identities by
+            # construction. Skip the disjointness guard - it would be correct and
+            # useless here - but say plainly that this is not a leave-users-out result,
+            # because the number it produces looks like one.
+            checked_overlap = True
+            print("  NOTE: random pair split - train and evaluation share users, so "
+                  "this is NOT a leave-users-out result")
             generator = torch.Generator().manual_seed(_seed_value(seed, 3))
             if len(train_dataset) <= 1:
                 test_dataset = train_dataset
@@ -1004,6 +1066,10 @@ def create_dataloader_from_path(
             generator=torch.Generator().manual_seed(_seed_value(seed, 23)),
         )
         print(f"Validation split: {len(validation_users)} users held out for epoch selection")
+
+    # Both datasets exist by here, whichever branch built them.
+    if not checked_overlap:
+        assert_evaluation_users_are_unseen(train_dataset, test_dataset, allow_seen_user_eval)
 
     train_loader = DataLoader(
         train_dataset,

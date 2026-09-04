@@ -10,6 +10,85 @@ claim could not be checked it says so rather than guessing.
 
 ---
 
+## Everything we can reach, at a glance
+
+Identities, sessions and activities for all data we **can access**, not just what is on
+disk. Session counts are per identity. Read the tiers below for licences, caveats and
+access routes.
+
+### A. Downloaded and in use
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| BOXRR-23 (our slice) | **2,020** | 4.45 recordings | Beat Saber | VR |
+| Head_and_Gaze | 100 | many videos | 360-degree video | VR |
+| PanoSaliency | 99 | 22 median | 360-degree video | VR |
+| Who Is Alyx | 76 | **2, different days** | Half-Life: Alyx | VR |
+| VR_User_Behavior | 48 | 18 | 360-degree video | VR |
+| ViewGauss | 35 | 4 | 4D Gaussian video | VR |
+| EyeNavGS | 22 | 12 | 3DGS navigation | VR |
+| Panonut360 | 21 | 15 | 360-degree video | VR |
+| NJIT_6DOF | 18 | **1** | room-scale walking | VR |
+| 360_em | 13 | 15 median | position-only, 0 windows at `channels=full` | VR |
+| **total** | **2,452** (2,439 with windows) | | **~5 activity types** | |
+
+### B. Open access, retrievable now, not yet fetched
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| BOXRR-23, rest of corpus | **79,349 more** (81,369 eligible) | ~45 recordings | Beat Saber | VR |
+| BOXRR-23 aligned [C2] | 11,927 | many | Beat Saber | VR |
+| **Nymeria** | **236** | 4.66 recordings, **one sitting** | **daily life in the wild**, 50 locations | **AR glasses** (click-through) |
+| Across XR Applications | 49 | 5 apps x takes | Superhot, Alyx, Beat Saber, Synth Riders, Social VR | VR |
+| MooreCrossDomain23 | 45 | 2 builds | two distinct VR builds | VR |
+| VR.net | 21 | varies | **7 apps** incl. Pottery, VR ROME, Traffic Cop | VR |
+| LiebersHand22 | 16 | 2, x8 scenes | AR/VR hand + button tasks | AR + VR |
+| LiebersLabStudy21 | 16 | 2 | Archery, Bowling | VR |
+| LiebersBeatSaber23 | 15 | 25 | Beat Saber | VR |
+| CREATTIVE3D | to confirm | multiple scenarios | VR road crossing, incl. low vision | VR |
+| 3D-ARM-Gaze | to confirm | multiple trials | seated arm reaching | VR |
+| **total (excl. BOXRR)** | **~398** | | **~20 distinct activities** | |
+
+### C. Available on request
+
+| dataset | identities | sessions each | activity | device |
+| --- | --- | --- | --- | --- |
+| Stanford Longitudinal Social VR | **232** | **8, weekly** | social VR | VR |
+| OpenNEEDS | 44 | 2 | reading, drawing, shooting, manipulation | VR |
+| Cross-system ball throwing | 41 | **6, >=1 day apart** | ball throwing on **3 headsets** | VR x3 |
+| mmWave XR Mobility | not stated | 45h total | Alyx, Wrench, Pistol Whip | VR |
+| NTHU 6-DoF Privacy | not stated | not stated | 3D virtual world | VR |
+| Cognitive-State XR Motion | not stated | not stated | reading, confusion, hesitation | VR |
+| **total (known)** | **317** | | **~10 activities** | |
+
+### What the totals mean
+
+| | identities |
+| --- | --- |
+| on disk now | **2,439** |
+| + open, unfetched, excluding BOXRR | **~2,840** |
+| + the rest of BOXRR-23 | **~82,200** |
+| + everything granted on request | **~82,500** |
+
+**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 2,439
+to over 80,000 with no new permission, and the practical ceiling becomes conversion and
+training time rather than availability. What B and C actually buy is **activity coverage**:
+roughly 5 activity types on disk today against 30-plus reachable, spanning rhythm games,
+FPS, social VR, painting, pottery, archery, bowling, road crossing, arm reaching, ball
+throwing, room-scale walking, 360-degree video and unscripted daily life.
+
+**Three properties are scarce and worth targeting deliberately**, because almost nothing has
+them:
+
+| property | who has it |
+| --- | --- |
+| **cross-day sessions** | Who Is Alyx (2 days), Stanford (8 weekly), ball throwing (6, >=1 day) |
+| **multiple headsets** | ball throwing only (Quest / Vive / Cosmos) |
+| **real AR glasses** | Nymeria only |
+
+Everything else is one sitting on one device. Those three are what a generalisation claim
+rests on, and two of the three need a request.
+
 ## What we actually need
 
 Applied as a filter throughout. A dataset failing 1 or 2 is not usable by this pipeline at
@@ -42,6 +121,9 @@ all, whatever else it offers.
 | 7 | LiebersHand22 [C3] | 16 | 2, x8 scenes | AR/VR hand + button tasks | yes | open, in catalogue | verified, not fetched |
 | 8 | LiebersLabStudy21 [C4] | 16 | 2 | Archery, Bowling | yes | open, in catalogue | verified, not fetched |
 | 9 | BOXRR-23, *aligned* [C2] | **11,927** | many | Beat Saber | yes | as B1 | **WIP upstream** — see note |
+| 10 | CREATTIVE3D [D10] | 40 (to confirm) | multiple scenarios | **VR road crossing, incl. simulated low vision** | yes, 125Hz | **CC BY 4.0** | verified open, 7.2GB, not fetched |
+| 11 | 3D-ARM-Gaze [D9] | to confirm | multiple trials | seated arm reaching | head + **neck + trunk** | **Apache-2.0** | verified open, 4.7GB — see caveat |
+| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0 | **needs a click-through** - see below |
 
 **VR.net's 7 applications**: Beat Saber, Carton Network, Monster Awaken, Pottery,
 Traffic Cop, VR ROME, Voxel Shot VR. Only 21 participants, but the widest task span of
@@ -92,6 +174,67 @@ contradiction but the same fact from the other side: body-relative encodings nee
 frame derived from head **and both controllers**, which they have and we do not. Their
 coordinate system (forward z, right x, up y) matches ours, so no axis remap.
 
+### Nymeria — the only dataset found that is recorded on real AR glasses
+
+**Accepted, and the strongest new find.** Meta Project Aria glasses, so it matches this
+project's deployment target exactly rather than by analogy. Verified from the dataset's own
+metadata, not the paper:
+
+| | |
+| --- | --- |
+| participants | **236** with released data (275 in the metadata CSV, 264 in the README - see below) |
+| sequences | **1,100**, mean **4.66 per participant**; 231 of 236 have >= 2 |
+| head pose | `recording_head/mps/slam/closed_loop_trajectory.csv` - **a CSV, separate from the video** |
+| activities | daily life in the wild, 50 locations, 300 hours |
+| licence | CC BY-NC 4.0, **`gated: false`** - no request process |
+
+Sequence keys are `<date>_<session>_<name>_act<N>_<hash>`, e.g.
+`20230607_s0_james_johnson_act0_...`, so identity linkage across recordings is free. Each
+sequence also carries `location`, `script` (the activity, e.g. `S14-By_my_desk`),
+`has_two_participants` and per-sequence anthropometrics - all in the freely downloadable
+metadata, before any licence step.
+
+**Three participant counts circulate and they are not in conflict**: 236 names appear in
+sequence keys, 275 in `participants_metadata.csv`, 264 in the README. Measured directly:
+every sequence name is in the CSV, 39 CSV names have no sequences, and 236 + 39 = 275.
+So the CSV lists everyone recruited and **236 have released motion data**. Quote 236.
+
+**Access is gated by a click-through**, which is the one thing blocking it: `download.py`
+needs `nymeria_download_urls.json`, generated at explorer.projectaria.com after signing in
+and accepting the licence. No DUA text and no IRB question - closer to a normal EULA than
+BOXRR's Limited Data Set agreement - but it is still an account and a terms acceptance, so
+it has to be done by the user rather than on their behalf.
+
+**Selective download is coarser than it looks - an earlier claim here was wrong.**
+`download.py` selects `DataGroups`, but groups are **packed one zip per group per
+sequence**, so there is no per-file choice inside one. RGB does stay out
+(`data.vrs` is in the separate `recording_head_data_data_vrs` group), but the base
+`recording_head` zip carries `et.vrs` - 30fps eye-tracking video over a ~1,220-second
+sequence - plus `motion.vrs`, `semidense_points.csv.gz`, both trajectories, calibration and
+gaze CSVs. `dataset_metadata.json` has no size fields, so this cannot be bounded without
+pulling one zip; the realistic figure is **hundreds of MB per sequence, so 100-500GB for
+all 1,100**, not the "few GB" first recorded here.
+
+**So take a subset.** The explorer has sequence-level filters. Roughly 100 participants at
+3 sequences each is ~300 sequences, keeps cross-activity pairing intact, and should land in
+the tens of GB. Nothing about our thresholds needs all 236 participants or all 1,100
+sequences.
+
+**The limitation, stated precisely.** Every participant appears in exactly **one date and
+one session**; the 4.66 recordings are different *activities* within one sitting. So
+Nymeria yields **cross-activity** positives, not cross-day ones - the headset stays mounted
+throughout. That is better than same-recording windows and weaker than Who Is Alyx's two
+separate days. Do not quote it as evidence of temporal persistence.
+
+**It also carries something no other dataset here has: ground-truth anthropometrics.**
+`data/participants_metadata.csv` gives per-participant **height_cm** (149-199, mean 169.7),
+plus shoulder height, hip height, knee height, arm span, weight and BMI. This project's
+central finding is that **~78% of what the model uses is absolute head position, i.e.
+height and posture** - and that has only ever been inferred, by centring the position
+channel and watching accuracy collapse. Nymeria makes it directly checkable: correlate the
+model's embedding against *measured* height for 236 people. Nothing else in the corpus can
+do that, and it would turn an inference into a measurement.
+
 ### The XR Motion Dataset Catalogue is the single most valuable find
 
 Entries 4–9 all live in one HuggingFace repository [C0], already standardized to a single
@@ -129,11 +272,42 @@ the papers and lab pages linked, and are deliberately not guessed here.**
 | # | Dataset | Identities | Sessions/user | Task | Head 6DoF | How to get it |
 |---|---|---|---|---|---|---|
 | 10 | Stanford Longitudinal Social VR [S1] | **232** | **8, weekly** | social VR | yes, confirmed | corresponding author |
-| 11 | RMillerBall22 [R1] | not verified | not verified | ball-throwing, VR biometrics | likely | permissions pending upstream |
+| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 75/45/45Hz | via the Data in Brief article — see below |
 | 12 | OpenNEEDS [O1] | 44 | 2 | reading, drawing, shooting, manipulation | yes | signed data-use agreement |
 | 13 | mmWave XR Mobility [M1] | not stated | 45h total | Alyx, Wrench, Pistol Whip | yes, 500Hz | contact authors |
 | 14 | NTHU 6-DoF Privacy [N1] | not stated | not stated | 3D virtual world | yes | contact authors |
 | 15 | Cognitive-State XR Motion [G1] | not stated | not stated | reading/confusion/hesitation tasks | yes, 72Hz | release pending publication |
+
+### 16. Cross-system VR ball throwing — the second priority request
+
+**The only multi-headset dataset found, and one of only two with genuine day-scale session
+separation.** Verified from an open-access paper using it [P1], since the Data in Brief
+article itself is behind a CAPTCHA:
+
+- **41 participants**, right-handed, ball-throwing task in Unity
+- **6 sessions per participant, separated by at least one day** — 2 sessions on each of
+  **Meta Quest, HTC Vive, HTC Vive Cosmos**, covering both lighthouse and camera-based
+  tracking
+- HMD **and** two controllers recorded; we take the head track only
+- 10 trials per session, **fixed 3-second recordings**, 225 / 135 / 135 frames per device
+  (~75Hz / 45Hz / 45Hz)
+
+**Why it matters for our scope specifically.** The user's stated goal is all of XR
+including glasses, so device-independence is part of the claim, not a footnote. This is the
+only dataset found that can test it: if identity transfers across Quest, Vive and Cosmos, that
+is direct evidence the model is not learning a tracking-system artefact. Combined with
+6 sessions a day or more apart, it answers *two* questions nothing else here can.
+
+**The limitation is severe and bounds its use.** 3-second recordings mean roughly 30 seconds
+of motion per session and ~180s per user in total. At `sample_time=2` that is about 90
+windows per user; at `sample_time=5` it yields almost nothing. **Test set only, and only at
+short window lengths.**
+
+- **Access**: the original repository, `github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication`, now returns **404** — the catalogue entry [R1] is a dead link and this Data in Brief release supersedes it.
+- Data in Brief is normally open access with a named repository; the article is
+  S2352340925005542 [T1]. **Someone with institutional access should read its Data
+  Availability statement** — that names the current host.
+- The group is Wright State University's Terascale All-sensing Research Studio (TARS).
 
 ### 10. Stanford Longitudinal Social VR — the priority request
 
@@ -167,12 +341,39 @@ object manipulation) is unlike anything else here, so its value is as a **test**
 
 ---
 
+### Caveat on 3D-ARM-Gaze
+
+Its own description says movements were made "from a precisely controlled, comfortably
+seated posture". That is the **GazeBaseVR risk** — a study that constrains posture in order
+to isolate something else may have suppressed exactly the head motion we depend on. It does
+record head, neck **and** trunk position and quaternion, which is unique and would let us
+separate posture from head movement directly, so it is worth checking rather than
+discarding. **Verify head-motion range before converting.**
+
+### No AR-glasses motion dataset appears to exist
+
+Searched specifically, because the project's scope is all of XR **including glasses**, and a
+dataset recorded on actual AR glasses would match the deployment target exactly. Nothing
+suitable found: the HoloLens/Magic Leap literature is dominated by eye tracking, hand
+interaction and spatial-accuracy comparisons, and the one head-motion study located (HoloLens
+2, 60Hz, 54 participants) is a behavioural study rather than a released dataset. The nearest
+release, a HoloLens 2 eye-tracking dataset by Aziz and Komogortsev sharing participants with
+GazeBaseVR, is eye tracking and therefore fails requirement 1.
+
+**Partly closed by Nymeria** (entry 12), which is recorded on Project Aria glasses and does
+give 236 identities of head trajectory - the search above predates it and was looking for
+HoloLens/Magic Leap specifically. What remains true is that there is no AR-glasses corpus
+built *for identification*: Nymeria is a motion-understanding dataset with one sitting per
+participant, so it can test whether the signal exists on glasses but not whether it
+persists across days on them.
+
 ## Tier 3 — Verified unusable, recorded so the search is not repeated
 
 | Dataset | Why not |
 |---|---|
 | **GazeBaseVR** [Z1] | **407 participants, CC BY, trivial figshare download — and no head position or orientation channel at all.** Participants were on a chin rest specifically to suppress head movement, and gaze is expressed as an angle relative to a fixed headset (paper Table 4). The attractive access profile means this *will* be proposed again. It is the wrong signal, not the wrong licence. |
 | **BOXRR-23 Tilt Brush portion** | The `xror` library's own `fromTilt()` emits a single `BRUSH` device, `type='OTHER'`, with **no HMD**. Separately, a scan of all 4,716,986 metadata records found 4,661,942 Beat Saber and zero other named apps, so the Tilt Brush portion does not appear in the HuggingFace mirror's index at all. |
+| **EasyCom** [E1] | **Rejected on identity labelling, not data quality.** The head pose is good - position and quaternion for every seated participant at 20fps, in natural restaurant conversation, recorded from AR glasses. But **participant IDs are assigned per session**: the README says the `Participant_Photos` directory holds images "suffixed with integer numbers between 1 and 7 that correspond to the participant ID for the given session". Those photos exist precisely because the numbering is session-local. With no way to link a person across sessions there are no cross-session identities, which fails requirement 2 outright and leaves only same-session pairs - the inflation this project has already had to remove. Recovering identities by face-matching the participant photos would be re-identification of research subjects and is not something to do. |
 | **Liebers datasets, as training data** | 15–16 participants each. Fine as test sets (they are in Tier 1), far below the training threshold. |
 
 ---
@@ -245,7 +446,7 @@ https://github.com/cschell/xr-motion-dataset-conversion-scripts
 
 **[C6] VR.net.** arXiv:2306.03381 — distributed via [C0].
 
-**[C7] Who Is Alyx.** C. Rack, T. Fernando, M. Yalcin, A. Hotho, M. E. Latoschik.
+**[C7] Who Is Alyx.** Zenodo DOI 10.5281/zenodo.8379914. C. Rack, T. Fernando, M. Yalcin, A. Hotho, M. E. Latoschik.
 *Who is Alyx? A new behavioral biometric dataset for user identification in XR.*
 Frontiers in Virtual Reality, 2023. https://doi.org/10.3389/frvir.2023.1272234 ·
 https://github.com/cschell/who-is-alyx
@@ -261,7 +462,40 @@ R. Chen, J. N. Bailenson. *A Large-Scale Study of Personal Identifiability of Vi
 Reality Motion Over Time.* arXiv:2303.01430, 2023. Stanford IRB-61257.
 
 **[R1] RMillerBall22.** Terascale All-sensing Research Studio.
-https://github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication
+https://github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication —
+**link is dead (404 as of 2026-09-03)**; superseded by [T1]. Listed as
+"request for permissions pending" in the XR Motion Dataset Catalogue [C0].
+
+**[T1] Multimodal cross-system VR ball throwing dataset for VR biometrics.**
+Data in Brief, 2025. https://www.sciencedirect.com/science/article/pii/S2352340925005542 ·
+41 participants, 6 sessions >=1 day apart, Meta Quest / HTC Vive / HTC Vive Cosmos.
+Wright State University, Terascale All-sensing Research Studio.
+
+**[P1] A. Sawicki, K. Saeed, W. Walendziuk.** *Behavioral Biometrics in VR: Changing Sensor
+Signal Modalities.* 2025. https://pmc.ncbi.nlm.nih.gov/articles/PMC12473712/ —
+open-access source used to verify [T1]'s specifications. Corresponding author
+a.sawicki@pb.edu.pl.
+
+**[Y1] Nymeria.** L. Ma, Y. Ye, F. Hong, V. Guzov, Y. Jiang, R. Postyeni, L. Pesqueira,
+A. Gamino, V. Baiyya, H. J. Kim, K. Bailey, D. S. Fosas, C. K. Liu, Z. Liu, J. Engel,
+R. De Nardi, R. Newcombe. *Nymeria: A Massive Collection of Multimodal Egocentric Daily
+Motion in the Wild.* ECCV 2024. arXiv:2406.09905.
+https://www.projectaria.com/datasets/nymeria/ ·
+https://huggingface.co/datasets/projectaria/Nymeria ·
+https://explorer.projectaria.com/nymeria · CC BY-NC 4.0, not gated.
+
+**[E1] EasyCom.** J. Donley, V. Tourbabin, J.-S. Lee, M. Broyles, H. Jiang, J. Shen,
+M. Pantic, V. K. Ithapu, R. Mehra. *EasyCom: An Augmented Reality Dataset to Support
+Algorithms for Easy Communication in Noisy Environments.* 2021.
+https://github.com/facebookresearch/EasyComDataset · CC BY-NC 4.0.
+**Rejected - see Tier 3.**
+
+**[K1] Deep Learning for Virtual Reality User Identification: A Benchmark.**
+D. Frizzo, F. Genilotti, D. Petrovic, A. Stropeni, F. Borsatti, D. Dalle Pezze,
+R. De Monte, M. Barusco, G. A. Susto. arXiv:2604.16341, 2026. **Not a new dataset** — it
+benchmarks LSTM, GRU, CNN, TCN, Transformer and state-space models on Who Is Alyx alone.
+Relevant as an external check on our "architecture is worth ~0" finding, not as an
+acquisition.
 
 **[O1] OpenNEEDS.** E. Sun, K. Muhlbach, P. Zhang et al. *OpenNEEDS: An open, large-scale
 dataset of head, hand and eye motion for VR interaction.* 2021.
@@ -306,11 +540,14 @@ https://symmru.github.io/EyeNavGS/
 **[D8] NJIT 6DOF VR Navigation.** J. Chakareski, 2019.
 https://web.njit.edu/~chakarsk/vr-navigation.html — by request to Prof. Jakov Chakareski.
 
-**[D9] 3D-ARM-Gaze.** https://zenodo.org/record/10567366 ·
-https://doi.org/10.1038/s41597-023-02676-5
+**[D9] 3D-ARM-Gaze.** B. Lento, E. Segas, V. Leconte, E. Doat, F. Danion, R. Peteri,
+J. Benois-Pineau, A. de Rugy. *3D-ARM-Gaze: a public dataset of 3D Arm Reaching Movements
+with Gaze information in virtual reality.* 2024. **Apache-2.0, open, 4.7GB.**
+https://zenodo.org/record/10567366
 
-**[D10] CREATTIVE3D.** https://zenodo.org/records/14514163 ·
-https://doi.org/10.1038/s41597-024-03382-2
+**[D10] CREATTIVE3D.** *CREATTIVE3D multimodal dataset of user behavior in virtual
+reality.* ANR CREATTIVE3D project, 2024-12-18. **CC BY 4.0, open, 7.2GB.**
+https://zenodo.org/records/14514163 · https://doi.org/10.1038/s41597-024-03382-2
 
 **[D11] Non-Laboratory Gait Dataset.** Z. P. Shiri, H. Pierce et al. Scientific Data 10, 2023.
 https://doi.org/10.1038/s41597-023-02374-2
