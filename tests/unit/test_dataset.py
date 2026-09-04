@@ -539,3 +539,34 @@ def test_sample_index_carries_window_start_times_when_supplied():
     index = _overlapping_index()
     assert index.window_start_times is not None
     assert index.window_start_times.shape[0] == index.sample_count
+
+
+# --- max_users must not filter a separate evaluation corpus --------------------
+
+def test_a_user_subsample_never_filters_a_separate_test_corpus(tmp_path):
+    """
+    select_user_subset returns user directories from data_dir. Passing that list to a
+    dataset built from a DIFFERENT test_dir rejects every evaluation user, giving
+    "Loaded 0 samples from 0 users" and then a bare ZeroDivisionError.
+
+    It is also wrong in principle: max_users varies how many identities are trained on,
+    and the held-out corpus has to stay fixed while it does - otherwise the
+    identity-count curve varies two things at once.
+    """
+    import shutil
+
+    other = tmp_path / "OtherDataset" / "users"
+    other.parent.mkdir(parents=True)
+    shutil.copytree(FIXTURE_USERS_DIR, other)
+
+    train_index = build_sample_index(str(FIXTURE_USERS_DIR), sample_time=1, sample_rate=10)
+    subsample = [str(pathlib.Path(FIXTURE_USERS_DIR) / u.name)
+                 for u in sorted(pathlib.Path(FIXTURE_USERS_DIR).iterdir()) if u.is_dir()]
+
+    # The mechanism: those paths do not exist under the other corpus.
+    filtered = SampleDataset(str(other), sample_time=1, sample_rate=10, keep_users=subsample)
+    assert filtered.num_users == 0, "precondition: a foreign subsample rejects everything"
+
+    # So the evaluation corpus must be built without it.
+    unfiltered = SampleDataset(str(other), sample_time=1, sample_rate=10, keep_users=None)
+    assert unfiltered.num_users == train_index.num_users > 0
