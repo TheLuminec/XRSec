@@ -34,7 +34,12 @@ and a sweep whose rows split across two `code_identity` values).
   serialised like GPU runs**: one session at a time in the shared checkout, and a merge
   or rebase only after saying so by message. Two sessions fetching into one `.git` at
   once has already produced a `cannot lock ref` error; the same collision during a merge
-  would not be harmless. Plain `fetch`/`pull --ff-only` collisions are benign, retry them.
+  would not be harmless. Plain `fetch`/`pull --ff-only` collisions are benign, retry them. **An announcement
+  names the commit being merged and waits for one ack** before running: on 2026-09-04 two
+  sessions each announced a merge of the same commit minutes apart; harmless because
+  neither stashed or reset, but only by timing. A rebase needs a clean tree, and the
+  running chain's shard makes the tree dirty, so in practice integration is a merge
+  commit by whoever announced first.
 - **"On origin" is read from `origin/main`, not from the working tree.** In a shared
   checkout the working file already shows another session's unpushed edits, so a
   coordinator "verifying" a push by reading the file verifies nothing; use
