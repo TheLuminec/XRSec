@@ -30,6 +30,11 @@ and a sweep whose rows split across two `code_identity` values).
   committed and pushed by the holder of the current GPU slot, when their slot ends and
   no `model/main.py` is running** - never by anyone else, and never mid-chain, so a
   commit cannot capture another session's sweep in flight.
+- **Git operations that write refs (`fetch`, `pull`, `push`, `merge`, `rebase`) are
+  serialised like GPU runs**: one session at a time in the shared checkout, and a merge
+  or rebase only after saying so by message. Two sessions fetching into one `.git` at
+  once has already produced a `cannot lock ref` error; the same collision during a merge
+  would not be harmless. Plain `fetch`/`pull --ff-only` collisions are benign, retry them.
 - **Nobody launches on the GPU without the coordinator's slot.** Current queue below.
 
 ## Code changes queued (need a worktree, and no sweep running when merged)
@@ -80,8 +85,13 @@ concentration is 0.998 (locally exact). That's the tilting signature, not a wron
 shipped per the amended rule. All four numbers confirmed pooled after reconversion: gravity
 exact, mean |q| 1.0000000000, local +Y -> world up 0.9127, locomotion median 0.86 / sign
 test 0.80. Quaternion columns of all 100 already-converted sequences reconverted in place
-on AVALON (position untouched, was never wrong); DESKTOP-C's copy needs the same
-reconversion or a re-pull to pick this up - not yet confirmed done there.
+on AVALON (position untouched, was never wrong). **DESKTOP-C reconverted 15:10** with
+the committed script on the verified pre-fix copy: all 100 files match AVALON's sha256
+(after normalising pandas' Windows CRLF to LF - the script now forces LF), cache rebuilt
+(50 users / 20,778 windows), `audit_frames.py` head-up `[-0.020 +0.911 +0.009]`, |q|
+1.0000. Pre-fix copy kept at `raw_datasets/Nymeria_prefix_backup/` until the first
+Nymeria result is in, then delete. **Nymeria is scoreable on both machines**; the
+lookup-first measurement is with Model Generalization on CPU.
 
 **Across-XR: user approved the fetch; DESKTOP-C is blocked too (13:50).** From
 216.171.49.113: `/-/raw/main/0.csv` 429, `/-/raw/main/Readme.md` 429, `/-/archive/` 429,
