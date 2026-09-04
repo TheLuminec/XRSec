@@ -8,15 +8,16 @@ XR biometric identification research. A Siamese network decides whether two wind
 
 ## Coordination between sessions
 
-Three sessions work this repo on three machines - a coordinator, a trainer, a data/storage
-session - plus ad-hoc ones. **The coordinator's direct messaging channel is currently down**
-(`SendMessage` no longer resolves; the replacement cannot deliver to remote-dispatched
-sessions), so **`docs/COORDINATION.md` is the reply channel**. Read it after every pull;
-append under your own heading to reply.
+Three sessions work this repo - a coordinator, a trainer, a generalisation session - on
+DESKTOP-C, plus a data/storage session on AVALON and ad-hoc ones. As of 2026-09-04 the
+coordinator runs on DESKTOP-C too, and **`SendMessage` between the on-machine sessions
+works both ways**; use it for anything between them. **`docs/COORDINATION.md` is still
+the channel for the AVALON session and for anything that must outlive a session**: read
+it after every pull, append under your own heading to reply, delete resolved items. It
+also carries the shared-working-tree rules and the GPU queue.
 
-That file exists because git is the one channel every session provably shares. It is also
-the more durable one: a notice in the repo survives a session ending, which a chat message
-does not.
+Git is the one channel every session provably shares, and a notice in the repo survives
+a session ending, which a chat message does not.
 
 ## Current state - read this before quoting any number
 
