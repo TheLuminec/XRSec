@@ -867,6 +867,69 @@ What Nymeria is from here:
   **one sitting on one day**, so Nymeria cannot pay the 1.1-1.6 point cross-session cost
   the rest of the corpus pays.
 
+### 9.10 What the lookup measures, by axis: height where people stand, the room where they sit
+
+A companion to 9.9, proposed by the Coordinator because the Nymeria finding generalises:
+the three-number lookup mixes height (a body property) with lateral position (where the
+tracking origin or the chair is). The same held-out pairs as 9.8, three manifest seeds,
+each corpus standardised on itself; BOXRR is the held-out validation users of the five
+9.1-setup checkpoints (about 82 each), standardised with each checkpoint's training
+normaliser. Lookup AUC on xyz (as recorded), y only, xz only:
+
+| corpus | users | posture | xyz | y only (height) | xz only (room) |
+| --- | --- | --- | --- | --- | --- |
+| ViewGauss | 35 | seated | 0.933 | 0.886 | 0.871 |
+| Head_and_Gaze V2 | 100 | seated | 0.870 | 0.690 | **0.872** |
+| VR_User_Behavior | 48 | seated | 0.719 | 0.640 | **0.700** |
+| BOXRR held-out | ~82 | standing | 0.763 +-0.022 | **0.810** +-0.021 | 0.680 +-0.019 |
+| alyx (cross-day) | 76 | standing, walking | 0.593 | **0.661** | 0.539 |
+| NJIT | 18 | walking | 0.653 | **0.748** | 0.542 |
+| Nymeria | 50 | daily life, glasses | 0.730 | 0.654 | **0.784** |
+| PanoSaliency (direction vector) | 99 | - | 0.579 | 0.602 | 0.532 |
+| Panonut360 (direction vector) | 21 | - | 0.515 | 0.525 | 0.504 |
+| EyeNavGS (virtual camera) | 22 | - | 0.489 | 0.488 | 0.498 |
+
+Seed spreads are 0.001-0.008 everywhere except BOXRR, where the spread shown is across
+checkpoints.
+
+**The registered prediction failed for the seated corpora, in the opposite direction.**
+It said y-only would carry nearly all of the seated lab corpora's AUC and xz-only would
+sit near 0.5 (one chair). On Head_and_Gaze xz-only carries the *whole* lookup (0.872
+against xyz 0.870) and y-only is 0.69; on VR_User_Behavior xz 0.700 against y 0.640;
+only ViewGauss has both high. The audit in section 1 says why: between-user spread is
+0.19 m in x and z and 0.05 m in y on Head_and_Gaze, with 0.02 m within a window. Where a
+seated participant's head sits in the tracking space - the origin, or the chair - is a
+20 cm fingerprint that barely moves; their eye height differs by 5 cm.
+
+A session-structure fact makes the placement reading exact: on every seated corpus each
+participant is a single sitting (18-54 files per user recorded in one session), so the
+"cross-session" positives there never crossed a sitting, and a placement that persists
+across the sitting persists across every positive pair.
+
+**Where people stand or walk, height is the cue.** BOXRR y-only 0.810 against xz 0.680,
+NJIT 0.748 against 0.542, and alyx, the one cross-day corpus, 0.661 against 0.539: across
+days the room is gone and height remains. Nymeria is the reverse of alyx and as
+predicted - xz 0.784 above xyz, y high for the wrong reason (9.9).
+
+**Consequences.**
+
+- What this project has called anthropometry splits in two: **height**, a body property
+  that survives a day, and **origin placement**, a same-sitting rig artefact. The seated
+  360-video corpora - the majority of the original corpus - are scoring mostly the
+  second. That does not touch the leave-users-out protocol (a held-out user's seat is
+  still theirs), but it changes what "identified by head position" means there.
+- **BOXRR's xz-only lookup is 0.680, above the 0.6 line the Coordinator set in advance**:
+  every `raw` identity-count result on BOXRR carries a room-fingerprint caveat - part of
+  what separates unseen Beat Saber players is where they stood in the play space - and
+  the `dyn` results, where mean position is removed by construction, are the clean ones.
+- The lookup as the step 6 enrolment model should be reported by axis, and a
+  deployment claim should rest on y (plus `dyn`), not on xz.
+
+**Placeholder, pending:** Trainer's co-location geometry table - within- against
+between-participant separation of session means, per axis, per corpus, on the same rows
+as the table above - lands under this section when it is done. Until it does, the
+placement reading rests on the lookup-by-axis figures and the section 1 audit only.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
@@ -891,12 +954,16 @@ descriptors (9.8: the three-number lookup is the ceiling of the static cue acros
 corpora, and the 3-number learned variant is a post-hoc near-miss, not a win).
 
 **What the paper can claim now**, in one paragraph: on head pose alone, unseen users
-are verified across capture rigs primarily through cohort-relative head position, which
-three numbers capture without training and which no trained model in this repository
-beats out of domain; a learned movement component exists, is small on seated viewing,
-strong on rhythm-game play, rises with training identities up to about a thousand, and
-does not carry across activities. Across-XR (step 4) is what turns the last clause from
-an inference across corpora into a measurement.
+are verified across capture rigs primarily through a static cue that three numbers
+capture without training and that no trained model in this repository beats out of
+domain - and that cue is **placement in the tracking space** on the same-sitting corpora
+(where the participant sat; 9.10) and **head height** across days (alyx, BOXRR, NJIT).
+A learned movement component exists, is small on seated viewing, strong on rhythm-game
+play, and does not carry across activities; it rises with training identities up to
+about a thousand, with the caveat that every `raw` identity-count result on BOXRR
+carries part of the play-space placement (xz-only lookup 0.68) and only the `dyn`
+curve is clean of it. Across-XR (step 4) is what turns the activity clause from an
+inference across corpora into a measurement.
 
 ## Appendix: reproduction
 
