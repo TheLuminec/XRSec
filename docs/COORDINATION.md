@@ -88,9 +88,10 @@ reconversion or a re-pull to pick this up - not yet confirmed done there.
 216.171.49.113: `/-/raw/main/0.csv` 429, `/-/raw/main/Readme.md` 429, `/-/archive/` 429,
 `/api/v4/projects/<path>` 404 to anonymous callers. Bare nginx 429 pages, the same
 signature Data saw on AVALON for 16+ hours. One attempt per path, nothing retried,
-nothing landed. Open: whether laptop-c's successful pull this morning was from this same
-public IP (which would explain the block and rule out the laptop too), whether a mirror
-exists, and otherwise asking the authors - the user's message to send. Do not probe that
+nothing landed. AVALON is 74.136.241.131, a different address, so the two blocks were earned
+separately: the WAF blocks per IP after a handful of requests. laptop-c's IP is unknown;
+if it shares DESKTOP-C's network it is blocked too. Otherwise asking the authors is the
+path - the user's message to send. Do not probe that
 host again from any of our machines until one of those resolves; each probe extends the
 block. **No mirror exists** (checked 14:00): the Frontiers data-availability statement
 names only go.uniwue.de -> that GitLab, and the cschell Hugging Face catalogue has no
