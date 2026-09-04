@@ -216,6 +216,21 @@ documentation:
 | timestamp | **`tracking_timestamp_us`** - *not* `utc_timestamp_ns`, which has only 584 distinct values across 20,001 rows and is a batch marker, not a per-frame clock. Using it would have collapsed the apparent rate 34x with no error raised. |
 | native rate | **~1029Hz** (mean inter-row delta 971.9us), monotonic |
 
+**One real axis-convention break, found while answering a peer session's canonicalisation
+question and verified before answering.** Every other dataset here (BOXRR-23, who-is-alyx,
+across-xr) is Unity-family, left-handed, **Y-up**. Nymeria's `world_device` frame is
+**Z-up**: `gravity_z_world` reads a constant -9.81 with `gravity_x/y_world` at 0.0 across
+every row checked, and `tz_world_device` has an order of magnitude less variance than
+`tx/ty` over a 20-second window - both confirm Z is vertical. `prepare_nymeria.py`
+deliberately does **not** remap columns to compensate: swapping the y/z output slots to put
+height back in `HmdPosition.y` would need the quaternion rotated to match (a real
+change-of-basis), and a wrong version of that silently decouples position from orientation,
+which is worse than documenting an exception. **For Nymeria specifically, height lives in
+`HmdPosition.z`, not `HmdPosition.y`** - anything reading "column y = height" across the
+pooled corpus (most importantly the height-vs-ground-truth comparison two paragraphs down)
+must special-case this dataset. Does not affect `center_position`, which zeros all three
+channels uniformly regardless of which is "up".
+
 **Download cost, from the manifest's own `file_size_bytes` rather than estimated:**
 `recording_head` averages **689MB per sequence** (min 361, max 1964) across all 1,100.
 Groups are packed one zip per group per sequence with no per-file choice, and Range
