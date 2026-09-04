@@ -48,6 +48,25 @@ and a sweep whose rows split across two `code_identity` values).
   is never read as 48. Found 2026-09-04 by the step 3 digit check: the config default
   silently dropped VR_User_Behavior users 1-5 from every cross-corpus evaluation.
 
+## CPU measurements registered (2026-09-04 15:55), from the Nymeria failure
+
+The three-number lookup mixes head height (a real anthropometric cue) with lateral
+position (the room). Nymeria showed the mixture can be all room. Two companion tables,
+same dataset rows, predictions registered by message before running:
+
+- **Trainer: co-location geometry.** Per dataset, within- vs between-participant
+  separation of per-session mean position (median, IQR, P(within<between)) for xyz, xz,
+  and y separately; tier-2 direction-vector rows labelled, single-session datasets
+  reported as untestable. Harness check: Nymeria reproduces 2.13 / 6.44 / 0.847.
+- **Model Generalization: per-axis lookup AUC** on the held-out pairs already scored
+  (8 LODO corpora, Nymeria, BOXRR held-out): xyz / y-only / xz-only, three seeds.
+
+Coordinator's predictions: seated lab corpora lateral P ~0.5 and y-only carries the AUC;
+alyx lateral 0.5-0.65; **BOXRR lateral P > 0.7 and xz-only AUC well above 0.5** - the row
+that matters, since 4020 identities are BOXRR; Nymeria ~0.85 on every axis for the wrong
+reason. **Decision rule:** BOXRR xz-only lookup above ~0.6 puts a room-fingerprint caveat
+on every `raw` BOXRR identity-count result and makes the `dyn` results the clean ones.
+
 ## GPU queue
 
 | order | who | what | status |
