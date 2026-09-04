@@ -426,7 +426,20 @@ That is a sharper statement of the generalisation problem than "the model does n
 generalise". It generalises exactly as far as the static cue does, and the part it actually
 learns is the part that does not survive a change of corpus.
 
-**Two caveats on the in-domain figure.** Its spread is +-0.073 against +-0.014 pooled,
+**A THIRD CAVEAT, AND IT IS THE ONE TO CHECK FIRST.** The in-domain checkpoint comes from
+sweep `31751868df`, which is the **margin/scale sweep** - and its only 5-fold-complete cells
+are at `identity_margin=0.1`, not the 0.35 default, run at `epochs=30`. The 7-dataset
+comparison (`b732bee5c6`) is at the 0.35 default and `epochs=20`. So the pair differs in
+**three** things - dataset coverage, margin, and epoch budget - not one.
+
+The confound is bounded rather than fatal: the same sweep puts margin 0.1 about 0.02 above
+the default reference, against a measured gap of 0.164. So the direction survives and the
+magnitude should not be quoted to three digits. **The clean version is a 7-dataset model
+trained at the same margin and epoch budget as the 8-dataset one**, differing only in
+whether alyx was in training. Until that exists, treat 0.164 as "large and positive", not
+as a measurement.
+
+**Two further caveats on the in-domain figure.** Its spread is +-0.073 against +-0.014 pooled,
 because only ~15 alyx users are held out per fold, so the 0.16 gap is about 2.2 sd -
 real but not tight. And the two numbers come from different checkpoints scored on
 *different* evaluation sets: ~15 held-out alyx users against all 76. Gallery composition
