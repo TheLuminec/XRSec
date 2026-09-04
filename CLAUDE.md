@@ -17,7 +17,7 @@ four findings, all from the same day of auditing, change what it *means*:
 | --- | --- |
 | Per-dataset held-out AUC is **0.93+** where a real head position exists and **~0.49** where the position column holds a unit direction vector | any pooled figure averages near-perfect verification with chance |
 | A **training-free three-number lookup** (mean position, Euclidean distance) scores **0.726** where the model scores **0.723**, same folds, same manifests | most of what the pooled model does needs no model |
-| The model beats that lookup **in domain by +0.14** on alyx, and **loses to it by 0.03** on an unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
+| The model beats that lookup **in domain by +0.18** on alyx (clean pair, t(4)=7.52) and **loses to it** on every unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
 | Every published comparison uses head **plus both controllers**; we are head-only by scope, so the model runs on glasses | part of the gap to published figures is sensor set, not performance |
 
 **The honest one-sentence version.** We identify unseen users well where absolute head
@@ -377,6 +377,63 @@ Acquired: **50 participants, 100 sequences, 47.1GB transfer, 20,778 windows at 5
 pair is cross-activity by construction.** Held at 50 rather than 100: the second half costs
 another ~47GB to buy identities in a dataset whose value is device and activity diversity,
 where BOXRR supplies identities 300x cheaper.
+
+### Cross-corpus transfer: the model is BELOW the lookup, and flat in identity count
+
+The experiment the BOXRR acquisition was for. Train on BOXRR+alyx, evaluate on the seven
+held-out corpora never trained on. `bilstm`, `identity_softmax`, 30 epochs, target-fit
+stats on the held-out corpora, random control 0.498 pooled:
+
+| | pooled | ViewGauss | H&G | VR_UB | NJIT | tier 2 + EyeNavGS |
+| --- | --- | --- | --- | --- | --- | --- |
+| model, 419 ids | **0.672** +-0.003 | 0.911 | 0.750 | 0.638 | 0.648 | at chance |
+| model, 2096 ids | **0.671** | | | | | |
+| **lookup** | **0.727** | 0.934 | **0.869** | **0.714** | 0.653 | |
+
+**Two results, both pre-registered, and the second is worse than predicted.**
+
+1. **Transfer is flat in identity count.** 419 to 2096 BOXRR identities moves pooled
+   transfer by 0.001. More identities from one activity does not improve generalisation to
+   other activities. This is the "we bought an easier corpus rather than a better model"
+   outcome recorded before the curve was measured.
+2. **The model is worse than three equally weighted numbers** on every tier-1 corpus once
+   the corpus changes - by 0.12 on Head_and_Gaze and 0.08 on VR_User_Behavior. Validation
+   selects epoch 2-3 of 30 every time, so it overfits the source domain almost immediately.
+
+Identity count was the only data-side lever ever measured to work here. It works
+**within** a domain and does not cross one.
+
+### `dyn`: the first transferable learned component (PROVISIONAL - censored)
+
+`encoding=dyn` removes every static cue - position centred per window *and* orientation
+taken relative to the window's mean heading, gravity kept. The lookup scores **0.506** on
+it by construction, so anything above chance is behaviour, measured rather than simulated.
+
+| | pooled | tier 1 range |
+| --- | --- | --- |
+| dyn, BOXRR+alyx -> the seven | **0.581** +-0.002 | 0.517-0.538, all 4-40 sd above 0.5 |
+
+**A transferable dynamics component exists and it is small.** That is the first evidence in
+this project of a learned signal that survives a change of corpus - the static cue transfers
+but needs no model, and the earlier learned component was in-domain only.
+
+**Censored, so this is a floor rather than a measurement**: all five runs selected epoch 29
+or 30 of 30. Re-queued at `epochs=120, patience=15` - the axis is now characterised as slow
+and monotone, which is the condition for using patience safely.
+
+**PanoSaliency scores 0.724 under `dyn`**, far above the tier-1 corpora. Its position column
+is a viewing-direction vector, so the model is reading the direction *sweep* as head
+translation and separating users on it. A behavioural signal recovered across a semantic
+mismatch - and the strongest argument yet for the `channels=orientation` mode deferred
+earlier.
+
+### Yaw canonicalisation: predicted correctly per corpus, worth nothing pooled
+
+`encoding=yawc` (gravity-preserving yaw canonicalisation) seed-paired at 419 identities:
+**+0.025** on Head_and_Gaze (t=3.0) and **+0.015** on VR_User_Behavior (t=2.4) - exactly the
++X and -X corpora predicted - but **-0.035** on ViewGauss and **-0.025** on NJIT, the +Z
+corpora. Pooled **+0.003, t=0.3**, and it triples seed spread. The per-corpus pattern matched
+the prediction and the pooled effect is nil. Not worth an arm.
 
 ### A three-number lookup matches the trained model (CONFIRMED)
 
