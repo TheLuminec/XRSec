@@ -169,6 +169,55 @@ Predicted beforehand from data alone: between-session position spread is compara
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
+### Half the corpus has no absolute head height at all
+
+The anthropometric cue - the strongest single thing this model uses - **does not exist in
+every dataset**. Mean `HmdPosition` per axis, sampled across users:
+
+| dataset | mean x | mean y | mean z | absolute height? |
+| --- | --- | --- | --- | --- |
+| ViewGauss | 0.436 | **1.564** | 0.420 | yes |
+| NJIT_6DOF | 3.011 | **1.587** | 2.252 | yes (room-scale) |
+| VR_User_Behavior | 0.024 | **1.162** | -0.258 | yes (seated) |
+| Head_and_Gaze | 0.181 | **0.822** | 0.222 | yes (low origin) |
+| PanoSaliency | -0.536 | -0.008 | 0.195 | **no** |
+| EyeNavGS | -0.184 | 0.214 | 0.601 | **no** |
+| Panonut360 | -0.251 | 0.043 | -0.324 | **no** |
+| 360_em | -0.074 | 0.147 | 0.463 | **no** |
+| **BOXRR-23** | | **1.602** (sd 0.141) | | **yes, standing** |
+
+Four of eight record position relative to a seated origin, so no axis carries a height.
+Those users cannot be separated by anthropometry at all, and whatever the model achieves
+on them is posture and behaviour.
+
+**This qualifies the "~78% is absolute head position" finding rather than overturning it.**
+That figure was measured on the pooled corpus, where it is an average over datasets that
+carry the cue and datasets that cannot. The per-dataset picture is far more uneven than a
+single number suggests, and any future anthropometry claim should say which datasets it
+rests on.
+
+Height discriminability, between-user sd over within-user sd on the height axis (a
+scale-free ratio, so comparable even where the frames differ):
+
+| ViewGauss | BOXRR-23 | NJIT | VR_User_Behavior | the four centred datasets |
+| --- | --- | --- | --- | --- |
+| 4.03 | **2.36** | 1.97 | 1.61 | 0.21-0.42 (no height axis) |
+
+### A confound to weigh before reading the identity-count curve
+
+**BOXRR is probably an easier corpus per identity, not merely a bigger one.** It has true
+standing head height (2.36 discriminability, above all but ViewGauss), one uniform
+activity, and absolute coordinates - where half our existing corpus has no height cue at
+all and the rest is seated posture. Recorded before the curve is measured: a large gain
+at 2439 identities will be **partly BOXRR being easier**, not purely more identities
+helping.
+
+The two readings separate it. Held-out BOXRR users measures identity count within a clean
+domain and will flatter. Training with BOXRR and testing on our existing datasets asks
+whether the acquisition transfers, and is the number that decides whether it was worth
+it. If the first is strong and the second flat, the honest conclusion is that we bought
+an easier corpus rather than a better model.
+
 ### How much is the model actually adding?
 
 Measured under the **corrected** protocol (5 leave-users-out folds, cross-session positives, per-dataset normalization, threshold fitted on validation users and accuracy reported on held-out users) — the same protocol the trained runs use:
