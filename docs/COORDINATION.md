@@ -40,8 +40,9 @@ and a sweep whose rows split across two `code_identity` values).
   `create_dataloader_from_path` (or `resolve_paths`) should warn, naming the users, when an
   excluded path lies under a test directory and the eval set is not the excluded set.
   Prefer refusing over warning if a test can cover it. CLAUDE.md carries the interim
-  guard (`exclude_users=[]` in the command shape). Owner: coordinator, in a worktree,
-  merged between GPU slots.
+  guard (`exclude_users=[]` in the command shape). Owner: Model Generalization, in a
+  worktree, refusing rather than warning, merged into main after Trainer pushes the shard
+  and before step 2 launches.
 
 ## GPU queue
 
