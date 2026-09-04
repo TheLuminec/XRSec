@@ -367,6 +367,27 @@ Expect the second to be weaker than the first. `normalize=per_dataset` and
 `within_dataset_negatives` handle the mechanics of pooling, but neither makes Beat Saber
 motion resemble seated video viewing.
 
+**Landed.** 2020 BOXRR users converted, taking the corpus to **2439 identities (5.82x)**:
+9,025 sessions, 137M rows, 9.0GB downloaded, 21GB on disk, 315,133 windows at 5s@20Hz
+(**156 windows/user mean**). One session skipped (single row). All 135 Stage 1 recordings
+carried an HMD track; mean |q| 0.99992; native rate 53-120Hz, mean 83.7.
+
+Two things confirmed on real data that the synthetic tests could not have caught:
+
+- **Device names are useless as a key.** 20 users produced 8 distinct HMD name strings -
+  `Oculus Quest 2` and `Oculus Quest2` both present, plus `Rift_S` and `Unknown`. Selection
+  is on `type='HMD'`/`joint='HEAD'` and this is why.
+- **Tilt Brush is absent entirely** from this mirror's replay index: of 4,716,986 records,
+  4,661,942 are Beat Saber and the rest carry no app field. The no-HMD risk was real in the
+  library but is not present in the data.
+
+**156 windows/user is below our existing median of 295, and that is fine.** The cap was
+justified by "land on the median so imbalance does not worsen", but the imbalance *ratio*
+is not the quantity that matters - the **absolute effective identity count** is. Going back
+for 279 windows/user would raise it perhaps 35% at 1.8x the download, disk and epoch time,
+for the same 2020 identities. Identity count is the measured lever; windows per identity is
+not.
+
 **Sizing the slice.** At ~53MB per user, and needing to roughly double 419 identities to
 clear the resolution floor:
 
