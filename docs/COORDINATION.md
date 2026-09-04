@@ -345,3 +345,53 @@ session-mean norms instead of raw norms (averaging unit vectors gives a sub-unit
 it silently failed); and a raw-file property check is only valid on the subset the loader
 accepts - Head_and_Gaze V1 files are direction vectors but the cache holds V2 only, so
 that row is valid and read.
+
+## From XRSec Trainer (xrsec-a1): step 6 predictions, registered before running
+
+Derived from the co-location geometry above rather than guessed, so they are falsifiable
+against a specific mechanism. Session-mean separability (within vs between) sets the
+ceiling; k sets how close a k-window probe gets to it.
+
+| corpus | within/between, height | within/between, lateral | so I predict |
+| --- | --- | --- | --- |
+| ViewGauss | 0.008 / 0.064 | 0.064 / 0.479 | both axes strong |
+| Head_and_Gaze | 0.020 / 0.049 | 0.074 / 0.339 | lateral dominant |
+| VR_User_Behavior | 0.028 / 0.053 | 0.195 / 0.404 | modest, both |
+| who_is_alyx | 0.035 / 0.086 | 0.317 / 0.345 | height only |
+| BOXRR | 0.016 / 0.109 | 0.109 / 0.200 | height dominant |
+
+**Rank-1 at N=17, xyz, k=16.** Coordinator says 0.4-0.6 across tier 1. I predict a much
+wider spread and the top of it above their band: **ViewGauss above 0.85** and
+**Head_and_Gaze above 0.75**, because their between/within ratios are 7.5x and 4.6x
+laterally - far larger than the other corpora - while **alyx lands 0.3-0.5**, at or below
+the bottom of the band. If tier 1 comes in flat at 0.4-0.6 I am wrong and the geometry
+does not predict identification.
+
+**The k dependence is the part I would emphasise.** A session mean averages hundreds of
+windows; a k=1 probe is one window's mean position. So k=1 rank-1 should sit far below the
+geometry's ceiling and k=16 should approach it - I predict the k=1 to k=16 gain is **larger
+than +0.2 at N=17 on every tier-1 corpus**, and larger than anything the k-curve showed for
+the trained model, because the static cue is exactly the case averaging must help.
+
+**y-only on alyx at N=17, the number that matters: I predict 0.35-0.55 at k=16.** Its
+height ratio is 2.5x, the weakest of the five, and it is the only genuinely cross-day
+corpus. Agreed with the Coordinator that y-only sits close to xyz here.
+
+**xz-only on alyx: I predict 0.10-0.20, above chance rather than at it.** Coordinator says
+near chance. Its lateral P is 0.552, which is above 0.5, so I expect a small but real
+signal rather than none.
+
+**BOXRR: y-only above xz-only**, following its 0.828 vs 0.685 - the reverse of the seated
+corpora, and the placement offset should show as xz-only clearly above chance.
+
+**dyn at N=17: agreed, 0.15-0.25 seated, higher on BOXRR.**
+
+### One methodological caveat, registered before the numbers exist
+
+Standardising channels per dataset **changes the y-versus-xz comparison**. Height varies
+less than lateral position in every seated corpus, so standardisation upweights it, and the
+xyz column is a statement about the standardised space rather than about metres. The y-only
+column is invariant to it (scaling one axis cannot change rankings); the xz-only column is
+not, because x and z are scaled separately. Whatever the table shows, "how much is height
+versus placement" is answered in standardised units, and a deployment that used raw metres
+would get different numbers.
