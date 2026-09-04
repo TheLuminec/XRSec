@@ -677,6 +677,47 @@ What this settles:
   `dyn`); and longer windows for the dynamics branch specifically, since free
   locomotion may need more than five seconds to show a person.
 
+### 9.7 Leave-one-corpus-out: diversity is not the lever either
+
+Section 10 step 1, run the same morning. Train on seven of the eight corpora, test on
+the eighth, for `raw` (30 epochs) and `dyn` (60 epochs, patience 15), one seed each, so
+every row is a single run. Registered prediction: `raw` at the lookup +-0.03 on tier 1.
+
+| held-out corpus | tier | lookup | `raw`, 7 corpora | raw - lookup | `raw`, BOXRR+alyx (9.1) | `dyn`, 7 corpora | `dyn` in domain (9.5) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ViewGauss | 1 | 0.9325 | 0.9152 | -0.0174 | 0.911 | 0.5265 | 0.528 +-0.034 |
+| Head_and_Gaze V2 | 1 | 0.8670 | 0.6877 | **-0.1793** | 0.750 | 0.5520 | 0.551 +-0.011 |
+| VR_User_Behavior | 1 | 0.7114 | 0.6385 | **-0.0729** | 0.638 | 0.5257 | 0.531 +-0.015 |
+| NJIT | 1 | 0.6459 | 0.5956 | **-0.0503** | 0.648 | 0.5364 | 0.558 +-0.040 |
+| alyx | 1 | 0.5895 | 0.5681 | -0.0214 | - | 0.5142 | 0.530 +-0.007 |
+| PanoSaliency | 2 | 0.5756 | 0.5881 | +0.0125 | 0.581 | **0.6715** | 0.729 +-0.027 |
+| Panonut360 | 2 | 0.5146 | 0.5077 | -0.0069 | 0.526 | 0.5318 | 0.522 +-0.017 |
+| EyeNavGS | 3 | 0.4878 | 0.4921 | +0.0043 | 0.502 | 0.5376 | 0.529 +-0.024 |
+
+- **The prediction failed, on the pessimistic side.** Three of the five tier-1 points
+  fall outside the +-0.03 band, all below it, and Head_and_Gaze at -0.18 is worse than
+  the BOXRR+alyx model's -0.12 there. Seven heterogeneous corpora transfer a `raw` model
+  no better than 2000 Beat Saber players do; on the two corpora where the static cue is
+  a seat position (Head_and_Gaze, VR_User_Behavior) both are far below three numbers.
+  The `raw` arm selected epochs 1, 3, 3, 4, 6, 6, 7, 7 of 30 (Head_and_Gaze at epoch
+  1), the same immediate source-corpus overfit as 9.1. Neither identity count nor
+  corpus diversity is the lever for the `raw` pipeline.
+- **The alyx row reproduces section 3 under the current code identity**: 0.5681 unseen
+  against the lookup's 0.5895, where the checkpoint re-scoring under the earlier tree
+  gave 0.566 and 0.593. A code check as much as a result: the harness, the fast EER and
+  the checkpoint fix between the two trees changed nothing that reaches a number.
+- **`dyn` from seven corpora lands inside the in-domain spread on six corpora** (within
+  0.005 on ViewGauss, Head_and_Gaze and VR_User_Behavior), so on those the dynamics
+  signal that transfers is the dynamics signal there is, and the corpora's own ceiling
+  is low. **PanoSaliency is the exception and the most interesting `dyn` point in the
+  run**: 0.6715 from the six other seated corpora, about 2 sd below its in-domain
+  0.729 and 0.05-0.07 below what 2000 Beat Saber players transferred (0.724-0.739). The
+  one corpus where training on the other seated corpora transfers dynamics *worse* than
+  Beat Saber did. The alyx `dyn` row has the same shape at a smaller scale (0.5142
+  against 0.530 +-0.007 in domain). Single runs, both.
+- Single runs throughout; the seed spread measured on the same corpora in 9.1 and 9.3 is
+  0.003 to 0.008, so the tier-1 shortfalls of 0.05 to 0.18 are far outside it.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
