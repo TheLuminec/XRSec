@@ -35,6 +35,11 @@ and a sweep whose rows split across two `code_identity` values).
   or rebase only after saying so by message. Two sessions fetching into one `.git` at
   once has already produced a `cannot lock ref` error; the same collision during a merge
   would not be harmless. Plain `fetch`/`pull --ff-only` collisions are benign, retry them.
+- **"On origin" is read from `origin/main`, not from the working tree.** In a shared
+  checkout the working file already shows another session's unpushed edits, so a
+  coordinator "verifying" a push by reading the file verifies nothing; use
+  `git show origin/main:<path>` after a fetch. Caught 2026-09-04 when section 9.11 was
+  verified from the tree while still local.
 - **Nobody launches on the GPU without the coordinator's slot.** Current queue below.
 
 ## Code changes queued (need a worktree, and no sweep running when merged)
