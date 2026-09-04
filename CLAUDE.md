@@ -17,7 +17,7 @@ four findings, all from the same day of auditing, change what it *means*:
 | --- | --- |
 | Per-dataset held-out AUC is **0.93+** where a real head position exists and **~0.49** where the position column holds a unit direction vector | any pooled figure averages near-perfect verification with chance |
 | A **training-free three-number lookup** (mean position, Euclidean distance) scores **0.726** where the model scores **0.723**, same folds, same manifests | most of what the pooled model does needs no model |
-| The model beats that lookup **in domain by +0.14** on alyx, and **loses to it by 0.03** on an unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
+| The model beats that lookup **in domain by +0.18** on alyx (clean pair, t(4)=7.52) and **loses to it** on every unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
 | Every published comparison uses head **plus both controllers**; we are head-only by scope, so the model runs on glasses | part of the gap to published figures is sensor set, not performance |
 
 **The honest one-sentence version.** We identify unseen users well where absolute head
@@ -403,6 +403,83 @@ pair is cross-activity by construction.** Held at 50 rather than 100: the second
 another ~47GB to buy identities in a dataset whose value is device and activity diversity,
 where BOXRR supplies identities 300x cheaper.
 
+### Cross-corpus transfer: the model is BELOW the lookup, and flat in identity count
+
+The experiment the BOXRR acquisition was for. Train on BOXRR+alyx, evaluate on the seven
+held-out corpora never trained on. `bilstm`, `identity_softmax`, 30 epochs, target-fit
+stats on the held-out corpora, random control 0.498 pooled:
+
+| | pooled | ViewGauss | H&G | VR_UB | NJIT | tier 2 + EyeNavGS |
+| --- | --- | --- | --- | --- | --- | --- |
+| model, 419 ids | **0.672** +-0.003 | 0.911 | 0.750 | 0.638 | 0.648 | at chance |
+| model, 2096 ids | **0.671** | | | | | |
+| **lookup** | **0.727** | 0.934 | **0.869** | **0.714** | 0.653 | |
+
+**Two results, both pre-registered, and the second is worse than predicted.**
+
+1. **Transfer is flat in identity count.** 419 to 2096 BOXRR identities moves pooled
+   transfer by 0.001. More identities from one activity does not improve generalisation to
+   other activities. This is the "we bought an easier corpus rather than a better model"
+   outcome recorded before the curve was measured.
+2. **The model is worse than three equally weighted numbers** on every tier-1 corpus once
+   the corpus changes - by 0.12 on Head_and_Gaze and 0.08 on VR_User_Behavior. Validation
+   selects epoch 2-3 of 30 every time, so it overfits the source domain almost immediately.
+
+Identity count was the only data-side lever ever measured to work here. It works
+**within** a domain and does not cross one.
+
+### `dyn`: the learned component that does transfer, and the only thing identity count moves
+
+`encoding=dyn` removes every static cue - position centred per window *and* orientation
+taken relative to the window's mean heading, gravity kept. The lookup scores **0.506** on it
+by construction, so anything above chance is behaviour, measured rather than simulated by
+`center_position` (which leaves absolute orientation in, and the mean quaternion alone
+recovers 0.54-0.79 of static posture).
+
+**Identity-count curve, BOXRR+alyx -> the seven held-out corpora**, `epochs=120`,
+`patience=15`:
+
+| identities | pooled | Head_and_Gaze | ViewGauss | NJIT | VR_UB |
+| --- | --- | --- | --- | --- | --- |
+| 419 (5 seeds) | 0.582 +-0.001 | 0.537 | 0.523 | 0.522 | 0.515 |
+| 1000 (2 seeds) | **0.600** +-0.001 | | | | |
+| 2096 (1 seed) | 0.598 | **0.570** | **0.571** | 0.540 | 0.521 (flat) |
+
+**This is the only thing in the project that identity count moves across a domain
+boundary.** Raw transfer is flat to three decimals over the same range (0.672 / 0.672 /
+0.671); `dyn` gains +0.016 pooled and +0.03 to +0.05 on the two best-conditioned corpora -
+the pre-registered band, held. All of the gain is between 419 and 1000. It only appears
+where the corpus has a stable real head pose: VR_User_Behavior, PanoSaliency and EyeNavGS
+are flat.
+
+**Not budget-limited.** The 120-epoch budget changed transfer at 419 by 0.001 against the
+30-epoch runs, even though those selected epoch 29-30 of 30. The censoring mattered for the
+in-domain figure, not the transfer one.
+
+**The ceiling on the seated corpora is theirs, not the model's.** In domain on the
+8-dataset corpus (5 folds, uncensored at epochs 5-10, control 0.499) the seated corpora
+reach 0.53-0.55 - and the BOXRR-trained branch **matches or exceeds that from outside**:
+Head_and_Gaze 0.570 out of domain against 0.551 in, ViewGauss 0.571 against 0.528. Training
+on a corpus does not beat training on Beat Saber and transferring in.
+
+**The learned component is activity-bound, and it is the activity rather than the share.**
+Unseen Beat Saber players separate at ~0.80 on movement alone; unseen alyx players at 0.53.
+Raising alyx from 3.6% to 18% of training identities left it at 0.530 +-0.007 - unchanged.
+Free FPS locomotion with cross-day sessions is simply less stereotyped than content-locked
+rhythm-game movement.
+
+**Fusion is retired for transfer.** Weighting the lookup with `dyn` drags tier 1 below the
+lookup under an in-domain weight, and a leave-one-corpus-out weight (0.15-0.35, never the
+target's labels) leaves every tier-1 corpus at or below it.
+
+### Yaw canonicalisation: predicted correctly per corpus, worth nothing pooled
+
+`encoding=yawc` (gravity-preserving yaw canonicalisation) seed-paired at 419 identities:
+**+0.025** on Head_and_Gaze (t=3.0) and **+0.015** on VR_User_Behavior (t=2.4) - exactly the
++X and -X corpora predicted - but **-0.035** on ViewGauss and **-0.025** on NJIT, the +Z
+corpora. Pooled **+0.003, t=0.3**, and it triples seed spread. The per-corpus pattern matched
+the prediction and the pooled effect is nil. Not worth an arm.
+
 ### A three-number lookup matches the trained model (CONFIRMED)
 
 Measured on all 5 folds of `b732bee5c6`, on the **same held-out users and the same pair
@@ -451,11 +528,17 @@ That is a sharper statement of the generalisation problem than "the model does n
 generalise". It generalises exactly as far as the static cue does, and the part it actually
 learns is the part that does not survive a change of corpus.
 
-**A THIRD CAVEAT, AND IT IS THE ONE TO CHECK FIRST.** The in-domain checkpoint comes from
-sweep `31751868df`, which is the **margin/scale sweep** - and its only 5-fold-complete cells
-are at `identity_margin=0.1`, not the 0.35 default, run at `epochs=30`. The 7-dataset
-comparison (`b732bee5c6`) is at the 0.35 default and `epochs=20`. So the pair differs in
-**three** things - dataset coverage, margin, and epoch budget - not one.
+**A THIRD CAVEAT, VERIFIED FROM THE LOG RATHER THAN INFERRED.** Read off the run records
+once DESKTOP-C's shard reached origin:
+
+| sweep | margin | scale | data dirs | epochs |
+| --- | --- | --- | --- | --- |
+| `31751868df` (in domain) | **0.1** (10 runs), 0.2 (3) | 15 / 30 | 8 | **30** |
+| `b732bee5c6` (unseen) | unrecorded, so the 0.35 default | 30 | 7 | **20** |
+
+The in-domain checkpoint comes from the **margin/scale sweep**, whose only 5-fold-complete
+cells are at `identity_margin=0.1`. So the pair differs in **three** things - dataset
+coverage, margin, and epoch budget - not one.
 
 The confound is bounded rather than fatal: the same sweep puts margin 0.1 about 0.02 above
 the default reference, against a measured gap of 0.164. So the direction survives and the
