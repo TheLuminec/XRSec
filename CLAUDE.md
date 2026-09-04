@@ -169,6 +169,51 @@ Predicted beforehand from data alone: between-session position spread is compara
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
+### Every dataset is Y-up except Nymeria
+
+Verified rather than assumed, using the fact that the vertical axis moves least during
+seated and standing tasks - mean and sd per axis across all eight local datasets:
+
+| dataset | quiet axis | dataset | quiet axis |
+| --- | --- | --- | --- |
+| PanoSaliency | y | Head_and_Gaze | y (1.58 mean) |
+| 360_em | y | NJIT_6DOF | y (1.58 mean) |
+| EyeNavGS | y | VR_User_Behavior | y (1.16 mean) |
+| Panonut360 | y | ViewGauss | y (1.58 mean) |
+
+Add BOXRR-23 (1.602m mean in `HmdPosition.y`), Across XR Applications (its config says
+`up: y` outright) and the XR Motion Dataset Catalogue (X right, Y up, Z forward by
+construction), and **Nymeria is the sole exception in the entire corpus**: its
+`world_device` frame is **Z-up**, confirmed by `gravity_z_world` reading a constant -9.81
+with x and y at zero.
+
+**Documenting the exception is not enough, and the reason goes past the obvious one.** The
+model consumes seven channels in a fixed order. If height is channel 5 for every dataset
+and channel 6 for one, then a model trained on Y-up data and evaluated on Nymeria looks for
+the anthropometric cue - the strongest single thing it uses - in the wrong channel.
+Cross-dataset transfer would collapse for a reason that has nothing to do with
+generalisation, which is exactly the experiment this project is now pointed at.
+`normalize=per_dataset` fixes scale, not semantic role.
+
+So Nymeria is rotated at conversion, as an explicit `--up-axis z` step rather than a silent
+special case:
+
+| | |
+| --- | --- |
+| position | `(x, y, z) -> (x, z, -y)` |
+| orientation | `q' = r (x) q`, **r on the left**, then renormalise |
+| | `r = (-0.70711, 0, 0, 0.70711)` in x,y,z,w |
+
+Left-multiplication is the part to get right: the trajectory quaternion is world-from-device,
+so changing the world frame composes on the left. **Swapping the position components without
+rotating the quaternion silently decouples position from orientation** - a worse failure
+than the exception it would be fixing.
+
+**The check is decisive**, which is what makes the rotation safe to apply: Nymeria ships
+`gravity_x/y/z_world`, so the same rotation must take `(0, 0, -9.81)` to `(0, -9.81, 0)`.
+If it does not, the rotation is wrong. Secondary checks: mean transformed `HmdPosition.y`
+near standing head height (BOXRR measures 1.602m), and mean \|q\| still 1.0000.
+
 ### Half the corpus has no absolute head height at all
 
 The anthropometric cue - the strongest single thing this model uses - **does not exist in

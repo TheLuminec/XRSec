@@ -1033,7 +1033,14 @@ def create_dataloader_from_path(
             cross_session_positives=cross_session_positives,
             center_position=center_position,
             encoding=encoding,
-            keep_users=keep_users,
+            # NOT keep_users. The subsample is a list of user directories drawn from
+            # data_dir, so none of those paths exist under a different test_dir and the
+            # filter would reject every evaluation user - "Loaded 0 samples from 0 users"
+            # and then a bare ZeroDivisionError. It is also wrong in principle:
+            # max_users varies how many identities are TRAINED on, and the held-out
+            # evaluation corpus must stay fixed while it does, or the identity-count
+            # curve varies two things at once.
+            keep_users=None,
         )
         normalizer.transform(test_dataset.sample_index)
 
