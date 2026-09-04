@@ -1651,6 +1651,20 @@ represents. **On the only cross-day corpus a person's own head position is 0.95 
 distance to a stranger's laterally, and 0.49 in height.** That sentence is what the static
 cue is worth for a deployment.
 
+**And the trained model adds nothing to it out of domain (step 6, 2026-09-04).** On alyx,
+scored by the LODO `dyn` checkpoint that never saw alyx, rank-1 at N=17 / full gallery of 70,
+k=16: `dyn` alone **0.082 / 0.031**, height alone 0.135 / 0.031, height plus `dyn` (summed
+z-scored distances, no learned weight) **0.132 / 0.026**. Both registered predictions were
+too high (coordinator: dyn 0.10-0.16, fused 0.15-0.22; Trainer: 0.10-0.20, 0.20-0.30), and
+the fusion is no better than height alone because the model's cue is barely above chance
+there - its pairwise AUC of 0.514 (9.7) implies exactly this rank-1. **On the only cross-day
+corpus, scored by the only model that never saw it, the best system a glasses deployment
+could honestly use identifies at 0.13 among 17 candidates and 0.03 among 70, and head
+height alone does the same.** Everything above 0.4 in this table is same-sitting placement.
+The regime a deployment actually runs in - unseen users of a *seen* activity, the
+in-domain `dyn` figures of 0.53-0.66 - is the pending row, predicted at 0.09-0.14 for
+`dyn` alone and 0.13-0.19 fused.
+
 ### The identification number, measured properly
 
 **rank-1 identification on unseen users, 5 retrained leave-users-out folds**

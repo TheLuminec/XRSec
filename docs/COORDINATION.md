@@ -188,7 +188,11 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   complementary than thought, below 0.18 dyn adds nothing to height on an unseen corpus.
   Fusion by summed z-scored distances over the impostor distribution, no learned weight.
   Distance-ratio table (median genuine / median impostor) recorded in CLAUDE.md: seated xz
-  0.13-0.18, alyx xz 0.947 / y 0.487.
+  0.13-0.18, alyx xz 0.947 / y 0.487. **Measured 22:20: dyn 0.082, y+dyn 0.132 vs y 0.135
+  at N=17; both predictions wrong, too high; the model adds nothing to height out of
+  domain.** In CLAUDE.md. Pending: the seen-activity row (9.5 run-8 in-domain dyn folds on
+  held-out alyx users), coordinator's prediction dyn 0.09-0.14, fused 0.13-0.19; then the
+  seated dyn columns (9.3 five, plus per-corpus LODO as a second column).
 
 ## GPU queue
 
