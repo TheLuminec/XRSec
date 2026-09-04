@@ -85,6 +85,40 @@ harmless for identification, but it is a different reference point than
 a VR headset's tracked origin and should not be assumed identical without
 checking if it ever matters for a cross-dataset comparison.
 
+UP AXIS IS Z, NOT Y -- verified from the data, not assumed, and this is
+the one real axis-convention break in the corpus. Every other dataset
+here (BOXRR-23/who-is-alyx/across-xr, all Unity-family) is left-handed,
+Y-up. Nymeria's raw `gravity_z_world` column reads a constant -9.81 with
+gravity_x_world/gravity_y_world at 0.0 across every row checked (two real
+sequences, thousands of rows) -- gravity points along -Z, so Z is
+vertical. Independently confirmed by the position statistics themselves:
+tz_world_device has near-zero variance over a 20-second window (std
+0.022, consistent with head height barely changing) while tx/ty_world
+device vary an order of magnitude more (std 0.18-0.21, consistent with
+horizontal motion while walking).
+
+THIS SCRIPT DOES NOT REMAP AXES. tx/ty/tz_world_device map straight to
+HmdPosition.x/y/z in that order -- position and the qx/qy/qz/qw_world_
+device quaternion stay in the SAME mutually-consistent frame they arrived
+in. Swapping the y/z slots to make "HmdPosition.y" mean height for this
+dataset too would require rotating the quaternion component to match
+(a real change-of-basis, not a column rename), and doing that wrong is a
+worse failure than documenting an exception plainly: it would produce a
+plausible-looking but silently-decoupled position/orientation pair,
+exactly the shape of failure that has bitten every dataset here that
+actually needed a component reorder.
+
+PRACTICAL CONSEQUENCE: for Nymeria specifically, HEIGHT LIVES IN
+HmdPosition.z, NOT HmdPosition.y. Anything that reads "HmdPosition.y" as
+height/vertical position across the pooled corpus (e.g. a height-vs-
+participants_metadata.csv ground-truth comparison) must special-case this
+dataset or it will silently compare the wrong channel. This does not
+affect identity-count/window-count acquisition, and does not affect
+`center_position`-style ablations (which zero all three channels
+uniformly regardless of which one is "up") -- it specifically affects any
+future analysis that assumes column identity implies physical axis
+identity across datasets.
+
 Every recording_head file also carries a second, ECEF-frame copy of the
 same pose (tx/ty/tz_ecef_device, qx/qy/qz/qw_ecef_device, gated on
 geo_available) -- an absolute geo-referenced pose. Not used; world_device
