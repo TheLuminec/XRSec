@@ -6,7 +6,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 XR biometric identification research. A Siamese network decides whether two windows of headset motion came from the same person. The research question is whether this generalizes to **users never seen during training**, so nearly every design decision (leave-users-out splits, pair generation, boosting) exists to serve that question.
 
-Current state: the defensible headline is **0.669** on unseen users (chance = 0.50) — `bilstm`, `objective=identity_softmax`, cross-session positives, validation-selected epoch, averaged over 5 leave-users-out folds on VR_User_Behavior. That is the only figure that has survived all three corrections below; earlier numbers in this file and in `results/runs.csv` predate one or more of them. The historical 0.85 is **explained and reproduced**: it was a *seen-user* number. Our lineage never held users out — the MS thesis this repo descends from splits pairs randomly across users ("each video contains sensor data from all users who watched it") and reports **0.8364 on VR_User_Behavior**, the dataset we still use. Verified here directly: the same protocol on our own code (`test_on_excluded=false`, `pair_bce`, `bilstm`, 2s@20Hz) reaches **0.810**, against 0.62–0.67 for the identical configuration with leave-users-out. So it is not a target, not a regression, and not comparable to anything in this file — every number here is leave-users-out.
+## Current state - read this before quoting any number
+
+**0.669** verification accuracy on unseen users (chance 0.50) is still what the pipeline
+measures: `bilstm`, `identity_softmax`, cross-session positives, validation-selected epoch,
+5 leave-users-out folds. It survived three protocol corrections and it is not wrong. But
+four findings, all from the same day of auditing, change what it *means*:
+
+| finding | consequence |
+| --- | --- |
+| Per-dataset held-out AUC is **0.93+** where a real head position exists and **~0.49** where the position column holds a unit direction vector | any pooled figure averages near-perfect verification with chance |
+| A **training-free three-number lookup** (mean position, Euclidean distance) scores **0.726** where the model scores **0.723**, same folds, same manifests | most of what the pooled model does needs no model |
+| The model beats that lookup **in domain by +0.14** on alyx, and **loses to it by 0.03** on an unseen corpus | there IS a learned component, and it is exactly what fails to transfer |
+| Every published comparison uses head **plus both controllers**; we are head-only by scope, so the model runs on glasses | part of the gap to published figures is sensor set, not performance |
+
+**The honest one-sentence version.** We identify unseen users well where absolute head
+position is recorded - and most of that is head height, which three numbers capture without
+training. The component the model actually learns is real, worth about +0.14 in domain, and
+does not survive a change of corpus.
+
+**What follows for anyone working here.** Report per dataset with its semantics, never
+pooled alone. The mean-position lookup is computed on every run (`lookup_auc`) and is the
+number to beat, not the model's previous score. The open problem is not accuracy, it is
+building a learned component that transfers - which is what
+`docs/GENERALISATION_PROPOSAL.md` is for.
+
+**Identification is a separate scale.** rank-1 **0.570** at a 17-user gallery (chance
+0.059), against a published 0.785 at the same gallery size. Never compare a verification
+figure to a published rank-1; they are different tasks.
+
+The historical 0.85 is **explained and reproduced**: it was a *seen-user* number. Our
+lineage never held users out - the MS thesis this repo descends from splits pairs randomly
+across users and reports **0.8364 on VR_User_Behavior**. Verified here directly: the same
+protocol on our own code reaches **0.810**, against 0.62-0.67 for the identical
+configuration with leave-users-out. Not a target, not a regression, not comparable to
+anything in this file - every number here is leave-users-out.
 
 What moved it, measured with paired folds:
 
@@ -169,6 +203,48 @@ Predicted beforehand from data alone: between-session position spread is compara
 
 Session provenance lives in `SampleIndex.window_session_ids` and is stored in the sample cache (cache v3).
 
+### NJIT's orientation is in a different frame from its position - and is repairable
+
+Its quaternion and position disagree. Measured across all 8 datasets by rotating the
+device's local +Y axis into world coordinates and averaging - for an upright head this
+should point at world up:
+
+| dataset | local +Y -> world | dataset | local +Y -> world |
+| --- | --- | --- | --- |
+| ViewGauss | (0.05, **0.97**, -0.11) | VR_User_Behavior | (0.01, **0.95**, 0.02) |
+| EyeNavGS | (-0.07, **0.93**, 0.13) | Panonut360 | (0.06, **0.95**, 0.05) |
+| **NJIT_6DOF** | (0.01, **0.05**, 0.00) | | |
+
+Every dataset puts the headset's up axis at world up around 0.95. **NJIT puts it
+nowhere** - and its local +Z lands on world +Z at 0.97, meaning its quaternions are
+rotations *about Z* while its position is Y-up. That matches the deleted parser, which
+built the quaternion with `R.from_euler('ZYX', [yaw, pitch, roll])` - a Z-up yaw
+convention applied to Y-up position data.
+
+**Unlike Nymeria's Z-up frame, this is not a source convention.** Nymeria's was confirmed
+by its gravity vector, an actual physical fact about the recording. NJIT is room-scale VR
+with no reason for orientation and position to disagree, so this is our own parser bug.
+
+**It is repairable from the processed data - the raw source is not needed.** Tested three
+candidates against the corpus-wide invariant:
+
+| candidate | local +Y -> world | up |
+| --- | --- | --- |
+| as-is | (0.00, 0.06, 0.01) | 0.063 |
+| `r (x) q` - world frame only | (0.00, 0.01, -0.06) | 0.006 |
+| **`r (x) q (x) r^-1`** - full basis change | (-0.01, **0.97**, 0.00) | **0.975** |
+
+with `r = (-0.70711, 0, 0, 0.70711)`, the same -90-degree rotation about X used for
+Nymeria. The full conjugation is what is needed, because both the world *and* device
+frames are Z-up in the parser's output. The acceptance criterion is not a guess: 0.975
+matches what every other dataset measures.
+
+**Not yet applied.** NJIT is 18 users and 414 windows at 5s, the smallest and least
+valuable dataset here, and applying it means rewriting processed CSVs on three machines.
+Recorded so whoever re-parses NJIT - or decides to patch it in place - has the verified
+transform and the test that confirms it. **Until then NJIT's orientation channel should
+not be trusted cross-dataset.**
+
 ### Every dataset is Y-up except Nymeria
 
 Verified rather than assumed, using the fact that the vertical axis moves least during
@@ -214,39 +290,54 @@ than the exception it would be fixing.
 If it does not, the rotation is wrong. Secondary checks: mean transformed `HmdPosition.y`
 near standing head height (BOXRR measures 1.602m), and mean \|q\| still 1.0000.
 
-### Half the corpus has no absolute head height at all
+### Four datasets store a DIRECTION VECTOR in `HmdPosition`, not a position
 
-The anthropometric cue - the strongest single thing this model uses - **does not exist in
-every dataset**. Mean `HmdPosition` per axis, sampled across users:
+Verified independently on raw CSVs - `|HmdPosition|` per dataset, over 25 users x 3 files:
 
-| dataset | mean x | mean y | mean z | absolute height? |
-| --- | --- | --- | --- | --- |
-| ViewGauss | 0.436 | **1.564** | 0.420 | yes |
-| NJIT_6DOF | 3.011 | **1.587** | 2.252 | yes (room-scale) |
-| VR_User_Behavior | 0.024 | **1.162** | -0.258 | yes (seated) |
-| Head_and_Gaze | 0.181 | **0.822** | 0.222 | yes (low origin) |
-| PanoSaliency | -0.536 | -0.008 | 0.195 | **no** |
-| EyeNavGS | -0.184 | 0.214 | 0.601 | **no** |
-| Panonut360 | -0.251 | 0.043 | -0.324 | **no** |
-| 360_em | -0.074 | 0.147 | 0.463 | **no** |
-| **BOXRR-23** | | **1.602** (sd 0.141) | | **yes, standing** |
+| dataset | mean \|pos\| | sd | what it is |
+| --- | --- | --- | --- |
+| PanoSaliency | **1.0000** | 1.7e-16 | **unit direction vector** |
+| 360_em | **1.0000** | 8.7e-17 | **unit direction vector**, and no quaternion column at all |
+| Head_and_Gaze `V1_*` | **1.0000** | 8.0e-17 | **unit direction vector** |
+| Panonut360 | **1.0000** | 7.1e-05 | **unit direction vector** |
+| VR_User_Behavior | 1.2403 | 9.6e-02 | real position |
+| EyeNavGS | 1.6955 | 9.7e-01 | real position (virtual-camera scene units) |
+| ViewGauss | 1.7208 | 1.4e-01 | real position |
+| NJIT_6DOF | 4.2727 | 1.3e+00 | real position, room-scale |
 
-Four of eight record position relative to a seated origin, so no axis carries a height.
-Those users cannot be separated by anthropometry at all, and whatever the model achieves
-on them is posture and behaviour.
+A norm of exactly 1 to machine epsilon is not a coordinate convention, it is a different
+quantity in the same column. **These datasets carry orientation, encoded in the position
+slot.**
 
-**This qualifies the "~78% is absolute head position" finding rather than overturning it.**
-That figure was measured on the pooled corpus, where it is an average over datasets that
-carry the cue and datasets that cannot. The per-dataset picture is far more uneven than a
-single number suggests, and any future anthropometry claim should say which datasets it
-rests on.
+**This corrects an earlier entry in this file.** A previous version said these datasets
+record "position relative to a seated origin" - inferred from their per-axis means sitting
+near zero. That inference was wrong: direction vectors average toward zero when the
+directions are spread, which produces the same signature. The mechanism matters, because a
+seated-origin position still carries posture while a direction vector carries none.
 
-Height discriminability, between-user sd over within-user sd on the height axis (a
-scale-free ratio, so comparable even where the frames differ):
+**It also corrects the `channels=position` recovery.** `360_em` going from 0 to 2,360
+windows was reported here as recovering a position dataset. Its source columns are
+`x_head, y_head, angle_deg_head, GazeRay.*` with no position field anywhere, and its
+`HmdPosition` is unit-norm, so what `channels=position` recovered was **13 identities of
+direction data**, not position. Still 13 identities; not the thing the entry implied.
 
-| ViewGauss | BOXRR-23 | NJIT | VR_User_Behavior | the four centred datasets |
-| --- | --- | --- | --- | --- |
-| 4.03 | **2.36** | 1.97 | 1.61 | 0.21-0.42 (no height axis) |
+**And it sharpens the "~78% is absolute head position" qualification.** That figure comes
+from `center_position` on the pooled corpus, which includes PanoSaliency and Panonut360 -
+where centring removes the mean of a *direction vector*, not a height. So the measurement
+"centring the position channels costs 0.134" stands; the interpretation "that 0.134 is
+height and posture" holds only for the datasets that actually carry position. Any
+anthropometry claim must name its datasets.
+
+**Provisional per-dataset held-out AUC** from a 7-dataset `identity_softmax` model (fold 0
+only, other folds pending) tracks the semantics exactly:
+
+| ViewGauss | Head_and_Gaze | VR_User_Behavior | NJIT | PanoSaliency | Panonut360 | EyeNavGS | pooled |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 0.942 | 0.929 | 0.711 | 0.682 | 0.568 | 0.492 | 0.495 | 0.738 |
+
+**The pooled headline is an average of near-perfect verification where real head position
+exists and chance where it does not.** That is the single most important thing to know
+before reading any pooled number in this file.
 
 ### A confound to weigh before reading the identity-count curve
 
@@ -262,6 +353,89 @@ domain and will flatter. Training with BOXRR and testing on our existing dataset
 whether the acquisition transfers, and is the number that decides whether it was worth
 it. If the first is strong and the second flat, the honest conclusion is that we bought
 an easier corpus rather than a better model.
+
+### Nymeria is the one place the static baseline cannot win
+
+The lookup below depends on absolute position being comparable between two recordings of
+one person. **On Nymeria it is not**: the SLAM origin is set per recording, so the two
+halves of a positive pair sit in different arbitrary frames and the static cue is absent
+between them. The lookup should therefore sit at **chance on Nymeria and nowhere else**.
+
+That makes it the cleanest instrument available for the question this project is stuck on.
+Everywhere else the static cue is present and dominates, so the learned component is
+measured only by subtraction. On Nymeria it is structurally disabled, so whatever the model
+scores above chance there **is** the behavioural component - measured directly rather than
+simulated by `center_position`, which has since been shown to be a leaky simulation (the
+mean quaternion alone recovers 0.54-0.79 of static-posture performance).
+
+Two consequences: expect Nymeria transfer numbers to be low, and do not read that as
+failure - low is the prediction. The question is whether the model beats the lookup there,
+and on Nymeria alone that is a fair fight.
+
+Acquired: **50 participants, 100 sequences, 47.1GB transfer, 20,778 windows at 5s@20Hz
+(415.6 per identity, above the corpus median of 295), 17 distinct scripts so every positive
+pair is cross-activity by construction.** Held at 50 rather than 100: the second half costs
+another ~47GB to buy identities in a dataset whose value is device and activity diversity,
+where BOXRR supplies identities 300x cheaper.
+
+### A three-number lookup matches the trained model (CONFIRMED)
+
+Measured on all 5 folds of `b732bee5c6`, on the **same held-out users and the same pair
+manifests**, with the lookup using **each checkpoint's own training-fitted
+`ChannelNormalizer`** - the exact transform the model receives. The probe is a
+training-free **mean position**: three numbers per window, Euclidean distance.
+
+| | pooled | ViewGauss | H&G | VR_UB | NJIT | PanoSal | Panonut | EyeNavGS |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| lookup | **0.726** +-0.017 | 0.932 | 0.868 | **0.716** | **0.674** | 0.583 | 0.508 | 0.493 |
+| model | **0.723** +-0.014 | 0.938 | 0.898 | 0.689 | 0.611 | 0.580 | 0.504 | 0.490 |
+
+An earlier pass fitted the lookup's statistics on the held-out cohort, which would have
+handed it information the model was denied. Redone properly the result is unchanged, and
+the reason is worth keeping: **with Euclidean distance the per-channel mean cancels in
+`a - b`**, so the only cohort information the flawed version ever used was three per-axis
+scales.
+
+**The model wins on the two best-conditioned corpora and loses on the next two.** Pooled,
+it is inside the fold spread of three numbers requiring no training at all.
+
+### But there IS a learned component - it just does not transfer
+
+The decisive contrast, from an 8-dataset model with alyx identities in training
+(`31751868df`, ~15 alyx users held out per fold):
+
+| | AUC on alyx |
+| --- | --- |
+| 8-dataset model, alyx **in domain** | **0.725** +-0.073 |
+| static lookup on alyx | ~0.59 |
+| 7-dataset model, alyx **never seen** | **0.566** |
+| random control | 0.496 |
+
+In domain the model beats the static lookup by roughly **+0.13**. That is the first
+evidence anywhere in these numbers of a learned non-static component - and it is **exactly
+the component that disappears on transfer**: unseen, the model drops to 0.566, below the
+lookup's 0.593 on the same corpus.
+
+So the picture is coherent and uncomfortable:
+
+- the **static cue transfers** (lookup: 0.593 unseen, and it needs no model)
+- the **learned cue is real but dataset-specific** (+0.13 in domain, gone when unseen)
+- the unseen-dataset cost on alyx is about **0.16 AUC**
+
+That is a sharper statement of the generalisation problem than "the model does not
+generalise". It generalises exactly as far as the static cue does, and the part it actually
+learns is the part that does not survive a change of corpus.
+
+**Two caveats on the in-domain figure.** Its spread is +-0.073 against +-0.014 pooled,
+because only ~15 alyx users are held out per fold, so the 0.16 gap is about 2.2 sd -
+real but not tight. And the two numbers come from different checkpoints scored on
+*different* evaluation sets: ~15 held-out alyx users against all 76. Gallery composition
+has already been shown to matter here, so the like-for-like version - both models on the
+same ~15 users per fold - is the one to quote.
+
+**Standing consequence**: the mean-position lookup is a permanent per-dataset baseline
+reported beside every model, not a probe someone runs occasionally. It has now been found
+competitive twice, both times only because someone went looking.
 
 ### How much is the model actually adding?
 

@@ -90,6 +90,8 @@ FIELDS = [
     "selected_test_eer",
     "best_test_auc",
     "best_test_eer",
+    "lookup_auc",
+    "lookup_eer",
     "best_epoch",
     "final_train_acc",
     "final_test_acc",

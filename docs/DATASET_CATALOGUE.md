@@ -311,6 +311,53 @@ also announces **BOXRR-24**, "which will include significantly more users".
 
 ---
 
+## Coordinate-frame conventions, per dataset — measured, not assumed
+
+Compiled from two independent audits (AVALON: BOXRR-23/who-is-alyx/360_em/Nymeria; the
+"Model generalization to unseen datasets" session on DESKTOP-C: everything else, 5s@20Hz
+windows over 60 users/dataset plus raw-CSV confirmation). A full table with method notes
+lives in `docs/GENERALISATION_PROPOSAL.md` on DESKTOP-C, not yet committed.
+
+**Tier 1 — real head pose.** `|HmdPosition|` is a genuine distance (metres), not a unit
+vector, and the quaternion is a real rotation.
+
+| dataset | mean `\|pos\|` | up axis | yaw reference (mean forward, concentration) | dup. frames @20Hz |
+| --- | --- | --- | --- | --- |
+| BOXRR-23 | 1.64m | Y | +Z (0.98) | 0.3% |
+| who-is-alyx | 1.62m | Y | none (0.33) | 6.6% |
+| VR_User_Behavior | 1.16m | Y | -X (0.56) | 8.3% |
+| ViewGauss | 1.95m | Y | +Z (0.96) | 50.5% |
+| Head_and_Gaze V2 | 1.36m | Y | +X (0.64) | 0.1% |
+| EyeNavGS | 1.05m (sd 0.26), scene units not metres | Y | none (0.14) | 0.4% |
+| Nymeria | SLAM-relative, not comparable in scale to the rest (see the Nymeria section above) | **Z** (rotated to Y by the converter) | n/a | n/a |
+| NJIT_6DOF | 3.9m, room-scale | position Y-up, **but orientation rotates about Z** — see below | +Z (0.97) | 0.0% |
+
+**NJIT's orientation and position are in different frames — a real, unresolved break.**
+The deleted parser (`git show 6421567^:datasets/NJIT_6DOF_VR_Navigation_Dataset/parser.py`)
+builds the quaternion with `R.from_euler('ZYX', [yaw, pitch, roll], degrees=True)` while
+position stays Y-up. That is not a documentation gap like Nymeria's — it looks like an
+axis-order bug in a parser that no longer exists to re-derive from source, and the fix
+requires either recovering the original NJIT files' native convention or accepting the
+mismatch. **Flagged as broken until re-parsed, not just noted.**
+
+**Tier 2 — direction vector, not position.** `\|HmdPosition\|` is exactly 1.0 on every row
+(the give-away — a real position essentially never lands on a unit sphere by chance).
+
+| dataset | `\|pos\|` | what it actually encodes | quaternion |
+| --- | --- | --- | --- |
+| PanoSaliency | 1.0000, sd 0 | orientation, in the position slot | **constant identity (0,0,0,1)** — this dataset has NO real rotation channel either |
+| Panonut360 | 1.000, sd 0 | the source's `head_x/y/z`, already a unit vector — copied through by the deleted parser | real, and encodes the same direction as "position" |
+| Head_and_Gaze V1 | 1.0000, sd 0 | `(sin(yaw)cos(pitch), sin(pitch), cos(yaw)cos(pitch))` from `Pose_Point`, per the deleted parser | absent (this is why `channels=full` reports 0 windows for these files) |
+| 360_em_dataset | 1.0000, sd 8.5e-17 | almost certainly derived from `x_head, y_head, angle_deg_head` — no real position field exists in the raw columns | absent |
+
+**Consequence for a claim already in this file:** 360_em's "recovery" under `channels=
+position` (0 → 2,360 windows) added a direction-vector dataset, not a position one — the
+framing needs correcting wherever it's quoted, not just caveated.
+
+**Tier 3 — other.** Not yet fully characterised; recorded so it isn't re-litigated.
+
+---
+
 ## Tier 2 — Retrievable with permission
 
 These need a request. Contacts are given as names and affiliations; **email addresses are on

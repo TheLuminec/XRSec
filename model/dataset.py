@@ -249,6 +249,59 @@ def position_channel_slice(num_channels: int) -> slice:
     return slice(4, 7) if num_channels >= 7 else slice(0, 3)
 
 
+
+def detect_direction_vector_datasets(sample_index) -> list[str]:
+    """
+    Name any dataset whose `HmdPosition` is a unit vector rather than a position.
+
+    Four datasets in this corpus store a viewing DIRECTION in the position columns -
+    PanoSaliency, Panonut360, Head_and_Gaze's V1 files and 360_em, all with
+    |position| = 1.0000 to machine epsilon. That is not a coordinate convention, it is
+    a different quantity in the same column, and it took two independent audits to
+    notice: the per-axis means sit near zero, which reads exactly like a
+    seated-origin position, so summary statistics do not reveal it. The norm does.
+
+    It matters because the model's strongest cue is absolute head position. A dataset
+    carrying directions contributes none of it - measured held-out AUC there is 0.49 to
+    0.58 against 0.93+ where real position exists - so pooling the two silently
+    averages near-perfect verification with chance.
+
+    Called at index build time, before encoding and centring, since both destroy the
+    norm that makes this detectable.
+    """
+    if sample_index.sample_count == 0:
+        return []
+
+    channels = position_channel_slice(sample_index.num_channels)
+    positions = sample_index.samples[:, channels, :]
+    norms = positions.norm(dim=1)
+
+    flagged = []
+    dataset_ids = getattr(sample_index, "window_dataset_ids", None)
+    names = list(getattr(sample_index, "dataset_names", []))
+    for dataset_id, name in enumerate(names):
+        if dataset_ids is None:
+            selected = norms
+        else:
+            mask = dataset_ids == dataset_id
+            if not bool(mask.any()):
+                continue
+            selected = norms[mask]
+        # A genuine position varies in magnitude; a unit vector does not.
+        if abs(float(selected.mean()) - 1.0) < 1e-3 and float(selected.std()) < 1e-3:
+            flagged.append(name)
+
+    if flagged:
+        print(f"  WARNING: {', '.join(flagged)} store a unit DIRECTION VECTOR in "
+              f"HmdPosition, not a position.")
+        print(f"           |position| = 1.0000 to machine epsilon. These carry "
+              f"orientation, not head")
+        print(f"           height, and score at chance on held-out users. Do not pool "
+              f"them with")
+        print(f"           real-position datasets in a headline number.")
+    return flagged
+
+
 class SampleIndex:
     """
     Stable index over flattened per-user samples.
@@ -314,6 +367,9 @@ class SampleIndex:
         self.sample_count = int(self.samples.shape[0])
         self.center_position = center_position
         self.encoding = encoding
+
+        # Before encoding and centring: both destroy the norm this depends on.
+        self.direction_vector_datasets = detect_direction_vector_datasets(self)
 
         # Before centring: br already removes the absolute position, so applying both
         # would centre an already-centred signal rather than compounding.
