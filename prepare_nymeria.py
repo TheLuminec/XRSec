@@ -249,8 +249,23 @@ def find_sequences(source: Path):
             yield fake_name, act_id, csv_path
 
 
-def convert_session(path: Path) -> pd.DataFrame:
-    """One closed_loop_trajectory.csv -> a DataFrame in the pipeline's schema."""
+def convert_session(path: Path, max_hz: float | None = None) -> pd.DataFrame:
+    """One closed_loop_trajectory.csv -> a DataFrame in the pipeline's schema.
+
+    max_hz optionally decimates, same convention and same rationale as
+    who-is-alyx's --max-hz: nothing in the pipeline samples above 20Hz, so
+    storing the full ~1029Hz native rate is mostly frames that get thrown
+    away at load time. Unlike who-is-alyx (default 60Hz), this is worth
+    doing here specifically because 1029Hz is a 50:1 decimation down to
+    20Hz -- by far the most aggressive in the corpus (next worst is NJIT's
+    250Hz at 12:1) -- so leaving the stored rate well above 20Hz preserves
+    real headroom for Sampler's nearest-point selection rather than
+    handing it an already-decimated series. The ORIGINAL full-rate data
+    is not lost by doing this -- it stays fetchable from Nymeria's own
+    hosted zips via the URL list, so a future resample=bin retest (see
+    module docstring) means re-fetching, not something this local copy
+    needs to preserve.
+    """
     frame = pd.read_csv(path, usecols=lambda name: name in REQUIRED)
     missing = [column for column in REQUIRED if column not in frame.columns]
     if missing:
@@ -266,6 +281,13 @@ def convert_session(path: Path) -> pd.DataFrame:
     if seconds.size > 1:
         forward = np.concatenate([[True], np.diff(seconds) > 0])
         seconds, position, rotation = seconds[forward], position[forward], rotation[forward]
+
+    if max_hz and seconds.size > 1:
+        duration = seconds[-1] - seconds[0]
+        native = seconds.size / duration if duration > 0 else 0.0
+        if native > max_hz:
+            step = max(1, int(round(native / max_hz)))
+            seconds, position, rotation = seconds[::step], position[::step], rotation[::step]
 
     output = pd.DataFrame(
         np.column_stack([seconds, rotation, position]),
@@ -290,7 +312,7 @@ def describe(frame: pd.DataFrame) -> dict:
     }
 
 
-def inspect(source: Path, limit: int = 4) -> int:
+def inspect(source: Path, max_hz: float | None = None, limit: int = 4) -> int:
     sequences = list(find_sequences(source))
     users = sorted({name for name, _, _ in sequences})
     print(f"{len(users)} participants, {len(sequences)} activity recordings found")
@@ -307,7 +329,7 @@ def inspect(source: Path, limit: int = 4) -> int:
 
     print(f"\nsampling {min(limit, len(sequences))} recordings:")
     for name, act_id, path in sequences[:: max(1, len(sequences) // max(limit, 1))][:limit]:
-        stats = describe(convert_session(path))
+        stats = describe(convert_session(path, max_hz))
         print(f"  {name:<20} act{act_id}  rows={stats['rows']:>8} "
               f"{stats['duration']:>8.1f}s  {stats['hz']:>7.1f}Hz  "
               f"|q|={stats['quat_norm']:.6f}")
@@ -316,7 +338,8 @@ def inspect(source: Path, limit: int = 4) -> int:
     return 0
 
 
-def convert(source: Path, out: Path, metadata_csv: Path | None = None) -> int:
+def convert(source: Path, out: Path, metadata_csv: Path | None = None,
+            max_hz: float | None = None) -> int:
     sequences = list(find_sequences(source))
     if not sequences:
         print(f"ERROR: no closed_loop_trajectory.csv found under {source}")
@@ -336,7 +359,7 @@ def convert(source: Path, out: Path, metadata_csv: Path | None = None) -> int:
 
     for fake_name, act_id, path in sequences:
         try:
-            frame = convert_session(path)
+            frame = convert_session(path, max_hz)
         except Exception as exc:
             print(f"  SKIP {fake_name} act{act_id}: {type(exc).__name__}: {exc}")
             skipped += 1
@@ -390,6 +413,11 @@ def main() -> int:
                         help="One sequence key per line")
     parser.add_argument("--dest", type=Path, default=None,
                         help="Where --fetch writes <sequence_key>/closed_loop_trajectory.csv")
+    parser.add_argument("--max-hz", type=float, default=60.0,
+                        help="Decimate above this rate (default 60, same convention as "
+                             "prepare_who_is_alyx.py). Native is ~1029Hz; nothing in the "
+                             "pipeline samples above 20Hz, so storing the full rate is "
+                             "mostly discarded at load time. 0 disables.")
     args = parser.parse_args()
 
     if args.fetch:
@@ -405,8 +433,9 @@ def main() -> int:
         print(f"ERROR: --source {args.source} is not a directory")
         return 1
 
-    return (inspect(args.source) if args.inspect
-            else convert(args.source, args.out, args.participants_metadata))
+    max_hz = args.max_hz if args.max_hz and args.max_hz > 0 else None
+    return (inspect(args.source, max_hz) if args.inspect
+            else convert(args.source, args.out, args.participants_metadata, max_hz))
 
 
 if __name__ == "__main__":

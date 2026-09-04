@@ -85,6 +85,22 @@ def test_timestamp_is_microseconds_and_zero_based(tmp_path):
     assert np.allclose(session["SessionTime"].diff().dropna(), 0.000972, atol=1e-9)
 
 
+def test_max_hz_decimates_but_leaves_low_rate_sources_alone(tmp_path):
+    """Native ~1029Hz is by far the most aggressive decimation in the
+    corpus (next worst is NJIT's 250Hz at 12:1) -- max_hz exists so the
+    stored copy isn't forced all the way down to 20Hz, unlike a naive
+    reading of 'nothing samples above 20Hz' might suggest."""
+    _write_trajectory_csv(tmp_path / "traj.csv", n=1000, dt_us=972)  # ~1029Hz
+    full = convert_session(tmp_path / "traj.csv", max_hz=None)
+    decimated = convert_session(tmp_path / "traj.csv", max_hz=60.0)
+    assert len(decimated) < len(full)
+    assert len(decimated) == pytest.approx(len(full) / (1029 / 60), rel=0.2)
+
+    _write_trajectory_csv(tmp_path / "slow.csv", n=50, dt_us=50_000)  # 20Hz
+    untouched = convert_session(tmp_path / "slow.csv", max_hz=60.0)
+    assert len(untouched) == 50
+
+
 def test_find_sequences_reads_the_fake_name_and_act_id(tmp_path):
     seq_dir = tmp_path / "20230607_s0_james_johnson_act0_e72nhq"
     seq_dir.mkdir()
