@@ -254,3 +254,80 @@ def test_balanced_sampling_keeps_the_epoch_the_same_size():
     loader = create_window_loader(index, batch_size=16, device=None, seed=5,
                                   balance_identities=True)
     assert sum(int(labels.numel()) for _, labels in loader) == 111
+
+
+# --- capping: equalise by trimming the surplus, not by resampling the scarce ---
+#
+# On the post-BOXRR corpus the 419 pre-BOXRR identities are 17.2% of 2439 and hold
+# 40.8% of all windows, so uniform sampling gives them four times their share of every
+# epoch's gradient. Weighted sampling fixes that WITH REPLACEMENT, which lowers the
+# number of distinct windows seen; capping trims instead.
+
+def test_capping_bounds_every_identity_without_resampling():
+    from identity_train import CappedIdentitySampler, WindowDataset
+
+    dataset = WindowDataset(_lopsided_index((100, 10, 1)))
+    sampler = CappedIdentitySampler(dataset.labels, cap=10)
+    drawn = list(sampler)
+
+    assert len(drawn) == len(set(drawn)), "a window was drawn twice in one epoch"
+    counts = torch.bincount(dataset.labels[torch.tensor(drawn)], minlength=3)
+    assert counts.tolist() == [10, 10, 1], "each identity capped, small ones untouched"
+
+
+def test_the_default_cap_is_the_median_identity_size():
+    from identity_train import CappedIdentitySampler, WindowDataset
+
+    dataset = WindowDataset(_lopsided_index((100, 30, 5)))
+    assert CappedIdentitySampler(dataset.labels).cap == 30
+
+
+def test_capping_makes_the_epoch_smaller_not_larger():
+    """The point against weighted sampling: this gets cheaper, not more expensive."""
+    from identity_train import CappedIdentitySampler, WindowDataset
+
+    dataset = WindowDataset(_lopsided_index((100, 10, 1)))
+    sampler = CappedIdentitySampler(dataset.labels, cap=10)
+    assert len(sampler) == 21 < len(dataset) == 111
+
+
+def test_a_fresh_subset_is_drawn_each_epoch():
+    """
+    The surplus is trimmed per epoch, not discarded permanently - over many epochs a
+    large identity still contributes all of its windows.
+    """
+    from identity_train import CappedIdentitySampler, WindowDataset
+
+    dataset = WindowDataset(_lopsided_index((100, 10, 1)))
+    sampler = CappedIdentitySampler(dataset.labels, cap=10,
+                                    generator=torch.Generator().manual_seed(0))
+    assert set(sampler) != set(sampler)
+
+
+def test_capping_raises_the_effective_identity_count():
+    from identity_train import (CappedIdentitySampler, WindowDataset,
+                                effective_identity_count)
+
+    dataset = WindowDataset(_lopsided_index((100, 10, 1)))
+    before = effective_identity_count(dataset.labels, 3)
+    drawn = torch.tensor(list(CappedIdentitySampler(dataset.labels, cap=10)))
+    after = effective_identity_count(dataset.labels[drawn], 3)
+    assert after > before
+
+
+@pytest.mark.parametrize("value,expected", [
+    (False, "off"), (None, "off"), ("off", "off"),
+    (True, "weighted"), ("weighted", "weighted"), ("cap", "cap"),
+])
+def test_balance_mode_accepts_the_old_booleans(value, expected):
+    """Existing configs say true/false; those must keep meaning what they meant."""
+    from identity_train import resolve_balance_mode
+
+    assert resolve_balance_mode(value) == expected
+
+
+def test_an_unknown_balance_mode_is_rejected():
+    from identity_train import resolve_balance_mode
+
+    with pytest.raises(ValueError, match="off, weighted or cap"):
+        resolve_balance_mode("stratified")

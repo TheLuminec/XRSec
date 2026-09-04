@@ -40,7 +40,7 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, Dataset, WeightedRandomSampler
+from torch.utils.data import DataLoader, Dataset, Sampler, WeightedRandomSampler
 
 
 class WindowDataset(Dataset):
@@ -59,6 +59,60 @@ class WindowDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.samples[idx], self.labels[idx]
+
+
+
+class CappedIdentitySampler(Sampler):
+    """
+    Draw at most `cap` windows from each identity per epoch, without replacement.
+
+    The alternative - inverse-frequency weighting - equalises identities by resampling
+    WITH replacement, so a 1260-window identity gets drawn far fewer times than it has
+    windows: the effective identity count rises while the number of distinct windows
+    the model sees falls. Capping equalises from the other direction. It discards the
+    surplus of over-represented identities rather than re-drawing the scarce ones, so
+    every window it yields is a distinct window, and the epoch gets cheaper rather than
+    more expensive.
+
+    Why this matters on the current corpus: the 419 pre-BOXRR identities are 17.2% of
+    2439 and hold 40.8% of all windows, so uniform sampling gives them four times their
+    share of every epoch's gradient and discounts the 2020 identities just acquired.
+
+    A fresh subset is drawn each epoch, so the surplus is not permanently discarded -
+    over many epochs a large identity contributes all of its windows, just never more
+    than `cap` of them at once.
+    """
+
+    def __init__(self, labels: torch.Tensor, cap: int | None = None,
+                 generator: torch.Generator | None = None):
+        self.labels = labels
+        self.generator = generator
+        counts = torch.bincount(labels)
+        present = counts[counts > 0]
+        # Default to the median: identities above it are trimmed, those below are
+        # untouched, so the epoch stays close to representative rather than collapsing
+        # to the smallest identity.
+        self.cap = int(cap) if cap else int(present.median().item())
+        self.by_identity = [torch.nonzero(labels == i, as_tuple=True)[0]
+                            for i in range(len(counts))]
+        self.length = int(sum(min(self.cap, int(g.numel())) for g in self.by_identity))
+
+    def __len__(self) -> int:
+        return self.length
+
+    def __iter__(self):
+        picked = []
+        for windows in self.by_identity:
+            total = int(windows.numel())
+            if total == 0:
+                continue
+            if total <= self.cap:
+                picked.append(windows)
+            else:
+                order = torch.randperm(total, generator=self.generator)[:self.cap]
+                picked.append(windows[order])
+        pool = torch.cat(picked)
+        return iter(pool[torch.randperm(pool.numel(), generator=self.generator)].tolist())
 
 
 class AMSoftmaxHead(nn.Module):
@@ -108,8 +162,24 @@ def effective_identity_count(labels: torch.Tensor, num_classes: int) -> float:
     return float(counts.sum() ** 2 / (counts ** 2).sum())
 
 
+def resolve_balance_mode(value) -> str:
+    """`false`/`off` -> off, `true` -> weighted (back-compat), or a named mode."""
+    if value is None or value is False:
+        return "off"
+    if value is True:
+        return "weighted"
+    mode = str(value).strip().lower()
+    if mode in ("", "false", "off", "none"):
+        return "off"
+    if mode in ("true", "weighted"):
+        return "weighted"
+    if mode == "cap":
+        return "cap"
+    raise ValueError(f"balance_identities must be off, weighted or cap, got {value!r}.")
+
+
 def create_window_loader(sample_index, batch_size: int, device, seed: int, num_workers: int = 0,
-                         balance_identities: bool = False):
+                         balance_identities=False, balance_cap: int | None = None):
     """
     Windows as examples, optionally sampled so every identity contributes equally.
 
@@ -127,14 +197,22 @@ def create_window_loader(sample_index, batch_size: int, device, seed: int, num_w
     dataset = WindowDataset(sample_index)
     generator = torch.Generator().manual_seed(int(seed))
 
+    mode = resolve_balance_mode(balance_identities)
     sampler = None
-    if balance_identities:
-        weights = identity_sample_weights(dataset.labels, dataset.num_classes)
-        sampler = WeightedRandomSampler(
-            weights, num_samples=len(dataset), replacement=True, generator=generator)
+    if mode != "off":
         effective = effective_identity_count(dataset.labels, dataset.num_classes)
-        print(f"  balanced identity sampling: {dataset.num_classes} identities, "
-              f"effective {effective:.0f} before balancing")
+        if mode == "weighted":
+            weights = identity_sample_weights(dataset.labels, dataset.num_classes)
+            sampler = WeightedRandomSampler(
+                weights, num_samples=len(dataset), replacement=True, generator=generator)
+            print(f"  balanced identity sampling (weighted, with replacement): "
+                  f"{dataset.num_classes} identities, effective {effective:.0f} before")
+        else:
+            sampler = CappedIdentitySampler(dataset.labels, cap=balance_cap,
+                                            generator=generator)
+            print(f"  balanced identity sampling (capped at {sampler.cap} windows): "
+                  f"{dataset.num_classes} identities, effective {effective:.0f} before, "
+                  f"epoch {len(sampler)} of {len(dataset)} windows")
 
     return DataLoader(
         dataset,
@@ -266,7 +344,8 @@ def build_identity_trainer(model, sample_index, train_manifest, device, args):
         device=device,
         seed=int(getattr(args, "seed", 67)),
         num_workers=int(getattr(args, "num_workers", 0)),
-        balance_identities=bool(getattr(args, "balance_identities", False)),
+        balance_identities=getattr(args, "balance_identities", False),
+        balance_cap=getattr(args, "balance_cap", None),
     )
 
     print(f"Identity objective: {sample_index.num_users} classes, "

@@ -832,12 +832,32 @@ nothing to flag it. **Pass `data_dirs` explicitly for any pooled-corpus run** - 
 default is single-dataset and always has been.
 
 **The premise now holds on the real corpus, and did not when this was piloted.** Post-
-BOXRR the imbalance is measured, large, and structurally lopsided: 17.2% of identities
-hold 40.8% of the windows. Balanced sampling is worth an arm in the first full-corpus
-sweep - but prefer the **capping** variant (take at most ~median windows per identity
-per epoch) over inverse-frequency weighting, because capping raises the effective
-identity count without resampling with replacement, which is the mechanism that made
-the original proposal suspect.
+BOXRR the imbalance is measured, large and structurally lopsided: 17.2% of identities
+hold 40.8% of the windows. Worth an arm in the first full-corpus sweep.
+
+`balance_identities` takes **`off` | `weighted` | `cap`** (`false`/`true` still mean
+off/weighted, so existing configs are unchanged):
+
+- **`weighted`** - inverse-frequency, **with replacement**. Equalises identities but
+  lowers the number of *distinct* windows seen per epoch, because a 1260-window identity
+  gets drawn far fewer times than it has windows. This is the form that was piloted and
+  the mechanism that made it suspect.
+- **`cap`** - take at most `balance_cap` windows per identity per epoch, without
+  replacement, defaulting to the median so identities above it are trimmed and those
+  below are untouched. Every window in an epoch is distinct, and the epoch gets
+  **cheaper** rather than more expensive. A fresh subset is drawn each epoch, so the
+  surplus is trimmed rather than permanently discarded - over many epochs a large
+  identity still contributes all of its windows.
+
+**Prefer `cap`.** It raises the effective identity count from the other direction, and
+it is the variant that survives the objection to the first one.
+
+**How to read the result, agreed in advance.** The power table says +0.005 to +0.02
+needs 10-15 folds; adding this as a cheap arm on a 5-fold sweep makes the arm
+affordable, not the comparison resolvable. If it lands inside +-0.02 with t under 2.8
+the honest entry is **"not resolved"**, not "small gain" - and since it will be the arm
+we hoped would work after acquiring 2020 identities, that is exactly where a small
+positive would be over-read.
 Until that lands this is **untested**, and the prediction registered beforehand
 (+0.005 to +0.02) still stands unmeasured.
 

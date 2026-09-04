@@ -28,7 +28,13 @@ identity_scale: 30.0
 # the pooled corpus (34 to 2639), which leaves an effective identity count of 193
 # against 312 real ones - about 38% of our identity diversity discarded by sampling,
 # on the axis measured to be binding. identity_softmax only; off by default.
-balance_identities: false
+balance_identities: false        # off | weighted | cap  (false/true also accepted)
+
+# Windows per identity for balance_identities=cap. null uses the median, so identities
+# above it are trimmed and those below are untouched. Capping equalises by discarding
+# the surplus of over-represented identities rather than re-drawing scarce ones, so
+# every window in an epoch is distinct and the epoch gets cheaper, not more expensive.
+balance_cap: null
 
 # Stop training when the validation-selected metric has not improved for this many
 # epochs. 0 disables it, which is the historical fixed budget. Across 304 recorded runs
