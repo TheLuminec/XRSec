@@ -590,11 +590,26 @@ reach 0.53-0.55 - and the BOXRR-trained branch **matches or exceeds that from ou
 Head_and_Gaze 0.570 out of domain against 0.551 in, ViewGauss 0.571 against 0.528. Training
 on a corpus does not beat training on Beat Saber and transferring in.
 
-**The learned component is activity-bound, and it is the activity rather than the share.**
-Unseen Beat Saber players separate at ~0.80 on movement alone; unseen alyx players at 0.53.
-Raising alyx from 3.6% to 18% of training identities left it at 0.530 +-0.007 - unchanged.
-Free FPS locomotion with cross-day sessions is simply less stereotyped than content-locked
-rhythm-game movement.
+**The learned component is activity-bound - less so than first measured, and the
+difference is window length and budget.** At 5 s and 30 epochs, unseen Beat Saber players
+separated at ~0.80 on movement alone and unseen alyx players at 0.53, and raising alyx from
+3.6% to 18% of training identities left it at 0.530 +-0.007. Re-measured on the same
+validation-user protocol (never trained on; they chose the epoch, so ~+0.02 optimistic),
+five seeds each:
+
+| `dyn`, in domain | BOXRR | alyx |
+| --- | --- | --- |
+| 5 s, 30 epochs | ~0.80 | 0.530 |
+| 5 s, 120 epochs, patience 15 | 0.814 +-0.012 | **0.592** +-0.027 |
+| 10 s, stride 5, same budget | 0.845 +-0.004 | **0.664** +-0.019 |
+
+alyx crosses the 0.60 line registered for it by three seed-sds, so the reading softens as
+pre-registered: free FPS locomotion across two days *does* show a person at ten seconds.
+The activity gap to Beat Saber remains (0.845 vs 0.664), but "barely a biometric" was a
+5-second, 30-epoch statement. Two things to carry: the training budget moved alyx in
+domain (0.53 -> 0.59) even though it never moved transfer, so in-domain and transfer
+figures respond to different levers; and every number in this table carries the +0.02
+optimism of the validation-user protocol.
 
 **Fusion is retired for transfer.** Weighting the lookup with `dyn` drags tier 1 below the
 lookup under an in-domain weight, and a leave-one-corpus-out weight (0.15-0.35, never the
