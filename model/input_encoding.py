@@ -173,13 +173,20 @@ def _yaw_canonical(quaternion, position):
 
 def _dynamics_only(quaternion, position):
     """dyn: pose relative to the window's mean pose, every static cue removed."""
-    residual = position - position.mean(dim=2, keepdim=True)
+    # Centred in float64, then cast back. In float32 the residual's window-mean is not
+    # zero but rounding residue that scales with the absolute coordinate (median 1.7e-7 m,
+    # max 3.6e-5 m on Nymeria, whose SLAM coordinates run to 30 m) - a faint numerical
+    # copy of the location cue the encoding exists to remove. Measured as unused by the
+    # model (corr +0.01 with location) but it belongs at 1e-14 m, not 1e-5.
+    wide = position.double()
+    residual = (wide - wide.mean(dim=2, keepdim=True)).to(position.dtype)
     if quaternion is None:
         return None, residual
     inverse = _quaternion_conjugate(_mean_quaternion(quaternion)).expand(-1, -1, position.shape[2])
     relative = _quaternion_multiply(inverse, quaternion)
     sign = torch.where(relative[:, 3:4] < 0, -1.0, 1.0)
-    return relative * sign, _rotate(inverse, residual)
+    rotated = _rotate(inverse.double(), residual.double()).to(position.dtype)
+    return relative * sign, rotated
 
 
 def apply_encoding(samples: torch.Tensor, encoding: str) -> torch.Tensor:
