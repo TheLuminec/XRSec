@@ -7,3 +7,6 @@ hydra-core
 omegaconf
 pytest
 pytest-cov
+xror @ git+https://github.com/MetaGuard/xror.git
+fpzip
+pymongo
