@@ -67,6 +67,19 @@ that matters, since 4020 identities are BOXRR; Nymeria ~0.85 on every axis for t
 reason. **Decision rule:** BOXRR xz-only lookup above ~0.6 puts a room-fingerprint caveat
 on every `raw` BOXRR identity-count result and makes the `dyn` results the clean ones.
 
+**Trainer's predictions, registered against the coordinator's (16:10).** Agrees on the
+seated corpora, Nymeria, tier 2 and NJIT. **Differs on BOXRR: lateral P near 0.5**, on
+the mechanism that room-scale VR re-centres the tracking origin per session (guardian /
+play-space setup, a standing spot re-established each time), so two sessions by one
+player are no more co-located than two by different players even in the same room; alyx
+likewise 0.5-0.6 at the low end. Adds: VR_User_Behavior height P **above 0.8** (48 users x
+18 sessions in one seated rig, the cleanest anthropometry row). The disagreement is the
+value of the measurement: above 0.7 and raw BOXRR identity-count results are partly room
+counts; near 0.5 and BOXRR's static cue is height, which is legitimate. Harness details:
+session means from the 5s@20Hz cache (present for all ten datasets), tier 2 detected by
+unit-norm session means rather than by name, Nymeria calibration gate 2.13 / 6.44 / 0.847
+before any other row is read.
+
 - **Model Generalization: Nymeria `dyn` transfer** (scoring only, CPU, registered 16:05):
   the 9.3 long-budget `dyn` checkpoints (419 x 5 seeds, 1000 x 2, 2096 x 1) and step 2's
   10 s / 20 s checkpoints on all 50 Nymeria users, `exclude_users=[]`, cross-sequence
