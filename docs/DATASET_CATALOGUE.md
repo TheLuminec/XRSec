@@ -38,7 +38,7 @@ access routes.
 | --- | --- | --- | --- | --- |
 | BOXRR-23, rest of corpus | **79,349 more** (81,369 eligible) | ~45 recordings | Beat Saber | VR |
 | BOXRR-23 aligned [C2] | 11,927 | many | Beat Saber | VR |
-| **Nymeria** | **236** | 4.66 recordings, **one sitting** | **daily life in the wild**, 50 locations | **AR glasses** |
+| **Nymeria** | **236** | 4.66 recordings, **one sitting** | **daily life in the wild**, 50 locations | **AR glasses** (click-through) |
 | Across XR Applications | 49 | 5 apps x takes | Superhot, Alyx, Beat Saber, Synth Riders, Social VR | VR |
 | MooreCrossDomain23 | 45 | 2 builds | two distinct VR builds | VR |
 | VR.net | 21 | varies | **7 apps** incl. Pottery, VR ROME, Traffic Cop | VR |
@@ -123,7 +123,7 @@ all, whatever else it offers.
 | 9 | BOXRR-23, *aligned* [C2] | **11,927** | many | Beat Saber | yes | as B1 | **WIP upstream** — see note |
 | 10 | CREATTIVE3D [D10] | 40 (to confirm) | multiple scenarios | **VR road crossing, incl. simulated low vision** | yes, 125Hz | **CC BY 4.0** | verified open, 7.2GB, not fetched |
 | 11 | 3D-ARM-Gaze [D9] | to confirm | multiple trials | seated arm reaching | head + **neck + trunk** | **Apache-2.0** | verified open, 4.7GB — see caveat |
-| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0, **not gated** | verified, **recommended** |
+| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0 | **needs a click-through** - see below |
 
 **VR.net's 7 applications**: Beat Saber, Carton Network, Monster Awaken, Pottery,
 Traffic Cop, VR ROME, Voxel Shot VR. Only 21 participants, but the widest task span of
@@ -182,20 +182,43 @@ metadata, not the paper:
 
 | | |
 | --- | --- |
-| participants | **236** distinct, labelled in every sequence key |
+| participants | **236** with released data (275 in the metadata CSV, 264 in the README - see below) |
 | sequences | **1,100**, mean **4.66 per participant**; 231 of 236 have >= 2 |
 | head pose | `recording_head/mps/slam/closed_loop_trajectory.csv` - **a CSV, separate from the video** |
 | activities | daily life in the wild, 50 locations, 300 hours |
 | licence | CC BY-NC 4.0, **`gated: false`** - no request process |
 
 Sequence keys are `<date>_<session>_<name>_act<N>_<hash>`, e.g.
-`20230607_s0_james_johnson_act0_...`, so identity linkage across recordings is free.
+`20230607_s0_james_johnson_act0_...`, so identity linkage across recordings is free. Each
+sequence also carries `location`, `script` (the activity, e.g. `S14-By_my_desk`),
+`has_two_participants` and per-sequence anthropometrics - all in the freely downloadable
+metadata, before any licence step.
 
-**Downloadable without the bulk.** `download.py` selects `DataGroups`, and
-`recording_head` is a separate group from `recording_head_data_data_vrs`. We can take the
-SLAM trajectories and leave the RGB, grayscale, eye-tracking and IMU blobs behind - the
-difference between a few GB and many TB. Watch that the `mps` group also carries
-`semidense_points.csv.gz`, which is not small and which we do not need.
+**Three participant counts circulate and they are not in conflict**: 236 names appear in
+sequence keys, 275 in `participants_metadata.csv`, 264 in the README. Measured directly:
+every sequence name is in the CSV, 39 CSV names have no sequences, and 236 + 39 = 275.
+So the CSV lists everyone recruited and **236 have released motion data**. Quote 236.
+
+**Access is gated by a click-through**, which is the one thing blocking it: `download.py`
+needs `nymeria_download_urls.json`, generated at explorer.projectaria.com after signing in
+and accepting the licence. No DUA text and no IRB question - closer to a normal EULA than
+BOXRR's Limited Data Set agreement - but it is still an account and a terms acceptance, so
+it has to be done by the user rather than on their behalf.
+
+**Selective download is coarser than it looks - an earlier claim here was wrong.**
+`download.py` selects `DataGroups`, but groups are **packed one zip per group per
+sequence**, so there is no per-file choice inside one. RGB does stay out
+(`data.vrs` is in the separate `recording_head_data_data_vrs` group), but the base
+`recording_head` zip carries `et.vrs` - 30fps eye-tracking video over a ~1,220-second
+sequence - plus `motion.vrs`, `semidense_points.csv.gz`, both trajectories, calibration and
+gaze CSVs. `dataset_metadata.json` has no size fields, so this cannot be bounded without
+pulling one zip; the realistic figure is **hundreds of MB per sequence, so 100-500GB for
+all 1,100**, not the "few GB" first recorded here.
+
+**So take a subset.** The explorer has sequence-level filters. Roughly 100 participants at
+3 sequences each is ~300 sequences, keeps cross-activity pairing intact, and should land in
+the tens of GB. Nothing about our thresholds needs all 236 participants or all 1,100
+sequences.
 
 **The limitation, stated precisely.** Every participant appears in exactly **one date and
 one session**; the 4.66 recordings are different *activities* within one sitting. So
