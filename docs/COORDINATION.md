@@ -148,6 +148,16 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   1e-4 AUC. Section 9.11 with Model Generalization. One-sitting caveat beside every
   number.
 
+- **Trainer: step 6, the static cue as an enrolment system, by axis** (CPU, registered
+  20:05). Per tier-1 corpus, cross-session gallery/probe templates over k = 1/4/16 windows
+  (population fixed from k=16), scorers xyz / y-only / xz-only plus the `dyn` checkpoint's
+  cosine, rank-1 at N=17 and at the full gallery with chance, ties rank-averaged. Harness
+  check: k=1 xyz pairwise AUC reproduces `lookup_auc_by_dataset` to the digit.
+  Coordinator's predictions: xyz rank-1 at N=17 0.4-0.6 on tier 1; y-only well below xyz on
+  the seated corpora and close to it on alyx; xz-only near xyz seated and near chance on
+  alyx; `dyn` 0.15-0.25 seated, higher on BOXRR. The decisive number is y-only on alyx at
+  N=17: what height alone buys across days. Trainer's predictions to be written beside.
+
 ## GPU queue
 
 | order | who | what | status |
