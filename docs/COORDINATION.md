@@ -58,8 +58,10 @@ same dataset rows, predictions registered by message before running:
   separation of per-session mean position (median, IQR, P(within<between)) for xyz, xz,
   and y separately; tier-2 direction-vector rows labelled, single-session datasets
   reported as untestable. Harness check: Nymeria reproduces 2.13 / 6.44 / 0.847.
-- **Model Generalization: per-axis lookup AUC** on the held-out pairs already scored
-  (8 LODO corpora, Nymeria, BOXRR held-out): xyz / y-only / xz-only, three seeds.
+- **Model Generalization: per-axis lookup AUC** - MEASURED 16:30, in CLAUDE.md's opening
+  section. Seated corpora: xz carries the lookup (Head_and_Gaze 0.872 vs y 0.690); alyx,
+  the only cross-day corpus: xz 0.539, y 0.661; BOXRR xz-only **0.680**, the rule fires.
+  Proposal section 9.10 with Model Generalization.
 
 Coordinator's predictions: seated lab corpora lateral P ~0.5 and y-only carries the AUC;
 alyx lateral 0.5-0.65; **BOXRR lateral P > 0.7 and xz-only AUC well above 0.5** - the row

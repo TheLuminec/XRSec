@@ -34,9 +34,44 @@ four findings, all from the same day of auditing, change what it *means*:
 | Every published comparison uses head **plus both controllers**; we are head-only by scope, so the model runs on glasses | part of the gap to published figures is sensor set, not performance |
 
 **The honest one-sentence version.** We identify unseen users well where absolute head
-position is recorded - and most of that is head height, which three numbers capture without
-training. The component the model actually learns is real, worth about +0.14 in domain, and
-does not survive a change of corpus.
+position is recorded - and most of that is *where the headset sat in the tracking space
+that day*, which three numbers capture without training; head height is the part that
+survives a change of day, and it is smaller. The component the model actually learns is
+real, worth about +0.14 in domain, and does not survive a change of corpus.
+
+**The static cue is mostly placement, not height (measured 2026-09-04).** The three-number
+lookup, restricted to one axis at a time on the same held-out pairs (three manifest seeds):
+
+| corpus | xyz | y only | xz only | sessions per user |
+| --- | --- | --- | --- | --- |
+| ViewGauss | 0.933 | 0.886 | 0.871 | 4, one sitting |
+| Head_and_Gaze V2 | 0.870 | 0.690 | **0.872** | 54, one sitting |
+| VR_User_Behavior | 0.719 | 0.640 | **0.700** | 18, one sitting |
+| NJIT | 0.653 | **0.748** | 0.542 | 1 |
+| **alyx** (two days) | 0.593 | **0.661** | **0.539** | 2, different days |
+| BOXRR held-out | 0.763 | **0.810** | 0.680 | many, across days |
+| Nymeria | 0.730 | 0.654 | 0.784 | 2, one sitting, shared map |
+
+On the seated 360-video corpora the lateral coordinates carry the whole lookup and height
+adds nothing to them. The audit says why: between-user spread is 0.19-0.29 m in x and z
+against 0.04-0.07 m in y, within-window 0.01-0.02 m, and every participant's sessions are
+one sitting - so "cross-session" positives there never crossed a sitting, and where the
+seat and the tracking origin were placed that day is a perfect per-participant constant.
+**alyx is the only corpus in the table with sessions on different days, and there the
+lateral cue collapses (0.539) while height stays (0.661).** That is the split: height
+survives a day and is a biometric; placement is a same-sitting rig artefact that the
+seated corpora, and part of BOXRR (xz-only 0.680, above the pre-registered 0.6 line), are
+scoring. Nymeria's lateral figure is the shared SLAM map (see its section).
+
+Three consequences. (1) The "~78% is absolute head position" finding from
+`center_position` stands as a measurement, but "height and seated posture" was the wrong
+gloss on the seated corpora: it is mostly placement. (2) **Every `raw` identity-count
+result on BOXRR carries a room-fingerprint caveat**, per the rule registered before the
+number existed, and the `dyn` results are the clean ones. (3) Only corpora with sessions
+on different days (alyx, BOXRR in part) can say anything about anthropometry at all; a
+single-sitting corpus cannot separate a person from where they were put. Trainer's
+co-location geometry (per-axis within- vs between-participant separation of session means)
+is the companion table and is pending.
 
 **What follows for anyone working here.** Report per dataset with its semantics, never
 pooled alone. The mean-position lookup is computed on every run (`lookup_auc`) and is the
