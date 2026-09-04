@@ -32,6 +32,17 @@ and a sweep whose rows split across two `code_identity` values).
   commit cannot capture another session's sweep in flight.
 - **Nobody launches on the GPU without the coordinator's slot.** Current queue below.
 
+## Code changes queued (need a worktree, and no sweep running when merged)
+
+- **Loader warning for `exclude_users` under a `test_dir` with `test_on_excluded=false`.**
+  Found 2026-09-04 by the step 3 digit check: the config default silently dropped
+  VR_User_Behavior users 1-5 from every cross-corpus evaluation (43 users scored, not 48).
+  `create_dataloader_from_path` (or `resolve_paths`) should warn, naming the users, when an
+  excluded path lies under a test directory and the eval set is not the excluded set.
+  Prefer refusing over warning if a test can cover it. CLAUDE.md carries the interim
+  guard (`exclude_users=[]` in the command shape). Owner: coordinator, in a worktree,
+  merged between GPU slots.
+
 ## GPU queue
 
 | order | who | what | status |

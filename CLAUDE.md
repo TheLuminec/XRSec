@@ -187,8 +187,22 @@ seat, posture) and is invariant to any rigid transform of the capture frame. `dy
 orientation alone is 0.54-0.81 AUC of static posture.
 
 The command shape for a cross-corpus run: `data_dirs` = training corpora, `test_dirs` =
-the held-out corpora, **`test_on_excluded=false`**, and any path with parentheses quoted
-inside the Hydra list.
+the held-out corpora, **`test_on_excluded=false`**, **`exclude_users=[]`**, and any path
+with parentheses quoted inside the Hydra list.
+
+**`exclude_users=[]` is not optional, and this was found the expensive way.** The config
+ships `exclude_users` with VR_User_Behavior users 1-5. With `test_on_excluded=false` those
+five are removed from the *evaluation* set as well as the training set, so every
+cross-corpus run that left the default in place scored VR_User_Behavior on **43 users,
+not 48** - which is every VR_User_Behavior figure in `docs/GENERALISATION_PROPOSAL.md`
+section 9 (the transfer table above included: 0.638 / 0.714 are 43-user numbers). The
+comparisons inside section 9 are unaffected because every arm made the same omission, and
+`sweep.folds` ignores `exclude_users` so no in-domain fold result is touched. It was caught
+by a digit-exact reproduction of `lookup_auc` (0.719 on 48 users against the recorded
+0.7114), not by reading the tables - and the tell was in every row all along:
+`num_excluded_users` = 5 beside `test_on_excluded` = false. Read those two columns
+together on any cross-corpus row before quoting it. A loader warning for the combination
+is queued (see `docs/COORDINATION.md`); until it exists the override is the guard.
 
 ## Sweep mode
 
