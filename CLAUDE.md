@@ -187,8 +187,22 @@ seat, posture) and is invariant to any rigid transform of the capture frame. `dy
 orientation alone is 0.54-0.81 AUC of static posture.
 
 The command shape for a cross-corpus run: `data_dirs` = training corpora, `test_dirs` =
-the held-out corpora, **`test_on_excluded=false`**, and any path with parentheses quoted
-inside the Hydra list.
+the held-out corpora, **`test_on_excluded=false`**, **`exclude_users=[]`**, and any path
+with parentheses quoted inside the Hydra list.
+
+**`exclude_users=[]` is not optional, and this was found the expensive way.** The config
+ships `exclude_users` with VR_User_Behavior users 1-5. With `test_on_excluded=false` those
+five are removed from the *evaluation* set as well as the training set, so every
+cross-corpus run that left the default in place scored VR_User_Behavior on **43 users,
+not 48** - which is every VR_User_Behavior figure in `docs/GENERALISATION_PROPOSAL.md`
+section 9 (the transfer table above included: 0.638 / 0.714 are 43-user numbers). The
+comparisons inside section 9 are unaffected because every arm made the same omission, and
+`sweep.folds` ignores `exclude_users` so no in-domain fold result is touched. It was caught
+by a digit-exact reproduction of `lookup_auc` (0.719 on 48 users against the recorded
+0.7114), not by reading the tables - and the tell was in every row all along:
+`num_excluded_users` = 5 beside `test_on_excluded` = false. Read those two columns
+together on any cross-corpus row before quoting it. A loader warning for the combination
+is queued (see `docs/COORDINATION.md`); until it exists the override is the guard.
 
 ## Sweep mode
 
@@ -346,6 +360,15 @@ Verified independently on raw CSVs - `|HmdPosition|` per dataset, over 25 users 
 A norm of exactly 1 to machine epsilon is not a coordinate convention, it is a different
 quantity in the same column. **These datasets carry orientation, encoded in the position
 slot.**
+
+**PanoSaliency's quaternion column is a constant identity `(0, 0, 0, 1)` on every row**
+(verified 2026-09-04 on 25 of its 1583 files: per-file std 0.0, one distinct value per
+column). So it has one orientation signal, in the position slot, and four dead channels
+where orientation should be; after per-dataset standardisation the dead channels are
+zero. Any orientation-derived feature on PanoSaliency (mean quaternion, `dyn`'s heading,
+a future `channels=orientation`) is reading nothing there unless the direction vector is
+moved into the quaternion slot first. The other tier-2 corpora should be checked the same
+way before any orientation claim is made on them.
 
 **This corrects an earlier entry in this file.** A previous version said these datasets
 record "position relative to a seated origin" - inferred from their per-axis means sitting
@@ -1730,6 +1753,18 @@ free to test here.
 **Why it is not one CSV any more.** The log is committed from three machines and merged with `merge=union`, which unions *lines* - but a CSV's meaning lives in a header those lines share, and this schema migrates by design. The moment two machines held different column counts (57 vs 56), union filed every row from one side under the other's header: 537 rows, 237 duplicated, `seed` 67 reading as 2, `run_dir` holding a git SHA, and 151 rows appearing to have a `template_k` that was pure column shift. Both inputs were individually clean; nothing was wrong until they met. Repaired by rebuilding on column *name*.
 
 JSONL removes the class instead of patching it - a union of self-describing records is correct whatever schema either side used, adding a field is a non-event, and appending never rewrites a line. `run_id` makes every line unique so union can't coalesce two runs that agree on all fields. Tests cover the property, not just the writing: `test_union_merging_two_schemas_keeps_every_field_on_the_right_row` reproduces the exact merge that corrupted the file. **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
+
+**`code_identity` invalidation was tested once, and the trade held (2026-09-04).** The
+margin/scale grid ran at `67c63fa767`; eight `model/*.py` files changed afterwards (the
+lookup baseline, per-dataset metrics, EER, checkpoint serialisation) and the tree hashed
+to `6ac797f158`. Re-running one grid cell over all five folds under the new identity
+reproduced every recorded field on `repr` - `selected_test_auc`, `selected_test_acc`,
+`best_epoch`, `best_test_auc`, `final_train_loss` - so the whole optimisation trajectory
+was identical and those commits changed no training numerics. The invalidation was
+unnecessary in hindsight and cost five runs to prove; the alternative silently reuses
+results across a numerics change. **Do not loosen the digest** because of this. Rows at the
+two identities are comparable, and any comparison across a code change should be earned
+the same way: one cell, every fold, identical on `repr`.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 

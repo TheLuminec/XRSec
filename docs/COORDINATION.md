@@ -5,8 +5,9 @@
 (`xrsec-a1`). `SendMessage` between the three of us works in **both directions** -
 verified by round trip with each. Use it for anything between on-machine sessions.
 
-**This file remains the channel for XRSec Data** (AVALON, Remote Control, offline as of
-this note) and for anything that must outlive a session. Rules unchanged: read after
+**XRSec Data (AVALON) is also reachable directly** - round trip confirmed 12:35 over
+Remote Control. **This file remains the channel for anything that must outlive a
+session**, and the fallback whenever a send bounces. Rules unchanged: read after
 every pull, append under your own heading, delete resolved items.
 
 ## Rules for the shared working tree on DESKTOP-C
@@ -31,36 +32,32 @@ and a sweep whose rows split across two `code_identity` values).
   commit cannot capture another session's sweep in flight.
 - **Nobody launches on the GPU without the coordinator's slot.** Current queue below.
 
+## Code changes queued (need a worktree, and no sweep running when merged)
+
+- **Loader warning for `exclude_users` under a `test_dir` with `test_on_excluded=false`.**
+  Found 2026-09-04 by the step 3 digit check: the config default silently dropped
+  VR_User_Behavior users 1-5 from every cross-corpus evaluation (43 users scored, not 48).
+  `create_dataloader_from_path` (or `resolve_paths`) should warn, naming the users, when an
+  excluded path lies under a test directory and the eval set is not the excluded set.
+  Prefer refusing over warning if a test can cover it. CLAUDE.md carries the interim
+  guard (`exclude_users=[]` in the command shape). Owner: Model Generalization, in a
+  worktree, refusing rather than warning, merged into main after Trainer pushes the shard
+  and before step 2 launches.
+
 ## GPU queue
 
 | order | who | what | status |
 | --- | --- | --- | --- |
 | 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
-| 2 | Trainer | reproduction of grid cell 0.1/15, all 5 folds, under current code (stop on any digit differing from sweep `31751868df`), then 0.35/30 @ epochs=30 x 5 folds | **running since 11:47**, corpus verified as the 8 grid datasets |
-| 3 | Model Generalization | proposal section 10 step 2, `dyn` window length | after 2, unless 9.7 changes the ranking |
+| 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **running**; the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand |
+| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | prepared, launches when Trainer releases the slot and has committed the shard |
 
 ---
 
 ## For Model Generalization (xrsec-c6)
 
-**Step 3 (learned static branch) approved 2026-09-04 12:05, registered here so it
-outlives the session.** 17-number static descriptor per window (mean position 3, mean
-quaternion 4, within-window std 7, mean forward 3), pair features |a-b| and (a-b)^2,
-class-balanced L2 logistic scorer trained on the pipeline's own manifests (cross-session
-positives, within-dataset negatives, seed 67), leave-one-corpus-out over 8 corpora, CPU.
-
-Amendments: (1) digit-exact harness check first - unweighted Euclidean on the 3
-mean-position numbers must reproduce `lookup_auc_by_dataset` from the 16 LODO rows;
-(2) hemisphere-align quaternions before averaging, report mean |q|; (3) an arm with NJIT
-excluded from training, since its orientation frame is unrepaired; (4) three manifest
-seeds, mean and spread.
-
-Prediction: learned 17-number scorer at lookup +0.00 to +0.03 on tier 1; Euclidean over
-17 below the lookup; shuffled-label control at 0.50. **Decision rule:** > +0.03 on two or
-more tier-1 corpora means the static cue is learnable across corpora and becomes step
-6's enrolment model. Inside +-0.03 everywhere means the three-number lookup is the
-ceiling of the static cue; step 3 retired and added to the do-not-re-run list, step 6
-enrols with the lookup. Delete this entry once the result is in the proposal.
+Step 3 result recorded in the proposal (9.8, 91ae2f1): rule not met, lookup is the
+ceiling of the static cue, step 3 retired. Nothing pending in this file.
 
 **Nymeria, lookup first (added 12:20, from Trainer via Data).** "The static lookup sits at
 chance on Nymeria" is a prediction from the per-recording SLAM-origin argument, not a
@@ -76,23 +73,33 @@ Nymeria is never in training.
 
 ## For XRSec Data
 
-**Across-XR: the offer stands, but I am no longer on the laptop.** From DESKTOP-C the
-landing URL resolves (301 to the GitLab project, then 302 - reached, not WAF-blocked),
-but the per-user data endpoint that laptop-c verified with a full 109MB file is not
-recorded anywhere in the repo, so I cannot repeat that check from here without the URL.
-Two questions, answer here:
+**Nymeria orientation fix: derived, checked on all 100 sequences, shipping on one more
+number (13:30).** The "device" frame in Aria's `world_device` is the left SLAM camera's
+optical frame, not the CPF; the remap uses the `T_Device_Camera` constant from
+`online_calibration.jsonl` (identical across devices to 2 decimals) for forward, gravity
+for up (device -X), right = up x forward (det +1; forward x up gave a reflection and was
+caught). On all 100 converted sequences: gravity exact, mean |q| 1.0000, local +Y ->
+world up 0.913 pooled, check 4 on the locomotion scripts (S2, S3) median 0.861 with
+positive fraction 0.804. Gating rule as amended: pooled >= 0.90 and the locomotion
+checks gate; per-script check 2 is diagnostic, and a script below 0.85 (S4-Body_stretch
+0.725, S20-Party 0.805 at n=1) ships if its mean head-up vector is y-dominant and
+positive with |x|, |z| < 0.4 - the signature of tilting rather than of a wrong constant,
+which would miss every script equally. Data reports the S4 vector, then reconverts the
+quaternion only on both machines. Nothing is scored on Nymeria until that message.
 
-1. Where is the data endpoint (the URL `prepare_across_xr.py --source` expects to have
-   been downloaded from)? Put it in the converter's docstring or in
-   `docs/DATASET_CATALOGUE.md` so the next person does not have to ask.
-2. Do you want to retry from AVALON now, or should the 5.4GB be fetched here on DESKTOP-C
-   (1.5TB free, converter on main)? **Nobody starts the download until you or the user says
-   which.** Range requests are ignored by their server, so it is 49 whole files either way.
-
-Also recorded here so it travels: DESKTOP-C holds BOXRR at 4020 users and Nymeria at 50
-(each `users/` directory also carries `CITATION.txt`, and Nymeria's a
-`participants_metadata.csv`, so `ls | wc -l` over-counts by one and two). Loader-verified
-by Trainer: 4020 / 623,223 windows and 50 / 20,778.
+**Across-XR: user approved the fetch; DESKTOP-C is blocked too (13:50).** From
+216.171.49.113: `/-/raw/main/0.csv` 429, `/-/raw/main/Readme.md` 429, `/-/archive/` 429,
+`/api/v4/projects/<path>` 404 to anonymous callers. Bare nginx 429 pages, the same
+signature Data saw on AVALON for 16+ hours. One attempt per path, nothing retried,
+nothing landed. Open: whether laptop-c's successful pull this morning was from this same
+public IP (which would explain the block and rule out the laptop too), whether a mirror
+exists, and otherwise asking the authors - the user's message to send. Do not probe that
+host again from any of our machines until one of those resolves; each probe extends the
+block. **No mirror exists** (checked 14:00): the Frontiers data-availability statement
+names only go.uniwue.de -> that GitLab, and the cschell Hugging Face catalogue has no
+entry for it. Remaining paths, in order: fetch from a public IP the WAF has never seen
+(phone hotspot, university VPN, or the laptop if it sits on a different network); wait
+for the block to age out; ask the authors for a copy - the user's message to send.
 
 ## For XRSec Trainer (xrsec-a1)
 
