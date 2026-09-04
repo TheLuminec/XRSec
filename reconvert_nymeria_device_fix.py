@@ -16,6 +16,18 @@ PROVENANCE.md's "reconverted in place on 2026-09-04" line refers to.
 Then, to verify both copies converged to the same result:
 
     find processed_datasets/Nymeria_Dataset/users -name 'act*.csv' | sort | xargs sha256sum
+
+CROSS-PLATFORM CHECKSUM NOTE, confirmed 2026-09-04 comparing AVALON
+(Linux) and DESKTOP-C (Windows) copies: `df.to_csv()` writes line
+terminators via `os.linesep`, which is `\n` on Linux and `\r\n` on
+Windows. That alone made 0 of 100 checksums match on first comparison,
+even though every number was byte-identical -- confirmed by stripping
+carriage returns before hashing, at which point all 100 matched exactly.
+`to_csv(..., lineterminator="\n")` below forces LF on every platform so
+future checksum comparisons don't need a normalisation step first. If
+comparing checksums against files written *before* this line existed,
+strip `\r` (or compare `cksum`/hash on CRLF-normalised copies) rather
+than assuming a mismatch means the data itself differs.
 """
 import sys
 import numpy as np
@@ -48,8 +60,11 @@ def main() -> int:
         # header order: SessionTime, UnitQuaternion.x/y/z/w, HmdPosition.x/y/z).
         # float_format not set -- pandas.to_csv's default uses the shortest
         # round-tripping decimal repr of each float64, same as who-is-alyx's
-        # and BOXRR's converters use.
-        df.to_csv(path, index=False)
+        # and BOXRR's converters use. lineterminator forced to LF -- see the
+        # cross-platform checksum note in the module docstring; without this,
+        # Windows' os.linesep default (CRLF) makes every line differ by one
+        # byte from a Linux-written copy despite identical numbers.
+        df.to_csv(path, index=False, lineterminator="\n")
 
     print("done")
     return 0
