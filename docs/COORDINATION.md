@@ -63,17 +63,16 @@ and a sweep whose rows split across two `code_identity` values).
 Step 3 result recorded in the proposal (9.8, 91ae2f1): rule not met, lookup is the
 ceiling of the static cue, step 3 retired. Nothing pending in this file.
 
-**Nymeria, lookup first (added 12:20, from Trainer via Data).** "The static lookup sits at
-chance on Nymeria" is a prediction from the per-recording SLAM-origin argument, not a
-measurement. It is measured in the step 3 harness before any model is scored on Nymeria:
-(1) `audit_frames.py` row for Nymeria (position not unit-norm, local +Y at world up ~0.95,
-mean |q| 1.0000, else stop); (2) lookup AUC on Nymeria pairs, three seeds, random control,
-plus same-participant vs different-participant mean-position distance. Criterion: lookup
-within 0.50 +-0.02 and same-participant distance no smaller than different-participant.
-At or above 0.55 the premise is wrong and CLAUDE.md's "clean instrument" paragraph is
-retracted before anything else is built on it. Every Nymeria number carries the caveat:
-cross-activity positives within one sitting, so it cannot pay the cross-session cost.
-Nymeria is never in training.
+**Nymeria lookup-first: MEASURED, criterion failed, premise retracted (15:40).** Lookup
+0.730 +-0.001 on Nymeria pairs (control 0.499) against a registered criterion of 0.50
++-0.02. Direct test: same-participant sequence means 2.13 m apart vs 6.44 m between
+participants, P(same<diff) 0.847, reproduced on both machines; mean y vs true `height_cm`
+correlates 0.057. A participant's two sequences share a map; the lookup is a location
+match with no height content. CLAUDE.md paragraph retracted; retraction text for the
+proposal is with Model Generalization for the coordinator's check. Nymeria under `raw` is
+reported only as a location match; under `dyn` it is the cross-device instrument as
+before. Credit order: Trainer proposed measuring first, Data relayed, Model
+Generalization measured. Nymeria is never in training.
 
 ## For XRSec Data
 

@@ -415,29 +415,45 @@ whether the acquisition transfers, and is the number that decides whether it was
 it. If the first is strong and the second flat, the honest conclusion is that we bought
 an easier corpus rather than a better model.
 
-### Nymeria is the one place the static baseline cannot win
+### Nymeria: the lookup was predicted at chance and scores 0.73 - RETRACTED premise
 
-The lookup below depends on absolute position being comparable between two recordings of
-one person. **On Nymeria it is not**: the SLAM origin is set per recording, so the two
-halves of a positive pair sit in different arbitrary frames and the static cue is absent
-between them. The lookup should therefore sit at **chance on Nymeria and nowhere else**.
+An earlier version of this section said Nymeria was "the one place the static baseline
+cannot win", because the SLAM origin was assumed to be set per recording, which would
+disable the mean-position lookup between the two halves of a positive pair and leave the
+learned component measurable directly. That was a prediction, and Trainer insisted it be
+measured before any model was scored on Nymeria. **It failed decisively** (2026-09-04,
+50 participants, 20,778 windows at 5s@20Hz, cross-sequence positives, 25,600 balanced
+pairs, target-fit standardisation, three manifest seeds):
 
-That makes it the cleanest instrument available for the question this project is stuck on.
-Everywhere else the static cue is present and dominates, so the learned component is
-measured only by subtraction. On Nymeria it is structurally disabled, so whatever the model
-scores above chance there **is** the behavioural component - measured directly rather than
-simulated by `center_position`, which has since been shown to be a leaky simulation (the
-mean quaternion alone recovers 0.54-0.79 of static-posture performance).
+| | AUC |
+| --- | --- |
+| three-number mean-position lookup | **0.730** +-0.001 |
+| random-score control | 0.499 |
+| criterion registered beforehand | 0.50 +-0.02 |
 
-Two consequences: expect Nymeria transfer numbers to be low, and do not read that as
-failure - low is the prediction. The question is whether the model beats the lookup there,
-and on Nymeria alone that is a fair fight.
+The direct test of the premise, in raw metres on per-sequence mean positions, reproduced
+independently on both machines: a participant's two sequences sit **2.13 m** apart
+(IQR 1.10-3.18) against **6.44 m** (3.78-9.13) between participants, P(same < different)
+= 0.847. **A participant's sequences from one sitting share a map**, so the lookup
+identifies *where someone was recorded*, not who they are.
 
-Acquired: **50 participants, 100 sequences, 47.1GB transfer, 20,778 windows at 5s@20Hz
-(415.6 per identity, above the corpus median of 295), 17 distinct scripts so every positive
-pair is cross-activity by construction.** Held at 50 rather than 100: the second half costs
-another ~47GB to buy identities in a dataset whose value is device and activity diversity,
-where BOXRR supplies identities 300x cheaper.
+And the position channel carries **no height at all**: Nymeria ships each participant's
+measured `height_cm`, and the correlation between mean `HmdPosition.y` and true height
+across the 50 participants is **0.057**, while a participant's two sequences agree on
+mean y at 0.944. Mean y spreads 1.8 m across participants against 0.11 m of real height
+spread - it is an origin offset shared within a sitting, nothing anthropometric.
+
+**Consequences.** Under `raw`, every Nymeria number is a location match and is reported
+only as that; a model-vs-lookup contest on Nymeria is not a fair fight. Under `dyn` the
+lookup is 0.50 by construction, so Nymeria remains the cross-device (real AR glasses)
+and cross-activity instrument - the same instrument as every other corpus, with no
+special status. Every Nymeria number also carries the caveat that its positives are
+cross-activity within one sitting on one day, so it cannot pay the 1.1-1.6 point
+cross-session cost the rest of the corpus pays.
+
+The acquisition stands: **50 participants, 100 sequences, 47.1GB transfer, 20,778 windows
+at 5s@20Hz, 17 distinct scripts.** Held at 50 rather than 100 because its value is device
+and activity diversity, not identity count.
 
 ### Cross-corpus transfer: the model is BELOW the lookup, and flat in identity count
 
