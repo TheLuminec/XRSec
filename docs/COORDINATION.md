@@ -67,6 +67,16 @@ that matters, since 4020 identities are BOXRR; Nymeria ~0.85 on every axis for t
 reason. **Decision rule:** BOXRR xz-only lookup above ~0.6 puts a room-fingerprint caveat
 on every `raw` BOXRR identity-count result and makes the `dyn` results the clean ones.
 
+- **Model Generalization: Nymeria `dyn` transfer** (scoring only, CPU, registered 16:05):
+  the 9.3 long-budget `dyn` checkpoints (419 x 5 seeds, 1000 x 2, 2096 x 1) and step 2's
+  10 s / 20 s checkpoints on all 50 Nymeria users, `exclude_users=[]`, cross-sequence
+  positives, target-fit, three seeds. Prediction: 0.52-0.56 at 419; +0.00 to +0.02 with
+  identity count; +0.01 to +0.03 from longer windows. Falsifiers: below 0.51 everywhere
+  (VR dynamics do not carry to glasses), above 0.60 (first strong cross-device transfer,
+  needs the leak check). Harness check in the table: lookup on the `dyn` windows reads
+  0.50 +-0.01 on the same pairs, else the encoding leaks location and nothing is read.
+  One-sitting caveat beside every number.
+
 ## GPU queue
 
 | order | who | what | status |
