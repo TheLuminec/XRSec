@@ -269,8 +269,10 @@ things to state as the section now does, since a deck can flatten them:
 1. The static cue on the seated corpora is **placement in the tracking space**, not
    height; both registered predictions had it wrong. Height is the part that survives a
    day, seen only on alyx and BOXRR. BOXRR's lateral component has a caveat by rule
-   (xz-only lookup 0.680); its *mechanism* is pending Trainer's origin-distance statistic,
-   so call it "placement", not "the room", until that lands.
+   (xz-only lookup 0.680) and its mechanism is now measured: a person-specific standing
+   offset in a re-centred frame (median |xz| 0.125 m), not the room - and height (P 0.828)
+   is the larger share of BOXRR's static cue. Say "placement (standing offset)", never
+   "room count".
 2. Every Nymeria `raw` number is a location match; only Nymeria under `dyn` (9.11,
    0.529-0.542) is a result. Nymeria carries the one-sitting caveat everywhere.
 
