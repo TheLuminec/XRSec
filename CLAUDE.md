@@ -426,11 +426,17 @@ That is a sharper statement of the generalisation problem than "the model does n
 generalise". It generalises exactly as far as the static cue does, and the part it actually
 learns is the part that does not survive a change of corpus.
 
-**A THIRD CAVEAT, AND IT IS THE ONE TO CHECK FIRST.** The in-domain checkpoint comes from
-sweep `31751868df`, which is the **margin/scale sweep** - and its only 5-fold-complete cells
-are at `identity_margin=0.1`, not the 0.35 default, run at `epochs=30`. The 7-dataset
-comparison (`b732bee5c6`) is at the 0.35 default and `epochs=20`. So the pair differs in
-**three** things - dataset coverage, margin, and epoch budget - not one.
+**A THIRD CAVEAT, VERIFIED FROM THE LOG RATHER THAN INFERRED.** Read off the run records
+once DESKTOP-C's shard reached origin:
+
+| sweep | margin | scale | data dirs | epochs |
+| --- | --- | --- | --- | --- |
+| `31751868df` (in domain) | **0.1** (10 runs), 0.2 (3) | 15 / 30 | 8 | **30** |
+| `b732bee5c6` (unseen) | unrecorded, so the 0.35 default | 30 | 7 | **20** |
+
+The in-domain checkpoint comes from the **margin/scale sweep**, whose only 5-fold-complete
+cells are at `identity_margin=0.1`. So the pair differs in **three** things - dataset
+coverage, margin, and epoch budget - not one.
 
 The confound is bounded rather than fatal: the same sweep puts margin 0.1 about 0.02 above
 the default reference, against a measured gap of 0.164. So the direction survives and the
