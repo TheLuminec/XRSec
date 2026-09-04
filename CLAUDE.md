@@ -1651,30 +1651,27 @@ represents. **On the only cross-day corpus a person's own head position is 0.95 
 distance to a stranger's laterally, and 0.49 in height.** That sentence is what the static
 cue is worth for a deployment.
 
-**And the trained model adds nothing to it out of domain (step 6, 2026-09-04).** On alyx,
-scored by the LODO `dyn` checkpoint that never saw alyx, rank-1 at N=17 / full gallery of 70,
-k=16: `dyn` alone **0.082 / 0.031**, height alone 0.135 / 0.031, height plus `dyn` (summed
-z-scored distances, no learned weight) **0.132 / 0.026**. Both registered predictions were
-too high (coordinator: dyn 0.10-0.16, fused 0.15-0.22; Trainer: 0.10-0.20, 0.20-0.30), and
-the fusion is no better than height alone because the model's cue is barely above chance
-there - its pairwise AUC of 0.514 (9.7) implies exactly this rank-1. **On the only cross-day
-corpus, scored by the only model that never saw it, the best system a glasses deployment
-could honestly use identifies at 0.13 among 17 candidates and 0.03 among 70, and head
-height alone does the same.** Everything above 0.4 in this table is same-sitting placement.
-The regime a deployment actually runs in - unseen users of a *seen* activity - was
-measured next, on the held-out alyx users of the in-domain `dyn` folds (sweep
-`ddc9b964e5`, 11-16 users per fold, k=16, so the "N=17" gallery is the whole fold and
-chance is 1/users, 0.06-0.09): `dyn` alone **0.147**, height alone **0.198**, fused
-**0.197** (per fold: dyn 0.086-0.200, y 0.087-0.309). The model roughly doubles its
-contribution in domain (0.082 -> 0.147; predicted 0.09-0.14, just under) and **fusion is
-still a wash** - 0.198 against 0.197, as 0.135 against 0.132 out of domain. The per-fold
-columns say why: dyn and height are anti-correlated across folds (fold 2 is height's best
-and dyn's second worst, fold 3 the reverse), so no fixed weight beats both, and a weight
-fitted to 70 users would be the test set. **The best alyx number in the whole table, 0.198
-on unseen users of a seen activity, is head height alone and needs no model.** Small
-populations, large per-fold spread, pooled means only; and the two alyx rows are on
-different galleries (70 users at N=17 against whole folds of 11-16), so compare each
-against its own chance, not against each other.
+**And the trained model never reaches what height alone gives (step 6, 2026-09-04).** Both
+alyx regimes on the same 14-user gallery, k=16, chance 0.0714, summed z-scored distances
+with no learned weight:
+
+| alyx, rank-1 at N=14 | `dyn` alone | height alone | height + `dyn` |
+| --- | --- | --- | --- |
+| unseen **activity** (LODO checkpoint, alyx never in training, 70 users) | 0.096 (1.3x) | 0.166 (2.3x) | 0.159 |
+| unseen **users** of a seen activity (in-domain folds `ddc9b964e5`, 11-16 users each) | 0.147 (2.1x) | **0.198 (2.8x)** | 0.197 |
+
+The model gains from being in domain (1.3x to 2.1x chance) and in neither regime reaches
+what three numbers of head height already give; **fusion is a wash in both** (0.159 vs
+0.166, 0.197 vs 0.198). The per-fold columns say why: `dyn` and height are anti-correlated
+across folds (fold 2 is height's best and dyn's second worst, fold 3 the reverse), so no
+fixed weight beats both, and a weight fitted to 70 users would be the test set. Both
+registered predictions for the fused system were too high (coordinator 0.15-0.22 and
+0.13-0.19, Trainer 0.20-0.30 twice). **The best alyx number in the whole table, 0.198 on
+unseen users of a seen activity, is head height alone and needs no model.** An earlier
+version of this paragraph compared a 17-of-70 draw against whole folds of 11-16 users as if
+they were one gallery; they were not, and the corrected pair above is the one to quote.
+Small populations, large per-fold spread (dyn 0.086-0.200, height 0.087-0.309), pooled
+means only.
 
 ### The identification number, measured properly
 
