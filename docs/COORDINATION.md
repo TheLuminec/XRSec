@@ -172,7 +172,12 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   0.18; ViewGauss 0.63 / 0.48 / 0.45; BOXRR 0.25 / 0.33 / 0.17; k=16 expected within +0.03
   of k=1 everywhere. Lesson: P(within<between) is pairwise and does not translate into
   16-way rank-1; the static cue is limited by between-session shift, which enrolment
-  evidence cannot remove.
+  evidence cannot remove. **Static table complete for four corpora (21:30), in CLAUDE.md's
+  identification section**: same-sitting corpora 0.61-0.81 xyz at N=17 carried by xz;
+  alyx 0.119; height alone never above 0.34 except ViewGauss k=3. Implied values held on
+  alyx only and undershot the seated corpora (non-Gaussian scores: placement within a
+  sitting is near-constant per person). Both sets of predictions scored, mostly wrong.
+  BOXRR and the dyn columns next.
 
 ## GPU queue
 

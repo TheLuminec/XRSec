@@ -1605,9 +1605,30 @@ between), a pairwise property, does not translate into 16-way rank-1 - alyx heig
 P=0.743 and identifies at 0.16 among 17; and enrolment averaging cannot lift a static cue
 whose limit is between-session shift (alyx k=1 to k=16: flat, whole-session ceiling 0.162).
 **Head position alone as an enrolment system on the one cross-day corpus is 2.4x chance
-at N=17 and 0.057 at a 70-person gallery. It is not an enrolment system.** Section 10's
-0.4-0.6 expectation was wrong there and holds at most on ViewGauss and Head_and_Gaze,
-whose implied values are 0.63 and 0.44.
+at N=17 and 0.057 at a 70-person gallery. It is not an enrolment system.** The full static
+table (Trainer, cross-session gallery vs probe, standardised, rank-1 at N=17, k = the
+largest each corpus supports):
+
+| corpus | sessions are | k | xyz | y only | xz only | implied xyz / y / xz |
+| --- | --- | --- | --- | --- | --- | --- |
+| ViewGauss | one sitting | 3 | 0.814 | 0.540 | 0.627 | 0.63 / 0.48 / 0.45 |
+| Head_and_Gaze V2 | one sitting | 8 | 0.609 | 0.142 | 0.618 | 0.44 / 0.17 / 0.45 |
+| VR_User_Behavior | one sitting | 16 | 0.790 | 0.114 | 0.832 | 0.20 / 0.13 / 0.18 |
+| **alyx** | **different days** | 16 | **0.119** | **0.135** | 0.075 | 0.10 / 0.15 / 0.08 |
+
+Two groups and nothing between them. Where gallery and probe come from one sitting, xz
+(placement) carries everything at 0.6-0.8 - a person not moving between clips, the same
+category as BOXRR's standing offset at its easiest. Where they are days apart, xz collapses
+to 0.075 and only height survives, at 0.135. **Head height alone never exceeds 0.34 at
+N=17 anywhere except ViewGauss (0.540, 35 users, four sessions in one visit).** So section
+10's 0.4-0.6 is met on three corpora, all same-sitting, and fails on the only corpus that
+measures what a deployment would face. The Gaussian implication was within 0.01 on alyx
+and undershot the seated corpora by up to 0.4: their score distributions are far from
+Gaussian, because within-sitting placement is nearly constant per person (within-window sd
+0.01-0.02 m) so genuine distances are tiny against widely spread impostors. Corpus
+property, not harness choice: ViewGauss sessions hold exactly 3 windows at 5 s and
+Head_and_Gaze 11, so k=16 is impossible there; population fixed at each corpus's maximum.
+k-averaging gained +0.18 on VR_User_Behavior and nothing on alyx.
 
 ### The identification number, measured properly
 
