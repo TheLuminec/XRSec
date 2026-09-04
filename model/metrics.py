@@ -71,20 +71,21 @@ def equal_error_rate(scores: torch.Tensor, labels: torch.Tensor) -> tuple[float,
     thresholds = torch.unique(scores)
     # A single candidate per distinct score is enough; add one below the minimum so
     # the "accept everything" end of the curve is reachable.
-    thresholds = torch.cat([thresholds.min().view(1) - 1.0, thresholds])
+    thresholds = torch.cat([thresholds.min().view(1) - 1.0, thresholds]).double()
 
-    best_gap = float("inf")
-    best_eer = float("nan")
-    best_threshold = float("nan")
-    for threshold in thresholds.tolist():
-        false_accept = (negative_scores >= threshold).float().mean().item()
-        false_reject = (positive_scores < threshold).float().mean().item()
-        gap = abs(false_accept - false_reject)
-        if gap < best_gap:
-            best_gap = gap
-            best_eer = (false_accept + false_reject) / 2.0
-            best_threshold = threshold
-    return best_eer, best_threshold
+    # Every threshold at once, from two sorted arrays, rather than one vectorised
+    # comparison per threshold. The per-threshold form is O(n^2): at 214k pairs per
+    # evaluation - a seven-corpus held-out set - it was the bulk of every epoch, and
+    # it runs once for the model, once for the lookup and once per dataset for each.
+    # Counts are exact, so this returns the same point the sweep did.
+    sorted_positive = torch.sort(positive_scores.double()).values
+    sorted_negative = torch.sort(negative_scores.double()).values
+    false_reject = torch.searchsorted(sorted_positive, thresholds, right=False).double() / sorted_positive.numel()
+    false_accept = 1.0 - torch.searchsorted(sorted_negative, thresholds, right=False).double() / sorted_negative.numel()
+    gap = (false_accept - false_reject).abs()
+    # First threshold at the minimal gap, as the ascending sweep found it.
+    best = int(torch.argmin(gap))
+    return float((false_accept[best] + false_reject[best]) / 2.0), float(thresholds[best])
 
 
 def pair_metrics(scores: torch.Tensor, labels: torch.Tensor) -> dict:
