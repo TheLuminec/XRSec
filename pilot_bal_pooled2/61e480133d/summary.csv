@@ -1,0 +1,3 @@
+rank,best_test_acc,fold_std,folds_completed,fold_scores,extractor,overrides,status,checkpoint,error
+1,0.7382821677810764,0.0071409451012436195,3,0.7326;0.7339;0.7483,bilstm,balance_identities=True,ok,C:\Users\thelu\Desktop\GIT\XRSec\pilot_bal_pooled2\61e480133d\runs\bilstm_1ae3b5c04e_fold0\best.pth,
+2,0.7289880153581675,0.002624153284061476,3,0.7313;0.7303;0.7253,bilstm,balance_identities=False,ok,C:\Users\thelu\Desktop\GIT\XRSec\pilot_bal_pooled2\61e480133d\runs\bilstm_65a04693fa_fold0\best.pth,
