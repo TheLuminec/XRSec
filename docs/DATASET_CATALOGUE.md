@@ -44,6 +44,7 @@ all, whatever else it offers.
 | 9 | BOXRR-23, *aligned* [C2] | **11,927** | many | Beat Saber | yes | as B1 | **WIP upstream** — see note |
 | 10 | CREATTIVE3D [D10] | 40 (to confirm) | multiple scenarios | **VR road crossing, incl. simulated low vision** | yes, 125Hz | **CC BY 4.0** | verified open, 7.2GB, not fetched |
 | 11 | 3D-ARM-Gaze [D9] | to confirm | multiple trials | seated arm reaching | head + **neck + trunk** | **Apache-2.0** | verified open, 4.7GB — see caveat |
+| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0, **not gated** | verified, **recommended** |
 
 **VR.net's 7 applications**: Beat Saber, Carton Network, Monster Awaken, Pottery,
 Traffic Cop, VR ROME, Voxel Shot VR. Only 21 participants, but the widest task span of
@@ -93,6 +94,44 @@ encoding our own screen measured as *losing* to raw by 0.13 AUC over 40 runs - n
 contradiction but the same fact from the other side: body-relative encodings need a body
 frame derived from head **and both controllers**, which they have and we do not. Their
 coordinate system (forward z, right x, up y) matches ours, so no axis remap.
+
+### Nymeria — the only dataset found that is recorded on real AR glasses
+
+**Accepted, and the strongest new find.** Meta Project Aria glasses, so it matches this
+project's deployment target exactly rather than by analogy. Verified from the dataset's own
+metadata, not the paper:
+
+| | |
+| --- | --- |
+| participants | **236** distinct, labelled in every sequence key |
+| sequences | **1,100**, mean **4.66 per participant**; 231 of 236 have >= 2 |
+| head pose | `recording_head/mps/slam/closed_loop_trajectory.csv` - **a CSV, separate from the video** |
+| activities | daily life in the wild, 50 locations, 300 hours |
+| licence | CC BY-NC 4.0, **`gated: false`** - no request process |
+
+Sequence keys are `<date>_<session>_<name>_act<N>_<hash>`, e.g.
+`20230607_s0_james_johnson_act0_...`, so identity linkage across recordings is free.
+
+**Downloadable without the bulk.** `download.py` selects `DataGroups`, and
+`recording_head` is a separate group from `recording_head_data_data_vrs`. We can take the
+SLAM trajectories and leave the RGB, grayscale, eye-tracking and IMU blobs behind - the
+difference between a few GB and many TB. Watch that the `mps` group also carries
+`semidense_points.csv.gz`, which is not small and which we do not need.
+
+**The limitation, stated precisely.** Every participant appears in exactly **one date and
+one session**; the 4.66 recordings are different *activities* within one sitting. So
+Nymeria yields **cross-activity** positives, not cross-day ones - the headset stays mounted
+throughout. That is better than same-recording windows and weaker than Who Is Alyx's two
+separate days. Do not quote it as evidence of temporal persistence.
+
+**It also carries something no other dataset here has: ground-truth anthropometrics.**
+`data/participants_metadata.csv` gives per-participant **height_cm** (149-199, mean 169.7),
+plus shoulder height, hip height, knee height, arm span, weight and BMI. This project's
+central finding is that **~78% of what the model uses is absolute head position, i.e.
+height and posture** - and that has only ever been inferred, by centring the position
+channel and watching accuracy collapse. Nymeria makes it directly checkable: correlate the
+model's embedding against *measured* height for 236 people. Nothing else in the corpus can
+do that, and it would turn an inference into a measurement.
 
 ### The XR Motion Dataset Catalogue is the single most valuable find
 
@@ -219,10 +258,12 @@ interaction and spatial-accuracy comparisons, and the one head-motion study loca
 release, a HoloLens 2 eye-tracking dataset by Aziz and Komogortsev sharing participants with
 GazeBaseVR, is eye tracking and therefore fails requirement 1.
 
-**This is a gap in the field, not a gap in the search.** Worth stating in a write-up:
-head-only models are validated on VR headsets because no AR-glasses motion corpus exists to
-validate them on, and the head-only design is what would let the model transfer there
-unchanged.
+**Partly closed by Nymeria** (entry 12), which is recorded on Project Aria glasses and does
+give 236 identities of head trajectory - the search above predates it and was looking for
+HoloLens/Magic Leap specifically. What remains true is that there is no AR-glasses corpus
+built *for identification*: Nymeria is a motion-understanding dataset with one sitting per
+participant, so it can test whether the signal exists on glasses but not whether it
+persists across days on them.
 
 ## Tier 3 — Verified unusable, recorded so the search is not repeated
 
@@ -230,6 +271,7 @@ unchanged.
 |---|---|
 | **GazeBaseVR** [Z1] | **407 participants, CC BY, trivial figshare download — and no head position or orientation channel at all.** Participants were on a chin rest specifically to suppress head movement, and gaze is expressed as an angle relative to a fixed headset (paper Table 4). The attractive access profile means this *will* be proposed again. It is the wrong signal, not the wrong licence. |
 | **BOXRR-23 Tilt Brush portion** | The `xror` library's own `fromTilt()` emits a single `BRUSH` device, `type='OTHER'`, with **no HMD**. Separately, a scan of all 4,716,986 metadata records found 4,661,942 Beat Saber and zero other named apps, so the Tilt Brush portion does not appear in the HuggingFace mirror's index at all. |
+| **EasyCom** [E1] | **Rejected on identity labelling, not data quality.** The head pose is good - position and quaternion for every seated participant at 20fps, in natural restaurant conversation, recorded from AR glasses. But **participant IDs are assigned per session**: the README says the `Participant_Photos` directory holds images "suffixed with integer numbers between 1 and 7 that correspond to the participant ID for the given session". Those photos exist precisely because the numbering is session-local. With no way to link a person across sessions there are no cross-session identities, which fails requirement 2 outright and leaves only same-session pairs - the inflation this project has already had to remove. Recovering identities by face-matching the participant photos would be re-identification of research subjects and is not something to do. |
 | **Liebers datasets, as training data** | 15–16 participants each. Fine as test sets (they are in Tier 1), far below the training threshold. |
 
 ---
@@ -331,6 +373,20 @@ Wright State University, Terascale All-sensing Research Studio.
 Signal Modalities.* 2025. https://pmc.ncbi.nlm.nih.gov/articles/PMC12473712/ —
 open-access source used to verify [T1]'s specifications. Corresponding author
 a.sawicki@pb.edu.pl.
+
+**[Y1] Nymeria.** L. Ma, Y. Ye, F. Hong, V. Guzov, Y. Jiang, R. Postyeni, L. Pesqueira,
+A. Gamino, V. Baiyya, H. J. Kim, K. Bailey, D. S. Fosas, C. K. Liu, Z. Liu, J. Engel,
+R. De Nardi, R. Newcombe. *Nymeria: A Massive Collection of Multimodal Egocentric Daily
+Motion in the Wild.* ECCV 2024. arXiv:2406.09905.
+https://www.projectaria.com/datasets/nymeria/ ·
+https://huggingface.co/datasets/projectaria/Nymeria ·
+https://explorer.projectaria.com/nymeria · CC BY-NC 4.0, not gated.
+
+**[E1] EasyCom.** J. Donley, V. Tourbabin, J.-S. Lee, M. Broyles, H. Jiang, J. Shen,
+M. Pantic, V. K. Ithapu, R. Mehra. *EasyCom: An Augmented Reality Dataset to Support
+Algorithms for Easy Communication in Noisy Environments.* 2021.
+https://github.com/facebookresearch/EasyComDataset · CC BY-NC 4.0.
+**Rejected - see Tier 3.**
 
 **[K1] Deep Learning for Virtual Reality User Identification: A Benchmark.**
 D. Frizzo, F. Genilotti, D. Petrovic, A. Stropeni, F. Borsatti, D. Dalle Pezze,
