@@ -1615,8 +1615,14 @@ largest each corpus supports):
 | Head_and_Gaze V2 | one sitting | 8 | 0.609 | 0.142 | 0.618 | 0.44 / 0.17 / 0.45 |
 | VR_User_Behavior | one sitting | 16 | 0.790 | 0.114 | 0.832 | 0.20 / 0.13 / 0.18 |
 | **alyx** | **different days** | 16 | **0.119** | **0.135** | 0.075 | 0.10 / 0.15 / 0.08 |
+| BOXRR held-out (5 ckpts, 73-92 users) | across days | 16 | 0.407 | **0.379** | 0.242 | 0.25 / 0.33 / 0.17 |
 
-Two groups and nothing between them. Where gallery and probe come from one sitting, xz
+BOXRR is the **only corpus where height beats placement** (y 0.379 against xz 0.242), and
+every seated corpus is the reverse by a wide margin - which is what a modest standing
+offset looks like against what a room looks like, and matches its geometry (height P 0.828
+over lateral 0.685). Its population is fixed at k=16 like every other row, which drops 2-3
+validation users per checkpoint against the lookup's lists. Two groups and nothing between
+them, with BOXRR between them on the distance ratio. Where gallery and probe come from one sitting, xz
 (placement) carries everything at 0.6-0.8 - a person not moving between clips, the same
 category as BOXRR's standing offset at its easiest. Where they are days apart, xz collapses
 to 0.075 and only height survives, at 0.135. **Head height alone never exceeds 0.34 at
