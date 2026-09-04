@@ -1591,6 +1591,24 @@ and the difference is not performance.
 The window length is the third mismatch and is the one that might be a real deficit;
 that is what `window_stride` now makes testable.
 
+### A pairwise AUC implies a rank-1, and the implication should be computed first
+
+Under an equal-variance Gaussian score model, d' = sqrt(2) * Phi^-1(AUC), and rank-1 at
+gallery N is the probability a genuine score beats N-1 impostor draws. Checked
+2026-09-04 on alyx: the per-axis lookup AUCs (0.593 / 0.661 / 0.539) imply rank-1 at N=17
+of 0.103 / 0.149 / 0.075, and the enrolment harness measured 0.114 / 0.140 / 0.071. So
+before any identification number is run, compute what its verification number already
+implies; a rank-1 that lands more than ~0.05 from the implied value is the interesting
+result (a score distribution far from Gaussian, i.e. a few very separable users), and one
+that lands on it was already known. Two consequences from the same check: P(within <
+between), a pairwise property, does not translate into 16-way rank-1 - alyx height has
+P=0.743 and identifies at 0.16 among 17; and enrolment averaging cannot lift a static cue
+whose limit is between-session shift (alyx k=1 to k=16: flat, whole-session ceiling 0.162).
+**Head position alone as an enrolment system on the one cross-day corpus is 2.4x chance
+at N=17 and 0.057 at a 70-person gallery. It is not an enrolment system.** Section 10's
+0.4-0.6 expectation was wrong there and holds at most on ViewGauss and Head_and_Gaze,
+whose implied values are 0.63 and 0.44.
+
 ### The identification number, measured properly
 
 **rank-1 identification on unseen users, 5 retrained leave-users-out folds**
