@@ -945,6 +945,37 @@ def assert_evaluation_users_are_unseen(train_dataset, test_dataset,
         f"what you intend.")
 
 
+def refuse_excluded_users_under_test_dirs(test_dirs, exclude_users) -> None:
+    """
+    Refuse a configuration that would silently drop users from a separate evaluation
+    corpus.
+
+    `exclude_users` describes the TRAINING split. With `test_dirs` pointing at another
+    corpus and `test_on_excluded=false`, any excluded path that lies under a test_dir is
+    removed from the evaluation set as well - silently, because the loader just reports
+    a smaller user count. The config default names five VR_User_Behavior users, and
+    every cross-corpus run of the generalisation programme inherited it: 30 runs scored
+    VR_User_Behavior on 43 users while everyone read 48. A warning is what nobody read;
+    this refuses.
+    """
+    test_roots = [str(Path(d).resolve()) for d in ([test_dirs] if isinstance(test_dirs, str) else list(test_dirs or []))]
+    offenders = []
+    for user in (exclude_users or []):
+        resolved = str(Path(user).resolve())
+        if any(resolved == root or resolved.startswith(root + os.sep) for root in test_roots):
+            offenders.append(user)
+    if not offenders:
+        return
+    listed = ", ".join(str(Path(u).name) for u in offenders[:5])
+    more = f" and {len(offenders) - 5} more" if len(offenders) > 5 else ""
+    raise ValueError(
+        f"exclude_users names {len(offenders)} user(s) under test_dirs ({listed}{more}) while "
+        f"test_on_excluded=false. They would be silently dropped from the evaluation corpus, "
+        f"which is what happened to VR_User_Behavior users 1-5 for 30 cross-corpus runs. "
+        f"Pass exclude_users=[] (the config default names training-corpus users), or set "
+        f"test_on_excluded=true if evaluating on exactly those users is what you intend.")
+
+
 def create_dataloader_from_path(
     data_dir,
     batch_size: int,
@@ -1029,6 +1060,11 @@ def create_dataloader_from_path(
     keep_users = select_user_subset(data_dir, max_users, seed)
     if keep_users is not None:
         print(f"User subsample: keeping {len(keep_users)} users, stratified across datasets")
+
+    # A separate evaluation corpus must never lose users to the training split's
+    # exclude list. Refused rather than warned; see the helper.
+    if is_train and test_dir is not None and not test_on_excluded:
+        refuse_excluded_users_under_test_dirs(test_dir, exclude_users)
 
     if not is_train:
         eval_swap_data = not swap_data if test_on_excluded else swap_data
