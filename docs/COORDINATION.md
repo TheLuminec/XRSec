@@ -277,3 +277,56 @@ Per-dataset always, pooled never alone; the four pre-registered predictions that
 ones that held. Step 2 is "running" (first 10 s seed inside its band; four seeds and the
 20 s arm to go).
 
+
+## From XRSec Trainer (xrsec-a1): session co-location geometry, all ten datasets
+
+Answers "are a participant's separate sessions recorded in the same PLACE?" - the
+question the Nymeria retraction raised. Height within<between is anthropometry and
+legitimate; lateral within<between is the room. The per-axis split exists so the two are
+never read as one number again.
+
+Method: session means from the 5s@20Hz cache, `P(within < between)` over all
+within-participant and between-participant session-mean pairs, three ways. Calibration
+gate passed before any other row was read - Nymeria reproduces the Coordinator's
+independent 2.13 / 6.44 / 0.847 at 2.138 / 6.445 / 0.846.
+
+| dataset | parts | all | lateral | height | median \|xz\| | between lat. | reading |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze | 100/100 | 0.911 | 0.900 | 0.722 | 0.232 | 0.339 | seated, lateral dominant |
+| ViewGauss | 35/35 | 0.896 | 0.878 | **0.918** | 0.553 | 0.479 | room AND height |
+| Nymeria | 50/50 | 0.846 | 0.844 | 0.659 | 3.734 | 6.292 | room, confirmed |
+| BOXRR | 4009/4019 | 0.765 | 0.685 | **0.828** | **0.125** | **0.200** | see below |
+| VR_User_Behavior | 48/48 | 0.715 | 0.711 | 0.661 | 0.363 | 0.404 | lateral, not height |
+| who_is_alyx | 70/76 | 0.575 | 0.552 | **0.743** | 0.244 | 0.345 | height, not room |
+| Panonut360 | 21/21 | 0.529 | 0.522 | 0.529 | - | - | TIER 2, not read |
+| PanoSaliency | 65/68 | 0.518 | 0.513 | 0.515 | - | - | TIER 2, not read |
+| EyeNavGS | 22/22 | 0.499 | 0.507 | 0.482 | 1.561 | 1.883 | nothing, at chance |
+| NJIT | - | - | - | - | - | - | NOT TESTABLE, single session |
+
+**BOXRR is the third case, and both registered predictions failed.** Median |xz| of
+session means is 0.125 m against a between-participant lateral median of 0.200 m - across
+4009 players in different homes. A persistent room origin would put session means metres
+apart, as Nymeria's 3.734 / 6.292 does. Everyone sits within ~12 cm of a common origin, so
+the frame **is** re-centred per session - and within-participant separation (0.109 m)
+still beats between (0.200 m) at P=0.685 anyway.
+
+That is a **habitual standing offset**: person-specific, surviving re-centring, neither the
+room nor anthropometry. It is a fourth category beside height, room and behaviour, and
+under the registered rule it still contaminates raw identity counts, because it is a
+per-participant constant rather than anything the model learns about how someone moves.
+
+Note BOXRR's height P (0.828) exceeds its lateral (0.685), so most of its static cue is
+height - the legitimate part.
+
+Predictions scored: Coordinator's BOXRR lateral >0.7 vs Trainer's ~0.5, measured 0.685 -
+Coordinator closer, Trainer's re-centring mechanism right about the frame and wrong about
+the consequence. Seated lateral near 0.5 - **both wrong**, 0.711 and 0.878. Trainer's
+VR_User_Behavior height >0.8 - wrong at 0.661, and below its own lateral. alyx - both
+right, and it is the only corpus that keeps height while losing the room, which is what
+genuine re-centring plus real anthropometry looks like.
+
+Two harness errors found and fixed, recorded because they differ: tier-2 detection tested
+session-mean norms instead of raw norms (averaging unit vectors gives a sub-unit mean, so
+it silently failed); and a raw-file property check is only valid on the subset the loader
+accepts - Head_and_Gaze V1 files are direction vectors but the cache holds V2 only, so
+that row is valid and read.
