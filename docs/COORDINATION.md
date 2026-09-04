@@ -156,7 +156,14 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
   Coordinator's predictions: xyz rank-1 at N=17 0.4-0.6 on tier 1; y-only well below xyz on
   the seated corpora and close to it on alyx; xz-only near xyz seated and near chance on
   alyx; `dyn` 0.15-0.25 seated, higher on BOXRR. The decisive number is y-only on alyx at
-  N=17: what height alone buys across days. Trainer's predictions to be written beside.
+  N=17: what height alone buys across days. Trainer's predictions written beside (297ed6a):
+  a wider spread from the between/within ratios (ViewGauss > 0.85, Head_and_Gaze > 0.75 at
+  N=17/k=16, alyx 0.3-0.5), xz-only on alyx 0.10-0.20, k=1 to k=16 gain > +0.2 everywhere.
+  Amendments 20:20: NJIT reported NOT APPLICABLE (single session); BOXRR users are the
+  held-out validation users recorded in the five 9.1-setup checkpoints Model Generalization
+  scored, named in the table; raw-metres xyz and xz columns beside the standardised ones,
+  since per-dataset standardisation upweights height and the y-vs-xz split is partly the
+  normaliser's.
 
 ## GPU queue
 
