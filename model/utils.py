@@ -29,7 +29,17 @@ def load_checkpoint(checkpoint_path, device, seq_len=10, return_checkpoint=False
         sys.exit(1)
 
     print(f"Loading checkpoint: {checkpoint_path}")
-    checkpoint = torch.load(checkpoint_path, map_location=device)
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+    except Exception as exc:
+        # Checkpoints written between 6953cd0 and this change carry an OmegaConf
+        # DictConfig in eval_split.max_users, which the weights-only unpickler
+        # refuses. These are this repository's own artefacts, so load them the
+        # permissive way rather than orphaning fifteen trained models.
+        if "weights_only" not in str(exc) and "Unsupported global" not in str(exc):
+            raise
+        print("  NOTE: checkpoint carries non-tensor config objects; loading with weights_only=False")
+        checkpoint = torch.load(checkpoint_path, map_location=device, weights_only=False)
 
     # Rebuild the exact extractor this checkpoint was trained with. Older checkpoints
     # predate extractor selection and are assumed to be the paper architecture.

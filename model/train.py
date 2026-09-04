@@ -12,7 +12,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import torch
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 from boost_train import resolve_paths, run_boosted_training
 from dataset import count_single_session_users, create_dataloader_from_path
@@ -49,6 +49,22 @@ three items above are what to fix first."""
 def _namespaceify(value):
     if isinstance(value, dict):
         return SimpleNamespace(**{key: _namespaceify(inner) for key, inner in value.items()})
+    return value
+
+
+def plain_container(value):
+    """
+    An OmegaConf container (or anything with .items()) as plain dicts/lists/scalars.
+
+    Anything written into a checkpoint has to survive torch.load's weights-only
+    unpickler, which allows only plain Python types.
+    """
+    if value is None or isinstance(value, (bool, int, float, str)):
+        return value
+    if isinstance(value, (list, tuple, ListConfig)):
+        return [plain_container(v) for v in value]
+    if isinstance(value, (dict, DictConfig)) or hasattr(value, "items"):
+        return {str(k): plain_container(v) for k, v in value.items()}
     return value
 
 
@@ -478,7 +494,10 @@ def _run_standard_training(args, device):
                 "exclude_users": [str(u) for u in (getattr(args, "exclude_users", None) or [])],
                 "swap_data": bool(getattr(args, "swap_data", False)),
                 "test_on_excluded": bool(getattr(args, "test_on_excluded", False)),
-                "max_users": getattr(args, "max_users", None),
+                # Plain Python, never an OmegaConf container: torch.load's default
+                # weights-only unpickler refuses DictConfig, which made every checkpoint
+                # trained with a per-dataset max_users unloadable by mode=test.
+                "max_users": plain_container(getattr(args, "max_users", None)),
                 "sample_time": int(args.sample_time),
                 "sample_rate": int(args.sample_rate),
                 "window_stride": getattr(args, "window_stride", None),
