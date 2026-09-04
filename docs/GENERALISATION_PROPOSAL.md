@@ -808,6 +808,65 @@ the in-domain fold sweeps are unaffected (`sweep.folds` ignores `exclude_users`)
 absolute VR_User_Behavior figures are on 43 users. Any cross-corpus command must carry
 `exclude_users=[]` explicitly; the CLAUDE.md command shape has been corrected.
 
+### 9.9 Nymeria: the lookup is a location match
+
+A registered prediction failed, and it is recorded as a failure. CLAUDE.md carried
+"Nymeria is the one place the static baseline cannot win": its SLAM origin was assumed
+to be set independently per recording, so the mean-position lookup should sit at chance
+there and nowhere else. Trainer proposed measuring that *before* any model was scored on
+Nymeria, Data relayed it, and it was measured here after the reconversion passed the
+frame audit (head-up 0.91 on world +Y, |q| 1.0000, position untouched). That order is
+why no number was built on the premise.
+
+Setup: all 50 users, 20,778 windows at 5s@20Hz, cross-sequence positives, within-dataset
+negatives, 25,600 pairs at 0.500 positive, target-fit standardisation, three manifest
+seeds drawn as the pipeline draws them, `exclude_users=[]`.
+
+| measurement | value | criterion |
+| --- | --- | --- |
+| three-number lookup | **0.730 +-0.001** | within 0.50 +-0.02: **failed** |
+| random-score control | 0.499 +-0.002 | ~0.50: held |
+| same-participant sequence means, distance apart (50 pairs, raw metres) | median **2.14 m** (IQR 1.10-3.19) | |
+| different-participant sequence means (4,900 pairs) | median **6.44 m** (IQR 3.79-9.13) | |
+| P(same-participant distance < different-participant distance) | **0.846** | 0.5 = premise holds: **failed** |
+| height axis alone, same vs different participant | 0.26 m vs 0.44 m | |
+
+The Coordinator reproduced all of it independently from the raw CSVs (2.13 / 6.44 m,
+0.847). Reading: a participant's recordings from one sitting share a map, so the origin
+is per sitting, not per recording, and mean position identifies the participant by
+*where they were recorded*. Even the height axis is an origin offset there (a
+participant's own two sequences differ by 0.26 m in y), not a head height.
+
+Trainer's framing of the size of it: at 0.730 against the pooled in-domain lookup of
+0.727 (section 2), Nymeria under `raw` is the *easiest* location match in the corpus, and
+had a model been scored on it first the number would have read as cross-device
+generalisation to AR glasses. Credit in order: Trainer proposed measuring the premise
+before scoring, Data relayed it, this session measured it.
+
+Nymeria is the one corpus that ships measured anthropometrics, and they close the
+"maybe y is still height" reading before anyone offers it (Coordinator, from
+`participants_metadata.csv`, all 50 participants matched): the correlation between a
+participant's mean `HmdPosition.y` and their measured `height_cm` is **0.057**, while a
+participant's two sequences agree on mean y at 0.944; mean y spreads **1.8 m** across
+participants against **0.11 m** of real height spread. So Nymeria's position channel
+carries no anthropometry at all - it is an origin offset shared within a sitting.
+
+What Nymeria is from here:
+
+- **Under `raw`, every Nymeria number is a location match** and is reported only as
+  that. The learned static scorers (9.8's harness, Nymeria never in training) all sit
+  *below* the lookup - learned 3 numbers 0.708, learned 17 0.685, in domain 0.723
+  against a same-half lookup of 0.723 - which is what a location fingerprint looks
+  like: the lookup already reads the shared map. Reported, not read.
+- **Under `dyn` the lookup is chance by construction**, so Nymeria under `dyn` is the
+  cross-device, cross-activity instrument it was meant to be - the same instrument as
+  every other corpus, without the special status. The `dyn` transfer to Nymeria
+  (checkpoints from 9.3 and from step 2, scoring only) is queued after step 2, with its
+  prediction registered first.
+- Every Nymeria number carries this beside it: positives are cross-activity but within
+  **one sitting on one day**, so Nymeria cannot pay the 1.1-1.6 point cross-session cost
+  the rest of the corpus pays.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
