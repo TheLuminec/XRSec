@@ -42,6 +42,8 @@ all, whatever else it offers.
 | 7 | LiebersHand22 [C3] | 16 | 2, x8 scenes | AR/VR hand + button tasks | yes | open, in catalogue | verified, not fetched |
 | 8 | LiebersLabStudy21 [C4] | 16 | 2 | Archery, Bowling | yes | open, in catalogue | verified, not fetched |
 | 9 | BOXRR-23, *aligned* [C2] | **11,927** | many | Beat Saber | yes | as B1 | **WIP upstream** — see note |
+| 10 | CREATTIVE3D [D10] | 40 (to confirm) | multiple scenarios | **VR road crossing, incl. simulated low vision** | yes, 125Hz | **CC BY 4.0** | verified open, 7.2GB, not fetched |
+| 11 | 3D-ARM-Gaze [D9] | to confirm | multiple trials | seated arm reaching | head + **neck + trunk** | **Apache-2.0** | verified open, 4.7GB — see caveat |
 
 **VR.net's 7 applications**: Beat Saber, Carton Network, Monster Awaken, Pottery,
 Traffic Cop, VR ROME, Voxel Shot VR. Only 21 participants, but the widest task span of
@@ -129,11 +131,42 @@ the papers and lab pages linked, and are deliberately not guessed here.**
 | # | Dataset | Identities | Sessions/user | Task | Head 6DoF | How to get it |
 |---|---|---|---|---|---|---|
 | 10 | Stanford Longitudinal Social VR [S1] | **232** | **8, weekly** | social VR | yes, confirmed | corresponding author |
-| 11 | RMillerBall22 [R1] | not verified | not verified | ball-throwing, VR biometrics | likely | permissions pending upstream |
+| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 75/45/45Hz | via the Data in Brief article — see below |
 | 12 | OpenNEEDS [O1] | 44 | 2 | reading, drawing, shooting, manipulation | yes | signed data-use agreement |
 | 13 | mmWave XR Mobility [M1] | not stated | 45h total | Alyx, Wrench, Pistol Whip | yes, 500Hz | contact authors |
 | 14 | NTHU 6-DoF Privacy [N1] | not stated | not stated | 3D virtual world | yes | contact authors |
 | 15 | Cognitive-State XR Motion [G1] | not stated | not stated | reading/confusion/hesitation tasks | yes, 72Hz | release pending publication |
+
+### 16. Cross-system VR ball throwing — the second priority request
+
+**The only multi-headset dataset found, and one of only two with genuine day-scale session
+separation.** Verified from an open-access paper using it [P1], since the Data in Brief
+article itself is behind a CAPTCHA:
+
+- **41 participants**, right-handed, ball-throwing task in Unity
+- **6 sessions per participant, separated by at least one day** — 2 sessions on each of
+  **Meta Quest, HTC Vive, HTC Vive Cosmos**, covering both lighthouse and camera-based
+  tracking
+- HMD **and** two controllers recorded; we take the head track only
+- 10 trials per session, **fixed 3-second recordings**, 225 / 135 / 135 frames per device
+  (~75Hz / 45Hz / 45Hz)
+
+**Why it matters for our scope specifically.** The user's stated goal is all of XR
+including glasses, so device-independence is part of the claim, not a footnote. This is the
+only dataset found that can test it: if identity transfers across Quest, Vive and Cosmos, that
+is direct evidence the model is not learning a tracking-system artefact. Combined with
+6 sessions a day or more apart, it answers *two* questions nothing else here can.
+
+**The limitation is severe and bounds its use.** 3-second recordings mean roughly 30 seconds
+of motion per session and ~180s per user in total. At `sample_time=2` that is about 90
+windows per user; at `sample_time=5` it yields almost nothing. **Test set only, and only at
+short window lengths.**
+
+- **Access**: the original repository, `github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication`, now returns **404** — the catalogue entry [R1] is a dead link and this Data in Brief release supersedes it.
+- Data in Brief is normally open access with a named repository; the article is
+  S2352340925005542 [T1]. **Someone with institutional access should read its Data
+  Availability statement** — that names the current host.
+- The group is Wright State University's Terascale All-sensing Research Studio (TARS).
 
 ### 10. Stanford Longitudinal Social VR — the priority request
 
@@ -166,6 +199,30 @@ participants is below the training threshold, but the task set (reading, drawing
 object manipulation) is unlike anything else here, so its value is as a **test** set.
 
 ---
+
+### Caveat on 3D-ARM-Gaze
+
+Its own description says movements were made "from a precisely controlled, comfortably
+seated posture". That is the **GazeBaseVR risk** — a study that constrains posture in order
+to isolate something else may have suppressed exactly the head motion we depend on. It does
+record head, neck **and** trunk position and quaternion, which is unique and would let us
+separate posture from head movement directly, so it is worth checking rather than
+discarding. **Verify head-motion range before converting.**
+
+### No AR-glasses motion dataset appears to exist
+
+Searched specifically, because the project's scope is all of XR **including glasses**, and a
+dataset recorded on actual AR glasses would match the deployment target exactly. Nothing
+suitable found: the HoloLens/Magic Leap literature is dominated by eye tracking, hand
+interaction and spatial-accuracy comparisons, and the one head-motion study located (HoloLens
+2, 60Hz, 54 participants) is a behavioural study rather than a released dataset. The nearest
+release, a HoloLens 2 eye-tracking dataset by Aziz and Komogortsev sharing participants with
+GazeBaseVR, is eye tracking and therefore fails requirement 1.
+
+**This is a gap in the field, not a gap in the search.** Worth stating in a write-up:
+head-only models are validated on VR headsets because no AR-glasses motion corpus exists to
+validate them on, and the head-only design is what would let the model transfer there
+unchanged.
 
 ## Tier 3 — Verified unusable, recorded so the search is not repeated
 
@@ -245,7 +302,7 @@ https://github.com/cschell/xr-motion-dataset-conversion-scripts
 
 **[C6] VR.net.** arXiv:2306.03381 — distributed via [C0].
 
-**[C7] Who Is Alyx.** C. Rack, T. Fernando, M. Yalcin, A. Hotho, M. E. Latoschik.
+**[C7] Who Is Alyx.** Zenodo DOI 10.5281/zenodo.8379914. C. Rack, T. Fernando, M. Yalcin, A. Hotho, M. E. Latoschik.
 *Who is Alyx? A new behavioral biometric dataset for user identification in XR.*
 Frontiers in Virtual Reality, 2023. https://doi.org/10.3389/frvir.2023.1272234 ·
 https://github.com/cschell/who-is-alyx
@@ -261,7 +318,26 @@ R. Chen, J. N. Bailenson. *A Large-Scale Study of Personal Identifiability of Vi
 Reality Motion Over Time.* arXiv:2303.01430, 2023. Stanford IRB-61257.
 
 **[R1] RMillerBall22.** Terascale All-sensing Research Studio.
-https://github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication
+https://github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication —
+**link is dead (404 as of 2026-09-03)**; superseded by [T1]. Listed as
+"request for permissions pending" in the XR Motion Dataset Catalogue [C0].
+
+**[T1] Multimodal cross-system VR ball throwing dataset for VR biometrics.**
+Data in Brief, 2025. https://www.sciencedirect.com/science/article/pii/S2352340925005542 ·
+41 participants, 6 sessions >=1 day apart, Meta Quest / HTC Vive / HTC Vive Cosmos.
+Wright State University, Terascale All-sensing Research Studio.
+
+**[P1] A. Sawicki, K. Saeed, W. Walendziuk.** *Behavioral Biometrics in VR: Changing Sensor
+Signal Modalities.* 2025. https://pmc.ncbi.nlm.nih.gov/articles/PMC12473712/ —
+open-access source used to verify [T1]'s specifications. Corresponding author
+a.sawicki@pb.edu.pl.
+
+**[K1] Deep Learning for Virtual Reality User Identification: A Benchmark.**
+D. Frizzo, F. Genilotti, D. Petrovic, A. Stropeni, F. Borsatti, D. Dalle Pezze,
+R. De Monte, M. Barusco, G. A. Susto. arXiv:2604.16341, 2026. **Not a new dataset** — it
+benchmarks LSTM, GRU, CNN, TCN, Transformer and state-space models on Who Is Alyx alone.
+Relevant as an external check on our "architecture is worth ~0" finding, not as an
+acquisition.
 
 **[O1] OpenNEEDS.** E. Sun, K. Muhlbach, P. Zhang et al. *OpenNEEDS: An open, large-scale
 dataset of head, hand and eye motion for VR interaction.* 2021.
@@ -306,11 +382,14 @@ https://symmru.github.io/EyeNavGS/
 **[D8] NJIT 6DOF VR Navigation.** J. Chakareski, 2019.
 https://web.njit.edu/~chakarsk/vr-navigation.html — by request to Prof. Jakov Chakareski.
 
-**[D9] 3D-ARM-Gaze.** https://zenodo.org/record/10567366 ·
-https://doi.org/10.1038/s41597-023-02676-5
+**[D9] 3D-ARM-Gaze.** B. Lento, E. Segas, V. Leconte, E. Doat, F. Danion, R. Peteri,
+J. Benois-Pineau, A. de Rugy. *3D-ARM-Gaze: a public dataset of 3D Arm Reaching Movements
+with Gaze information in virtual reality.* 2024. **Apache-2.0, open, 4.7GB.**
+https://zenodo.org/record/10567366
 
-**[D10] CREATTIVE3D.** https://zenodo.org/records/14514163 ·
-https://doi.org/10.1038/s41597-024-03382-2
+**[D10] CREATTIVE3D.** *CREATTIVE3D multimodal dataset of user behavior in virtual
+reality.* ANR CREATTIVE3D project, 2024-12-18. **CC BY 4.0, open, 7.2GB.**
+https://zenodo.org/records/14514163 · https://doi.org/10.1038/s41597-024-03382-2
 
 **[D11] Non-Laboratory Gait Dataset.** Z. P. Shiri, H. Pierce et al. Scientific Data 10, 2023.
 https://doi.org/10.1038/s41597-023-02374-2
