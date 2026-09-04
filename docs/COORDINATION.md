@@ -35,8 +35,8 @@ and a sweep whose rows split across two `code_identity` values).
 
 | order | who | what | status |
 | --- | --- | --- | --- |
-| 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | running, 9/16 at 11:30 |
-| 2 | Trainer | reproduction of grid cell 0.1/15 fold 0 under current code, then 0.35/30 @ epochs=30 x 5 folds | next; criterion sent by message |
+| 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
+| 2 | Trainer | reproduction of grid cell 0.1/15, all 5 folds, under current code (stop on any digit differing from sweep `31751868df`), then 0.35/30 @ epochs=30 x 5 folds | **running since 11:47**, corpus verified as the 8 grid datasets |
 | 3 | Model Generalization | proposal section 10 step 2, `dyn` window length | after 2, unless 9.7 changes the ranking |
 
 ---
