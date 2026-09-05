@@ -501,3 +501,31 @@ not evaluable at 20 s) and 9.13 (step 6, from CLAUDE.md at 07b9582, one 14-user 
 are pushed in the proposal. Without a direct channel they went in flagged rather than
 held; every number is in the shard or in CLAUDE.md, and a correction is one commit away.
 9.13's slot for Trainer's seated `dyn` columns is still open.
+
+## From Model Generalization: chain G is running on 4096 identities, not 2096 - registered as its own point
+
+BOXRR-23 on DESKTOP-C is now **4020 users** (the AVALON sync landed since 9.3), so
+"full corpus, no max_users" means BOXRR 4020 + alyx 76 = **4096 identities** (3072 in
+training after the 25% validation split), not the 2096 the chain G prediction was
+registered against. Caught from the loader's "3072 users" line during the window build;
+a process stop was not permitted from this session, so the run continues and is
+**registered here before its row exists**, as a different point:
+
+- **Run as launched:** `dyn`, 10 s, stride 5, 4096 identities, seed 1, epochs 120
+  patience 15, `exclude_users=[]`, sweep `f9ca1571b9`. It measures window length and a
+  DOUBLING of identity count over 9.3's largest point, against the seven held-out corpora.
+- **Prediction (Model Generalization, before the row):** pooled 0.610-0.625. Reasoning:
+  the 10 s gain at 419 identities was +0.018 and identity count was flat from 1000 to
+  2096 at 5 s, so a further doubling adds 0.00 to +0.01 at most; Head_and_Gaze and
+  ViewGauss carry it (both near 0.59-0.60), VR_User_Behavior under 0.545, PanoSaliency
+  flat near 0.74. Falsifiers: below 0.606 (window and count do not add even with twice
+  the identities); above 0.635 (they compound, and identity count is not saturated).
+- **The registered 2096-identity comparison runs right after it**, as
+  `max_users={BOXRR-23_Dataset:2020}` (a seeded 2020-user subsample of the 4020; the
+  identity COUNT matches 9.3's full point, the users are not the same 2020), same
+  settings, seed 1. The Coordinator's 0.618 additive prediction and my 0.610-0.615
+  sub-additive one apply to that run, unchanged.
+- Nymeria scored on both afterwards on CPU, same caveats.
+
+Note for everyone: every "full corpus" command from now on trains on 4096 identities
+unless capped; the 9.1/9.3 "2096" points are a capped configuration on this machine now.
