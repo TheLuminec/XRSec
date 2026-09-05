@@ -407,6 +407,19 @@ class SampleIndex:
         # Before encoding and centring: both destroy the norm this depends on.
         self.direction_vector_datasets = detect_direction_vector_datasets(self)
 
+        # Each window's mean position as RECORDED, before any encoding or centring: the
+        # static cue itself, kept beside windows the model may see with that cue removed.
+        # The training-free lookup is scored on it so a `dyn` row carries the real static
+        # baseline on its own pairs. On the encoded windows a `dyn` window's mean is zero
+        # to rounding, and a lookup on it ranks rounding residue that tracks movement
+        # amplitude (docs/GENERALISATION_PROPOSAL.md 9.14) - not a baseline of anything.
+        # ChannelNormalizer.transform standardises this with the position channels.
+        if self.sample_count:
+            channels = position_channel_slice(self.samples.shape[1])
+            self.window_mean_positions = self.samples[:, channels, :].mean(dim=2)
+        else:
+            self.window_mean_positions = torch.empty((0, 3), dtype=torch.float32)
+
         # Before centring: br already removes the absolute position, so applying both
         # would centre an already-centred signal rather than compounding.
         if encoding != "raw" and self.sample_count:

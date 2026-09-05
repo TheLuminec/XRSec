@@ -249,6 +249,7 @@ transfer number never travels without the three things that qualify it:
 | column / key | meaning |
 | --- | --- |
 | `test_auc_by_dataset`, `lookup_auc_by_dataset` | AUC per evaluation dataset for the model and for the mean-position lookup, on the same scores, as `name=value;...` |
+| `position_lookup_auc`, `amplitude_auc` (each also `_eer` and `_by_dataset`) | the two training-free baselines that are valid under every encoding, on the same pairs: the mean-position lookup on each window's **recorded** position (`SampleIndex.window_mean_positions`, taken before encoding and standardised with the position channels), and **movement amplitude alone** (norm of the per-axis sd of position in the window). `lookup_auc` keeps its old meaning - the lookup on the windows as the model sees them - and on a `dyn` row that is rounding residue tracking amplitude, not a baseline (`docs/GENERALISATION_PROPOSAL.md` 9.14) |
 | `eval_tiers` | the semantics tiers present in the evaluation set (`dataset.DATASET_TIERS`: 1 head pose in metres, 2 direction vector, 3 other). `evaluate()` announces when a pooled figure mixes tiers |
 | `eval_normalize` | how a dataset the normaliser never saw was brought into the training frame: `target_fit` (statistics fitted on the evaluation data, unsupervised, the default and the best label-free option measured), `session` (each session by its own statistics; at chance), `none` (a bound). Replaces what used to be a silent WARNING fallback |
 | `unseen_datasets` | which evaluation datasets that policy actually applied to |

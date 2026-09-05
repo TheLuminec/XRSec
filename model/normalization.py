@@ -49,6 +49,23 @@ GLOBAL_KEY = "__global__"
 _CHUNK = 4096
 
 
+def _standardise_positions(sample_index, indices, mean: torch.Tensor, std: torch.Tensor) -> None:
+    """
+    Apply the position channels' affine transform to the recorded window means as well.
+
+    `SampleIndex.window_mean_positions` is the static cue as recorded, kept beside windows
+    that may have been encoded to remove it. The lookup scored on it must sit in the same
+    standardised frame as the model's windows - the per-axis scales are all a Euclidean
+    distance sees - so it gets the same statistics, here, at the same moment.
+    """
+    positions = getattr(sample_index, "window_mean_positions", None)
+    if positions is None or positions.numel() == 0:
+        return
+    # dataset.position_channel_slice, not imported: dataset imports this module.
+    channels = slice(4, 7) if mean.numel() >= 7 else slice(0, 3)
+    positions[indices] = (positions[indices] - mean.view(-1)[channels]) / std.view(-1)[channels]
+
+
 class ChannelNormalizer:
     """
     Per-channel affine standardisation, keyed by dataset of origin.
@@ -150,6 +167,7 @@ class ChannelNormalizer:
                 self.statistics[name] = statistics
 
             mean, std = statistics
+            _standardise_positions(sample_index, indices, mean, std)
             mean = mean.view(1, -1, 1)
             std = std.view(1, -1, 1)
             for start in range(0, indices.numel(), _CHUNK):
@@ -169,6 +187,7 @@ class ChannelNormalizer:
                       else [windows[sessions[windows] == s] for s in torch.unique(sessions[windows])])
             for group in groups:
                 mean, std = self._channel_statistics(sample_index.samples, group)
+                _standardise_positions(sample_index, group, mean, std)
                 sample_index.samples[group] = (sample_index.samples[group] - mean.view(1, -1, 1)) / std.view(1, -1, 1)
 
     def fit_transform(self, sample_index) -> "ChannelNormalizer":

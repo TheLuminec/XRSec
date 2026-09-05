@@ -129,6 +129,16 @@ FIELDS = [
     "run_dir",
     "git_sha",
     "code_identity",
+    # The two training-free baselines added 2026-09-05 (GENERALISATION_PROPOSAL 9.14): the
+    # mean-position lookup on the RECORDED positions, valid under every encoding, and
+    # movement amplitude alone, the dynamics branch's baseline. `lookup_auc` above keeps
+    # its meaning (the lookup on the windows as the model sees them).
+    "position_lookup_auc",
+    "position_lookup_eer",
+    "position_lookup_auc_by_dataset",
+    "amplitude_auc",
+    "amplitude_eer",
+    "amplitude_auc_by_dataset",
 ]
 
 
@@ -279,10 +289,16 @@ def summarize(mode: str, result) -> dict:
         "selected_test_acc": history.get("selected_test_acc"),
         "lookup_auc": history.get("lookup_auc"),
         "lookup_eer": history.get("lookup_eer"),
+        "position_lookup_auc": history.get("position_lookup_auc"),
+        "position_lookup_eer": history.get("position_lookup_eer"),
+        "amplitude_auc": history.get("amplitude_auc"),
+        "amplitude_eer": history.get("amplitude_eer"),
         # Compact `name=value;...` strings, sortable in a spreadsheet and lossless in
         # JSONL, so a pooled figure never travels without its per-dataset split.
         "test_auc_by_dataset": _by_dataset(by_dataset, "auc"),
         "lookup_auc_by_dataset": _by_dataset(by_dataset, "lookup_auc"),
+        "position_lookup_auc_by_dataset": _by_dataset(by_dataset, "position_lookup_auc"),
+        "amplitude_auc_by_dataset": _by_dataset(by_dataset, "amplitude_auc"),
         "eval_tiers": ",".join(str(t) for t in sorted({e.get("tier") for e in by_dataset.values()
                                                        if e.get("tier") is not None})),
         "unseen_datasets": _params(history.get("unseen_datasets")),

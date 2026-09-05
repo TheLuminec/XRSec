@@ -7,7 +7,7 @@ Loads a trained model checkpoint and evaluates accuracy on the dataset.
 import torch
 import torch.nn as nn
 from dataset import create_dataloader_from_path, dataset_tier, position_channel_slice
-from metrics import pair_metrics, per_dataset_metrics, static_position_lookup
+from metrics import amplitude_lookup, movement_amplitude, pair_metrics, per_dataset_metrics, static_position_lookup
 from normalization import ChannelNormalizer
 from utils import load_checkpoint
 
@@ -38,9 +38,34 @@ def _pair_datasets(loader, count: int):
     return ids, list(getattr(index, "dataset_names", []) or [])
 
 
-def split_metrics_by_dataset(loader, scores, labels, lookup_scores=None) -> dict:
+def _position_lookup(loader, count: int):
+    """
+    The mean-position lookup on the windows' RECORDED positions, over the whole manifest.
+
+    Needs the alignment `_pair_datasets` needs - a manifest-backed loader walked in order -
+    plus `SampleIndex.window_mean_positions`; None when either is missing.
+    """
+    dataset = getattr(loader, "dataset", None)
+    manifest = getattr(dataset, "manifest", None)
+    index = getattr(dataset, "sample_index", None)
+    positions = getattr(index, "window_mean_positions", None)
+    if manifest is None or positions is None or positions.numel() == 0 or hasattr(dataset, "indices"):
+        return None
+    sampler = getattr(loader, "sampler", None)
+    if sampler is not None and not isinstance(sampler, torch.utils.data.SequentialSampler):
+        return None
+    x1 = manifest["x1_indices"].view(-1)
+    x2 = manifest["x2_indices"].view(-1)
+    if x1.numel() != count:
+        return None
+    return static_position_lookup(positions[x1], positions[x2])
+
+
+def split_metrics_by_dataset(loader, scores, labels, lookup_scores=None, extra=None) -> dict:
     """
     Per-dataset AUC/EER for the model and the lookup, each tagged with its semantics tier.
+    `extra` maps a name to further per-pair scores split the same way (the position lookup
+    and the amplitude baseline), recorded as `<name>_auc` / `<name>_eer` per dataset.
 
     Returns {} when the loader cannot be attributed. Pooling across tiers is announced,
     because a pooled figure over tier 1 and tier 2 averages near-perfect verification
@@ -58,6 +83,12 @@ def split_metrics_by_dataset(loader, scores, labels, lookup_scores=None) -> dict
         if name in lookup:
             entry["lookup_auc"] = lookup[name]["auc"]
             entry["lookup_eer"] = lookup[name]["eer"]
+    for key, extra_scores in (extra or {}).items():
+        split = per_dataset_metrics(extra_scores, labels, ids, dataset_names=names)
+        for name, entry in by_dataset.items():
+            if name in split:
+                entry[f"{key}_auc"] = split[name]["auc"]
+                entry[f"{key}_eer"] = split[name]["eer"]
     tiers = sorted({entry["tier"] for entry in by_dataset.values() if entry["tier"] is not None})
     unaudited = sorted(name for name, entry in by_dataset.items() if entry["tier"] is None)
     if unaudited:
@@ -96,6 +127,7 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
     score_chunks = []
     label_chunks = []
     lookup_chunks = []
+    amplitude_chunks = []
 
     with torch.no_grad():
         for batch_x, batch_y in loader:
@@ -123,6 +155,10 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
                 lookup_chunks.append(static_position_lookup(
                     batch_x1[:, channels].mean(dim=2),
                     batch_x2[:, channels].mean(dim=2)).detach().cpu())
+                # And the dynamics branch's training-free baseline, on the same pairs.
+                amplitude_chunks.append(amplitude_lookup(
+                    movement_amplitude(batch_x1, channels),
+                    movement_amplitude(batch_x2, channels)).detach().cpu())
 
             if return_preds:
                 all_preds.extend(predicted.cpu().tolist())
@@ -149,9 +185,33 @@ def evaluate(model, loader, criterion, device, return_preds=False, return_metric
                 print(f"  NOTE: the training-free mean-position lookup scored "
                       f"{lookup['auc']:.4f} AUC against the model's {metrics['auc']:.4f} "
                       f"- the model is not beating it on this set")
+        extra = {}
+        if amplitude_chunks:
+            all_amplitude_t = _torch.cat(amplitude_chunks)
+            amplitude = pair_metrics(all_amplitude_t, all_labels_t)
+            metrics["amplitude_auc"] = amplitude["auc"]
+            metrics["amplitude_eer"] = amplitude["eer"]
+            extra["amplitude"] = all_amplitude_t
+        # The static cue as recorded, before any encoding - the baseline `lookup_auc` was
+        # always meant to be. Under `dyn` the encoded window mean is zero to rounding and
+        # `lookup_auc` ranks rounding residue that tracks movement amplitude
+        # (docs/GENERALISATION_PROPOSAL.md 9.14); this column is the static baseline a
+        # `dyn` row carries. Under `raw` the two agree to rounding.
+        position_lookup_t = _position_lookup(loader, int(all_labels_t.numel()))
+        if position_lookup_t is not None:
+            position = pair_metrics(position_lookup_t, all_labels_t)
+            metrics["position_lookup_auc"] = position["auc"]
+            metrics["position_lookup_eer"] = position["eer"]
+            extra["position_lookup"] = position_lookup_t
+            encoding = getattr(getattr(getattr(loader, "dataset", None), "sample_index", None), "encoding", "raw")
+            if encoding != "raw":
+                print(f"  NOTE: under encoding={encoding} the lookup on the encoded windows "
+                      f"({metrics.get('lookup_auc', float('nan')):.4f}) is not a static baseline; "
+                      f"the mean-position lookup on the recorded positions is {position['auc']:.4f} "
+                      f"and movement amplitude alone is {metrics.get('amplitude_auc', float('nan')):.4f}")
         # Per dataset, with its semantics tier, on the same scores. A pooled number over
         # several corpora is an average of things that differ in kind.
-        metrics["by_dataset"] = split_metrics_by_dataset(loader, all_scores_t, all_labels_t, all_lookup_t)
+        metrics["by_dataset"] = split_metrics_by_dataset(loader, all_scores_t, all_labels_t, all_lookup_t, extra)
 
     if return_preds and return_metrics:
         return avg_loss, accuracy, all_preds, all_labels, metrics
@@ -182,6 +242,8 @@ def run_evaluation(model, test_loader, criterion, test_size, device):
     print(f"  Test Accuracy: {accuracy:.2%}  ({int(accuracy * test_size)}/{test_size} correct)")
     print(f"  Test AUC     : {metrics.get('auc', float('nan')):.4f}   EER {metrics.get('eer', float('nan')):.3f}"
           f"   lookup AUC {metrics.get('lookup_auc', float('nan')):.4f}")
+    print(f"  Baselines    : mean position (recorded) {metrics.get('position_lookup_auc', float('nan')):.4f}"
+          f"   movement amplitude {metrics.get('amplitude_auc', float('nan')):.4f}")
     print(f"{'-' * 40}")
 
     return loss, accuracy, metrics
@@ -432,12 +494,15 @@ def evaluate_model(args, device=None):
 
 
 def format_by_dataset(by_dataset: dict) -> str:
-    """One line per evaluation dataset: tier, model AUC/EER, lookup AUC, pair count."""
-    lines = [f"  {'dataset':<44} {'tier':>4} {'model AUC':>10} {'EER':>7} {'lookup AUC':>11} {'pairs':>7}"]
+    """One line per evaluation dataset: tier, model AUC/EER, the three baselines, pair count."""
+    def cell(value):
+        return '-' if value is None else f'{value:.4f}'
+    lines = [f"  {'dataset':<44} {'tier':>4} {'model AUC':>10} {'EER':>7} {'lookup AUC':>11} "
+             f"{'pos lookup':>11} {'amplitude':>10} {'pairs':>7}"]
     for name, entry in sorted(by_dataset.items(), key=lambda kv: (kv[1].get("tier") or 9, kv[0])):
         tier = entry.get("tier")
-        lookup = entry.get("lookup_auc")
         lines.append(f"  {name[:44]:<44} {('-' if tier is None else tier):>4} {entry['auc']:>10.4f} "
-                     f"{entry['eer']:>7.3f} {('-' if lookup is None else f'{lookup:.4f}'):>11} "
+                     f"{entry['eer']:>7.3f} {cell(entry.get('lookup_auc')):>11} "
+                     f"{cell(entry.get('position_lookup_auc')):>11} {cell(entry.get('amplitude_auc')):>10} "
                      f"{entry.get('pairs', 0):>7}")
     return "\n".join(lines)
