@@ -1,0 +1,16 @@
+{
+ "checkpoint": "C:\\Users\\TheLu\\Desktop\\GIT\\XRSec\\sweeps\\314cd507f1\\runs\\bilstm_dbc29cfc5f\\best.pth",
+ "device": "cpu",
+ "code": "main at ba39c9c (pre float64 fix), full precision",
+ "auc": {
+  "VR_User_Behavior": 0.521389,
+  "ViewGauss": 0.570754,
+  "Head_and_Gaze": 0.56959,
+  "NJIT": 0.539575,
+  "PanoSaliency": 0.731514,
+  "Panonut360": 0.543486,
+  "EyeNavGS": 0.528596
+ },
+ "nymeria_residual_median_m": 1.7528520857013064e-07,
+ "nymeria_residual_max_m": 3.5922876122640446e-05
+}

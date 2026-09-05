@@ -141,3 +141,17 @@ def test_position_only_windows_are_accepted(encoding):
         assert torch.allclose(out.mean(dim=2), torch.zeros(2, 3), atol=1e-6)
     else:
         assert torch.equal(out, window), "with no orientation there is no heading to remove"
+
+
+def test_dyn_residual_mean_is_zero_at_far_coordinates():
+    """
+    Rounding residue scales with the absolute coordinate: at 30 m a float32 centring
+    leaves ~1e-5 m in the window mean, a faint copy of the location the encoding removes.
+    Centred in float64 the residue is gone even at SLAM-scale coordinates.
+    """
+    g = torch.Generator().manual_seed(1)
+    window = _random_head_window(count=100, seed=3)
+    window[0, 4:7] += torch.tensor([27.0, 0.3, -31.0]).view(3, 1)       # Nymeria-scale coordinates
+    encoded = apply_encoding(window, "dyn")
+    residual_mean = encoded[0, 4:7].mean(dim=1).abs().max()
+    assert residual_mean < 1e-6, f"residual window-mean {residual_mean:.2e} m; float32 centring leaves ~1e-5"
