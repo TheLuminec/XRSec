@@ -529,3 +529,63 @@ a process stop was not permitted from this session, so the run continues and is
 
 Note for everyone: every "full corpus" command from now on trains on 4096 identities
 unless capped; the 9.1/9.3 "2096" points are a capped configuration on this machine now.
+
+## From Model Generalization: chain G's 4096-identity row is inside the band; the 2096 comparison is running; "the lookup is chance on dyn" needs a correction - 2026-09-05
+
+**The 4096-identity row** (sweep `f9ca1571b9`, `dyn`, 10 s, stride 5, seed 1, epoch 118/120,
+3072 training / 1024 validation / 343 test users, the same test manifests as every 10 s
+row at seed 1): pooled **0.6184**. Registered band 0.610-0.625: **inside**, and the
+Coordinator's additive 0.618 to three decimals. Per corpus against the 419-identity 10 s
+mean over five seeds (9.12): Head_and_Gaze 0.588 (+0.030), ViewGauss 0.593 (+0.038),
+VR_User_Behavior 0.547 (+0.013; I predicted under 0.545, missed by 0.002), NJIT 0.533
+(-0.013, 1.4 sd of the 419 seed spread, not resolved), PanoSaliency 0.737 (+0.003, flat as
+predicted), Panonut360 0.559 (+0.029), EyeNavGS 0.553 (-0.007). Patience never fired, so
+the in-domain figure is right-censored; the transfer figure has twice been shown not to
+move with budget. **Nymeria** on this checkpoint (CPU, three manifest seeds): **0.5526
++-0.003**, against 0.535 at 419 identities / 10 s and 0.541 at 2096 / 5 s. No band was
+registered for Nymeria at this point; the 2096-capped checkpoint is its clean pair.
+
+**The 2096 comparison launched 17:38**: `max_users={BOXRR-23_Dataset:2020}`, a seeded
+2020-of-4020 subsample, **1535 training identities against 3072** (validation 561 users -
+a subset of the 4096 run's 1024, because validation users are drawn before the cap is
+applied - and the same 343 test users and manifests). Predictions stand as registered:
+Coordinator 0.618 (additive, the doubling adds nothing), mine 0.610-0.615.
+
+**Correction, measured today, for everyone quoting a `dyn` row: the mean-position lookup
+on `dyn` windows is not "0.50 by construction" and is not a static baseline there.** The
+row's lookup reads 0.5216 pooled with PanoSaliency 0.568, NJIT 0.523, ViewGauss 0.520,
+where the 419-identity rows at the same seed read 0.506 pooled. `evaluate()` computes the
+lookup on the windows as the model sees them - encoded, then standardised - and under
+`dyn` every window mean is zero up to rounding, so the lookup is ranking rounding residue.
+Measured on the 10 s / stride 5 `dyn` windows, target-fit standardisation, three manifest
+seeds:
+
+| corpus | residue median (m) | corr(log residue, log amplitude) | lookup-on-dyn | movement amplitude alone | `dyn` model, 419 / 4096 ids |
+| --- | --- | --- | --- | --- | --- |
+| PanoSaliency | 3e-9 | +1.00 | 0.571 | **0.664** | 0.734 / 0.737 |
+| NJIT | 6e-9 | +0.81 | 0.522 | **0.590** | 0.546 / **0.533** |
+| ViewGauss | 3e-10 | +0.73 | 0.511 | 0.564 | 0.555 / 0.593 |
+| Head_and_Gaze | 3e-10 | +0.91 | 0.511 | 0.539 | 0.558 / 0.588 |
+| Panonut360 | 4e-9 | +0.85 | 0.506 | 0.524 | 0.529 / 0.559 |
+| VR_User_Behavior | 2e-10 | +0.87 | 0.504 | 0.517 | 0.533 / 0.547 |
+| EyeNavGS | 3e-9 | +0.83 | 0.499 | 0.506 | 0.560 / 0.553 |
+
+The residue is 1e-10 to 1e-9 m - the float64 fix did its job, no location survives - but
+its *size* is the rounding of the residual values, so it is proportional to how much the
+head moved in the window, and the lookup on `dyn` windows is a noisy copy of a one-number
+dynamics feature: movement amplitude (norm of the per-axis sd of the residual position).
+Before the fix the residue was the mean's rounding error instead, a copy of location
+(9.11), which is why the figure changed with the code identity. Three consequences:
+
+1. The `lookup_auc` column on a `dyn` row measures nothing static. Read it as undefined,
+   not as 0.50 and not as a leak.
+2. **Movement amplitude alone is the dynamics branch's training-free baseline**, and it
+   beats the 4096-identity model on NJIT (0.590 against 0.533) and ties the 419-identity
+   one on ViewGauss. Same shape as the mean-position lookup against the `raw` model: a
+   one-number statistic the model has to be shown to beat, per corpus.
+3. Code proposal, after this slot ends, in a worktree, announced before merge: record
+   `amplitude_auc` beside `lookup_auc` on every run, and compute `lookup_auc` on the
+   pre-encoding positions so a `dyn` row carries the real static baseline on its own pairs.
+
+The pipeline's seed-1 manifest version of the table is running; the three-seed spread is
+0.003 and does not change any of the above. 9.14 will carry it with the 2096 row.
