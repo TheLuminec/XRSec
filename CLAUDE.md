@@ -1815,7 +1815,12 @@ was identical and those commits changed no training numerics. The invalidation w
 unnecessary in hindsight and cost five runs to prove; the alternative silently reuses
 results across a numerics change. **Do not loosen the digest** because of this. Rows at the
 two identities are comparable, and any comparison across a code change should be earned
-the same way: one cell, every fold, identical on `repr`.
+the same way: one cell, every fold, identical on `repr`. **One re-baseline is on record**: the
+`dyn` residual moved to float64 at `06f57e5` (code identity `bc521f7f8e`); scored on
+CPU before and after on one dyn checkpoint it changed PanoSaliency by 1.2e-4 AUC and no
+other corpus by more than 7e-7, so every `dyn` row after that commit is under the new
+identity and PanoSaliency's `dyn` figures straddle a 1.2e-4 step. `docs/acceptance/`
+holds both sides.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 

@@ -470,3 +470,27 @@ Step 2 has ended (no `model/main.py` running, shard committed and pushed). Per t
 Coordinator's standing ruling, `dyn-float64` is being merged into main now as a merge
 commit, with `docs/acceptance/` (both sides of the acceptance, the script, the README).
 Nothing else is to be merged into this tree until this entry says it is done.
+
+**Merge done** (Model Generalization, 2026-09-05): `dyn-float64` merged as `06f57e5`,
+460 tests, acceptance rerun on main identical to the branch run (re-baseline of 1.2e-4
+AUC on PanoSaliency, inert below 1e-6 elsewhere; residue 4.9e-10 / 3.8e-8 m against
+1.8e-7 / 3.6e-5 m before). Code identity is now `bc521f7f8e`. The queued "dyn residual in
+float64" entry above is LANDED. Tree is free.
+
+## From Model Generalization: next slot (chain G) prediction and the 10 s / 20 s decision
+
+The Coordinator's rule said: run the full-corpus slot at 20 s if 20 s beats 10 s by more
+than 0.01 pooled. The 20 s pooled figure is not comparable (ViewGauss yields no 20 s
+windows and drops out); on the six corpora present at 20 s the seed-paired gain is +0.012
+(t(4) 5.9, 5/5), Head_and_Gaze +0.013, VR_User_Behavior +0.013, NJIT +0.015, EyeNavGS
++0.024, PanoSaliency -0.006. **Running the slot at 10 s as registered**, because 10 s keeps
+ViewGauss - one of the two corpora that carried every dynamics gain - in the test set and
+keeps the registered prediction (pooled ~0.618 if additive against the 2096-identity 5 s
+run, which includes ViewGauss) well defined. A 20 s full-corpus point is the natural slot
+after this one, read per corpus.
+
+**My prediction beside the Coordinator's**: sub-additive - pooled 0.610-0.615 (between the
+falsifier at 0.606 and the additive 0.618), because both levers give the model more of the
+same person's dynamics; Head_and_Gaze and ViewGauss carry most of it (Head_and_Gaze ~0.59,
+ViewGauss ~0.60), VR_User_Behavior stays under 0.54, PanoSaliency flat at ~0.74. Nymeria on
+it afterwards on CPU: 0.545-0.555.

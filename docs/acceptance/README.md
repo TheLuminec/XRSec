@@ -37,3 +37,5 @@ with the coordinate, below 1e-7 m", met.
 The recorded GPU rows differ from CPU scoring by up to 7e-4 with no code change at all
 (cuDNN versus CPU float32 in the BiLSTM); score differences below about 1e-3 between
 devices are arithmetic, not results.
+
+Confirmed on `main` after the merge (`06f57e5`, code identity `bc521f7f8e`): identical to the branch run - largest gap 1.2e-4 (PanoSaliency), all others below 1e-6, Nymeria residue 4.9e-10 m median / 3.8e-8 m max.
