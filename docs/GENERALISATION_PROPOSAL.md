@@ -1107,7 +1107,13 @@ show more of a person at twenty seconds than at five. (Scored under the float64 
 residual of 9.11's fix; the `dyn`-window lookup now reads 0.504, the residue gone.)
 
 The window-length lever and the identity-count lever are the two things that move the
-dynamics branch's transfer; whether they add is the registered next slot (section 10).
+dynamics branch's transfer; whether they add is the registered next slot (section 10),
+run at 10 s in two configurations because the corpus changed under the programme:
+BOXRR-23 on DESKTOP-C grew from 2020 to 4020 users when the AVALON sync landed, so "full
+corpus" is now 4096 identities. The first run (4096, registered before its row with a
+prediction of 0.610-0.625 pooled) doubles identity count over 9.3's largest point as well
+as the window; the second (BOXRR capped at 2020, 2096 identities) is the comparison the
+original prediction was registered against.
 
 ### 9.13 The static cue as an enrolment system: placement within a sitting, nothing across days
 
