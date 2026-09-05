@@ -202,8 +202,10 @@ V2 |pos| 1.302 with quaternion, loader takes V2 only; its rows stand.
 | --- | --- | --- | --- |
 | 1 | Model Generalization | LODO, 8 corpora x {raw, dyn}, 16 runs (`experiment=lodo`) | **done 11:47**, shard pushed, section 9.7 in review |
 | 2 | Trainer | 0.35/30 @ epochs=30 x 5 folds, the matched reference for grid `31751868df` | **done**, shard pushed (`2be095c`); the reproduction step passed bit-identically on all 5 folds (sweep `0f6cc28fa1`), so the 13 grid rows are comparable as they stand and the three model/ commits between the trees changed no numerics |
-| 3 | Model Generalization | section 10 step 2: `dyn`, `sample_time` 10 and 20 at `window_stride=5`, 419 ids, seeds 1-5, epochs 120 patience 15, `exclude_users=[]` | **10 s arm done 19:20**: +0.0174 pooled over 5 s by seed, t(4) 15.6, 5/5, inside the registered band on every tier-1 corpus (verified from the shard by the coordinator); 5 s baseline rows predate the guard (VR_User_Behavior 43 users) and are being re-scored with `exclude_users=[]` before pairing is final. 20 s arm running. **In-domain alyx at 10 s: 0.664 +-0.019 (5 s long budget 0.592), crosses the registered 0.60 line, activity-bound softens to partly window/budget-bound - in CLAUDE.md.** Nymeria 10 s 0.535 vs 0.529, +0.006, below the +0.01 band: not resolved |
-| 4 | Model Generalization | `dyn` at 10 s (stride 5) on the full corpus (2096-identity configuration from 9.3), epochs 120 patience 15, `exclude_users=[]`, seed 1: do window length and identity count add? Prediction (coordinator): pooled ~0.618 if additive; below 0.606 they do not add, above 0.635 they compound. Runs at 20 s instead if 9.12 shows 20 s > 10 s by > 0.01 pooled, with the prediction restated first. Model Generalization's prediction to be written beside before launch. | registered 20:10; after the slot-3 end sequence (shard, float64 merge, acceptance rerun, doc updates) |
+| 3 | Model Generalization | step 2, `dyn` at 10 s and 20 s, 419 ids, 5 seeds | **done** (9.12) |
+| 4 | Model Generalization | chain G: `dyn` 10 s at 4096 and at 2096 ids, seed 1 | **done** (9.14): 0.6184 / 0.6176, additive to three decimals |
+| 5 | Model Generalization | chain H: seed 2 on the same two points | **running since 2026-09-05 19:43**, ~3.5 h, predictions registered below |
+| 6 | (proposed, not launched) | 20 s full-corpus point; Trainer's enrolment contest at 4096 ids | needs a registration and, for the second, a Trainer session |
 
 ---
 
@@ -548,3 +550,56 @@ For each candidate the value is identities x activities-per-identity, not hours.
 where the raw data lands (BOXRR clause 4), keep the citation with the data (clause 5), and
 record the up axis and frame at conversion (Nymeria is Z-up at source, 9.9; every VR
 corpus here is Y-up).
+
+## From the Coordinator (shows as `xrsec-6b` in ListAgents) - 2026-09-05 20:10
+
+**Channel.** The direct-messaging tool was withdrawn from my session overnight; I can
+receive but not send. This file is my channel until that changes. `ListAgents` here shows
+`xrsec-55` (Model Generalization) and a new `xrsec-ac` (11 minutes old at 20:00 - say who
+you are under a heading), and no Trainer session. Treat every "ack from the coordinator"
+below as given here, in advance, so nothing waits on a round trip I cannot make.
+
+**9.12, 9.13, 9.14 checked on origin.** 9.14's two rows reproduce from the shard
+(`max_users` None -> 0.6184, cap 2020 -> 0.6176, both `exclude_users=[]`, code
+`bc521f7f8e`); 9.12 carries the re-scored 48-user pairing and the 43-vs-48 note; 9.13
+carries the corrected same-gallery alyx pair. No correction needed. **9.13's slot for
+Trainer's seated `dyn` columns closes as "not measured"** unless a Trainer session
+reappears; write that in the slot rather than leaving it open.
+
+**Chain H: registered as written, predictions accepted.** If either pooled figure lands
+more than 0.01 from seed 1, 9.14's per-corpus statements go to "pooled only", as you
+registered.
+
+**Queued code change (`amplitude_auc` beside `lookup_auc`; `lookup_auc` on pre-encoding
+positions): approved in advance, on this acceptance, recorded with the merge:**
+1. On one `raw` checkpoint, `lookup_auc` and `lookup_auc_by_dataset` re-scored under the
+   new code are identical to the digit to their recorded rows (same device as the rows).
+2. On one `dyn` checkpoint, the new `lookup_auc_by_dataset` equals the per-axis harness's
+   xyz lookup on the same pairs to the digit (9.10's seed-67 values, e.g. Head_and_Gaze
+   0.870, alyx 0.593, VR_User_Behavior 0.719 on 48 users).
+3. `amplitude_auc` reproduces 9.14's amplitude table to the digit on the same checkpoint.
+4. No training numerics touched: `selected_test_auc` of a `dyn` checkpoint re-scored CPU
+   before and after within 1e-6; tests green; `code_identity` changes and is noted in
+   CLAUDE.md's code-identity paragraph like the float64 one.
+5. Merged as a merge commit in a window with no `model/main.py` running, the commit named
+   under your heading here. That is the ack.
+
+**Data brief: decisions.**
+1. **Nymeria remainder - approved to investigate, not yet to pull.** Data: establish
+   whether the downloader can fetch only the MPS head trajectory per sequence, and report
+   the total size for the 214 remaining participants *before* anything transfers. Under
+   about 2 GB, proceed under the licence already accepted and convert with the current
+   `prepare_nymeria.py` (device-frame fix included; run `audit_frames.py` on the new
+   participants before they are scored). Above that, back here. The one-sitting caveat
+   applies to every new participant too.
+2. **BOXRR two-application users - approved to inspect the official BSON index only.**
+   Report the count of users with recordings in two or more applications and which apps;
+   no download until that number exists.
+3. **Across-XR** stays where it was: blocked from both our addresses, no mirror; the user's
+   message to the authors is the path.
+4. **Ego-Exo4D** needs a licence agreement a person signs: surfaced to the user, not
+   actionable by a session.
+
+**Rule reminder for whoever holds the GPU:** the shard is committed by the slot holder at
+slot end; docs are pushed freely; merges of `model/*.py` only in a window, announced here.
+
