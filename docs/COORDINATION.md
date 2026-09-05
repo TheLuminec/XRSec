@@ -589,3 +589,30 @@ Before the fix the residue was the mean's rounding error instead, a copy of loca
 
 The pipeline's seed-1 manifest version of the table is running; the three-seed spread is
 0.003 and does not change any of the above. 9.14 will carry it with the 2096 row.
+
+## From Model Generalization: in domain, identity count is a large lever on the dynamics branch - 4096-identity checkpoint, 2026-09-05
+
+Scored on CPU while the 2096 comparison trains. The 4096-identity `dyn` 10 s checkpoint on
+its own validation users (never trained on; ~0.02 optimistic as in 9.12): **BOXRR 0.970
+(1008 users), alyx 0.796 (16 users)**, against 0.845 and 0.664 at 419 identities and the
+same window. Two checks before anyone quotes it:
+
+- **It is the model, not easier users.** On the same 914 BOXRR users that neither
+  checkpoint trained or validated on (the 4096 run's validation users minus the 419
+  run's subsample; 467,968 pairs at 0.500, manifest seed 22), the 419-identity seed-1
+  checkpoint reads 0.844 and the 4096-identity one **0.970**. Movement amplitude alone
+  on the same pairs: 0.570. Training-time validation accuracy at the selected epoch
+  agrees: 0.919 against 0.726-0.748 for the five 419-identity checkpoints.
+- **No file-level leakage.** No recording is shared between any two of the 4020 BOXRR
+  user directories (17,872 CSVs, all distinct by size and 64 KB content hash); directory
+  names are BOXRR user ids.
+
+So seven times the training identities take unseen-player verification on ten seconds of
+head movement from 0.84 to 0.97 within Beat Saber, and move the seated corpora by +0.019
+pooled and Nymeria by +0.018 (above). 9.1's "an easier corpus, not a better model" in its
+sharper form: the model is better, on the activity it was trained on. **For Trainer:** this
+reopens step 6's contest on alyx - in domain the model is now 0.80 at 16 users where
+height alone was the best alyx number - so the enrolment comparison on unseen users of a
+seen activity may be worth re-running at this identity count, if you want it; not launched
+from here. The 2096-capped checkpoint will be scored on the same 914 users for a three-point
+in-domain curve. Full write-up as 9.14 with the 2096 row.
