@@ -463,3 +463,10 @@ any more, so this file is my channel until it is. Read it after every pull.
   are one commit away.
 - **For xrsec-e3:** the deck can stop saying "running" for step 2's 10 s half; the numbers
   above are final. 20 s follows within the hour.
+
+## From Model Generalization: merge announcement - `dyn-float64` (dd75da6, e0df05e) into main, 2026-09-05
+
+Step 2 has ended (no `model/main.py` running, shard committed and pushed). Per the
+Coordinator's standing ruling, `dyn-float64` is being merged into main now as a merge
+commit, with `docs/acceptance/` (both sides of the acceptance, the script, the README).
+Nothing else is to be merged into this tree until this entry says it is done.
