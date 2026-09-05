@@ -1021,6 +1021,175 @@ with an acceptance fixed now: afterwards the Nymeria residue reads ~1e-14 m and 
 existing `dyn` checkpoint scores every held-out corpus within 1e-4 AUC of its recorded
 rows; anything larger is a re-baseline and is said to be one.
 
+### 9.12 Window length for the dynamics branch: longer windows keep paying, and alyx crosses the line
+
+Section 10 step 2. `dyn`, 419 identities (343 BOXRR + all 76 alyx), seeds 1-5 as
+subsample folds, `sample_time` 10 and 20 at `window_stride=5` so the example count
+stays comparable, `epochs=120` with patience 15, `exclude_users=[]` explicit on every
+row (the guard of 9.8 was merged before launch). Registered prediction: +0.01 to +0.03
+on tier 1 and on alyx in domain; alyx above 0.60 in domain softens the activity-bound
+reading to window-bound.
+
+**The 5 s baseline was re-scored first.** The 9.3 long-budget 5 s rows predate the guard
+and evaluated VR_User_Behavior on 43 users; the 10 s rows evaluate 48. The five 5 s
+checkpoints were re-scored on the seven corpora with `exclude_users=[]` on the
+pipeline's own manifests and recorded in the shard as `mode=rescore` rows
+(`experiment=transfer_rescored`, original sweep id carried), so the 9.3 rows stay
+traceable. The exclusion barely moves them: pooled 0.5813 +-0.002 against 0.5823
++-0.001 (largest per-seed difference 0.003), VR_User_Behavior 0.516 against 0.515. The
+pairing below is 48 users against 48.
+
+| held-out corpus | tier | `dyn` 5 s (re-scored) | `dyn` 10 s | 10 s - 5 s, paired | t(4) | won |
+| --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | 0.536 | **0.558** | +0.022 | 12.0 | 5/5 |
+| ViewGauss | 1 | 0.523 | **0.555** | +0.032 | 8.4 | 5/5 |
+| VR_User_Behavior (48) | 1 | 0.516 | **0.533** | +0.018 | 5.4 | 5/5 |
+| NJIT | 1 | 0.524 | **0.546** | +0.022 | 5.9 | 5/5 |
+| PanoSaliency | 2 | 0.729 | 0.734 | +0.006 | 1.8 | 3/5 |
+| Panonut360 | 2 | 0.519 | 0.529 | +0.010 | 5.6 | 5/5 |
+| EyeNavGS | 3 | 0.538 | 0.560 | +0.021 | 3.2 | 5/5 |
+| **pooled** | | **0.581 +-0.002** | **0.600 +-0.003** | **+0.018** | **14.3** | **5/5** |
+
+**The prediction held on tier 1**: inside the +0.01 to +0.03 band on three corpora and
+just above it on ViewGauss, every seed in the same direction. Selected epochs 73-118 of
+88-120 under patience, so the arm ran to its budget, but 9.3 showed budget does not move
+the transfer figure. Doubling the window from 5 s to 10 s is worth as much to the
+dynamics branch's transfer as going from 419 to 2096 training identities was (+0.016,
+9.3), and the two are separate levers.
+
+**In domain, split by training corpus** (each checkpoint's own validation users, never
+trained on; they chose the epoch, so every figure here is optimistic by about 0.02):
+
+| training corpus | `dyn` 5 s, 30 epochs (9.4) | `dyn` 5 s, 120 epochs | `dyn` 10 s | 5 s -> 10 s |
+| --- | --- | --- | --- | --- |
+| BOXRR (74-94 users per checkpoint) | 0.78-0.81 | 0.814 +-0.012 | **0.845 +-0.004** | +0.031 |
+| alyx (14-17 users per checkpoint) | 0.53-0.55 | 0.592 +-0.027 | **0.664 +-0.019** | +0.072 |
+
+**alyx crosses the registered 0.60 line by three seed-sds**, so the reading softens as
+pre-registered: free FPS locomotion across two days does show a person, at ten seconds
+rather than five, and "activity-bound" at 5 s was partly window-bound. Two qualifications
+beside it: the 120-epoch 5 s alyx figure (0.59) is already above the 30-epoch 0.53-0.55
+of 9.4 and the 0.530 of the in-domain folds in 9.5, so the budget moved alyx *in domain*
+even though it never moved transfer; and the ~0.02 optimism applies to every number in
+this table.
+
+**Nymeria at 10 s**: 0.535 +-0.004 (five seeds) against 0.529 +-0.002 at 5 s, +0.006,
+below the registered +0.01 to +0.03 band: **not resolved**. The `dyn`-window lookup
+reads 0.546, the residue of 9.11, and the location-independence criteria of 9.11 apply
+unchanged. One-sitting caveat beside it as always.
+
+**20 s.** Five seeds, `epochs=120` with patience 15, selected epochs 48-68 (the 20 s arm
+converges faster and stopped on patience every time). **ViewGauss yields no 20 s windows**
+- its sessions are about 15 s long (3 windows each at 5 s, 9.13) - so it drops out of the
+20 s evaluation entirely; the recorded 20 s pooled figure (0.611) is therefore not
+comparable to the 10 s one, and the comparison is per corpus on the six that remain,
+seed-paired:
+
+| held-out corpus | tier | 5 s (re-scored) | 10 s | 20 s | 20 s - 10 s | t(4) | won | 20 s - 5 s |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | 0.536 | 0.558 | **0.571** | +0.013 | 7.8 | 5/5 | +0.035 |
+| VR_User_Behavior (48) | 1 | 0.516 | 0.533 | **0.546** | +0.013 | 3.8 | 5/5 | +0.031 |
+| NJIT | 1 | 0.524 | 0.546 | 0.561 | +0.015 | 1.8 | 4/5 | +0.037 |
+| ViewGauss | 1 | 0.523 | 0.555 | not evaluable | | | | |
+| EyeNavGS | 3 | 0.538 | 0.560 | **0.584** | +0.024 | 3.1 | 4/5 | +0.046 |
+| Panonut360 | 2 | 0.519 | 0.529 | 0.541 | +0.012 | 3.1 | 4/5 | +0.022 |
+| PanoSaliency | 2 | 0.729 | 0.734 | 0.728 | -0.006 | -1.4 | 2/5 | -0.001 |
+| mean over the six corpora present at 20 s | | 0.560 | 0.577 | **0.589** | **+0.012** | **5.9** | **5/5** | +0.028 |
+
+Longer windows keep paying on tier 1 (Head_and_Gaze and VR_User_Behavior +0.013 each,
+5/5), at about two thirds of the 5 s to 10 s step, and do nothing for PanoSaliency,
+whose direction-sweep signal is already saturated at 5 s. In domain: BOXRR 0.860 +-0.007
+and alyx **0.688 +-0.016** at 20 s (from 0.845 and 0.664 at 10 s; same validation-user
+protocol, same ~0.02 optimism). Nymeria at 20 s: 0.537 +-0.002 against 0.535 at 10 s and
+0.529 at 5 s, +0.008 from 5 s to 20 s, still below the registered +0.01 floor: **not
+resolved**, and flat against the tier-1 gains - daily-life locomotion on glasses does not
+show more of a person at twenty seconds than at five. (Scored under the float64 `dyn`
+residual of 9.11's fix; the `dyn`-window lookup now reads 0.504, the residue gone.)
+
+The window-length lever and the identity-count lever are the two things that move the
+dynamics branch's transfer; whether they add is the registered next slot (section 10).
+
+### 9.13 The static cue as an enrolment system: placement within a sitting, nothing across days
+
+Section 10 step 6, measured by Trainer on CPU (2026-09-04) on the same held-out users as
+9.10: template = mean position over k gallery windows from one session, probe = the mean
+over k from a different session, standardised as the pipeline standardises, rank-1 at
+N=17 and at the full gallery, three ways (xyz, y only, xz only), with the trained `dyn`
+embedding's cosine at the same k beside it. Population fixed from the largest k each
+corpus supports, which on BOXRR drops 2-3 validation users per checkpoint against the
+lookup's lists.
+
+**Compute the implication before the measurement.** Under an equal-variance Gaussian
+score model, d' = sqrt(2) Phi^-1(AUC) and rank-1 at gallery N is the probability that a
+genuine score beats N-1 impostor draws. On alyx the per-axis lookup AUCs (0.593 / 0.661 /
+0.539) imply rank-1 at N=17 of 0.103 / 0.149 / 0.075; the harness measured 0.114 / 0.140
+/ 0.071. So a rank-1 that lands within ~0.05 of what its AUC implies was already known;
+one that lands far from it is the finding. It held on alyx and on BOXRR (within 0.05) and
+**undershot the seated corpora by up to 0.4**, because within-sitting placement is nearly
+constant per person (within-window sd 0.01-0.02 m): genuine distances spike at zero
+against widely spread impostors, which no Gaussian score model represents.
+
+| corpus | sessions are | k | xyz | y only | xz only | implied xyz / y / xz |
+| --- | --- | --- | --- | --- | --- | --- |
+| ViewGauss | one sitting | 3 | 0.814 | 0.540 | 0.627 | 0.63 / 0.48 / 0.45 |
+| Head_and_Gaze V2 | one sitting | 8 | 0.609 | 0.142 | 0.618 | 0.44 / 0.17 / 0.45 |
+| VR_User_Behavior | one sitting | 16 | 0.790 | 0.114 | 0.832 | 0.20 / 0.13 / 0.18 |
+| **alyx** | **different days** | 16 | **0.119** | **0.135** | 0.075 | 0.10 / 0.15 / 0.08 |
+| BOXRR held-out (5 checkpoints, 73-92 users) | across days | 16 | 0.407 | **0.379** | 0.242 | 0.25 / 0.33 / 0.17 |
+
+Rank-1 at N=17, chance 0.059. k is a corpus property, not a harness choice: ViewGauss
+sessions hold exactly 3 windows at 5 s and Head_and_Gaze 11, so k=16 is impossible there
+and each corpus runs at its own maximum. k-averaging gained +0.18 on VR_User_Behavior and
+nothing on alyx (k=1 to k=16 flat, whole-session ceiling 0.162): enrolment averaging cannot
+lift a static cue whose limit is between-session shift.
+
+The compact form is the distance ratio, median genuine over median impostor at k=1:
+
+| corpus | xyz | y | xz |
+| --- | --- | --- | --- |
+| ViewGauss | 0.144 | 0.176 | 0.132 |
+| VR_User_Behavior | 0.301 | 0.531 | 0.183 |
+| Head_and_Gaze V2 | 0.330 | 0.579 | 0.183 |
+| **alyx** | 0.844 | **0.487** | **0.947** |
+
+Where gallery and probe come from one sitting, a person's genuine lateral distance is a
+seventh of a stranger's - they did not move between clips - and xz carries everything at
+0.6-0.8. Where they are days apart, xz collapses to 0.075 and only height survives, at
+0.135; a person's own head position is 0.95 of the distance to a stranger's laterally and
+0.49 in height. BOXRR is the only corpus where height beats placement (0.379 against
+0.242), which is what a modest standing offset looks like against a room, and matches its
+geometry (height P 0.828 over lateral 0.685). **Section 10's 0.4-0.6 was met on three
+corpora, all same-sitting and carried by xz, and failed on the one corpus that measures
+what a deployment faces.** Head height alone never exceeds 0.34 at N=17 anywhere except
+ViewGauss (0.540; 35 users, four sessions in one visit). On the one cross-day corpus,
+head position alone as an enrolment system is 2.4x chance at N=17 and 0.057 at a 70-person
+gallery. It is not an enrolment system.
+
+**The trained model never reaches what height alone gives, in either regime.** Both
+alyx regimes on the same 14-user gallery, k = 16, chance 0.0714 in every cell, summed
+z-scored distances with no learned weight:
+
+| alyx, rank-1 at N = 14 | `dyn` alone | height alone | height + `dyn` |
+| --- | --- | --- | --- |
+| unseen **activity** (LODO checkpoint, alyx never in training, 70 users) | 0.096 (1.3x chance) | 0.166 (2.3x) | 0.159 |
+| unseen **users** of a seen activity (in-domain folds `ddc9b964e5`, 11-16 users each) | 0.147 (2.1x) | **0.198 (2.8x)** | 0.197 |
+
+The model gains from being in domain (1.3x to 2.1x chance) and in neither regime reaches
+what three numbers of head height already give; **fusion is a wash in both** (0.159
+against 0.166, 0.197 against 0.198). The per-fold columns say why: `dyn` and height are
+anti-correlated across folds (fold 2 is height's best and `dyn`'s second worst, fold 3
+the reverse), so no fixed weight beats both, and a weight fitted to 70 users would be the
+test set. Both registered predictions for the fused system were too high (Coordinator
+0.15-0.22 and 0.13-0.19, Trainer 0.20-0.30 twice). **The best alyx number in the table,
+0.198 on unseen users of a seen activity, is head height alone and needs no model.** An
+earlier version of these rows compared a 17-of-70 draw against whole folds of 11-16 users
+as if they were one gallery; they were not, and the pair above, on one gallery with one
+chance, is the one to quote. Small populations, large per-fold spread (`dyn`
+0.086-0.200, height 0.087-0.309), pooled means only.
+
+*Slot, pending Trainer:* the seated corpora's `dyn` columns at the same k, and the
+per-corpus LODO second column, land here when they are sent.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
@@ -1036,7 +1205,7 @@ prediction registered now.
 | 3 | **A learned static branch** (CPU): a 17-number static descriptor with per-axis weights learned across corpora, leave-one-corpus-out against the three-number lookup | Can *any* learned static scorer beat the lookup out of domain? | done | **Retired (9.8).** Rule not met: +0.048 on NJIT only, -0.061 on Head_and_Gaze. The three-number lookup is the ceiling of the static cue across corpora; orientation and spread help in domain and cost out of domain (the frame problem). |
 | 4 | **Across-XR** (49 users x 5 applications, converter ready, download WAF-blocked from AVALON; retry from another machine or ask the authors) | The activity-bound finding measured directly: same users, same rig, different application. Cross-app `dyn` AUC is the number. | download 5.4 GB, one conversion, scoring only | cross-app `dyn` well below within-app; the size of that gap is the paper's second claim. |
 | 5 | **`channels=orientation` in a common frame**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and 9.8 says orientation carries identity within a corpus and is lost across corpora to the frame - so the common frame is the point. It would also make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
-| 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | scoring only | rank-1 at N=17 in the 0.4-0.6 range on tier 1, below published head+controller figures. |
+| 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | done, CPU (Trainer) | **Measured (9.13).** 0.4-0.6 met only on same-sitting corpora and carried by xz; on the one cross-day corpus 0.119 xyz / 0.135 height at N=17; the trained `dyn` embedding fused with height is a wash in both regimes on one 14-user gallery (0.159 vs 0.166 unseen activity, 0.197 vs 0.198 unseen users of a seen activity; chance 0.071); the best alyx number is height alone on unseen users of a seen activity, 0.198, no model. |
 
 **Retired by section 9, do not re-run:** the identity-count curve on the `raw`
 pipeline as a headline (it measures the lookup); fusion of lookup and `dyn`; `yawc` as
@@ -1050,11 +1219,14 @@ capture without training and that no trained model in this repository beats out 
 domain - and that cue is **placement in the tracking space** on the same-sitting corpora
 (where the participant sat; 9.10) and **head height** across days (alyx, BOXRR, NJIT).
 A learned movement component exists, is small on seated viewing, strong on rhythm-game
-play, and does not carry across activities; it rises with training identities up to
-about a thousand, with the caveat that every `raw` identity-count result on BOXRR
-carries part of a person-specific standing offset (xz-only lookup 0.68; placement, not the room) and only the `dyn`
-curve is clean of it. Across-XR (step 4) is what turns the activity clause from an
-inference across corpora into a measurement.
+play, and carries weakly across activities at 5 s; at 10 s the alyx in-domain figure
+rises to 0.66 and the transfer gains 0.02 on every tier-1 corpus, so part of what read
+as activity-bound was window-bound. It rises with training identities up to about a
+thousand, with the caveat that every `raw` identity-count result on BOXRR carries part
+of a person-specific standing offset (xz-only lookup 0.68; placement, not the room) and
+only the `dyn` curve is clean of it. As an enrolment system on head pose alone, the transferable cue identifies within a
+sitting and not across days (9.13). Across-XR (step 4) is what measures the
+cross-activity transfer directly rather than by inference across corpora.
 
 ## Appendix: reproduction
 

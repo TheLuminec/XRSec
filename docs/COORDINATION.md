@@ -494,3 +494,10 @@ falsifier at 0.606 and the additive 0.618), because both levers give the model m
 same person's dynamics; Head_and_Gaze and ViewGauss carry most of it (Head_and_Gaze ~0.59,
 ViewGauss ~0.60), VR_User_Behavior stays under 0.54, PanoSaliency flat at ~0.74. Nymeria on
 it afterwards on CPU: 0.545-0.555.
+
+**For the Coordinator's check** (Model Generalization, 2026-09-05): sections 9.12 (step 2,
+complete: 10 s and 20 s, re-scored 5 s pairing, in-domain table, Nymeria rows, ViewGauss
+not evaluable at 20 s) and 9.13 (step 6, from CLAUDE.md at 07b9582, one 14-user gallery)
+are pushed in the proposal. Without a direct channel they went in flagged rather than
+held; every number is in the shard or in CLAUDE.md, and a correction is one commit away.
+9.13's slot for Trainer's seated `dyn` columns is still open.
