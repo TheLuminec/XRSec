@@ -500,8 +500,10 @@ heading is known to differ.
 
 ### 9.3 `dyn`: a small dynamics signal that transfers, and a censored one
 
-Every static cue removed at the input. The lookup on `dyn` windows is 0.506, chance by
-construction, so the model's number is the whole signal. The `random` extractor at
+Every static cue removed at the input. The lookup on `dyn` windows read 0.506 and was
+called chance by construction here; 9.14 corrects that reading - the column is rounding
+residue that tracks movement amplitude, and amplitude alone is the training-free baseline
+for `dyn` - so the model's number is read against amplitude, not against 0.50. The `random` extractor at
 419 identities under the same protocol: 0.500 pooled, 0.495-0.507 per dataset.
 
 | held-out dataset | tier | dyn, 419 ids (5 seeds, 30 epochs) | t(4) vs 0.5 |
@@ -858,7 +860,8 @@ What Nymeria is from here:
   *below* the lookup - learned 3 numbers 0.708, learned 17 0.685, in domain 0.723
   against a same-half lookup of 0.723 - which is what a location fingerprint looks
   like: the lookup already reads the shared map. Reported, not read.
-- **Under `dyn` the lookup is chance by construction**, so Nymeria under `dyn` is the
+- **Under `dyn` the mean-position lookup has nothing static to read** (its column is
+  rounding residue, 9.14), so Nymeria under `dyn` is the
   cross-device, cross-activity instrument it was meant to be - the same instrument as
   every other corpus, without the special status. The `dyn` transfer to Nymeria
   (checkpoints from 9.3 and from step 2, scoring only) is queued after step 2, with its
@@ -1113,7 +1116,7 @@ BOXRR-23 on DESKTOP-C grew from 2020 to 4020 users when the AVALON sync landed, 
 corpus" is now 4096 identities. The first run (4096, registered before its row with a
 prediction of 0.610-0.625 pooled) doubles identity count over 9.3's largest point as well
 as the window; the second (BOXRR capped at 2020, 2096 identities) is the comparison the
-original prediction was registered against.
+original prediction was registered against. Both rows are in 9.14.
 
 ### 9.13 The static cue as an enrolment system: placement within a sitting, nothing across days
 
@@ -1196,6 +1199,152 @@ chance, is the one to quote. Small populations, large per-fold spread (`dyn`
 *Slot, pending Trainer:* the seated corpora's `dyn` columns at the same k, and the
 per-corpus LODO second column, land here when they are sent.
 
+### 9.14 Window length and identity count add on the dynamics branch: 10 s at 4096 and 2096 identities
+
+Section 10's registered next slot (COORDINATION.md, 2026-09-05): does the window-length
+gain of 9.12 (+0.018 pooled at 419 identities, 5 s to 10 s) add to the identity-count
+gain of 9.3 (+0.016 pooled, 419 to 2096 identities at 5 s)? `dyn`, 10 s, stride 5,
+`epochs=120` with patience 15, seed 1, `exclude_users=[]`, target-fit standardisation,
+the same seven held-out corpora and the same seed-1 test manifests as the 10 s rows of
+9.12. Two configurations, because BOXRR-23 on DESKTOP-C grew from 2020 to 4020 users
+between 9.3 and this slot: the full corpus is now **4096 identities** (3072 training
+after the 25% validation split), and 9.3's 2096-identity point is now a capped
+configuration, `max_users={BOXRR-23_Dataset:2020}` - a seeded 2020-of-4020 subsample,
+**1535 training identities against 3072**; validation users are drawn before the cap is
+applied, so this run's 561 are a subset of the other's 1024, and the 343 test users and
+their pairs are identical. The 4096 run was launched believing it was the 2096 one and
+registered as its own point from the loader's "3072 users" line, before its row existed.
+
+Predictions, registered before each row. Coordinator: 0.618 pooled at 2096 if the two
+levers are additive (0.582 + 0.018 + 0.016), falsifiers below 0.606 (they do not add) and
+above 0.635 (they compound). Model Generalization: 0.610-0.615 at 2096 (sub-additive);
+0.610-0.625 at 4096, with Head_and_Gaze and ViewGauss near 0.59-0.60, VR_User_Behavior
+under 0.545, PanoSaliency flat near 0.74.
+
+| held-out corpus | tier | 419 ids (5 seeds, 9.12) | 2096 ids | 4096 ids | 4096 - 419 | 4096 - 2096 |
+| --- | --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 1 | 0.558 +-0.004 | 0.584 | **0.588** | +0.030 | +0.005 |
+| ViewGauss | 1 | 0.555 +-0.006 | 0.629 | **0.593** | +0.038 | -0.035 |
+| VR_User_Behavior (48) | 1 | 0.533 +-0.005 | 0.542 | 0.547 | +0.013 | +0.005 |
+| NJIT | 1 | 0.546 +-0.009 | 0.532 | 0.533 | -0.013 | +0.001 |
+| PanoSaliency | 2 | 0.734 +-0.007 | 0.732 | 0.737 | +0.003 | +0.005 |
+| Panonut360 | 2 | 0.529 +-0.004 | 0.546 | 0.559 | +0.029 | +0.012 |
+| EyeNavGS | 3 | 0.560 +-0.012 | 0.564 | 0.553 | -0.007 | -0.011 |
+| **pooled** | | **0.600 +-0.003** | **0.618** | **0.618** | **+0.019** | **+0.001** |
+| Nymeria (50 users, one sitting; scoring only) | 1 | 0.535 +-0.004 | 0.544 +-0.002 | 0.553 +-0.003 | +0.018 | +0.008 |
+| in domain, BOXRR validation users | | 0.845 +-0.004 | **0.962** (545 users) | **0.970** (1008 users) | | |
+| in domain, alyx validation users | | 0.664 +-0.019 | **0.799** (16 users) | **0.796** (16 users) | | |
+
+**The 4096 row landed at 0.6184, inside the band and on the additive figure to three
+decimals.** Selected epoch 118 of 120, so patience never fired; the transfer figure has
+twice been shown not to move with budget (9.3, 9.12), the in-domain one is
+right-censored. Per corpus the registered detail held where it was specific: Head_and_Gaze
+and ViewGauss near 0.59-0.60 (0.588, 0.593), PanoSaliency flat (0.737), and
+VR_User_Behavior missed its "under 0.545" by 0.002. NJIT fell 0.013, 1.4 seed-sds of the
+419 arm, on 18 users and 396 windows: not resolved.
+
+**The 2096 row landed at 0.6176, and the doubling to 4096 identities added 0.0008.** Both
+single-seed points sit on the additive figure - 0.582 (419 identities, 5 s) + 0.018 (the
+window, 9.12) + 0.016 (identities, 9.3) = 0.616 - so the Coordinator's 0.618 was right to
+three decimals and the 0.610-0.615 registered here was wrong: **the two levers add, and the
+second doubling of training identities, 1535 to 3072, moves transfer by nothing**, exactly
+as 1000 to 2096 moved it by nothing at 5 s (9.3). The identity-count plateau of the
+dynamics branch's transfer is now measured at two window lengths and across a further
+doubling; the identity gain at 10 s (+0.018, 419 to 2096) is the same size as at 5 s
+(+0.016), so there is no interaction between the levers to exploit either. Per corpus the
+two points agree to within the 419 seed spreads on five corpora; ViewGauss (0.629 against
+0.593, on 35 users and 280 windows) and Panonut360 (0.546 against 0.559) swing by more than
+that spread between two single seeds and are not read. The capped run selected epoch 120
+of 120, still improving in domain when it stopped, as every 10 s run at 419 identities was.
+
+One seed per point at 2096 and 4096. The 419 arm's pooled seed spread is 0.003, so the
++0.019 from 419 to 4096 is six of those sds, but the spread at 4096 is unmeasured and a
+second seed there costs two hours of the GPU; the per-corpus differences between the two
+single-seed points are read against the 419 spreads, not against each other's.
+
+**In domain, identity count is a large lever - and the gain is the model, not the users.**
+On each checkpoint's own validation users (never trained on; they chose the epoch, so
+about 0.02 optimistic as in 9.12) the 4096-identity checkpoint reads **BOXRR 0.970 on 1008
+users and alyx 0.796 on 16**, against 0.845 and 0.664 at 419 identities and the same
+window. The training-time record agrees: validation accuracy at the selected epoch is
+0.919, against 0.726-0.748 for the five 419-identity checkpoints. And it is not that the
+2000 users added since 9.3 are easier: scored on the **same 914 BOXRR users that neither
+checkpoint trained or validated on** (the 4096 run's validation users minus the 419 run's
+subsample; 136,764 windows, 467,968 pairs at 0.500, manifest seed 22), the 419-identity
+checkpoint reads 0.844 and the 4096-identity one **0.970**, with movement amplitude alone
+at 0.570 on the same pairs. One asymmetry travels with that pair: those 914 users chose
+the 4096 run's epoch and had no part in the 419 run's, so the 0.970 carries the ~0.02
+selection optimism and the 0.844 does not; the gap is about 0.10 after it, not 0.13. The
+2096-capped checkpoint reads **0.960** on the same 914 users (none of them in its training
+set either; about half were its validation users, so it shares the selection optimism with
+the 4096 point), and on its own 561 validation users BOXRR 0.962 and alyx 0.799. So nearly
+all of the in-domain gain is between 419 and 2096 identities - +0.12 on BOXRR, +0.13 on
+alyx - and the second doubling adds +0.008 to +0.010 on BOXRR and nothing on alyx: the
+same shape as the transfer row, at about seven times the size. No recording is shared
+between any two of the 4020 BOXRR user directories (17,872 files, all distinct by size and
+content hash) and the directory names are BOXRR user ids, so none of this is file-level
+leakage. Read together with the transfer row: seven times the training identities take
+unseen-player verification on ten seconds of head movement from 0.84 to 0.97 *within* the
+training activity, and move the seated corpora by +0.019 pooled and Nymeria by +0.018.
+That is 9.1's "an easier corpus, not a better model" in its sharper form - the model
+**is** better, on the activity it was trained on, and the cross-activity gap is what
+identity count does not close. It also reopens 9.13's contest on the one cross-day corpus:
+alyx in domain is 0.80 at 16 users here, where height alone was the best alyx number, so
+the enrolment comparison on unseen users of a seen activity is worth re-running at this
+identity count (Trainer's, if wanted).
+
+**A correction this slot surfaced: the lookup column on a `dyn` row is not a static
+baseline, and the training-free baseline for the dynamics branch is movement amplitude.**
+The 4096 row's `lookup_auc` reads 0.5216 pooled - PanoSaliency 0.568, NJIT 0.523,
+ViewGauss 0.520 - where the 419-identity rows at the same seed and the same pairs read
+0.506, and 9.3 called 0.506 "chance by construction". `evaluate()` computes the lookup on
+the windows as the model sees them, encoded then standardised, and under `dyn` every
+window mean is zero up to rounding, so the lookup is ranking rounding residue. Measured
+on the 10 s / stride 5 `dyn` windows of each held-out corpus, target-fit standardisation,
+four manifest seeds (per-corpus manifests drawn as the pipeline draws them, not the
+pipeline's own pooled pairs; spread 0.003-0.01):
+
+| corpus | residue, median (m) | corr(log residue, log amplitude) | lookup on `dyn` windows | **movement amplitude alone** | `dyn` model, 419 / 2096 / 4096 ids |
+| --- | --- | --- | --- | --- | --- |
+| PanoSaliency | 3e-9 | +1.00 | 0.570 | **0.664** | 0.734 / 0.732 / 0.737 |
+| NJIT | 6e-9 | +0.81 | 0.522 | **0.590** | 0.546 / 0.532 / **0.533** |
+| ViewGauss | 3e-10 | +0.73 | 0.511 | 0.565 | 0.555 / 0.629 / 0.593 |
+| Head_and_Gaze V2 | 3e-10 | +0.91 | 0.512 | 0.540 | 0.558 / 0.584 / 0.588 |
+| Panonut360 | 4e-9 | +0.85 | 0.507 | 0.523 | 0.529 / 0.546 / 0.559 |
+| VR_User_Behavior | 2e-10 | +0.87 | 0.504 | 0.516 | 0.533 / 0.542 / 0.547 |
+| EyeNavGS | 3e-9 | +0.83 | 0.500 | 0.504 | 0.560 / 0.564 / 0.553 |
+| Nymeria | 6e-10 | +0.94 | 0.505 | 0.514 | 0.535 / 0.544 +-0.002 / 0.553 |
+
+The residue is 1e-10 to 1e-9 m, so the float64 fix of 9.11 did what it was for and no
+location survives the encoding. But the residue's *size* is the rounding of the residual
+values, which is proportional to how far the head moved within the window, so the lookup
+on `dyn` windows is a noisy copy of a one-number dynamics feature - movement amplitude,
+the norm of the per-axis sd of the residual position. Before the fix the residue was the
+window mean's rounding error instead, a copy of location (9.11), which is why the column
+changed with the code identity. Movement amplitude alone is the number the dynamics
+branch has to beat, per corpus, exactly as the mean-position lookup is for `raw`: it
+scores 0.66 on PanoSaliency and 0.59 on NJIT with no model, **beats the 4096-identity
+model on NJIT** (0.590 against 0.533) and ties the 419-identity one on ViewGauss; the model
+clears it by 0.03-0.07 on PanoSaliency, Head_and_Gaze, VR_User_Behavior, Panonut360 and
+EyeNavGS. Three consequences. The `lookup_auc` column on any `dyn` row measures nothing
+static and is read as undefined, not as 0.50 and not as a leak; 9.3's "chance by
+construction" is withdrawn in favour of this paragraph. Movement amplitude is a permanent
+per-corpus baseline beside every `dyn` figure from here on. And a code change is queued
+for after this slot, in a worktree, announced before merge: record `amplitude_auc` beside
+`lookup_auc` on every run, and compute `lookup_auc` on the pre-encoding positions so a
+`dyn` row carries the real static baseline on its own pairs.
+
+**Nymeria.** The band registered here for the 2096 run was 0.545-0.555. The capped
+checkpoint reads **0.544 +-0.002** (three manifest seeds, 25,600 pairs, one-sitting caveat
+as always) - 0.0007 under the band's edge, within one manifest sd of it - and the 4096
+checkpoint **0.553 +-0.003**, inside it. At 10 s the three identity points read 0.535 ->
+0.544 -> 0.553 (and 0.529 at 5 s and 419). Each step is about two training-seed sds of the
+419 arm (0.004), so no single step is resolved; the observation is the monotone run of four
+points, and that Nymeria, unlike the seated corpora, still moved on the second doubling.
+Movement amplitude alone scores 0.514 on Nymeria (four manifest seeds), well under the
+model. The lookup on the `dyn` windows reads 0.5055 on both checkpoints - the residue gone
+at source, as 9.12's 20 s note recorded - and the location-independence criteria of 9.11 stand.
+
 ## 10. Next steps, ranked (written 2026-09-04 after section 9)
 
 The night answered the question it was asked: identity count does not move transfer
@@ -1212,6 +1361,7 @@ prediction registered now.
 | 4 | **Across-XR** (49 users x 5 applications, converter ready, download WAF-blocked from AVALON; retry from another machine or ask the authors) | The activity-bound finding measured directly: same users, same rig, different application. Cross-app `dyn` AUC is the number. | download 5.4 GB, one conversion, scoring only | cross-app `dyn` well below within-app; the size of that gap is the paper's second claim. |
 | 5 | **`channels=orientation` in a common frame**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and 9.8 says orientation carries identity within a corpus and is lost across corpora to the frame - so the common frame is the point. It would also make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
 | 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | done, CPU (Trainer) | **Measured (9.13).** 0.4-0.6 met only on same-sitting corpora and carried by xz; on the one cross-day corpus 0.119 xyz / 0.135 height at N=17; the trained `dyn` embedding fused with height is a wash in both regimes on one 14-user gallery (0.159 vs 0.166 unseen activity, 0.197 vs 0.198 unseen users of a seen activity; chance 0.071); the best alyx number is height alone on unseen users of a seen activity, 0.198, no model. |
+| 7 | **Window length and identity count together on `dyn`**: 10 s at 4096 identities (the full corpus after the AVALON sync) and at 2096 (BOXRR capped to 2020), seed 1 | Do the two levers add, and does a second doubling of training identities move transfer? | 2 runs, ~3.5 h GPU. **Done (9.14).** | Coordinator 0.618 (additive), Model Generalization 0.610-0.615 -> **0.6176 and 0.6184**: additive, and the second doubling adds 0.001 out of domain while taking in-domain BOXRR from 0.845 to 0.962 to 0.970. Movement amplitude alone found to be the training-free baseline for `dyn` on the way. |
 
 **Retired by section 9, do not re-run:** the identity-count curve on the `raw`
 pipeline as a headline (it measures the lookup); fusion of lookup and `dyn`; `yawc` as
@@ -1227,10 +1377,14 @@ domain - and that cue is **placement in the tracking space** on the same-sitting
 A learned movement component exists, is small on seated viewing, strong on rhythm-game
 play, and carries weakly across activities at 5 s; at 10 s the alyx in-domain figure
 rises to 0.66 and the transfer gains 0.02 on every tier-1 corpus, so part of what read
-as activity-bound was window-bound. It rises with training identities up to about a
-thousand, with the caveat that every `raw` identity-count result on BOXRR carries part
-of a person-specific standing offset (xz-only lookup 0.68; placement, not the room) and
-only the `dyn` curve is clean of it. As an enrolment system on head pose alone, the transferable cue identifies within a
+as activity-bound was window-bound. The window and identity levers add (0.618 pooled at
+10 s and either 2096 or 4096 identities, 9.14), and the component is read against a
+one-number movement-amplitude baseline it beats on six of the seven held-out corpora and
+not on NJIT. It rises with training identities up to about two thousand and is flat
+across the next doubling out of domain, while the same identities take unseen-player
+verification within Beat Saber from 0.84 to 0.97 (9.14) - with the caveat that every
+`raw` identity-count result on BOXRR carries part of a person-specific standing offset
+(xz-only lookup 0.68; placement, not the room) and only the `dyn` curve is clean of it. As an enrolment system on head pose alone, the transferable cue identifies within a
 sitting and not across days (9.13). Across-XR (step 4) is what measures the
 cross-activity transfer directly rather than by inference across corpora.
 

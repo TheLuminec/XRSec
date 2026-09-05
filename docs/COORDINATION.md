@@ -434,185 +434,51 @@ not, because x and z are scaled separately. Whatever the table shows, "how much 
 versus placement" is answered in standardised units, and a deployment that used raw metres
 would get different numbers.
 
-## From Model Generalization (xrsec-c6, DESKTOP-C) - 2026-09-04, after a session restart
+## From Model Generalization (xrsec-c6, DESKTOP-C): standing items - 2026-09-05
 
-The session was shut down and restarted; `SendMessage` is not available from this session
-any more, so this file is my channel until it is. Read it after every pull.
+- **For the Coordinator's check:** 9.12, 9.13 and 9.14 are in the proposal, pushed flagged
+  rather than held; a correction is one commit away. 9.13's slot for Trainer's seated `dyn`
+  columns is still open.
+- **Queued code change (mine; after a GPU slot ends, in a worktree, announced here before
+  merge):** record `amplitude_auc` beside `lookup_auc` on every run, and compute `lookup_auc`
+  on the pre-encoding positions so a `dyn` row carries the real static baseline on its own
+  pairs. Reason (9.14): the lookup column on a `dyn` row is rounding residue (1e-9 m) whose
+  size tracks movement amplitude; amplitude alone is the training-free baseline for the
+  dynamics branch and beats the 4096-identity model on NJIT (0.590 against 0.533).
+- **Correction for anyone quoting a `dyn` row:** "the lookup is 0.50 by construction on dyn"
+  is withdrawn (9.3, 9.9 and the CLAUDE.md `dyn` section are corrected); read that column as
+  undefined on `dyn`, not as 0.50 and not as a leak.
 
-- **Step 2 status.** 10 s arm complete: paired against the re-scored 48-user 5 s rows,
-  +0.0184 pooled (t(4) 14.3, 5/5), Head_and_Gaze +0.022, ViewGauss +0.032,
-  VR_User_Behavior +0.018, NJIT +0.022; in domain, alyx 0.592 (5 s, 120 epochs) -> 0.664
-  (10 s), crossing the registered 0.60 line; Nymeria 10 s +0.006, not resolved. 20 s arm:
-  seeds 1-3 landed before the shutdown (pooled 0.618 / 0.609 / 0.611 on SIX corpora -
-  **ViewGauss yields no 20 s windows**, its sessions are ~15 s, so it drops out of the 20 s
-  evaluation and the 20 s pooled figure is not comparable to the 10 s one; the comparison
-  is per corpus on the six that remain). Seeds 4-5 **resumed now** from the sweep's own
-  state under the unchanged code identity 71c9783a14 (nothing under `model/` moved);
-  about an hour.
-- **Slot end, in the agreed order:** commit and push the shard (13 rows uncommitted in the
-  tree now: 20 s seeds 1-3, the five re-scored 5 s rows, and the 10 s rows already
-  pushed earlier); merge `dyn-float64` as a merge commit with `docs/acceptance/`, rerun
-  the acceptance on main and record it; update this file's queued entry and the CLAUDE.md
-  code-identity line; then the registered next slot (chain G: `dyn` 10 s full corpus,
-  seed 1, my prediction written here beside the Coordinator's before launch - unless the
-  20 s rows beat 10 s by more than 0.01 per corpus, in which case 20 s and a restated
-  prediction).
-- **9.12 and 9.13** are drafted locally (9.13 from CLAUDE.md at 07b9582, one 14-user
-  gallery); 9.13's slot for Trainer's seated `dyn` columns stays open. Without a direct
-  channel I will push them with a "for check" note here rather than hold them; corrections
-  are one commit away.
-- **For xrsec-e3:** the deck can stop saying "running" for step 2's 10 s half; the numbers
-  above are final. 20 s follows within the hour.
+## From Model Generalization: chain G done, GPU slot released - 2026-09-05 19:00
 
-## From Model Generalization: merge announcement - `dyn-float64` (dd75da6, e0df05e) into main, 2026-09-05
+Two runs, `dyn`, 10 s, stride 5, seed 1, epochs 120 with patience 15, `exclude_users=[]`,
+target-fit standardisation, the seven held-out corpora on the same seed-1 test manifests:
 
-Step 2 has ended (no `model/main.py` running, shard committed and pushed). Per the
-Coordinator's standing ruling, `dyn-float64` is being merged into main now as a merge
-commit, with `docs/acceptance/` (both sides of the acceptance, the script, the README).
-Nothing else is to be merged into this tree until this entry says it is done.
+| | training ids | pooled | H&G | ViewGauss | VR_UB | NJIT | PanoSal | Panonut | EyeNavGS | Nymeria | in domain BOXRR / alyx |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 419 (5 seeds, 9.12) | 314 | 0.600 | 0.558 | 0.555 | 0.533 | 0.546 | 0.734 | 0.529 | 0.560 | 0.535 | 0.845 / 0.664 |
+| 2096, BOXRR capped at 2020 (`b4617a5f05`) | 1535 | **0.6176** | 0.584 | 0.629 | 0.542 | 0.532 | 0.732 | 0.546 | 0.564 | 0.544 | 0.962 / 0.799 |
+| 4096, full corpus (`f9ca1571b9`) | 3072 | **0.6184** | 0.588 | 0.593 | 0.547 | 0.533 | 0.737 | 0.559 | 0.553 | 0.553 | 0.970 / 0.796 |
 
-**Merge done** (Model Generalization, 2026-09-05): `dyn-float64` merged as `06f57e5`,
-460 tests, acceptance rerun on main identical to the branch run (re-baseline of 1.2e-4
-AUC on PanoSaliency, inert below 1e-6 elsewhere; residue 4.9e-10 / 3.8e-8 m against
-1.8e-7 / 3.6e-5 m before). Code identity is now `bc521f7f8e`. The queued "dyn residual in
-float64" entry above is LANDED. Tree is free.
+Against the registrations: the Coordinator's 0.618 (additive) is right to three decimals on
+both points; my 0.610-0.615 (sub-additive) was wrong, both points landed above it; my
+0.610-0.625 for the 4096 point held; my Nymeria 0.545-0.555 reads 0.544 at the edge (within
+one manifest sd) and 0.553 inside. **The window and identity levers add, and the second
+doubling of training identities adds 0.001 out of domain.** In domain identity count is
+large and also saturates: 0.845 -> 0.962 -> 0.970 on BOXRR validation users, and on the same
+914 BOXRR users that none of the three checkpoints ever saw, **0.844 / 0.960 / 0.970**
+(movement amplitude alone 0.570 there). The 2096 and 4096 in-domain figures carry the ~0.02
+selection optimism, the 419 one on those users does not. Checks, caveats (single seeds at
+2096 and 4096; ViewGauss and Panonut360 swing more than the 419 spread between them and are
+not read) and the amplitude table are in 9.14.
 
-## From Model Generalization: next slot (chain G) prediction and the 10 s / 20 s decision
+Shard committed and pushed with this note (rows `661054c98a12` and `9985fe230214`). **GPU
+free.** Nothing launches from here unless registered. Proposed next slots, not launched:
 
-The Coordinator's rule said: run the full-corpus slot at 20 s if 20 s beats 10 s by more
-than 0.01 pooled. The 20 s pooled figure is not comparable (ViewGauss yields no 20 s
-windows and drops out); on the six corpora present at 20 s the seed-paired gain is +0.012
-(t(4) 5.9, 5/5), Head_and_Gaze +0.013, VR_User_Behavior +0.013, NJIT +0.015, EyeNavGS
-+0.024, PanoSaliency -0.006. **Running the slot at 10 s as registered**, because 10 s keeps
-ViewGauss - one of the two corpora that carried every dynamics gain - in the test set and
-keeps the registered prediction (pooled ~0.618 if additive against the 2096-identity 5 s
-run, which includes ViewGauss) well defined. A 20 s full-corpus point is the natural slot
-after this one, read per corpus.
-
-**My prediction beside the Coordinator's**: sub-additive - pooled 0.610-0.615 (between the
-falsifier at 0.606 and the additive 0.618), because both levers give the model more of the
-same person's dynamics; Head_and_Gaze and ViewGauss carry most of it (Head_and_Gaze ~0.59,
-ViewGauss ~0.60), VR_User_Behavior stays under 0.54, PanoSaliency flat at ~0.74. Nymeria on
-it afterwards on CPU: 0.545-0.555.
-
-**For the Coordinator's check** (Model Generalization, 2026-09-05): sections 9.12 (step 2,
-complete: 10 s and 20 s, re-scored 5 s pairing, in-domain table, Nymeria rows, ViewGauss
-not evaluable at 20 s) and 9.13 (step 6, from CLAUDE.md at 07b9582, one 14-user gallery)
-are pushed in the proposal. Without a direct channel they went in flagged rather than
-held; every number is in the shard or in CLAUDE.md, and a correction is one commit away.
-9.13's slot for Trainer's seated `dyn` columns is still open.
-
-## From Model Generalization: chain G is running on 4096 identities, not 2096 - registered as its own point
-
-BOXRR-23 on DESKTOP-C is now **4020 users** (the AVALON sync landed since 9.3), so
-"full corpus, no max_users" means BOXRR 4020 + alyx 76 = **4096 identities** (3072 in
-training after the 25% validation split), not the 2096 the chain G prediction was
-registered against. Caught from the loader's "3072 users" line during the window build;
-a process stop was not permitted from this session, so the run continues and is
-**registered here before its row exists**, as a different point:
-
-- **Run as launched:** `dyn`, 10 s, stride 5, 4096 identities, seed 1, epochs 120
-  patience 15, `exclude_users=[]`, sweep `f9ca1571b9`. It measures window length and a
-  DOUBLING of identity count over 9.3's largest point, against the seven held-out corpora.
-- **Prediction (Model Generalization, before the row):** pooled 0.610-0.625. Reasoning:
-  the 10 s gain at 419 identities was +0.018 and identity count was flat from 1000 to
-  2096 at 5 s, so a further doubling adds 0.00 to +0.01 at most; Head_and_Gaze and
-  ViewGauss carry it (both near 0.59-0.60), VR_User_Behavior under 0.545, PanoSaliency
-  flat near 0.74. Falsifiers: below 0.606 (window and count do not add even with twice
-  the identities); above 0.635 (they compound, and identity count is not saturated).
-- **The registered 2096-identity comparison runs right after it**, as
-  `max_users={BOXRR-23_Dataset:2020}` (a seeded 2020-user subsample of the 4020; the
-  identity COUNT matches 9.3's full point, the users are not the same 2020), same
-  settings, seed 1. The Coordinator's 0.618 additive prediction and my 0.610-0.615
-  sub-additive one apply to that run, unchanged.
-- Nymeria scored on both afterwards on CPU, same caveats.
-
-Note for everyone: every "full corpus" command from now on trains on 4096 identities
-unless capped; the 9.1/9.3 "2096" points are a capped configuration on this machine now.
-
-## From Model Generalization: chain G's 4096-identity row is inside the band; the 2096 comparison is running; "the lookup is chance on dyn" needs a correction - 2026-09-05
-
-**The 4096-identity row** (sweep `f9ca1571b9`, `dyn`, 10 s, stride 5, seed 1, epoch 118/120,
-3072 training / 1024 validation / 343 test users, the same test manifests as every 10 s
-row at seed 1): pooled **0.6184**. Registered band 0.610-0.625: **inside**, and the
-Coordinator's additive 0.618 to three decimals. Per corpus against the 419-identity 10 s
-mean over five seeds (9.12): Head_and_Gaze 0.588 (+0.030), ViewGauss 0.593 (+0.038),
-VR_User_Behavior 0.547 (+0.013; I predicted under 0.545, missed by 0.002), NJIT 0.533
-(-0.013, 1.4 sd of the 419 seed spread, not resolved), PanoSaliency 0.737 (+0.003, flat as
-predicted), Panonut360 0.559 (+0.029), EyeNavGS 0.553 (-0.007). Patience never fired, so
-the in-domain figure is right-censored; the transfer figure has twice been shown not to
-move with budget. **Nymeria** on this checkpoint (CPU, three manifest seeds): **0.5526
-+-0.003**, against 0.535 at 419 identities / 10 s and 0.541 at 2096 / 5 s. No band was
-registered for Nymeria at this point; the 2096-capped checkpoint is its clean pair.
-
-**The 2096 comparison launched 17:38**: `max_users={BOXRR-23_Dataset:2020}`, a seeded
-2020-of-4020 subsample, **1535 training identities against 3072** (validation 561 users -
-a subset of the 4096 run's 1024, because validation users are drawn before the cap is
-applied - and the same 343 test users and manifests). Predictions stand as registered:
-Coordinator 0.618 (additive, the doubling adds nothing), mine 0.610-0.615.
-
-**Correction, measured today, for everyone quoting a `dyn` row: the mean-position lookup
-on `dyn` windows is not "0.50 by construction" and is not a static baseline there.** The
-row's lookup reads 0.5216 pooled with PanoSaliency 0.568, NJIT 0.523, ViewGauss 0.520,
-where the 419-identity rows at the same seed read 0.506 pooled. `evaluate()` computes the
-lookup on the windows as the model sees them - encoded, then standardised - and under
-`dyn` every window mean is zero up to rounding, so the lookup is ranking rounding residue.
-Measured on the 10 s / stride 5 `dyn` windows, target-fit standardisation, three manifest
-seeds:
-
-| corpus | residue median (m) | corr(log residue, log amplitude) | lookup-on-dyn | movement amplitude alone | `dyn` model, 419 / 4096 ids |
-| --- | --- | --- | --- | --- | --- |
-| PanoSaliency | 3e-9 | +1.00 | 0.571 | **0.664** | 0.734 / 0.737 |
-| NJIT | 6e-9 | +0.81 | 0.522 | **0.590** | 0.546 / **0.533** |
-| ViewGauss | 3e-10 | +0.73 | 0.511 | 0.564 | 0.555 / 0.593 |
-| Head_and_Gaze | 3e-10 | +0.91 | 0.511 | 0.539 | 0.558 / 0.588 |
-| Panonut360 | 4e-9 | +0.85 | 0.506 | 0.524 | 0.529 / 0.559 |
-| VR_User_Behavior | 2e-10 | +0.87 | 0.504 | 0.517 | 0.533 / 0.547 |
-| EyeNavGS | 3e-9 | +0.83 | 0.499 | 0.506 | 0.560 / 0.553 |
-
-The residue is 1e-10 to 1e-9 m - the float64 fix did its job, no location survives - but
-its *size* is the rounding of the residual values, so it is proportional to how much the
-head moved in the window, and the lookup on `dyn` windows is a noisy copy of a one-number
-dynamics feature: movement amplitude (norm of the per-axis sd of the residual position).
-Before the fix the residue was the mean's rounding error instead, a copy of location
-(9.11), which is why the figure changed with the code identity. Three consequences:
-
-1. The `lookup_auc` column on a `dyn` row measures nothing static. Read it as undefined,
-   not as 0.50 and not as a leak.
-2. **Movement amplitude alone is the dynamics branch's training-free baseline**, and it
-   beats the 4096-identity model on NJIT (0.590 against 0.533) and ties the 419-identity
-   one on ViewGauss. Same shape as the mean-position lookup against the `raw` model: a
-   one-number statistic the model has to be shown to beat, per corpus.
-3. Code proposal, after this slot ends, in a worktree, announced before merge: record
-   `amplitude_auc` beside `lookup_auc` on every run, and compute `lookup_auc` on the
-   pre-encoding positions so a `dyn` row carries the real static baseline on its own pairs.
-
-The pipeline's seed-1 manifest version of the table is running; the three-seed spread is
-0.003 and does not change any of the above. 9.14 will carry it with the 2096 row.
-
-## From Model Generalization: in domain, identity count is a large lever on the dynamics branch - 4096-identity checkpoint, 2026-09-05
-
-Scored on CPU while the 2096 comparison trains. The 4096-identity `dyn` 10 s checkpoint on
-its own validation users (never trained on; ~0.02 optimistic as in 9.12): **BOXRR 0.970
-(1008 users), alyx 0.796 (16 users)**, against 0.845 and 0.664 at 419 identities and the
-same window. Two checks before anyone quotes it:
-
-- **It is the model, not easier users.** On the same 914 BOXRR users that neither
-  checkpoint trained or validated on (the 4096 run's validation users minus the 419
-  run's subsample; 467,968 pairs at 0.500, manifest seed 22), the 419-identity seed-1
-  checkpoint reads 0.844 and the 4096-identity one **0.970**. Movement amplitude alone
-  on the same pairs: 0.570. Training-time validation accuracy at the selected epoch
-  agrees: 0.919 against 0.726-0.748 for the five 419-identity checkpoints.
-- **No file-level leakage.** No recording is shared between any two of the 4020 BOXRR
-  user directories (17,872 CSVs, all distinct by size and 64 KB content hash); directory
-  names are BOXRR user ids.
-
-So seven times the training identities take unseen-player verification on ten seconds of
-head movement from 0.84 to 0.97 within Beat Saber, and move the seated corpora by +0.019
-pooled and Nymeria by +0.018 (above). 9.1's "an easier corpus, not a better model" in its
-sharper form: the model is better, on the activity it was trained on. **For Trainer:** this
-reopens step 6's contest on alyx - in domain the model is now 0.80 at 16 users where
-height alone was the best alyx number - so the enrolment comparison on unseen users of a
-seen activity may be worth re-running at this identity count, if you want it; not launched
-from here. The 2096-capped checkpoint will be scored on the same 914 users for a three-point
-in-domain curve. Full write-up as 9.14 with the 2096 row.
+1. **A second seed at 4096 and at 2096, 10 s** (~3.5 h): puts a spread on the two
+   single-seed points; until then every per-corpus statement in 9.14 is read against the
+   419 arm's spread.
+2. **A 20 s full-corpus point**, read per corpus without ViewGauss (9.12: 20 s pays +0.012
+   over 10 s on six corpora at 419 identities).
+3. **For Trainer:** step 6's enrolment contest on alyx at this identity count - in domain
+   the model is 0.80 at 16 users where height alone was the best alyx number (9.13).

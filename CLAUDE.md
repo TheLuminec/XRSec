@@ -559,9 +559,12 @@ Identity count was the only data-side lever ever measured to work here. It works
 ### `dyn`: the learned component that does transfer, and the only thing identity count moves
 
 `encoding=dyn` removes every static cue - position centred per window *and* orientation
-taken relative to the window's mean heading, gravity kept. The lookup scores **0.506** on it
-by construction, so anything above chance is behaviour, measured rather than simulated by
-`center_position` (which leaves absolute orientation in, and the mean quaternion alone
+taken relative to the window's mean heading, gravity kept. The mean-position lookup has
+nothing static to read on it: its column on a `dyn` row is rounding residue that tracks
+movement amplitude (1e-9 m; 0.50-0.57 per corpus, `docs/GENERALISATION_PROPOSAL.md` 9.14),
+so the training-free baseline for `dyn` is **movement amplitude alone** (0.50-0.66 per
+corpus; it beats the model on NJIT), and anything the model scores is behaviour, measured
+rather than simulated by `center_position` (which leaves absolute orientation in, and the mean quaternion alone
 recovers 0.54-0.79 of static posture).
 
 **Identity-count curve, BOXRR+alyx -> the seven held-out corpora**, `epochs=120`,
@@ -583,6 +586,20 @@ are flat.
 **Not budget-limited.** The 120-epoch budget changed transfer at 419 by 0.001 against the
 30-epoch runs, even though those selected epoch 29-30 of 30. The censoring mattered for the
 in-domain figure, not the transfer one.
+
+**At 10 s the window and identity levers add, and identity count then saturates out of
+domain while still paying in it (2026-09-05, `docs/GENERALISATION_PROPOSAL.md` 9.14).** `dyn`,
+10 s, seed 1, the seven held-out corpora: 419 identities 0.600 (5 seeds), 2096 (BOXRR capped
+at 2020 of the now-4020 users) **0.618**, 4096 **0.618** - the additive prediction to three
+decimals, and the second doubling of training identities (1535 -> 3072) moves transfer by
+0.001. In domain the same three checkpoints read BOXRR 0.845 -> 0.962 -> 0.970 and alyx
+0.664 -> 0.799 -> 0.796 on their own validation users, and on the same 914 BOXRR users that
+neither the 419 nor the 4096 checkpoint ever saw, **0.844 against 0.970** (the 4096 figure
+carries ~0.02 selection optimism, the 419 one none). Identity count is a large lever within
+the training activity and a small one across it, and the gain is the model, not easier
+users - no recording is shared between any two of the 4020 BOXRR user directories. Movement
+amplitude alone reads 0.57 on those users. Nymeria: 0.535 -> 0.544 -> 0.553, each step about
+two seed-sds, monotone and unresolved individually.
 
 **The ceiling on the seated corpora is theirs, not the model's.** In domain on the
 8-dataset corpus (5 folds, uncensored at epochs 5-10, control 0.499) the seated corpora
