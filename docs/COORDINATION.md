@@ -482,3 +482,69 @@ free.** Nothing launches from here unless registered. Proposed next slots, not l
    over 10 s on six corpora at 419 identities).
 3. **For Trainer:** step 6's enrolment contest on alyx at this identity count - in domain
    the model is 0.80 at 16 users where height alone was the best alyx number (9.13).
+
+## From Model Generalization: chain H registered and launched - a second seed on 9.14's two points - 2026-09-05 19:20
+
+The user has asked me to continue on my own judgement and to point the other sessions at
+data (brief below). GPU slot taken for chain H: `dyn`, 10 s, stride 5, **seed 2** at 4096
+identities and then at BOXRR capped to 2020 (2096 identities), everything else identical to
+chain G (`epochs=120`, patience 15, `exclude_users=[]`, target-fit). ~3.5 h. Purpose: the two
+9.14 points are single seeds and ViewGauss already swung 0.035 between them.
+
+**Predictions, registered before either row.** Pooled within +-0.006 of the seed-1 value on
+both points (0.612-0.624); the ViewGauss gap between the two identity counts shrinks below
+0.02 (it is seed noise on 280 windows, not identity count); Nymeria 0.545-0.560 on both; in
+domain BOXRR 0.955-0.975 on both. **Falsifier:** either pooled figure more than 0.01 from its
+seed-1 value - then single-seed points at this scale are not quotable and 9.14's per-corpus
+statements are withdrawn to "pooled only". Nymeria and in-domain scoring on CPU after each
+row, as before; the shard is committed at slot end.
+
+While it runs I am making the queued code change in a worktree (`amplitude_auc` beside
+`lookup_auc`; `lookup_auc` on pre-encoding positions), with tests; I will announce it here
+before any merge and merge nothing while `model/main.py` runs.
+
+## From Model Generalization, for XRSec Data (and anyone hunting data): what would move the transfer number
+
+9.14 settled what identity count does: within the training activity it is a large lever
+(0.84 -> 0.97 on unseen Beat Saber players), across activities it saturates at about 2000
+identities (+0.018 pooled, then +0.001 for the next doubling). More Beat Saber players will
+not move transfer. What the finding asks for is **the same people recorded in different
+activities, and many identities per activity that is not Beat Saber** - the two things that
+let a model learn what stays constant about a person when the task changes. In order of
+value, with the checks each needs before a byte is downloaded:
+
+1. **Nymeria, the rest of it.** We hold 50 of **264 participants** (1200 sequences, 20
+   scenarios, 50 locations; projectaria.com/datasets/nymeria). Same device class as the
+   target (Aria glasses), several scripted activities per participant, licence already
+   accepted. That is 5x the identities on the one corpus where `dyn` is the instrument and
+   nothing static is readable, and the scenarios give within-person activity diversity.
+   Check first whether the downloader can fetch **only the MPS head trajectory**
+   (`closed_loop_trajectory.csv` per sequence) - the 50-participant pull moved 47 GB for
+   what is a few hundred MB of trajectories. Caveat carried from 9.9: positives are one
+   sitting, so no cross-day cost is paid there.
+2. **Across-XR** (49 users x 5 applications; section 10 step 4). Small in identities but
+   the only corpus with the same users across five VR applications - the direct
+   measurement of the cross-activity gap this whole programme infers across corpora. The
+   download was WAF-blocked from AVALON; retry from a browser on another machine, or ask
+   the authors. 5.4 GB.
+3. **BOXRR-23 beyond Beat Saber.** The paper describes Tilt Brush recordings; our mirror's
+   replay index has none (4.66M of 4.72M records are Beat Saber, the rest carry no app
+   field). If the official host's BSON index lists users with recordings in **two
+   applications**, those users are Across-XR at scale under an agreement we already hold
+   (clauses 4, 5, 15 apply to every derived copy). Check the index for app diversity per
+   user before downloading anything; `prepare_boxrr.py` already skips recordings with no
+   HMD track and says why.
+4. **Ego-Exo4D** (ego-exo4d-data.org). Aria glasses with MPS 6DoF localisation on 95.9%
+   of recordings, skilled physical activities (cooking, repair, music, sports, dance,
+   climbing) from 12 institutions; participant count reported in the hundreds - **confirm
+   from the paper, and confirm the licence terms** (it is an Ego4D-style agreement that a
+   person has to sign, so that is a request to the user, not to a script). Head-only by
+   construction, on the target device class, with activity diversity we do not have.
+5. **Rejected already, do not re-search:** GazeBaseVR (no head channel), Liebers et al. (no
+   release), OpenNEEDS (gated). More Beat Saber users (BOXRR is 105k of them) buy nothing
+   out of domain now.
+
+For each candidate the value is identities x activities-per-identity, not hours. Convert
+where the raw data lands (BOXRR clause 4), keep the citation with the data (clause 5), and
+record the up axis and frame at conversion (Nymeria is Z-up at source, 9.9; every VR
+corpus here is Y-up).
