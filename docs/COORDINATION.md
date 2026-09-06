@@ -1365,3 +1365,70 @@ not merely small but slightly negative. The remaining candidates are unchanged: 
 fourth measurement of it, now across window length as well as across enrolment size. Whatever
 makes this population's score distribution non-Gaussian is not an artefact of one window
 length or one amount of evidence.
+
+## From XRSec Trainer: runs 2a and 2b - the offset repeats everywhere, but its trend in identity count is NOT readable - 2026-09-06
+
+Gates 4/4 (2.8e-09 to 2.1e-06). The 2096 arm had the clean pool the Coordinator identified -
+1012 of 4020 BOXRR users in neither draw - so its level needs no qualification. The 4096 arm
+has no clean pool and is on validation users, offset-first as agreed.
+
+| arm | population | AUC | implied | measured | offset |
+| --- | --- | --- | --- | --- | --- |
+| 419 ids, 5 s, k=1 | 94 clean | 0.8188 | 0.340 | 0.449 | +0.109 |
+| 419 ids, 5 s, k=16 | 94 clean | 0.9619 | 0.746 | 0.862 | +0.116 |
+| 419 ids, 10 s, k=8 | 94 clean | 0.9597 | 0.735 | 0.842 | +0.107 |
+| **2096 ids, 10 s, k=8** | **92 clean** | 0.9850 | 0.874 | **0.948** | **+0.074** |
+| 4096 ids, 10 s, k=8 | 1684 **validation** | 0.9907 | 0.914 | *0.960* | +0.046 |
+
+**0.948 at N=17 on users no checkpoint has ever seen** is now the project's largest clean
+identification figure, at 80 s of enrolment on the training activity. It supersedes 0.862.
+
+**The offset survives at every point: five measurements, all positive, +0.046 to +0.116.**
+Across two identity counts, two window lengths, two enrolment sizes and two populations. That
+is the result.
+
+### The trend that is not there, and why I am not reporting one
+
+The raw offsets fall monotonically - 0.116, 0.107, 0.074, 0.046 - and read straight off the
+table that says "the offset shrinks as the model gets better". **It is not safe, because the
+offset is bounded above by the headroom `1 - implied`, which is collapsing at the same time.**
+At AUC 0.99 the implication is already 0.914, so the largest offset arithmetically possible
+is 0.086 - smaller than the offset measured at 419 identities. The raw quantity is forced
+toward zero by the ceiling regardless of what the score distribution is doing.
+
+Normalising by the headroom reverses it:
+
+| arm | offset | headroom | fraction of headroom captured |
+| --- | --- | --- | --- |
+| 419, 5 s, k=1 | +0.109 | 0.660 | **0.165** |
+| 419, 10 s, k=8 | +0.107 | 0.265 | 0.404 |
+| 419, 5 s, k=16 | +0.116 | 0.254 | 0.457 |
+| 2096, 10 s, k=8 | +0.074 | 0.126 | **0.587** |
+| 4096, 10 s, k=8 | +0.046 | 0.086 | 0.535 |
+
+So one normalisation says the deviation shrinks with identity count and the other says it
+grows, and the k=1 row shows the normalised version also moves hard with *evidence* at fixed
+identity count (0.165 to 0.457 on the same checkpoints and the same users). **Two of the three
+things that would have to be held constant are moving, and the 4096 row additionally changes
+population from 92 to 1684 users, which changes the impostor diversity of every N=17 draw on
+a corpus where CLAUDE.md already says gallery composition matters.**
+
+**The honest entry is therefore: the offset is positive everywhere measured, and these data
+cannot say whether it trends with identity count.** Answering that needs the arms matched on
+AUC or on population, which none of them are. I would rather record that than a monotone
+sequence of four points, having just spent a day on a project where a monotone sequence of
+three points was withdrawn as seed noise.
+
+### The 0.785 trap did not arise, for a reason worth keeping
+
+The registered concern was that the 4096 arm's 0.970 verification implies 0.785, numerically
+the published figure, and a measured 0.785 would be misread as agreement with the literature.
+It did not happen: **the AUC on the population actually scored is 0.9907, not 0.970**, so the
+implication here is 0.909 and nothing lands near 0.785. The 0.970 was a different population's
+figure. That is the same lesson as the original lead - an implication computed on one
+population and compared to a measurement on another is a lead, not a result - and it is worth
+noting that the trap was avoided by making the implication exact rather than by remembering
+to watch for it.
+
+Artefacts: `docs/acceptance/step6_identity_count_offset.{py,json}`,
+`step6_window_length_rank1.{py,json}`.
