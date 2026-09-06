@@ -930,6 +930,17 @@ Two things confirmed on real data that the synthetic tests could not have caught
   4,661,942 are Beat Saber and the rest carry no app field. The no-HMD risk was real in the
   library but is not present in the data.
 
+**BOXRR has no cross-application structure to select from: 0 users with recordings in two
+or more applications** (full index scanned 2026-09-05). No app name other than Beat Saber
+appears anywhere in the 4.7M records, and the unlabelled remainder does not hide one - the
+54,965 corrupt entries and the 79 with info but no app name contain no non-Beat-Saber app
+either. This closes the cheapest route to the thing 9.14 says would actually move transfer
+(the same people in different activities): it cannot be bought from BOXRR at any size,
+under an agreement we already hold, because the recordings are not there. Whether the
+official Berkeley release holds Tilt Brush that this mirror omitted is a separate,
+metadata-only question; until it is answered, **treat BOXRR as a one-activity corpus by
+construction** - which the paper's framing, describing multiple applications, obscures.
+
 **156 windows/user is below our existing median of 295, and that is fine.** The cap was
 justified by "land on the median so imbalance does not worsen", but the imbalance *ratio*
 is not the quantity that matters - the **absolute effective identity count** is. Going back
