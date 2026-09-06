@@ -786,3 +786,46 @@ is the entire value. The remaining routes are a complete index from the authors 
 per-user folders blind; the second is an acquisition decision for the user. **No further
 research on this without the user opening it.**
 
+
+## From XRSec Generalisation: chain H done, the amplitude-baseline change merged, 9.14 seed-2 update following - 2026-09-06 13:40
+
+**Chain H (seed 2, `dyn`, 10 s), against the registration.** 4096 identities **0.6128**
+(seed 1 0.6184); BOXRR capped at 2020 **0.6183** (seed 1 0.6176). Both inside 0.612-0.624;
+the falsifier (more than 0.01 from seed 1) did not fire. Two-seed means: 2096 identities
+0.6179 +-0.0005, 4096 identities 0.6156 +-0.0040, so the second doubling adds -0.002 +-0.004
+out of domain - flat, as 9.14 said. Per corpus, ViewGauss and NJIT swing by more than twice
+the 419 seed spread between the two seeds at 4096 (0.593 -> 0.617, 0.533 -> 0.565), so
+per-corpus statements at these points stay "read against the 419 spread"; the ViewGauss gap
+between the identity counts shrank from 0.035 to 0.016, as predicted. In domain, own
+validation users, seed 1 / seed 2: 4096 BOXRR 0.970 / 0.970 and alyx 0.796 / 0.785; 2096
+BOXRR 0.962 / 0.958 and alyx 0.799 / 0.804 - inside the registered 0.955-0.975.
+**Nymeria: my 0.545-0.560 band failed at seed 2** - 0.538 (4096) and 0.535 (2096) against
+0.553 and 0.544 at seed 1; two-seed means 0.545 +-0.011 and 0.540 +-0.007 against 0.535
++-0.004 at 419 identities. The monotone identity trend 9.14 reported on Nymeria was seed
+noise and is withdrawn to "not resolved" in the seed-2 update. Shard committed (`343d9a1`),
+9.13 corrected per Trainer's retraction (`1f28075`); 9.14's seed-2 update follows once the
+914-user comparison of the seed-2 checkpoints finishes on CPU.
+
+**Merge done: `9277648` on main**, 472 tests, on the five criteria as amended - criterion 1
+digit-exact on the GPU on both the raw row (`3ad3e4d5a085`) and the 4096-identity dyn row
+(`661054c98a12`); criteria 2 and 3 digit-exact against both harness formulas on the seed-67
+training-time pairs, landing on 9.10's and 9.14's tables; criterion 4 twice, CPU before and
+after. Artefacts, the flaw the gate caught (standardising recorded means with a dyn
+normaliser weights the axes by the residual spread: ViewGauss 0.889 against 0.933), and the
+two facts a reader needs (a 1.8e-9 pooled gap is a CPU/GPU tie flip; training-time pairs
+draw at `_seed_value(seed, 4)`, `mode=test` at `(seed, 11)`) are in `docs/acceptance/README.md`.
+The CLAUDE.md `dyn` section carries the two-column rule and the code-identity note.
+
+**Code identity after the merge is `72b8053ec2`, and a hazard found on the way.**
+`code_identity()` hashes raw file bytes, so it follows the checkout's line endings: the
+branch computed `100bd18472` on LF files and main computes `72b8053ec2` on the same code
+checked out with `autocrlf`. Any machine with a different `autocrlf` setting will record a
+different identity for identical code, and a resume keyed on it will re-run everything
+instead of matching. Compare identities within one machine until this is fixed. Proposed
+fix, queued and announced here: normalise `\r\n` to `\n` before hashing in
+`results_log.code_identity` - one line, numerics-free, changes the identity once more;
+merged in the next window unless the Coordinator objects. (Corrected on main at `3c25817`:
+the notes had carried the LF value.)
+
+The Nymeria count in my data brief (264) was the paper's figure; the catalogue's 236 and
+Data's correction stand.
