@@ -930,16 +930,28 @@ Two things confirmed on real data that the synthetic tests could not have caught
   4,661,942 are Beat Saber and the rest carry no app field. The no-HMD risk was real in the
   library but is not present in the data.
 
-**BOXRR has no cross-application structure to select from: 0 users with recordings in two
-or more applications** (full index scanned 2026-09-05). No app name other than Beat Saber
-appears anywhere in the 4.7M records, and the unlabelled remainder does not hide one - the
-54,965 corrupt entries and the 79 with info but no app name contain no non-Beat-Saber app
-either. This closes the cheapest route to the thing 9.14 says would actually move transfer
-(the same people in different activities): it cannot be bought from BOXRR at any size,
-under an agreement we already hold, because the recordings are not there. Whether the
-official Berkeley release holds Tilt Brush that this mirror omitted is a separate,
-metadata-only question; until it is answered, **treat BOXRR as a one-activity corpus by
-construction** - which the paper's framing, describing multiple applications, obscures.
+**Our BOXRR mirror is Beat Saber only, and the true release is not** (checked 2026-09-05,
+metadata only, nothing fetched). Two facts that must be quoted together:
+
+- **The HuggingFace mirror's index has 0 users with recordings in two or more
+  applications.** Every one of the 4,716,986 records with a populated `info` block reads
+  `app.name = "Beat Saber"`, no exceptions, and the 55,044 without one are empty stubs
+  (duration 0, no frames, no metadata) - checked directly, so the absence is not hiding in
+  the unlabelled remainder.
+- **The official Berkeley release includes Google Poly (Tilt Brush) recordings: 55,178 of
+  them, 1.2%**, per the official page's own count, and the datasheet states that one folder
+  holds all of a user's recordings and that the source application is identifiable from the
+  included metadata. So the cross-application structure exists upstream and **this mirror
+  excludes it** - a curation choice its README does not mention.
+
+**This is an index gap, not an absence, and the distinction decides an acquisition.** No
+index that shows the Poly recordings is linked from the official page, the datasheet, or
+findable by search; `dict.json` is the XROR JSON Schema, not a recording index. So whether
+any user has recordings in *both* applications - the thing 9.14 says would actually move
+transfer, at scale, under an agreement we already hold - **is unanswered and cannot be
+answered from any metadata file we can reach.** Do not write "BOXRR is one activity"; write
+"our copy is". Resolving it needs either a complete index from the authors or fetching
+per-user folders blind, which is an acquisition decision, not a check.
 
 **156 windows/user is below our existing median of 295, and that is fine.** The cap was
 justified by "land on the median so imbalance does not worsen", but the imbalance *ratio*
