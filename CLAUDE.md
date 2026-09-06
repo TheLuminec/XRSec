@@ -1025,6 +1025,22 @@ acquisition needs to roughly double the corpus - ~400+ new identities - to justi
 conversion risk.** In XR biometrics only BOXRR-23 clears that; the rest of the field is
 15-100 users per dataset because that is what a lab study yields.
 
+**That criterion is superseded, and identity count is no longer the argument for an
+acquisition (2026-09-06).** The identification axis measured what identity count buys, and
+the answer is narrow. Across a five-fold increase in training identities it moved **in-domain**
+rank-1 a great deal (0.824 -> 0.948 on one clean population), moved **cross-activity transfer
+by 0.001**, and did **not touch the per-user split at all** - the near-certain and near-chance
+users are the same people at 2096 identities as at 419, shifted together. The project's two
+open problems are transfer and what the mean conceals, and more identities of the same
+activity address neither. **Argue an acquisition on activity or device diversity, or do not
+make it.** The 400-identity floor still applies to anything argued on identity count, but
+nothing should be argued on identity count now.
+
+This sharpens rather than weakens the outstanding BOXRR question. What the official release
+has and our mirror lacks is **users with recordings in two applications** - cross-activity
+structure at scale, under an agreement already held. That is precisely the axis this finding
+says is worth acquiring, and it is the one thing on the board that is.
+
 Searched and rejected, recorded so the search is not repeated:
 
 | dataset | verdict |
@@ -1921,6 +1937,13 @@ uniform", not "heterogeneity reduced". **A registered band can pass for a reason
 the one predicted, so record the mechanism separately from the band** - otherwise a wrong
 model gets confirmed by a right number, which is worse than a failed prediction because
 nothing prompts anyone to look again.
+
+**The actionable form of that, which is Trainer's own qualification of it**: the catch was a
+property of the design, not of anyone's attention. Running *one* map would have hidden it in
+either direction - the shift alone reads +0.001 and "band held", the scale alone reads +0.016
+and "weak support", and neither shows that the sign is wrong. So the rule to act on is **run
+enough variants that a wrong mechanism has somewhere to show up**; "record the mechanism
+separately" is the thing you then notice, not a thing you can do on purpose.
 
 **The consequence reaches past the table.** The per-user split is not a data-quantity
 artefact: it survives a five-fold increase in training identities intact - the ~16% of users
