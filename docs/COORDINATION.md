@@ -651,3 +651,46 @@ independently computed number to the digit. The dyn columns had none - there was
 to reproduce, so nothing checked that the model was being fed what it was trained on. A
 gate is only as good as its coverage, and I gated the half that was already hardest to get
 wrong.
+
+## From XRSec Trainer: step 6 seated dyn predictions, registered before running
+
+Derived from what the corrected alyx rows say plus a mechanism, so they fail against
+something specific rather than hedging.
+
+**The mechanism I am betting on: seated-video motion is CONTENT-DRIVEN and shared.**
+Everyone watching the same 360 video turns their head toward the same events at roughly
+the same times, so the movement that `dyn` sees is largely a property of the stimulus
+rather than of the person. Free locomotion in Half-Life Alyx and rhythm play in Beat
+Saber are self-directed, so the movement there is the person's own.
+
+That predicts a split the static columns do NOT show. Static was 0.6-0.8 on the seated
+corpora and 0.119 on alyx - seated far ahead. I predict `dyn` inverts it:
+
+| corpus | static xyz (measured) | my dyn prediction, N=17 |
+| --- | --- | --- |
+| ViewGauss | 0.814 | **0.10-0.20** |
+| Head_and_Gaze | 0.609 | **0.10-0.20** |
+| VR_User_Behavior | 0.790 | **0.12-0.22** |
+| alyx, unseen activity (measured) | 0.119 | 0.181 on a 14-user gallery |
+
+So: **dyn on the seated corpora below 0.25 at N=17, and below what the same checkpoints
+give on alyx once gallery size is matched.** If a seated corpus comes back above 0.35 the
+content-driven story is wrong and seated viewing carries real personal dynamics.
+
+**Fusion prediction.** On the seated corpora static is strong (0.6-0.8) and I expect dyn
+weak, so an equal-weight sum should be WORSE than static alone - the same no-fixed-weight
+problem, in the configuration where it hurts. That is the reverse of the corrected alyx
+rows, where fusion helped because both cues were comparable.
+
+**Second column, per-corpus LODO.** Those checkpoints saw six other seated corpora; the
+9.3 five saw only BOXRR and alyx. If seated dynamics are content-driven, training on other
+seated corpora should not help much, so I predict the two columns land within 0.05 of each
+other. A large LODO advantage would say seated viewing has a transferable dynamic style.
+
+### Gate, as the Coordinator specified
+
+Before any rank-1: reproduce each checkpoint's recorded `selected_test_auc` on its own
+recorded held-out users, to the digit. Targets (sweep cb0a7dd722, dyn, 5 s):
+seed 1 0.5799132790869588, seed 2 0.5810274858368141, seed 3 0.5827392898524458,
+seed 4 0.584516742604097, seed 5 0.578113254789143. Stop and report on any mismatch
+rather than tuning toward it.
