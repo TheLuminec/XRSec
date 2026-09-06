@@ -568,8 +568,7 @@ corpus; it beats the model on NJIT), and anything the model scores is behaviour,
 rather than simulated by `center_position` (which leaves absolute orientation in, and the mean quaternion alone
 recovers 0.54-0.79 of static posture).
 
-**Two lookup columns, one rule (since the amplitude-baseline merge of 2026-09-05, code
-identity `72b8053ec2`).** On a `dyn` row `lookup_auc` is the lookup on the *encoded* windows -
+**Two lookup columns, one rule (since the amplitude-baseline merge of 2026-09-05).** On a `dyn` row `lookup_auc` is the lookup on the *encoded* windows -
 rounding residue that tracks movement amplitude, not a baseline of anything - and
 `position_lookup_auc` (the same lookup on each window's recorded position, standardised per
 dataset on the evaluation corpus's own position frames, the 9.10 definition) is the real
@@ -1896,12 +1895,22 @@ the same way: one cell, every fold, identical on `repr`. **One re-baseline is on
 CPU before and after on one dyn checkpoint it changed PanoSaliency by 1.2e-4 AUC and no
 other corpus by more than 7e-7, so every `dyn` row after that commit is under the new
 identity and PanoSaliency's `dyn` figures straddle a 1.2e-4 step. `docs/acceptance/`
-holds both sides. **A second code-identity step is on record and is not a re-baseline**: the
-amplitude / recorded-position baselines (`position_lookup_auc`, `amplitude_auc`) merged on
-2026-09-05 as code identity `72b8053ec2` added columns and touched no numerics - `evaluate()`
-on a raw and a dyn checkpoint reproduced every pre-existing figure digit-exact on CPU before
-and after (`docs/acceptance/amplitude_*`), so rows at `bc521f7f8e` and `72b8053ec2` are
-comparable and no `dyn` figure moved.
+holds both sides. **Two more code-identity steps are on record and neither is a re-baseline.** The
+amplitude / recorded-position baselines (`position_lookup_auc`, `amplitude_auc`, merge `9277648`,
+2026-09-06) added columns and touched no numerics - `evaluate()` on a raw and a dyn checkpoint
+reproduced every pre-existing figure digit-exact on CPU before and after, and both recorded
+rows digit-exact on the GPU (`docs/acceptance/amplitude_*`). Then `code_identity()` was found
+to hash raw bytes and follow line endings: the same merged code read **`4d243b05d0`** from the
+stored LF blobs, **`100bd18472`** from a clean CRLF checkout, and **`72b8053ec2`** from this
+machine's checkout, where `model/extractors/_kinematics.py` alone sits on disk with LF - so
+every identity recorded here (`bc521f7f8e` included) depended on one file's line ending.
+`digest_tree` now normalises line endings (merge `20b67bd`; acceptance
+`docs/acceptance/code_identity_line_endings.py`: working tree and stored blobs agree), and
+`.gitattributes` checks `*.py` out with LF everywhere (`bacb45a`, identity-neutral after the
+fix). **The identity on main is now `8db420df4c`**; rows at `bc521f7f8e`, `72b8053ec2` and
+`8db420df4c` are comparable and no figure moved. A digest that names no commit names a dirty
+tree, and a tree with mixed line endings is one such: check `git ls-files --eol` before
+reading an identity off a machine you did not set up.
 
 **The digest follows the checkout's line endings, and the hazard is latent, not live
 (measured 2026-09-06).** `code_identity()` hashes `path.read_bytes()`, `core.autocrlf` is

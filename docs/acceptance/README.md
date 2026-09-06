@@ -58,7 +58,7 @@ the Coordinator on five criteria (COORDINATION.md at 3a388cf), scripts and artef
 | 3. `amplitude_auc` reproduces 9.14's table | `amplitude_baseline_criteria.py corpora`, `amplitude_criteria_dyn10s_4096.json` | On the 4096-identity dyn 10 s checkpoint, seed-67 pairs, every corpus equals the 9.14 harness formula on `repr` and the table's seed-67 column at its precision (PanoSaliency 0.6633, NJIT 0.5913, ViewGauss 0.5644, VR_User_Behavior 0.5161, Head_and_Gaze 0.5373, Panonut360 0.5205, EyeNavGS 0.5190); the encoded-window `lookup_auc` reproduces that table's lookup column too. |
 | 2. `position_lookup_auc` equals 9.10's xyz lookup on the same pairs | same script, `amplitude_criteria_dyn5s_419.json` | On the 5 s dyn checkpoint, seed-67 pairs, every corpus equals the 9.10 harness formula (standardised means, Euclidean, xyz) on `repr`, and lands on 9.10's table (three-seed means): Head_and_Gaze 0.867 vs 0.870, VR_User_Behavior 0.719 vs 0.719, ViewGauss 0.933 vs 0.933, NJIT 0.646 vs 0.653. |
 | 1. raw row digit-identical | `amplitude_baseline_criteria.py recorded`, `amplitude_criterion1_raw_cpu.json` and the GPU form recorded at the merge | **Passed on the GPU** (`amplitude_criterion1_{raw,dyn4096}_gpu.json`): pooled `lookup_auc` digit-identical to the recorded row on both the raw row (`3ad3e4d5a085`, 0.7288151589359121) and the 4096-identity dyn row (`661054c98a12`, 0.5215709756503836), every per-dataset value at its recorded precision; the raw row's recorded-position lookup equals the old one to 2.6e-9. The re-scored model AUC differs from the recorded one by 4e-10 (raw) and 1.7e-6 (dyn) - cuDNN across runs, inside CLAUDE.md's device band. On CPU the same pooled lookup differed by 1.8e-9 (below). |
-| 5. merge window | COORDINATION.md, Model Generalization's heading | merge commit named there; code identity `72b8053ec2` noted in CLAUDE.md. |
+| 5. merge window | COORDINATION.md, Model Generalization's heading | merge commit `9277648`; the identity it produced on this machine was `72b8053ec2`, one of three values the same code had before the line-ending fix below. |
 
 **What the gate caught, so the next reader learns it.** The first version standardised the
 recorded window means with the checkpoint's `ChannelNormalizer`. On a `dyn` index that
@@ -85,3 +85,34 @@ reproduces a figure from the other, and the 9.10 and 9.14 harnesses (and these s
 the training-time derivation. A pre-float64 `dyn` row cannot serve as a criterion-1
 reference either: its encoded lookup moved with the residual fix (9.11), which is what the
 `dyn_float64` re-baseline above records.
+
+## code_identity_line_endings (2026-09-06)
+
+`code_identity()` hashed raw file bytes, so identical code hashed differently by line
+ending: **`4d243b05d0`** from the stored LF blobs, **`100bd18472`** from a clean CRLF checkout
+(a fresh worktree), and **`72b8053ec2`** from the DESKTOP-C checkout, where
+`model/extractors/_kinematics.py` alone sits on disk with LF. The three were reconstructed
+byte for byte from HEAD's blobs (`git ls-files --eol` shows the odd file), which settled a
+dispute in which each side had one of the values right and the mechanism half right: `100bd18472`
+was not "different code" and not "the LF twin" - it was the same code, all-CRLF. Fix:
+`results_log.digest_tree` normalises CRLF to LF before hashing (merge `20b67bd`);
+`.gitattributes` then checks `*.py` out with LF everywhere (`bacb45a`), identity-neutral after
+the fix and a third identity step if done before it.
+
+Acceptance ruled by the Coordinator: the digest computed on the working tree must equal the
+digest computed from git's stored blobs of the same commit. `code_identity_line_endings.py`
+does both: on main after the merge, working tree **`8db420df4c`** = stored blobs
+**`8db420df4c`**; the pre-fix commit (`1e3adf3`) maps to its LF value `4d243b05d0`, which is
+how pre-fix rows relate to post-fix ones. Numerics-free by inspection (the digest's only
+callers are the results logger and the sweep's resume key); 475 tests.
+
+## Nymeria figures: scoring-only rows
+
+No training run has ever had Nymeria in `data_dirs` or `test_dirs`, so until 2026-09-06 no
+Nymeria figure in 9.11, 9.12, 9.14 or CLAUDE.md had a shard row - each came from a
+scratchpad script scoring dyn checkpoints on CPU with three manifest seeds. `score_nymeria.py`
+(repo root) now scores any checkpoint on Nymeria through the pipeline's own `SiameseDataset`
+and `evaluate()` and appends a `mode=rescore`, `experiment=nymeria_rescored` row per
+checkpoint (test manifest at `_seed_value(seed, 4)` from the checkpoint's own seed, as every
+row's is; the earlier three-manifest means sit within about 0.003 of the single-manifest
+row). Every quoted dyn checkpoint was re-scored that way on CPU the day the script landed.
