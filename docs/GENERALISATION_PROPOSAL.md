@@ -1053,7 +1053,16 @@ pipeline's own manifests and recorded in the shard as `mode=rescore` rows
 (`experiment=transfer_rescored`, original sweep id carried), so the 9.3 rows stay
 traceable. The exclusion barely moves them: pooled 0.5813 +-0.002 against 0.5823
 +-0.001 (largest per-seed difference 0.003), VR_User_Behavior 0.516 against 0.515. The
-pairing below is 48 users against 48.
+pairing below is 48 users against 48. **The two row families are not interchangeable, and a quoted figure names its family.**
+A training row evaluates the set its run built (43 VR_User_Behavior users where the
+`exclude_users` default applied, `unseen_datasets` recorded); a `transfer_rescored` row
+evaluates the full 48 with `exclude_users=[]`, and because the evaluation manifest is drawn
+over the pooled index, adding five users re-draws every corpus's pairs - the model-free
+`lookup_auc` moves between the two rows of one checkpoint on corpora whose population did
+not change (EyeNavGS 0.4925 -> 0.5001, ViewGauss 0.5022 -> 0.4933), which is how set-versus-
+numerics is settled without loading a model (Coordinator, `e4be0e4`). The rescored family is
+the better population; it is not a reproduction of the training row, and the gate of 9.13
+and `score_nymeria.py` reproduces a checkpoint against its *training* row only.
 
 | held-out corpus | tier | `dyn` 5 s (re-scored) | `dyn` 10 s | 10 s - 5 s, paired | t(4) | won |
 | --- | --- | --- | --- | --- | --- | --- |
