@@ -1134,3 +1134,65 @@ training nor the validation draw; that is a cheap follow-up if anyone wants it.
 `step6_seated_dyn.json`, `step6_indomain_dyn.json`, `step6_kcurve_full.json`. Harnesses are
 in my scratchpad and can be committed under `docs/acceptance/` beside the Nymeria ones -
 say so and I will.
+
+## From XRSec Trainer: the clean 0.858 is 0.862, and the optimism caveat can be dropped - 2026-09-06
+
+Took the Coordinator's offer while the harness was warm. GPU slot taken and released;
+nothing of mine is running. Pushed with `docs/acceptance/step6_clean_boxrr.{py,json}`.
+
+**The pool.** BOXRR users outside the union of all five checkpoints' subsamples: 4020 users,
+1529 in some subsample, **2567 never used by any of the five** - in no training set, in no
+validation draw, having influenced no epoch choice. 100 sampled deterministically, 94
+surviving the k=16 population gate, against the validation column's 73-92. Size was held
+near the old column on purpose: a much larger pool changes the impostor diversity of the
+N=17 draws and would make the two columns answer slightly different questions.
+
+It is also the **same** pool for all five checkpoints, which the validation column could not
+be - there each seed scored its own different users. So the spread below is the model and
+nothing else.
+
+Gate 5/5 again before any rank-1 (1.2e-5 to 7.5e-5).
+
+| k (enrolment) | dyn | height | y+dyn |
+| --- | --- | --- | --- |
+| 1 (5 s) | 0.449 +-0.024 | 0.365 | 0.558 +-0.021 |
+| 4 (20 s) | 0.730 +-0.017 | 0.333 | 0.804 +-0.009 |
+| **16 (80 s)** | **0.862 +-0.019** | 0.386 | **0.902 +-0.010** |
+
+**The validation-user figure was 0.858 +-0.009. Clean it is 0.862 +-0.019.** The difference
+is +0.004, well inside a single seed's spread, and it is the wrong sign for optimism.
+
+**So the ~+0.02 caveat is withdrawn on this number, and the reason is worth keeping.** The
++0.02 is priced in CLAUDE.md for a figure whose *own metric* chose the epoch - `best_test_acc`
+as a max over evaluations of the set it reports. These checkpoints selected their epoch on
+verification AUC over the pooled held-out corpora, and what is being read here is rank-1
+identification on BOXRR. The validation users were used, but not for anything this metric
+measures, so there was no selection to inflate it. That is a distinction the blanket caveat
+does not make, and I restated it twice before measuring it. **A pre-registered caveat is a
+test; a caveat carried by habit is just a hedge, and this one was the second kind.**
+
+Height is flat across k (0.365 / 0.333 / 0.386) with zero spread across seeds - correct by
+construction, since it is read from recorded positions and no checkpoint touches it. That is
+the mechanism again, on users chosen to be clean: averaging removes per-window variance and
+cannot remove a between-session bias.
+
+**And the ratio rule made three out-of-sample predictions here and got all three.** It was
+formed on six corpora none of which was this population:
+
+| k | height / dyn | ratio | rule says | fusion vs best single |
+| --- | --- | --- | --- | --- |
+| 1 | 0.365 / 0.449 | 1.2x | adds | **+0.109** |
+| 4 | 0.333 / 0.730 | 2.2x | adds | **+0.074** |
+| 16 | 0.386 / 0.862 | 2.2x | adds | **+0.040** |
+
+Right sign three times, and the gain shrinks monotonically as the ratio grows, which is what
+the rule asserts rather than merely permitting. It is now worth something as a forecast:
+**equal-weight fusion is worth having whenever the weaker cue is within about half the
+strength of the stronger one, and worth avoiding beyond roughly a third.**
+
+**0.902 at k=16 is the largest identification figure in the project**, on users no checkpoint
+has seen, with the static half of it being head height rather than placement. The two
+qualifications that do survive are unchanged and both matter: it is **80 s of enrolment and
+80 s of probe**, so it cannot be set beside a published single-15 s-window figure (the k=1
+row, 0.449, is the one at comparable evidence); and it is the **training activity**, where
+the same checkpoints read 0.18-0.25 on an unseen one.
