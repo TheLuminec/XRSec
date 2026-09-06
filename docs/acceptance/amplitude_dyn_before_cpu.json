@@ -1,0 +1,36 @@
+{
+ "auc": "0.520687533783338",
+ "eer": "0.49118454391891897",
+ "eer_threshold": "1.8962314128875732",
+ "lookup_auc": "0.5155391386601941",
+ "lookup_eer": "0.484691722972973",
+ "by_dataset": {
+  "NJIT_6DOF_VR_Navigation_Dataset": {
+   "auc": "0.5286899378270279",
+   "eer": "0.47981770833333337",
+   "pairs": "9216",
+   "tier": "1",
+   "lookup_auc": "0.5170890902295525",
+   "lookup_eer": "0.48307291666666663"
+  },
+  "ViewGauss_Head-Movement_Dataset": {
+   "auc": "0.5181450917769451",
+   "eer": "0.4962053571428572",
+   "pairs": "17920",
+   "tier": "1",
+   "lookup_auc": "0.5249805497150032",
+   "lookup_eer": "0.47845982142857146"
+  },
+  "Panonut360_Dataset": {
+   "auc": "0.5211938005996669",
+   "eer": "0.48902529761904767",
+   "pairs": "10752",
+   "tier": "2",
+   "lookup_auc": "0.501201344185135",
+   "lookup_eer": "0.5018601190476191"
+  }
+ },
+ "code_root": "C:\\Users\\TheLu\\Desktop\\GIT\\XRSec",
+ "checkpoint": "C:/Users/TheLu/Desktop/GIT/XRSec/sweeps/cb0a7dd722/runs/bilstm_a41190094c/best.pth",
+ "encoding": "dyn"
+}

@@ -249,7 +249,7 @@ transfer number never travels without the three things that qualify it:
 | column / key | meaning |
 | --- | --- |
 | `test_auc_by_dataset`, `lookup_auc_by_dataset` | AUC per evaluation dataset for the model and for the mean-position lookup, on the same scores, as `name=value;...` |
-| `position_lookup_auc`, `amplitude_auc` (each also `_eer` and `_by_dataset`) | the two training-free baselines that are valid under every encoding, on the same pairs: the mean-position lookup on each window's **recorded** position (`SampleIndex.window_mean_positions`, taken before encoding and standardised with the position channels), and **movement amplitude alone** (norm of the per-axis sd of position in the window). `lookup_auc` keeps its old meaning - the lookup on the windows as the model sees them - and on a `dyn` row that is rounding residue tracking amplitude, not a baseline (`docs/GENERALISATION_PROPOSAL.md` 9.14) |
+| `position_lookup_auc`, `amplitude_auc` (each also `_eer` and `_by_dataset`) | the two training-free baselines that are valid under every encoding, on the same pairs: the mean-position lookup on each window's **recorded** position (`SampleIndex.window_mean_positions`, taken before encoding and standardised per dataset on the evaluation corpus's own recorded position frames - the 9.10 definition, independent of the checkpoint), and **movement amplitude alone** (norm of the per-axis sd of position in the window). `lookup_auc` keeps its old meaning - the lookup on the windows as the model sees them - and on a `dyn` row that is rounding residue tracking amplitude, not a baseline (`docs/GENERALISATION_PROPOSAL.md` 9.14) |
 | `eval_tiers` | the semantics tiers present in the evaluation set (`dataset.DATASET_TIERS`: 1 head pose in metres, 2 direction vector, 3 other). `evaluate()` announces when a pooled figure mixes tiers |
 | `eval_normalize` | how a dataset the normaliser never saw was brought into the training frame: `target_fit` (statistics fitted on the evaluation data, unsupervised, the default and the best label-free option measured), `session` (each session by its own statistics; at chance), `none` (a bound). Replaces what used to be a silent WARNING fallback |
 | `unseen_datasets` | which evaluation datasets that policy actually applied to |
@@ -567,6 +567,16 @@ so the training-free baseline for `dyn` is **movement amplitude alone** (0.50-0.
 corpus; it beats the model on NJIT), and anything the model scores is behaviour, measured
 rather than simulated by `center_position` (which leaves absolute orientation in, and the mean quaternion alone
 recovers 0.54-0.79 of static posture).
+
+**Two lookup columns, one rule (since the amplitude-baseline merge of 2026-09-05, code
+identity `415ab7e145`).** On a `dyn` row `lookup_auc` is the lookup on the *encoded* windows -
+rounding residue that tracks movement amplitude, not a baseline of anything - and
+`position_lookup_auc` (the same lookup on each window's recorded position, standardised per
+dataset on the evaluation corpus's own position frames, the 9.10 definition) is the real
+static baseline; on a `raw` row the two coincide to
+rounding. `amplitude_auc` is movement amplitude alone, the dynamics branch's baseline,
+computed before standardisation in the corpus's own units under every encoding. Beside a
+`dyn` figure quote `position_lookup_auc` and `amplitude_auc`, never `lookup_auc`.
 
 **Identity-count curve, BOXRR+alyx -> the seven held-out corpora**, `epochs=120`,
 `patience=15`:
@@ -1876,7 +1886,12 @@ the same way: one cell, every fold, identical on `repr`. **One re-baseline is on
 CPU before and after on one dyn checkpoint it changed PanoSaliency by 1.2e-4 AUC and no
 other corpus by more than 7e-7, so every `dyn` row after that commit is under the new
 identity and PanoSaliency's `dyn` figures straddle a 1.2e-4 step. `docs/acceptance/`
-holds both sides.
+holds both sides. **A second code-identity step is on record and is not a re-baseline**: the
+amplitude / recorded-position baselines (`position_lookup_auc`, `amplitude_auc`) merged on
+2026-09-05 as code identity `415ab7e145` added columns and touched no numerics - `evaluate()`
+on a raw and a dyn checkpoint reproduced every pre-existing figure digit-exact on CPU before
+and after (`docs/acceptance/amplitude_*`), so rows at `bc521f7f8e` and `415ab7e145` are
+comparable and no `dyn` figure moved.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 

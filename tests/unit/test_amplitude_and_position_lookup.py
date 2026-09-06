@@ -56,7 +56,7 @@ def test_a_still_head_has_zero_amplitude_and_a_moving_one_does_not():
     moving = still.clone()
     moving[1, 6] += torch.linspace(-0.1, 0.1, 20)                       # one window sways
     amplitude = movement_amplitude(moving, position_channel_slice(7))
-    assert torch.allclose(movement_amplitude(still, position_channel_slice(7)), torch.zeros(2), atol=1e-7)
+    assert torch.allclose(movement_amplitude(still, position_channel_slice(7)), torch.zeros(2, dtype=torch.float64), atol=1e-7)
     assert amplitude[0] < 1e-7 < amplitude[1]
 
 
@@ -88,16 +88,42 @@ def test_the_index_keeps_the_recorded_mean_position_under_dyn():
     assert index.window_mean_positions.norm(dim=1).min() > 1e-3, "the recorded means were lost"
 
 
-def test_recorded_means_match_the_encoded_means_under_raw():
-    index = _dataset("raw").sample_index
-    assert torch.allclose(index.window_mean_positions, index.samples[:, 4:7].mean(dim=2), atol=1e-5)
+def test_the_index_amplitude_is_the_harness_definition_and_the_same_under_dyn():
+    """9.14's table: float64 norm of the per-axis sd of position, before standardisation."""
+    raw = _dataset("raw").sample_index
+    dyn = _dataset("dyn").sample_index
+    harness = raw.samples[:, 4:7].double().std(dim=2).norm(dim=1)
+    assert raw.window_amplitudes.dtype == torch.float64
+    assert torch.allclose(raw.window_amplitudes, harness)
+    assert torch.allclose(dyn.window_amplitudes, harness, rtol=1e-4), "rotation into the mean pose must not change it"
+    ChannelNormalizer("per_dataset").fit_transform(raw)
+    assert torch.allclose(raw.window_amplitudes, harness), "standardisation must leave it alone"
 
 
-def test_the_normaliser_standardises_the_recorded_means_with_the_position_channels():
-    """Only the per-axis scales matter to a Euclidean lookup; they must be the model's."""
+def test_the_recorded_means_are_standardised_on_the_corpus_at_build_and_the_normaliser_leaves_them():
+    """
+    The 9.10 definition: per dataset, by the mean and sd of the recorded position frames.
+    That equals what a raw index standardised by a target-fit normaliser gives - and the
+    normaliser must not touch them again, or a dyn index would rescale them by the
+    residual spread and move the number.
+    """
     index = _dataset("raw").sample_index
+    frames = index.samples[:, 4:7].double()
+    expected = ((frames.mean(dim=2) - frames.mean(dim=(0, 2))) / frames.std(dim=(0, 2), unbiased=False)).float()
+    assert torch.allclose(index.window_mean_positions, expected, atol=1e-4)
+    before = index.window_mean_positions.clone()
     ChannelNormalizer("per_dataset").fit_transform(index)
+    assert torch.equal(index.window_mean_positions, before), "the normaliser must leave them alone"
     assert torch.allclose(index.window_mean_positions, index.samples[:, 4:7].mean(dim=2), atol=1e-4)
+
+
+def test_the_recorded_means_under_dyn_are_standardised_like_the_raw_ones():
+    """A dyn index and a raw index of the same corpus must agree on them exactly."""
+    raw = _dataset("raw").sample_index
+    dyn = _dataset("dyn").sample_index
+    assert torch.allclose(raw.window_mean_positions, dyn.window_mean_positions, atol=1e-6)
+    ChannelNormalizer("per_dataset").fit_transform(dyn)
+    assert torch.allclose(raw.window_mean_positions, dyn.window_mean_positions, atol=1e-6)
 
 
 # --- evaluate() records both, on the same pairs -----------------------------------
@@ -131,7 +157,7 @@ def test_a_shuffled_loader_gets_no_position_lookup_rather_than_a_misaligned_one(
     _, _, metrics = evaluate(_ConstantModel(), loader, nn.BCEWithLogitsLoss(),
                              torch.device("cpu"), return_metrics=True)
     assert "position_lookup_auc" not in metrics
-    assert "amplitude_auc" in metrics          # per batch, needs no alignment
+    assert "amplitude_auc" not in metrics
 
 
 # --- the results row -------------------------------------------------------------

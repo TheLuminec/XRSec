@@ -1,0 +1,52 @@
+{
+ "auc": "0.520687533783338",
+ "eer": "0.49118454391891897",
+ "eer_threshold": "1.8962314128875732",
+ "lookup_auc": "0.5155391386601941",
+ "lookup_eer": "0.484691722972973",
+ "amplitude_auc": "0.5329774030374732",
+ "amplitude_eer": "0.4822635135135135",
+ "position_lookup_auc": "0.7483909097006932",
+ "position_lookup_eer": "0.3263830236486487",
+ "by_dataset": {
+  "NJIT_6DOF_VR_Navigation_Dataset": {
+   "auc": "0.5286899378270279",
+   "eer": "0.47981770833333337",
+   "pairs": "9216",
+   "tier": "1",
+   "lookup_auc": "0.5170890902295525",
+   "lookup_eer": "0.48307291666666663",
+   "amplitude_auc": "0.5982571354618779",
+   "amplitude_eer": "0.4301215277777778",
+   "position_lookup_auc": "0.6382908291286893",
+   "position_lookup_eer": "0.3935546875"
+  },
+  "ViewGauss_Head-Movement_Dataset": {
+   "auc": "0.5181450917769451",
+   "eer": "0.4962053571428572",
+   "pairs": "17920",
+   "tier": "1",
+   "lookup_auc": "0.5249805497150032",
+   "lookup_eer": "0.47845982142857146",
+   "amplitude_auc": "0.557820745974171",
+   "amplitude_eer": "0.46127232142857144",
+   "position_lookup_auc": "0.9359477265027104",
+   "position_lookup_eer": "0.1323660714285714"
+  },
+  "Panonut360_Dataset": {
+   "auc": "0.5211938005996669",
+   "eer": "0.48902529761904767",
+   "pairs": "10752",
+   "tier": "2",
+   "lookup_auc": "0.501201344185135",
+   "lookup_eer": "0.5018601190476191",
+   "amplitude_auc": "0.5150937277173239",
+   "amplitude_eer": "0.4888392857142857",
+   "position_lookup_auc": "0.505875723702567",
+   "position_lookup_eer": "0.49534970238095233"
+  }
+ },
+ "code_root": "C:\\Users\\TheLu\\Desktop\\GIT\\XRSec-wt-amplitude",
+ "checkpoint": "C:/Users/TheLu/Desktop/GIT/XRSec/sweeps/cb0a7dd722/runs/bilstm_a41190094c/best.pth",
+ "encoding": "dyn"
+}

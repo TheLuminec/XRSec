@@ -1,0 +1,80 @@
+{
+ "checkpoint": "C:/Users/TheLu/Desktop/GIT/XRSec/sweeps/cb0a7dd722/runs/bilstm_a41190094c/best.pth",
+ "encoding": "dyn",
+ "sample_time": 5,
+ "window_stride": null,
+ "manifest_seed": "_seed_value(67, 4)",
+ "corpora": {
+  "Head_and_Gaze": {
+   "pairs": 51200,
+   "users": 100,
+   "model_auc": 0.5426285202026367,
+   "lookup_auc_encoded": 0.5124773262023926,
+   "position_lookup_auc": 0.8669881553649902,
+   "harness_xyz_lookup": 0.8669881553649902,
+   "amplitude_auc": 0.5327598625183105,
+   "harness_amplitude": 0.5327598625183105
+  },
+  "VR_User_Behavior": {
+   "pairs": 24576,
+   "users": 48,
+   "model_auc": 0.5249961449040307,
+   "lookup_auc_encoded": 0.5061847004625533,
+   "position_lookup_auc": 0.7186689145035214,
+   "harness_xyz_lookup": 0.7186689145035214,
+   "amplitude_auc": 0.5136990778976016,
+   "harness_amplitude": 0.5136990778976016
+  },
+  "ViewGauss": {
+   "pairs": 17920,
+   "users": 35,
+   "model_auc": 0.526446788554289,
+   "lookup_auc_encoded": 0.5168882595762915,
+   "position_lookup_auc": 0.9325084950972576,
+   "harness_xyz_lookup": 0.9325084950972576,
+   "amplitude_auc": 0.5561850660674426,
+   "harness_amplitude": 0.5561850660674426
+  },
+  "NJIT": {
+   "pairs": 9216,
+   "users": 18,
+   "model_auc": 0.5447496484827112,
+   "lookup_auc_encoded": 0.5093794693181544,
+   "position_lookup_auc": 0.6458805460988739,
+   "harness_xyz_lookup": 0.6458805460988739,
+   "amplitude_auc": 0.5847479737835166,
+   "harness_amplitude": 0.5847479737835166
+  },
+  "PanoSaliency": {
+   "pairs": 34816,
+   "users": 99,
+   "model_auc": 0.7206914334148684,
+   "lookup_auc_encoded": 0.5672853991234591,
+   "position_lookup_auc": 0.5755843060239376,
+   "harness_xyz_lookup": 0.5755843060239376,
+   "amplitude_auc": 0.6558219140788676,
+   "harness_amplitude": 0.6558219140788676
+  },
+  "Panonut360": {
+   "pairs": 10752,
+   "users": 21,
+   "model_auc": 0.5274745223203213,
+   "lookup_auc_encoded": 0.5142782302129836,
+   "position_lookup_auc": 0.5145897724731169,
+   "harness_xyz_lookup": 0.5145897724731169,
+   "amplitude_auc": 0.5217132049352944,
+   "harness_amplitude": 0.5217132049352944
+  },
+  "EyeNavGS": {
+   "pairs": 11264,
+   "users": 22,
+   "model_auc": 0.5441818394936806,
+   "lookup_auc_encoded": 0.5010740579652392,
+   "position_lookup_auc": 0.4878327866231114,
+   "harness_xyz_lookup": 0.4878327866231114,
+   "amplitude_auc": 0.5097467564354258,
+   "harness_amplitude": 0.5097467564354258
+  }
+ },
+ "failures": []
+}

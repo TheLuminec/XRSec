@@ -148,9 +148,12 @@ def movement_amplitude(windows: torch.Tensor, channels: slice) -> torch.Tensor:
     mean is zero to rounding - and what its column recorded there was rounding residue
     whose size tracks exactly this quantity (docs/GENERALISATION_PROPOSAL.md 9.14): 0.66
     AUC on PanoSaliency and 0.59 on NJIT with no model, above the trained model on NJIT.
-    Invariant to where the window sits, so it is the same feature under every encoding.
+    Invariant to any translation or rotation of the window (it is the square root of the
+    position covariance's trace), so raw and `dyn` windows give the same number. Computed
+    in float64 on the windows BEFORE standardisation, in the corpus's own units, which is
+    how 9.14's table was made and what `SampleIndex.window_amplitudes` stores.
     """
-    return windows[:, channels, :].std(dim=2).norm(dim=1)
+    return windows[:, channels, :].double().std(dim=2).norm(dim=1)
 
 
 def amplitude_lookup(left_amplitude: torch.Tensor, right_amplitude: torch.Tensor) -> torch.Tensor:
