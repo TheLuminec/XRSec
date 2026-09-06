@@ -186,18 +186,31 @@ def code_identity() -> str:
     global _code_identity_cache
     if _code_identity_cache is not None:
         return _code_identity_cache
-
     try:
-        digest = hashlib.sha1()
-        for path in sorted(_CODE_ROOT.rglob("*.py")):
-            if "__pycache__" in path.parts:
-                continue
-            digest.update(str(path.relative_to(_CODE_ROOT)).replace("\\", "/").encode("utf-8"))
-            digest.update(hashlib.sha1(path.read_bytes()).digest())
-        _code_identity_cache = digest.hexdigest()[:10]
+        _code_identity_cache = digest_tree(_CODE_ROOT)
     except Exception:
         _code_identity_cache = ""
     return _code_identity_cache
+
+
+def digest_tree(root) -> str:
+    """
+    The content digest behind `code_identity`, over every .py under `root`.
+
+    Line endings are normalised before hashing. The digest is read on three machines
+    whose checkouts differ in `core.autocrlf`, and it once read `100bd18472` on LF files
+    and `72b8053ec2` on the same code under CRLF (2026-09-06): identical code would have
+    carried two identities, and a sweep resumed on the other machine would have re-run
+    everything instead of matching its state.
+    """
+    root = Path(root)
+    digest = hashlib.sha1()
+    for path in sorted(root.rglob("*.py")):
+        if "__pycache__" in path.parts:
+            continue
+        digest.update(str(path.relative_to(root)).replace("\\", "/").encode("utf-8"))
+        digest.update(hashlib.sha1(path.read_bytes().replace(b"\r\n", b"\n")).digest())
+    return digest.hexdigest()[:10]
 
 
 def _relative_to_repo(path) -> str:
