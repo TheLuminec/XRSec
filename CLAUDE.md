@@ -600,17 +600,25 @@ in-domain figure, not the transfer one.
 
 **At 10 s the window and identity levers add, and identity count then saturates out of
 domain while still paying in it (2026-09-05, `docs/GENERALISATION_PROPOSAL.md` 9.14).** `dyn`,
-10 s, seed 1, the seven held-out corpora: 419 identities 0.600 (5 seeds), 2096 (BOXRR capped
+10 s, the seven held-out corpora: 419 identities 0.600 (5 seeds), 2096 (BOXRR capped
 at 2020 of the now-4020 users) **0.618**, 4096 **0.618** - the additive prediction to three
 decimals, and the second doubling of training identities (1535 -> 3072) moves transfer by
-0.001. In domain the same three checkpoints read BOXRR 0.845 -> 0.962 -> 0.970 and alyx
+0.001. **Both figures held on a second seed** (2026-09-06): 2096 reads 0.6179 +-0.0005 over
+two seeds and 4096 0.6156 +-0.0040, against a falsifier registered beforehand at 0.01 from
+the seed-1 value. So the saturation is the result, not one seed's draw - and note the two
+seeds separate 4096 by ten times as much as they separate 2096, which is the shape of a
+figure that has stopped responding to identities and is reading run-to-run variation. In domain the same three checkpoints read BOXRR 0.845 -> 0.962 -> 0.970 and alyx
 0.664 -> 0.799 -> 0.796 on their own validation users, and on the same 914 BOXRR users that
 neither the 419 nor the 4096 checkpoint ever saw, **0.844 against 0.970** (the 4096 figure
 carries ~0.02 selection optimism, the 419 one none). Identity count is a large lever within
 the training activity and a small one across it, and the gain is the model, not easier
 users - no recording is shared between any two of the 4020 BOXRR user directories. Movement
-amplitude alone reads 0.57 on those users. Nymeria: 0.535 -> 0.544 -> 0.553, each step about
-two seed-sds, monotone and unresolved individually.
+amplitude alone reads 0.57 on those users. **The Nymeria trend was seed
+noise and is withdrawn**: seed 1 read 0.535 -> 0.544 -> 0.553, monotone and about two
+seed-sds a step, and seed 2 reads 0.538 at 4096 against 0.535 at 2096 - the ordering
+reverses. Identity count does not move Nymeria measurably. A one-seed monotone sequence
+over three points was never enough to call a trend, and calling it one is the error to
+learn from here, not the number.
 
 **The ceiling on the seated corpora is theirs, not the model's.** In domain on the
 8-dataset corpus (5 folds, uncensored at epochs 5-10, control 0.499) the seated corpora
@@ -1892,6 +1900,28 @@ amplitude / recorded-position baselines (`position_lookup_auc`, `amplitude_auc`)
 on a raw and a dyn checkpoint reproduced every pre-existing figure digit-exact on CPU before
 and after (`docs/acceptance/amplitude_*`), so rows at `bc521f7f8e` and `72b8053ec2` are
 comparable and no `dyn` figure moved.
+
+**The digest follows the checkout's line endings, and the hazard is latent, not live
+(measured 2026-09-06).** `code_identity()` hashes `path.read_bytes()`, `core.autocrlf` is
+true on the Windows machines and no `.gitattributes` rule covers `*.py`, so the merged tree
+hashes **`72b8053ec2` with CRLF on disk and `4d243b05d0` from git's stored LF blobs** -
+identical code, two identities. Every row ever written came from a Windows checkout, so
+nothing recorded is wrong; but a machine checking out with LF records a different identity
+for the same code, and a sweep resumed there re-runs every cell. Ruled: normalise CRLF to LF
+inside the digest - one line, no numerics, and `code_identity()` is called only by the logger
+and by sweep resume. Keep the pair `72b8053ec2 -> 4d243b05d0` so pre-fix rows can still be
+related to post-fix ones, and do the hash fix **before** any `*.py text eol=lf` in
+`.gitattributes`, because after it that change is identity-neutral and before it, it is a
+third identity step in three days.
+
+**And `100bd18472` is not this pair's LF value.** It was recorded on the amplitude branch and
+read as the LF twin of `72b8053ec2`; no commit in that branch or on main hashes to it under
+LF (they read `4d243b05d0`, `7125798546`, `1f03cbd34d`), so it came from an **uncommitted**
+state of that worktree - different code, not different line endings. The relabelling at
+`3c25817` therefore asserts more than is known, and what actually settles those artefacts is
+criterion 1's digit-exact reproduction on the merged tree, which was run on the GPU. General
+rule: a digest that names no commit names a dirty tree, and a dirty tree is not a code state
+anyone can return to.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 

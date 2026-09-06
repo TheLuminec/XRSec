@@ -1279,10 +1279,40 @@ two points agree to within the 419 seed spreads on five corpora; ViewGauss (0.62
 that spread between two single seeds and are not read. The capped run selected epoch 120
 of 120, still improving in domain when it stopped, as every 10 s run at 419 identities was.
 
-One seed per point at 2096 and 4096. The 419 arm's pooled seed spread is 0.003, so the
-+0.019 from 419 to 4096 is six of those sds, but the spread at 4096 is unmeasured and a
-second seed there costs two hours of the GPU; the per-corpus differences between the two
-single-seed points are read against the 419 spreads, not against each other's.
+**A second seed on both points (chain H, registered in COORDINATION.md before either row,
+run 2026-09-05 19:43-22:26).** Everything identical to seed 1 but the training seed:
+
+| corpus | 2096 ids, seed 1 | seed 2 | 4096 ids, seed 1 | seed 2 | 419 arm sd |
+| --- | --- | --- | --- | --- | --- |
+| Head_and_Gaze V2 | 0.584 | 0.578 | 0.588 | 0.588 | 0.004 |
+| ViewGauss | 0.629 | 0.632 | 0.593 | 0.617 | 0.006 |
+| VR_User_Behavior (48) | 0.542 | 0.545 | 0.547 | 0.547 | 0.005 |
+| NJIT | 0.532 | 0.546 | 0.533 | 0.565 | 0.009 |
+| PanoSaliency | 0.732 | 0.739 | 0.737 | 0.730 | 0.007 |
+| Panonut360 | 0.546 | 0.545 | 0.559 | 0.560 | 0.004 |
+| EyeNavGS | 0.564 | 0.581 | 0.553 | 0.552 | 0.012 |
+| **pooled** | **0.6176** | **0.6183** | **0.6184** | **0.6128** | 0.003 |
+| Nymeria | 0.544 | 0.535 | 0.553 | 0.538 | 0.004 |
+| in domain, BOXRR validation users | 0.962 | 0.958 | 0.970 | 0.970 | |
+| in domain, alyx validation users | 0.799 | 0.804 | 0.796 | 0.785 | |
+| the same 914 unseen BOXRR users (a seed-1 split; the seed-2 runs trained on part of it, so not scored) | 0.960 | - | 0.970 | - | |
+
+Registered before the rows: pooled within +-0.006 of seed 1 on both points, the ViewGauss
+gap between the identity counts below 0.02, Nymeria 0.545-0.560 on both, in-domain BOXRR
+0.955-0.975 on both; falsifier, either pooled figure more than 0.01 from seed 1. **Neither
+falsifier fired**: 2096 moved +0.0007 and 4096 -0.0056, both inside the +-0.006 band, and
+the two-seed means are **0.6179 +-0.0005 at 2096 and 0.6156 +-0.0040 at 4096** - the second
+doubling of training identities is -0.002 +-0.004 out of domain, flat, as the single seeds
+said. The ViewGauss gap between identity counts shrank from 0.035 to 0.016 (predicted), and
+ViewGauss and NJIT moved by more than twice the 419 spread between seeds at 4096, so the
+per-corpus differences at these points are read against the 419 spread and not quoted as
+identity-count effects. In domain both points reproduced on their own validation users (BOXRR 0.958-0.970, alyx
+0.785-0.804); the 914-user comparison is a seed-1 construction and is not repeated here.
+**The Nymeria band failed**: seed 2 reads 0.538 at 4096 and 0.535 at 2096, against 0.553
+and 0.544 at seed 1 - two-seed means 0.545 +-0.011 and 0.540 +-0.007 against 0.535 +-0.004
+at 419 identities. The monotone run of identity points reported for Nymeria below was seed
+noise; it is withdrawn to **not resolved**, and Nymeria stays where 9.11 and 9.12 left it,
+0.53-0.55 at every window and identity count measured.
 
 **In domain, identity count is a large lever - and the gain is the model, not the users.**
 On each checkpoint's own validation users (never trained on; they chose the epoch, so
@@ -1360,9 +1390,9 @@ for after this slot, in a worktree, announced before merge: record `amplitude_au
 checkpoint reads **0.544 +-0.002** (three manifest seeds, 25,600 pairs, one-sitting caveat
 as always) - 0.0007 under the band's edge, within one manifest sd of it - and the 4096
 checkpoint **0.553 +-0.003**, inside it. At 10 s the three identity points read 0.535 ->
-0.544 -> 0.553 (and 0.529 at 5 s and 419). Each step is about two training-seed sds of the
-419 arm (0.004), so no single step is resolved; the observation is the monotone run of four
-points, and that Nymeria, unlike the seated corpora, still moved on the second doubling.
+0.544 -> 0.553 (and 0.529 at 5 s and 419). Each step is about two training-seed sds of the 419 arm
+(0.004), so no single step is resolved - and at seed 2 (the second-seed block above) the run
+did not reproduce: 0.535 and 0.538. Not resolved.
 Movement amplitude alone scores 0.514 on Nymeria (four manifest seeds), well under the
 model. The lookup on the `dyn` windows reads 0.5055 on both checkpoints - the residue gone
 at source, as 9.12's 20 s note recorded - and the location-independence criteria of 9.11 stand.

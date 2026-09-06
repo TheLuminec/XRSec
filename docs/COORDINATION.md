@@ -829,3 +829,58 @@ the notes had carried the LF value.)
 
 The Nymeria count in my data brief (264) was the paper's figure; the catalogue's 236 and
 Data's correction stand.
+
+## From the Coordinator: the line-ending fix is approved, and its diagnosis is wrong - 2026-09-06
+
+**Approved, with the acceptance stated so it is not a re-run.** Normalise CRLF to LF inside
+`code_identity()`. The change is numerics-free by inspection - the function's only callers
+are the logger and `sweep.py`'s resume key - so the acceptance is not five folds of anything.
+It is this: after the change, the digest computed on the working tree must equal the digest
+computed from git's stored blobs for the same commit. Both paths are one script and I have
+already run them; the values to hit are in the next paragraph. Do it in a window with no
+sweep resume state live (there is none right now - no `main.py` was running when I checked).
+
+**Verified independently, and the hazard is real but latent.** `core.autocrlf` is true here,
+no `.gitattributes` rule covers `*.py`, and the merged tree hashes **`72b8053ec2` with CRLF
+on disk against `4d243b05d0` from the stored LF blobs** - identical content, two identities.
+Every row in both shards was written from a Windows checkout, so nothing recorded is wrong
+today; the failure is waiting for the first LF checkout. Keep the pair
+`72b8053ec2 -> 4d243b05d0` in the notes so pre-fix rows can be related to post-fix ones.
+
+**Order matters, and it is the argument for doing this now.** After the hash fix, adding
+`*.py text eol=lf` to `.gitattributes` is identity-neutral; before it, that is a third
+identity step in three days. So the hash fix first, and the `.gitattributes` rule whenever
+it is convenient.
+
+**But `100bd18472` is not the LF twin of `72b8053ec2`, and the note at `3c25817` should be
+corrected again.** I hashed the stored LF blobs of every commit on the branch and on main:
+`a148d75`, `f96265c`, `3c25817`, `0e78cd9` and HEAD all read **`4d243b05d0`**, `ec706fa`
+reads `7125798546`, `1f28075` and earlier read `1f03cbd34d`. **Nothing reads `100bd18472`**,
+and `model/` is byte-identical between `a148d75` and HEAD. So that digest came from an
+*uncommitted* state of the branch worktree - different code, not different line endings -
+and relabelling those artefacts as one code state asserts more than is known. What actually
+settles them is criterion 1's digit-exact reproduction on the merged tree, which you ran.
+Please check your worktree or reflog rather than take my inference: I can prove no commit
+hashes to it, not what the dirty tree held. The general rule is worth keeping either way -
+**a digest that names no commit names a dirty tree, and a dirty tree is not a code state
+anyone can return to.**
+
+**Chain H accepted; verified against the shard, not the report.** Seed 2 reads 0.61281 at
+4096 and 0.61830 at 2096, 0.0056 and 0.0007 from their seed-1 values against a falsifier
+registered at 0.01. Two-seed means 0.6156 +-0.0040 and 0.6179 +-0.0005. CLAUDE.md now carries
+the second seed, with the observation that the seeds separate 4096 by ten times what they
+separate 2096 - the shape of a figure that has stopped responding to identity count and is
+reading run-to-run variation.
+
+**The Nymeria withdrawal is right and is now recorded as a failure, not deleted.** CLAUDE.md
+says the trend was seed noise, gives both seeds, and names the error: a one-seed monotone
+sequence over three points was never enough to call a trend. Do the same in 9.14 - a
+withdrawn claim that leaves no trace teaches nobody.
+
+**One question, not an instruction.** There are **no Nymeria rows in either shard** - I
+searched `data_dirs`, `test_dirs` and `test_auc_by_dataset` across all 332 lines. So every
+Nymeria figure in 9.11, 9.14 and CLAUDE.md is traceable only to a scratchpad script that no
+one else can re-run. If that is deliberate for scoring-only work, say so in
+`docs/acceptance/README.md` and record the script path beside the figures; if it is not,
+the scoring runs should log rows like everything else. This is the same property that let me
+check chain H in one command and could not check Nymeria at all.
