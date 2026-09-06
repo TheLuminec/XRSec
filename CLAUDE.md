@@ -1763,6 +1763,68 @@ Across 29 `dyn` transfer checkpoints, 28 came back within 1e-4 of their recorded
 is noise by construction - which is the sensitivity you want from a gate: it passes what
 should reproduce and fails what cannot. Use it for any scoring outside the training path.
 
+### The learned branch identifies at 0.858 in domain, and averaging is why
+
+The largest identification figure this project has measured, and it is **entirely
+static-free** - `dyn` removes height, seat and placement, so none of it is the rig.
+rank-1 at N=17, chance 0.0588, k at each corpus's maximum, the 9.3 five checkpoints,
+both gates passed (2026-09-06, `docs/acceptance/step6_*`):
+
+| corpus | k | users | height alone | `dyn` |
+| --- | --- | --- | --- | --- |
+| BOXRR held-out (**training activity**) | 16 | 73-92 | 0.380 | **0.858 +-0.009** |
+| alyx held-out (training activity) | 16 | 12-17 | 0.178 | 0.630 +-0.129 |
+| ViewGauss (unseen activity) | 3 | 35 | 0.541 | 0.187 +-0.055 |
+| Head_and_Gaze (unseen activity) | 8 | 100 | 0.142 | 0.179 +-0.014 |
+| VR_User_Behavior (unseen activity) | 16 | 48 | 0.115 | 0.245 +-0.010 |
+
+**Do not set 0.858 beside the published 0.785.** That is a single 15 s window with head
+plus both controllers; this is 80 s of enrolment. Two more qualifications travel with it:
+the gallery is validation users, who chose the epoch, so ~+0.02 optimism by this file's own
+pricing (a clean version scoring BOXRR users in neither draw is cheap and unrun); and alyx's
+gallery is 12-17 users, so four of five seeds score a gallery smaller than N=17 - read that
+row as a direction, not a measurement.
+
+**The mechanism is the finding, not the number.** Population fixed from k=16, BOXRR:
+
+| k | 1 | 3 | 4 | 8 | 16 |
+| --- | --- | --- | --- | --- | --- |
+| `dyn` | 0.407 | 0.656 | 0.713 | 0.814 | **0.858** |
+| height alone | 0.356 | 0.368 | 0.358 | 0.374 | 0.380 |
+
+**Enrolment averaging lifts the learned cue by +0.45 and the static cue by +0.02.** A static
+cue's error is a between-session *bias* - where the headset sat that day - and averaging more
+windows from the same session cannot remove a bias. A learned cue's error is per-window
+*variance*, which averaging does remove. That extends the registered "enrolment averaging
+cannot lift a static cue" from alyx to BOXRR and supplies the contrast case it never had, and
+it is why k must be reported with every rank-1: at k=1 the two cues are 0.407 against 0.356
+and the whole result would read as marginal.
+
+**A k confound, caught in analysis and worth imitating.** ViewGauss sits at k=3 and
+Head_and_Gaze at k=8 because that is all their sessions hold, so part of their low figure is
+less evidence rather than an unseen activity. Matched at the same k, BOXRR reads 0.656 and
+0.814, so the activity gap survives - but the unmatched table overstates it, and the
+comparison is only honest at matched k.
+
+**Fusion has a rule now instead of a prediction.** Equal-weight height+`dyn` fusion *adds*
+below a cue ratio of ~2.3x and *subtracts* above ~2.9x, monotone, loss growing with the ratio
+- so it helps on BOXRR (0.867 against 0.858) and hurts on alyx (0.568 against 0.630). The
+prediction it replaces argued from "static is strong here", which was true of *placement* on
+the seated corpora and false of height - the harness fuses height, and fusing placement would
+mean fusing the artefact this file refuses to report as biometric.
+
+**The second gate is the transferable part.** A checkpoint gate proves the model is fed what
+it was trained on; it says nothing about the *enrolment protocol* - population, k, which
+session is gallery, the rng, tie handling - because none of that exists on the training path,
+and that is what voided the step 6 columns twice. So the harness also recomputed the nine
+published static rank-1 figures and had to land on them: all nine within 0.002, BOXRR height
+0.380 against the published 0.379. **An out-of-path harness should reproduce something from
+the column it will be compared against, not only something from the checkpoint.**
+
+**LODO says the seated ceiling is theirs.** All three leave-one-corpus-out deltas are
+negative (-0.034, -0.009, -0.065), so training on six other seated corpora made a *weaker*
+seated identifier than Beat Saber plus Alyx did.
+
 ### The identification number, measured properly
 
 **rank-1 identification on unseen users, 5 retrained leave-users-out folds**
@@ -1955,6 +2017,22 @@ line endings. **A content digest names a byte-state, and a commit is not one byt
 which of them you get depends on `core.autocrlf`, `.gitattributes`, and whatever wrote each
 file last. The check that settles a question like this is reconstruction from the stored
 blobs in each candidate state, not an argument from what is absent in the log.
+
+**Two rows for one checkpoint can be two measurements, and `lookup_auc` tells you which
+(arbitrated 2026-09-06).** The 9.3 `dyn` checkpoints carry a `mode=train` transfer figure
+(0.5811-0.5834) and an `experiment=transfer_rescored` one (0.5781-0.5845) differing by 1e-3
+to 3e-3 - larger than the 7e-4 CPU/GPU gap, so not arithmetic. They are **not** a
+reproduction and its target: `num_excluded_users` is 5 on the training rows and 0 on the
+rescored ones, so VR_User_Behavior is 43 users in one and 48 in the other (the documented
+`exclude_users` trap), the rescored rows record no `unseen_datasets` policy, and the pair
+draw differs everywhere. **Gate against the `mode=train` row.**
+
+The diagnostic generalises and costs one column: `lookup_auc` is training-free, so it cannot
+move for any reason involving the model. Here it moves (0.5055 -> 0.5047 pooled) and moves on
+corpora whose population is identical between the two rows - EyeNavGS 0.4925 -> 0.5001,
+Panonut360 0.4969 -> 0.4887, ViewGauss 0.5022 -> 0.4933. That is decisive before any
+checkpoint is loaded: **if the model-free baseline moved, the evaluation set moved**, and no
+amount of numerics will explain the difference.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 
