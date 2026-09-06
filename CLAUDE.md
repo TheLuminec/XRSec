@@ -834,6 +834,22 @@ Under `within_dataset_negatives`, any user who is the sole member of their datas
 
 Verified with the random extractor at `val_user_fraction=0.25` over 3 seeds: max-over-epochs averaged 0.525 while the validation-selected figure averaged **0.502**, i.e. chance. Default is 0 (historical behaviour) so old comparisons stay like-for-like; set it for anything you intend to quote.
 
+**The +0.02 is priced for the metric that did the selecting, not for every figure measured on
+validation users (2026-09-06).** It comes from `best_test_acc` being a max over ~20
+evaluations *of the set it reports*. A checkpoint that chose its epoch on pooled verification
+AUC and is then read for **rank-1 identification on one corpus** was not selected on anything
+that figure measures, so there is little for selection to inflate - and measuring it settled
+the question: validation users 0.858 +-0.009 against 0.862 +-0.019 on 94 users no checkpoint
+ever sampled, **+0.004, the wrong sign for optimism**. Residual optimism on a *different*
+metric over the same users is bounded by how tightly the two metrics correlate, which is a
+thing to measure once rather than a constant to add; do not carry the +0.02 onto a figure
+whose metric never chose an epoch.
+
+The method point is the durable half, and it was Trainer's: **a caveat registered before a
+number is a test; one carried by habit is a hedge.** This one was restated twice before it
+was measured, and it was wrong in the direction that made the result look weaker - the same
+lesson as the Nymeria at-chance prediction, pointing the other way.
+
 ### How many folds a question needs, and which questions are unaffordable
 
 Paired folds are far more sensitive than the raw fold spread suggests - the 0.037 sd is
@@ -1778,12 +1794,28 @@ both gates passed (2026-09-06, `docs/acceptance/step6_*`):
 | Head_and_Gaze (unseen activity) | 8 | 100 | 0.142 | 0.179 +-0.014 |
 | VR_User_Behavior (unseen activity) | 16 | 48 | 0.115 | 0.245 +-0.010 |
 
-**Do not set 0.858 beside the published 0.785.** That is a single 15 s window with head
-plus both controllers; this is 80 s of enrolment. Two more qualifications travel with it:
-the gallery is validation users, who chose the epoch, so ~+0.02 optimism by this file's own
-pricing (a clean version scoring BOXRR users in neither draw is cheap and unrun); and alyx's
-gallery is 12-17 users, so four of five seeds score a gallery smaller than N=17 - read that
-row as a direction, not a measurement.
+**Measured clean: 0.862, and the optimism caveat is withdrawn rather than restated.** 94
+BOXRR users no checkpoint ever sampled (2567 available, 100 drawn, 94 surviving the k=16
+gate), the same pool for all five seeds - so the spread is the model, which the validation
+column could not say because each seed scored different people there:
+
+| clean BOXRR, N=17 | `dyn` | height | height+`dyn` |
+| --- | --- | --- | --- |
+| k=1 (5 s) | 0.449 +-0.024 | 0.365 | 0.558 |
+| k=4 (20 s) | 0.730 +-0.017 | 0.333 | 0.804 |
+| **k=16 (80 s)** | **0.862 +-0.019** | 0.386 | **0.902** |
+
+Against 0.858 +-0.009 on validation users: **+0.004, inside one seed's spread and the wrong
+sign for optimism.** Height is flat across k with *zero* spread across seeds, since it is read
+from recorded positions and no checkpoint touches it - the averaging mechanism again, on
+users chosen for it. **0.902 is the largest identification figure in the project**, on users
+no checkpoint has seen, and its static half is head height rather than placement.
+
+**Two qualifications survive and both must stay attached.** It is 80 s of enrolment *and*
+80 s of probe, so **the k=1 row at 0.449 is the one at evidence comparable to a published
+single-15 s-window figure** - and that published figure also has both controllers. And it is
+the training activity: the same checkpoints read 0.18-0.25 on an unseen one. alyx's row above
+is a 12-17 user gallery, a direction rather than a measurement.
 
 **The mechanism is the finding, not the number.** Population fixed from k=16, BOXRR:
 
@@ -1806,9 +1838,15 @@ less evidence rather than an unseen activity. Matched at the same k, BOXRR reads
 0.814, so the activity gap survives - but the unmatched table overstates it, and the
 comparison is only honest at matched k.
 
-**Fusion has a rule now instead of a prediction.** Equal-weight height+`dyn` fusion *adds*
-below a cue ratio of ~2.3x and *subtracts* above ~2.9x, monotone, loss growing with the ratio
-- so it helps on BOXRR (0.867 against 0.858) and hurts on alyx (0.568 against 0.630). The
+**Fusion has a rule now instead of a prediction, and the rule has been forecast-tested.**
+Equal-weight height+`dyn` fusion *adds* below a cue ratio of ~2.3x and *subtracts* above
+~2.9x, monotone, loss growing with the ratio - so it helps on BOXRR (0.867 against 0.858) and
+hurts on alyx (0.568 against 0.630). Formed on six corpora, it then made three out-of-sample
+calls on the clean BOXRR population (ratios 1.2x / 2.2x / 2.2x, all "adds") and got all three,
+observed +0.109 / +0.074 / +0.040 - the gain shrinking as the ratio grows, which the rule
+asserts rather than merely permits. State it as a forecast: **equal-weight fusion is worth
+having when the weaker cue is within about half the stronger, and worth avoiding beyond
+roughly a third.** The
 prediction it replaces argued from "static is strong here", which was true of *placement* on
 the seated corpora and false of height - the harness fuses height, and fusing placement would
 mean fusing the artefact this file refuses to report as biometric.
