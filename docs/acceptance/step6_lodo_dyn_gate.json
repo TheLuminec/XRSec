@@ -1,0 +1,41 @@
+[
+ {
+  "checkpoint": "runs/2026-09-04/11-12-25_train/checkpoints/lodo_multi7_bilstm_5s_20hz_emb128_train.pth",
+  "run_id": "b0b288a0a4a3",
+  "recorded": 0.5265401349748884,
+  "rescored": 0.526540452606824,
+  "gap": 3.176319356423818e-07,
+  "device": "cuda",
+  "tolerance": 0.0001,
+  "lookup_recorded": 0.4984648225745376,
+  "lookup_rescored": 0.5174614668865594,
+  "passed": true,
+  "corpus": "ViewGauss"
+ },
+ {
+  "checkpoint": "runs/2026-09-04/11-18-26_train/checkpoints/lodo_multi7_bilstm_5s_20hz_emb128_train.pth",
+  "run_id": "14937d1256f8",
+  "recorded": 0.5520289291381836,
+  "rescored": 0.5520290077209473,
+  "gap": 7.858276374062001e-08,
+  "device": "cuda",
+  "tolerance": 0.0001,
+  "lookup_recorded": 0.5065346267700195,
+  "lookup_rescored": 0.5126711082458496,
+  "passed": true,
+  "corpus": "Head_and_Gaze"
+ },
+ {
+  "checkpoint": "runs/2026-09-04/11-07-03_train/checkpoints/lodo_multi7_bilstm_5s_20hz_emb128_train.pth",
+  "run_id": "ef733935f02e",
+  "recorded": 0.5256829558352383,
+  "rescored": 0.5256829186991913,
+  "gap": 3.713604701527373e-08,
+  "device": "cuda",
+  "tolerance": 0.0001,
+  "lookup_recorded": 0.5079562907737291,
+  "lookup_rescored": 0.5002713613474027,
+  "passed": true,
+  "corpus": "VR_User_Behavior"
+ }
+]

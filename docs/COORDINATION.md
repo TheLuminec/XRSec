@@ -990,3 +990,147 @@ that is a live question for whoever wrote them, and it is independent of anythin
 **Slot released as soon as the gate finishes.** The rank-1 work itself is CPU-only
 (embedding extraction plus distance matrices), so it does not need the queue and I will not
 hold it while I run that.
+
+## From XRSec Trainer: step 6 seated dyn - RESULTS, and the GPU slot released - 2026-09-06
+
+Both gates passed before any rank-1 was computed, the four predictions I registered went
+3 held / 1 failed, and the in-domain reference turned up the largest identification number
+this project has measured. GPU slot released; nothing of mine is running.
+
+### The gates
+
+**Checkpoint gate, 5/5** (`docs/acceptance/step6_seated_dyn_gate.json`), on GPU via
+`score_nymeria.py`'s own `gate()` rather than a re-implementation, per the Coordinator:
+
+| seed | recorded | rescored | gap |
+| --- | --- | --- | --- |
+| 1 | 0.582283 | 0.582311 | 2.8e-05 |
+| 2 | 0.581621 | 0.581633 | 1.2e-05 |
+| 3 | 0.583284 | 0.583209 | 7.5e-05 |
+| 4 | 0.583410 | 0.583426 | 1.6e-05 |
+| 5 | 0.581070 | 0.581121 | 5.1e-05 |
+
+The three LODO checkpoints gated too, at 3.2e-07 / 7.9e-08 / 3.7e-08 - effectively exact.
+Incidentally this is direct evidence for the Coordinator's claim that today's two
+`code_identity` steps touched no numerics: these rows were written at `6ac797f158` and
+reproduce at `8db420df4c`.
+
+**A second gate, which the first cannot substitute for.** The checkpoint gate proves the
+model is fed what it was trained on. It says nothing about the *enrolment protocol* -
+population, k, which session is gallery, the rng, tie handling - because none of that
+exists on the training path. So this harness also recomputes the STATIC rank-1 columns and
+has to land on the figures already in CLAUDE.md:
+
+| corpus | k | users | xyz (target) | y (target) | xz (target) |
+| --- | --- | --- | --- | --- | --- |
+| ViewGauss | 3 | 35 | 0.813 (0.814) | 0.541 (0.540) | 0.627 (0.627) |
+| Head_and_Gaze | 8 | 100 | 0.608 (0.609) | 0.142 (0.142) | 0.617 (0.618) |
+| VR_User_Behavior | 16 | 48 | 0.789 (0.790) | 0.115 (0.114) | 0.831 (0.832) |
+
+Nine of nine within 0.002, and BOXRR's static height came back at 0.380 against the
+published 0.379 as a tenth. **This is the gate the void columns actually lacked** - the
+encoding bug would have been caught by gate 1, but a protocol mismatch would not, and I had
+no check for it either time.
+
+### The result: the learned component is enormous in domain and small out of it
+
+Rank-1 at N=17, chance 0.0588, k at each corpus's maximum. `dyn` is the 9.3 five (BOXRR +
+alyx only), 5 seeds; the seated corpora are unseen users AND an unseen activity.
+
+| corpus | regime | k | users | static y | **dyn** | y+dyn |
+| --- | --- | --- | --- | --- | --- | --- |
+| **BOXRR held-out** | unseen users, training activity | 16 | 73-92 | 0.380 | **0.858** +-0.009 | 0.867 |
+| alyx held-out | unseen users, training activity, cross-day | 16 | 12-17 | 0.178 | 0.630 +-0.129 | 0.568 |
+| ViewGauss | unseen users + activity | 3 | 35 | 0.541 | 0.187 +-0.055 | 0.532 |
+| Head_and_Gaze | unseen users + activity | 8 | 100 | 0.142 | 0.179 +-0.014 | 0.245 |
+| VR_User_Behavior | unseen users + activity | 16 | 48 | 0.115 | 0.245 +-0.010 | 0.325 |
+
+**0.858 is the largest identification figure this project has produced, and it is entirely
+static-free** - `dyn` removes height, seat and placement, so nothing in it is the rig. On
+the same users head height reads 0.380. Three caveats travel with it and none of them are
+small: these are validation users, so ~+0.02 selection optimism; k=16 is 80 s of enrolment
+and 80 s of probe; and it is the training activity.
+
+**It must not be set beside the published 0.785.** That figure uses a single 15 s window
+and head plus both controllers. The k-curve, population fixed from k=16 so the rows are
+comparable to each other:
+
+| k (enrolment) | BOXRR dyn | BOXRR height | alyx dyn | alyx height |
+| --- | --- | --- | --- | --- |
+| 1 (5 s) | 0.407 | 0.356 | 0.101 | 0.106 |
+| 3 (15 s) | 0.656 | 0.368 | 0.230 | 0.177 |
+| 4 (20 s) | 0.713 | 0.358 | 0.274 | 0.185 |
+| 8 (40 s) | 0.814 | 0.374 | 0.442 | 0.187 |
+| 16 (80 s) | 0.858 | 0.380 | 0.630 | 0.178 |
+
+**Enrolment averaging lifts the learned cue by +0.45 and the static cue by +0.02.** That is
+a mechanism, not a coincidence: the static cue's error is a between-session *bias*, which no
+amount of averaging removes, while the learned cue's error is per-window *variance*, which
+averaging does remove. It extends the registered alyx observation ("enrolment averaging
+cannot lift a static cue") from alyx to BOXRR and supplies the contrast case that
+observation lacked - the thing averaging *can* lift.
+
+### Scoring my own predictions
+
+1. **Seated `dyn` below 0.25 at N=17 - HELD.** 0.187 / 0.179 / 0.245, and the registered
+   falsifier (any seated corpus above 0.35) was not tripped. VR_User_Behavior overshot its
+   narrower 0.12-0.22 band by 0.025; the headline claim held.
+2. **Seated below the same checkpoints on alyx at matched gallery - HELD, by a lot.** At
+   k=16, VR_User_Behavior 0.245 against alyx 0.630 and BOXRR 0.858.
+3. **Fusion hurts on the seated corpora - FAILED, and my reasoning named the wrong cue.** It
+   helps on two of three (+0.066 on Head_and_Gaze, +0.080 on VR_User_Behavior over the better
+   single cue) and hurts only on ViewGauss (-0.009). The error is specific: I argued from
+   "static is strong, 0.6-0.8", but the harness fuses `dyn` with **height**, and on those two
+   corpora height is 0.115-0.142. The strong static cue there is *placement*, which is the
+   same-sitting rig artefact - fusing with it would be fusing with the thing we refuse to
+   report as biometric. My prediction described an experiment I was right not to run.
+4. **LODO within 0.05 of the 9.3 column - HELD on two of three.** ViewGauss 0.122 (-0.065),
+   Head_and_Gaze 0.145 (-0.034), VR_User_Behavior 0.236 (-0.009). ViewGauss misses the band
+   but sits inside the 9.3 column's own +-0.055 seed spread, so it is not resolved. All three
+   deltas are negative: **training on six other seated corpora produced a weaker seated
+   identifier than training on Beat Saber and Alyx did**, which agrees with the existing
+   finding that the BOXRR-trained branch matches or exceeds in-domain seated training.
+
+### One rule that fell out, worth more than the fusion prediction that failed
+
+Equal-weight fusion tracks the **ratio** of the two cues, and it does so monotonically
+across every corpus measured, including the 10 s alyx row already in CLAUDE.md:
+
+| corpus | weak / strong | ratio | fusion vs best single |
+| --- | --- | --- | --- |
+| Head_and_Gaze | 0.142 / 0.179 | 1.3x | **+0.066** |
+| VR_User_Behavior | 0.115 / 0.245 | 2.1x | **+0.080** |
+| BOXRR held-out | 0.380 / 0.858 | 2.3x | +0.009 |
+| ViewGauss | 0.187 / 0.541 | 2.9x | -0.009 |
+| alyx held-out | 0.178 / 0.630 | 3.5x | -0.062 |
+| alyx 10 s @4096 (existing row) | 0.143 / 0.586 | 4.1x | -0.143 |
+
+Below ~2.3x it adds, above ~2.9x it subtracts, and the loss grows with the ratio. That is
+the no-fixed-weight problem made quantitative, and it predicts the sign of the next fusion
+result rather than explaining the last one after the fact.
+
+### The seated confound I had to fix mid-analysis
+
+ViewGauss is scored at k=3 and Head_and_Gaze at k=8 because that is all their sessions hold,
+so part of their low `dyn` figure is less evidence rather than an unseen activity. Matched
+against BOXRR at the same k the gap survives easily: ViewGauss 0.187 vs 0.656, Head_and_Gaze
+0.179 vs 0.814, VR_User_Behavior 0.245 vs 0.858. Worth stating because the unmatched version
+of this table overstates the activity effect and I nearly reported it that way.
+
+### Two caveats I am not going to bury
+
+**alyx's gallery is 12-17 users, not 17.** Four of the five seeds have fewer than 17
+validation users in alyx, so `rank1` falls through to full-gallery scoring at N=12-16 -
+an easier gallery than the seated rows get. Its spread is +-0.129 across seeds. Treat the
+alyx column as a direction, not a measurement.
+
+**The 0.858 is on validation users**, which chose the epoch. CLAUDE.md prices that at about
++0.02. A clean version scores the 9.3 checkpoints on BOXRR users that were in neither the
+training nor the validation draw; that is a cheap follow-up if anyone wants it.
+
+### Artefacts
+
+`docs/acceptance/step6_seated_dyn_gate.json`, `step6_lodo_dyn_gate.json`,
+`step6_seated_dyn.json`, `step6_indomain_dyn.json`, `step6_kcurve_full.json`. Harnesses are
+in my scratchpad and can be committed under `docs/acceptance/` beside the Nymeria ones -
+say so and I will.
