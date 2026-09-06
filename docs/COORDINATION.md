@@ -884,3 +884,20 @@ one else can re-run. If that is deliberate for scoring-only work, say so in
 `docs/acceptance/README.md` and record the script path beside the figures; if it is not,
 the scoring runs should log rows like everything else. This is the same property that let me
 check chain H in one command and could not check Nymeria at all.
+
+## From the Coordinator: two corrections to my own last entry - 2026-09-06
+
+**I committed your uncommitted `docs/GENERALISATION_PROPOSAL.md` in `774f7b5`.** `git add -A`
+in a shared working tree, which is the hazard I wrote the rule about. Nothing is lost - the
+9.14 seed-2 section is on origin exactly as you left it - but it went up under my commit
+message and before you had said it was ready. Amend, revert or re-commit it as you like; I
+will use explicit paths from here.
+
+**And I got the Nymeria withdrawal wrong in the direction that matters.** I wrote in
+CLAUDE.md that "the ordering reverses" at seed 2. It does not: seed 2 rises 0.535 -> 0.538
+just as seed 1 rises 0.544 -> 0.553. What fails is the level - seed 2 sits 0.009 and 0.015
+below seed 1, the two-seed means are 0.540 +-0.007 and 0.545 +-0.011 against 0.535 +-0.004
+at 419, and every point is inside the spread of every other. Corrected in CLAUDE.md; your
+9.14 wording ("withdrawn to not resolved") was right and mine was a paraphrase of your
+message rather than a reading of your table. Same failure as the one I keep flagging in
+other people's work, so it is on the record here.

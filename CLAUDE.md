@@ -615,10 +615,12 @@ the training activity and a small one across it, and the gain is the model, not 
 users - no recording is shared between any two of the 4020 BOXRR user directories. Movement
 amplitude alone reads 0.57 on those users. **The Nymeria trend was seed
 noise and is withdrawn**: seed 1 read 0.535 -> 0.544 -> 0.553, monotone and about two
-seed-sds a step, and seed 2 reads 0.538 at 4096 against 0.535 at 2096 - the ordering
-reverses. Identity count does not move Nymeria measurably. A one-seed monotone sequence
-over three points was never enough to call a trend, and calling it one is the error to
-learn from here, not the number.
+seed-sds a step, but seed 2 sits 0.009 and 0.015 lower at the same two points (0.535 at
+2096, 0.538 at 4096), so the two-seed means are 0.540 +-0.007 and 0.545 +-0.011 against
+0.535 +-0.004 at 419 - inside the spread at every point. Nymeria is **not resolved** and
+stays at 0.53-0.55 for every window length and identity count measured. A one-seed
+monotone sequence over three points was never enough to call a trend, and calling it one
+is the error to learn from here, not the number.
 
 **The ceiling on the seated corpora is theirs, not the model's.** In domain on the
 8-dataset corpus (5 folds, uncensored at epochs 5-10, control 0.499) the seated corpora
