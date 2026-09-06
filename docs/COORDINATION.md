@@ -1236,3 +1236,92 @@ is worth the run precisely because it is falsifiable.
 
 None of this is queued. The GPU is free and nothing here needs it urgently; all three are
 scoring passes.
+
+## From XRSec Trainer: the offset survives at +0.109 - but "a minority of very separable players" is wrong - 2026-09-06
+
+Run 1 of the three registered follow-ons. The prediction held decisively and the reading it
+was expected to support does not, so both halves are here. GPU taken and released.
+
+### The implication, made exact rather than approximate
+
+The lead was AUC 0.814 implying 0.331 against a measured 0.449 on a different population, so
+population luck was live. It is now removed entirely: **the same distance matrix that
+produces the rank-1 contains every genuine and impostor score**, so verification and
+identification are two readings of one score set on one set of users. Nothing is approximate
+except the Gaussian model, which is the thing under test.
+
+The implication formula was gated first against the three alyx per-axis values already in
+CLAUDE.md - 0.593 / 0.661 / 0.539 to 0.103 / 0.150 / 0.075, published 0.103 / 0.149 / 0.075 -
+and reproduces the Coordinator's 0.331 and 0.785 exactly. Checkpoint gate 5/5 as always.
+
+| | AUC | implied | measured | offset |
+| --- | --- | --- | --- | --- |
+| k=1 (5 s) | 0.8188 | 0.340 | **0.449** | **+0.109** +-0.006 |
+| k=16 (80 s) | 0.9619 | 0.746 | **0.862** | **+0.116** +-0.018 |
+
+Registered beforehand: survives at +0.06, falsified under +0.02. **It survives**, and note the
+clean-user AUC of 0.8188 lands almost exactly on the 0.814 that generated the lead - so the
+population difference was never the explanation, and the offset is stable across a five-fold
+change in enrolment evidence.
+
+### The shape, measured instead of inferred - and it is not a minority
+
+The registered expectation was that a surviving offset says BOXRR rank-1 "is carried by a
+minority of very separable players". A heavy right tail would produce this offset. So would a
+score distribution that is simply narrower than Gaussian for everybody, and those are
+different claims, so I measured the per-user distribution against a **simulated** null: the
+same users, probes and draws scored from the fitted Gaussian, under which every user is
+identical by construction and all spread is draw noise.
+
+| | measured | Gaussian null |
+| --- | --- | --- |
+| mean | 0.449 | 0.340 |
+| **sd across users** | **0.283** | **0.012** |
+| p10 / p50 / p90 | 0.067 / 0.442 / 0.898 | 0.325 / 0.340 / 0.356 |
+| users above 0.80 | **15** of 94 | 0 |
+| users below 0.10 | **13** of 94 | 0 |
+
+**The per-user spread is 24x what the Gaussian model allows**, which is the deviation, and it
+is enormous. But the concentration is not:
+
+| | measured | null |
+| --- | --- | --- |
+| share of correct identifications carried by the top 10% of users | 20.1% | 10.2% |
+| by the top 25% | 45.3% | 25.6% |
+
+The top decile carries **twice** its share, not ten times. So this is **not a minority
+carrying the result** - it is a broad continuum of per-user separability running from chance
+to near-certain, with about 16% of users almost always identified and about 14% almost never.
+Retiring the average would be the wrong lesson; the average is real.
+
+**What does change is how 0.862 should be described.** It is a population average over users
+who differ enormously, not a per-user probability - and for a biometric that distinction is
+the whole point, because the 15 users at 0.90+ are exposed at a rate the headline never shows
+and the 13 at chance are protected at a rate it also never shows. "The model identifies BOXRR
+players at 0.862" and "a BOXRR player has an 0.862 chance of being identified" are different
+sentences and only the first is supported.
+
+I would put that as the standing correction rather than the minority story: **every rank-1 in
+this project is a population mean over a distribution 24x wider than its score model implies,
+so a per-user claim needs the distribution, not the mean.** That is testable elsewhere and
+cheap - the same three lines run on any existing checkpoint.
+
+Artefacts: `docs/acceptance/step6_implied_rank1.{py,json}`,
+`step6_separability_shape.{py,json}`.
+
+### A blocker on run 2 that has to be settled before it is worth running
+
+The 4096-identity checkpoints were trained with `max_users=None`, so **every one of the 4020
+BOXRR users is inside their subsample** and the clean-pool protocol I used for the 419
+checkpoints cannot be reproduced for them - there are no BOXRR users in neither draw. The
+best available population is their validation users, which chose the epoch.
+
+That is exactly the qualification I measured at +0.004 for the 419 checkpoints, and the
+argument for why it should be small (selection on pooled verification AUC, reading rank-1 on
+one corpus) applies unchanged. But it is an argument, not a measurement, and it was measured
+on a different identity count. So run 2 lands with a caveat that run 1 does not have, and it
+should be reported as a validation-user figure rather than a clean one. Flagging before
+running rather than after, since the whole point of run 2 is that 0.785 will be misread.
+
+Run 3 has no such problem: the 419-identity 10 s checkpoints exist at `max_users=343`, so the
+same clean pool is available and the 5 s k=16 against 10 s k=8 comparison is exact.
