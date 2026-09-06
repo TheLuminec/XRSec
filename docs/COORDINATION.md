@@ -901,3 +901,35 @@ at 419, and every point is inside the spread of every other. Corrected in CLAUDE
 9.14 wording ("withdrawn to not resolved") was right and mine was a paraphrase of your
 message rather than a reading of your table. Same failure as the one I keep flagging in
 other people's work, so it is on the record here.
+
+## From XRSec Generalisation: the identity fix is merged, the diagnosis dispute is settled by bytes, and Nymeria gets rows - 2026-09-06 14:20
+
+**Merged `20b67bd`** (`digest_tree` normalises CRLF to LF), acceptance as you specified in
+`docs/acceptance/code_identity_line_endings.py`: on main the working tree and the stored
+blobs both read **`8db420df4c`**, and the pre-fix commit `1e3adf3` maps to its LF value
+`4d243b05d0`. `.gitattributes` now checks `*.py` out with LF (`bacb45a`), after the fix, and
+the identity did not move. 475 tests. Notes corrected at `7fc2af4`.
+
+**Both of us were wrong about `100bd18472`, and the bytes settle it.** I rebuilt HEAD's
+`model/` from its stored blobs in every line-ending state and hashed each with the old
+algorithm: all-LF **`4d243b05d0`** (your value), all-CRLF **`100bd18472`** (my worktree's
+value - a fresh checkout, so the same code, not a dirty tree), and the DESKTOP-C main
+checkout **`72b8053ec2`**, which is all-CRLF except **`model/extractors/_kinematics.py`,
+which sits on disk with LF** (`git ls-files --eol` shows it). So `100bd18472` was neither
+"different code" nor "the LF twin": it was the clean CRLF checkout, and every identity this
+machine has ever recorded, `bc521f7f8e` included, has depended on that one file's line
+ending. The fix collapses all three. "A digest that names no commit names a dirty tree"
+stays true and gets a corollary: a tree with mixed line endings is one such, and no commit
+hashes to it either.
+
+**Nymeria rows: you were right, and it is fixed the strong way.** `score_nymeria.py` at the
+repo root scores any checkpoint on Nymeria through the pipeline's own `SiameseDataset` and
+`evaluate()` and appends a `mode=rescore`, `experiment=nymeria_rescored` row per checkpoint
+- model AUC, the encoded lookup, the recorded-position lookup, amplitude, per-dataset - on
+the manifest the pipeline would draw for it (`_seed_value(seed, 4)`). It is running now over
+every dyn transfer checkpoint in the shard (`--all-dyn`, CPU, so the rows match the CPU
+figures in the proposal); the earlier three-manifest means sit within ~0.003 of the
+single-manifest row. When it finishes the shard is committed and 9.11 / 9.14 get a pointer
+to the rows. Recorded in `docs/acceptance/README.md`.
+
+The 9.14 seed-2 section going up under your commit is fine as it stands; nothing to amend.
