@@ -1885,18 +1885,56 @@ project** (the 2096-identity arm trained at `max_users=BOXRR-23_Dataset=2020`, l
 of 4020 users in neither draw). The 4096 row is a validation-user figure and must be labelled
 one wherever it appears.
 
-**The offsets fall monotonically and that trend is NOT readable.** The offset is bounded above
-by the headroom `1 - implied`, and at AUC 0.99 the implication is already 0.914, so the
-largest offset arithmetically possible there is 0.086 - smaller than what 419 identities
-measured. The ceiling forces the raw quantity down whatever the score distribution does.
-Normalising by headroom reverses the direction (fraction captured 0.404 / 0.457 / 0.587 /
-0.535) but is not a fix: the same normalisation moves from 0.165 to 0.457 with *evidence
-alone*, at fixed identity count on the same users, and the 4096 row also changes population
-from 92 to 1684, which changes impostor diversity in every N=17 draw on a corpus where
-gallery composition is already known to matter. **The entry is: positive at every point,
-+0.046 to +0.116, across two identity counts, two window lengths, two enrolment sizes and two
-populations - and these data cannot say whether it trends.** Deciding that needs arms matched
-on AUC or on population, which none of these are.
+**The offsets fall monotonically, the raw trend is unreadable, and the underlying question is
+now settled anyway.** The offset is bounded above by the headroom `1 - implied`, and at AUC
+0.99 the implication is already 0.914, so the largest offset arithmetically possible there is
+0.086 - below what 419 identities measured. The ceiling forces the raw quantity down whatever
+the distribution does, normalising by headroom reverses the direction but moves just as hard
+with *evidence alone* (0.165 to 0.457 at fixed identity count on the same users), and the
+4096 row changes population as well. So the four-point sequence says nothing on its own.
+
+**Answered by holding everything but identity count fixed, then rescaling.** On the 1012
+users clean for *both* arms, at 10 s and k=8, so identity count is the only difference:
+419 identities read AUC 0.9583 / implied 0.728 / measured 0.824 / offset **+0.096**, and 2096
+read 0.9850 / 0.874 / 0.948 / **+0.074**. The offset still falls by 0.022 with population,
+evidence and window length all fixed, so there was a real difference to explain. Rescaling the
+419 genuine scores up to the 2096 AUC and recomputing rank-1 explains it entirely:
+
+| monotone map | rescaled rank-1 | measured - rescaled |
+| --- | --- | --- |
+| **shift** (preserves every gap) | 0.947 | **+0.001** |
+| scale (preserves every ratio) | 0.932 | +0.016 |
+| stretch (rank order only) | 0.938 | +0.010 |
+
+All three inside the registered +0.02. **The shape did not change; the shrinkage is
+arithmetic, and the non-Gaussianity is a stable feature of the task rather than something
+that erodes as the model improves.**
+
+**The band passed and the predicted mechanism was wrong - record both.** Trainer registered
+the band expecting more identities to help the *hard* users most, reducing the heterogeneity
+that produces the offset, which would have shown as measured **below** rescaled. All three
+deltas came out slightly positive and the best-fitting map by a wide margin is the **shift**,
+at +0.001 - and a shift moves every genuine score by the same constant. So the 419 to 2096
+improvement is close to a uniform translation: **everyone improved by about the same amount**,
+which is the opposite of the mechanism offered. The entry is "shape unchanged, improvement
+uniform", not "heterogeneity reduced". **A registered band can pass for a reason other than
+the one predicted, so record the mechanism separately from the band** - otherwise a wrong
+model gets confirmed by a right number, which is worse than a failed prediction because
+nothing prompts anyone to look again.
+
+**The consequence reaches past the table.** The per-user split is not a data-quantity
+artefact: it survives a five-fold increase in training identities intact - the ~16% of users
+almost always identified and the ~14% almost never are still there at 2096 identities, shifted
+along with everyone else. **So the split is a property of the people, not a transitional state
+more data fixes**, and a deployment claim about "the identification rate" conceals a stable
+split rather than a temporary one. Caveats kept: two seeds per arm; the three maps are not
+equally flexible, and the shift is the most constrained, which makes its near-exact agreement
+more informative rather than less; and this is one corpus and one activity.
+
+**A free diagnostic fell out of it.** *Which* monotone map reproduces an improvement tells you
+the shape of that improvement - uniform, proportional, or rank-only - and it costs nothing
+wherever two checkpoints are scored on one population. Worth reaching for on any axis where
+"who did it help?" matters and only the mean is in hand.
 
 **The 0.785 trap dissolved structurally rather than being avoided.** The registered warning
 was that 0.970 verification implies rank-1 0.785, the published figure, and a measured 0.785
