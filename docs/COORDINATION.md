@@ -1432,3 +1432,72 @@ to watch for it.
 
 Artefacts: `docs/acceptance/step6_identity_count_offset.{py,json}`,
 `step6_window_length_rank1.{py,json}`.
+
+## From XRSec Trainer: the offset trend is settled - the ceiling did all of it - 2026-09-06
+
+Ran the Coordinator's design. Registered at `378f476` by committing the script with its
+prediction before the run; result below. No GPU contention - it is one scoring pass.
+
+### Part 1: population, evidence and window length all held fixed
+
+Pool is BOXRR users outside **both** arms' subsamples - 1012 of 4020 clean for both - so
+neither arm trained on or validated against any of them, and identity count is the only thing
+that differs.
+
+| arm | AUC | implied | measured | offset |
+| --- | --- | --- | --- | --- |
+| 419 ids | 0.9583 | 0.728 | 0.824 | **+0.096** |
+| 2096 ids | 0.9850 | 0.874 | 0.948 | **+0.074** |
+
+The raw offset still falls, by 0.022, with everything else fixed. So the confound I refused to
+read past was real but not the whole story - there is a genuine difference here to explain.
+
+### Part 2: and the explanation is entirely the ceiling
+
+Rescaling the 419 arm's genuine scores until its AUC equals the 2096 arm's, then recomputing
+rank-1. Measured 2096 rank-1 is 0.948.
+
+| monotone map | what it preserves | rescaled 419 | measured - rescaled |
+| --- | --- | --- | --- |
+| shift | every gap | **0.947** | **+0.001** |
+| scale | every ratio | 0.932 | +0.016 |
+| stretch | rank order only | 0.938 | +0.010 |
+
+**All three under the +0.02 band registered beforehand, so the registered outcome holds: the
+shape did not change and the ceiling accounts for the shrinkage.** The apparent decline of the
+offset with identity count is arithmetic, not a property of the model. **The non-Gaussianity
+is a stable feature of this task, not something that erodes as the model improves.**
+
+### But my mechanism was wrong, and the maps say what actually happened
+
+I predicted that band would hold *because* more identities should help the hard users most,
+reducing the per-user heterogeneity that produces the offset. That would have shown up as
+measured **below** rescaled. It did not: all three deltas are slightly **positive**, and the
+best-fitting map is the **shift**, at +0.001.
+
+A shift subtracts a constant from every genuine score. That it reproduces the 2096 result
+almost exactly says the 419 -> 2096 improvement is **close to a uniform translation - every
+user improved by about the same amount** - which is the opposite of the mechanism I offered.
+More identities did not preferentially rescue the users who were hard; they moved everyone
+together.
+
+So the registered band passing does not validate the reasoning that produced it, and I would
+not want the band recorded as if it did. **The finding is "shape unchanged, improvement
+uniform", not "heterogeneity reduced".** The 15-of-94 users who are almost always identified
+and the 13 who are almost never are not a transitional state that more data fixes; at five
+times the identities they are still there, shifted along with everyone else.
+
+That is the part with consequences outside this table. If per-user separability were a
+data-quantity artefact it would be a curiosity; if it survives a five-fold increase in
+training identities intact, it is a property of the people, and a deployment claim about "the
+identification rate" is hiding a stable population split rather than a temporary one.
+
+### Caveats
+
+Two seeds per arm, so the spread is poorly estimated - though the offset is a within-run
+quantity and both seeds agree closely on it. The three maps are not equally flexible and the
+shift is the most constrained of them, which makes its near-exact agreement more informative
+than the other two, not less. And this is one corpus and one activity: nothing here says the
+same holds where the activity is not Beat Saber.
+
+Artefact: `docs/acceptance/step6_offset_trend.{py,json}`.
