@@ -1912,27 +1912,34 @@ fix). **The identity on main is now `8db420df4c`**; rows at `bc521f7f8e`, `72b80
 tree, and a tree with mixed line endings is one such: check `git ls-files --eol` before
 reading an identity off a machine you did not set up.
 
-**The digest follows the checkout's line endings, and the hazard is latent, not live
-(measured 2026-09-06).** `code_identity()` hashes `path.read_bytes()`, `core.autocrlf` is
-true on the Windows machines and no `.gitattributes` rule covers `*.py`, so the merged tree
-hashes **`72b8053ec2` with CRLF on disk and `4d243b05d0` from git's stored LF blobs** -
-identical code, two identities. Every row ever written came from a Windows checkout, so
-nothing recorded is wrong; but a machine checking out with LF records a different identity
-for the same code, and a sweep resumed there re-runs every cell. Ruled: normalise CRLF to LF
-inside the digest - one line, no numerics, and `code_identity()` is called only by the logger
-and by sweep resume. Keep the pair `72b8053ec2 -> 4d243b05d0` so pre-fix rows can still be
-related to post-fix ones, and do the hash fix **before** any `*.py text eol=lf` in
-`.gitattributes`, because after it that change is identity-neutral and before it, it is a
-third identity step in three days.
+**One code, three identities, and the third was a mixed-endings tree (settled 2026-09-06).**
+`code_identity()` hashed `path.read_bytes()`, so it followed each file's line endings on
+disk. Reconstructing `model/` from the stored blobs of `1e3adf3` in each state and hashing
+with the old algorithm reproduces every identity this project has argued about, digit-exact:
 
-**And `100bd18472` is not this pair's LF value.** It was recorded on the amplitude branch and
-read as the LF twin of `72b8053ec2`; no commit in that branch or on main hashes to it under
-LF (they read `4d243b05d0`, `7125798546`, `1f03cbd34d`), so it came from an **uncommitted**
-state of that worktree - different code, not different line endings. The relabelling at
-`3c25817` therefore asserts more than is known, and what actually settles those artefacts is
-criterion 1's digit-exact reproduction on the merged tree, which was run on the GPU. General
-rule: a digest that names no commit names a dirty tree, and a dirty tree is not a code state
-anyone can return to.
+| tree state | old digest |
+| --- | --- |
+| all LF (a Linux or `autocrlf=false` checkout) | `4d243b05d0` |
+| all CRLF (a clean Windows checkout) | `100bd18472` |
+| **this machine's tree**: CRLF except `model/extractors/_kinematics.py`, which sits on disk with LF | **`72b8053ec2`** |
+
+So the identity recorded on every row written here - `bc521f7f8e` and its predecessors
+included - depended on one file's line ending, and **no clean checkout of any commit
+reproduces it**. Fixed at `20b67bd` by normalising CRLF to LF inside the digest, which
+collapses all three to one; `.gitattributes` gained `*.py eol=lf` at `bacb45a` afterwards
+and left the identity unchanged, which is what doing the hash fix first bought. Identity on
+main is now **`8db420df4c`**, working tree and stored blobs agreeing, and the fixed digest
+maps the pre-fix tree to `4d243b05d0` - that is the pair to use when relating old rows to
+new. The change touches no numerics: `code_identity()` is called only by the logger and by
+`sweep.py`'s resume key.
+
+**The rule this replaces was mine and was wrong.** I inferred from "no commit hashes to
+`100bd18472`" that it came from a dirty tree, and wrote "a digest that names no commit names
+a dirty tree". It was a clean checkout - of the same commit, on a machine with different
+line endings. **A content digest names a byte-state, and a commit is not one byte-state**;
+which of them you get depends on `core.autocrlf`, `.gitattributes`, and whatever wrote each
+file last. The check that settles a question like this is reconstruction from the stored
+blobs in each candidate state, not an argument from what is absent in the log.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.
 

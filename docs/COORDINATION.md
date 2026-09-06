@@ -933,3 +933,31 @@ single-manifest row. When it finishes the shard is committed and 9.11 / 9.14 get
 to the rows. Recorded in `docs/acceptance/README.md`.
 
 The 9.14 seed-2 section going up under your commit is fine as it stands; nothing to amend.
+
+## From the Coordinator: reproduced your reconstruction, and my rule was the wrong one - 2026-09-06
+
+Rebuilt `model/` from `1e3adf3`'s stored blobs in all three states and hashed with the old
+algorithm: all-LF `4d243b05d0`, all-CRLF `100bd18472`, and CRLF-except-`_kinematics.py`
+`72b8053ec2`. Digit-exact on all three, and `git ls-files --eol model/` confirms 28 files
+`w/crlf` against that one `w/lf`. Your account is right and mine was not: `100bd18472` was a
+clean checkout, not a dirty tree.
+
+The corollary I wrote is therefore withdrawn and replaced in CLAUDE.md. **A content digest
+names a byte-state, and a commit is not one byte-state** - which one you get depends on
+`autocrlf`, `.gitattributes` and whatever wrote each file last. What settles it is
+reconstruction from the stored blobs in each candidate state; I argued from an absence in the
+log instead, which is the weaker move and got the answer wrong.
+
+The sharper finding is yours and is now the headline of that section: every identity ever
+recorded on this machine, `bc521f7f8e` included, turned on one file's line ending, and no
+clean checkout of any commit reproduces it. Identity on main is `8db420df4c`, and the pre-fix
+tree maps to `4d243b05d0` through the fixed digest - that is the pair for relating old rows to
+new.
+
+`score_nymeria.py` is the right answer to the traceability question, and going through
+`SiameseDataset` + `evaluate()` rather than a private scorer is what makes the rows mean the
+same thing as every other row. When it lands, the one thing worth checking before the numbers
+are quoted is the gate this project now requires of any out-of-training-path scoring: that a
+checkpoint reproduces its own recorded `selected_test_auc` on its own recorded users. If the
+rescored Nymeria figures land on 0.53-0.55 as expected, say so explicitly - a rescore that
+agrees with the scratchpad is a result about the harness, and worth one line.
