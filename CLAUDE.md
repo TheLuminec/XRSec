@@ -617,7 +617,14 @@ noise and is withdrawn**: seed 1 read 0.535 -> 0.544 -> 0.553, monotone and abou
 seed-sds a step, but seed 2 sits 0.009 and 0.015 lower at the same two points (0.535 at
 2096, 0.538 at 4096), so the two-seed means are 0.540 +-0.007 and 0.545 +-0.011 against
 0.535 +-0.004 at 419 - inside the spread at every point. Nymeria is **not resolved** and
-stays at 0.53-0.55 for every window length and identity count measured. A one-seed
+stays at 0.53-0.55 for every window length and identity count measured. Every Nymeria figure
+is now a shard row rather than a scratchpad number (`experiment=nymeria_rescored`, 29
+checkpoints): 419 ids read 0.528 at 5 s, 0.537 at 10 s and 0.538 at 20 s, 2096 reads 0.541 at
+5 s and 4096 0.546 at 10 s over two seeds, the `random` control 0.497, and the rows agree with
+the scratchpad they replace within 0.003 everywhere - so the old harness had been feeding the
+checkpoints the right thing, which is a result about the harness and not a null. The same rows
+carry Nymeria's recorded-position lookup at 0.73 (the 9.9 location match) against movement
+amplitude at 0.51-0.52. A one-seed
 monotone sequence over three points was never enough to call a trend, and calling it one
 is the error to learn from here, not the number.
 
@@ -1747,6 +1754,14 @@ none, so nothing checked that the model was fed what it was trained on. **Any sc
 checkpoint outside the training path must first reproduce that checkpoint's own recorded
 metric on its own recorded users** - if `selected_test_auc` does not come back, the harness
 is feeding it something else, and no number from it means anything.
+
+**That gate now has a harness, and it has been run: `score_nymeria.py --gate`.** It scores a
+checkpoint through the pipeline's own `SiameseDataset` and `evaluate()` and writes a full
+shard row (`mode=rescore`), after first re-scoring the checkpoint on its own recorded users.
+Across 29 `dyn` transfer checkpoints, 28 came back within 1e-4 of their recorded figure
+(1.5e-9 to 7.5e-5, cuDNN run-to-run) and the only miss was the `random` control, whose score
+is noise by construction - which is the sensitivity you want from a gate: it passes what
+should reproduce and fails what cannot. Use it for any scoring outside the training path.
 
 ### The identification number, measured properly
 
