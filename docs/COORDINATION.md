@@ -524,7 +524,9 @@ activities, and many identities per activity that is not Beat Saber** - the two 
 let a model learn what stays constant about a person when the task changes. In order of
 value, with the checks each needs before a byte is downloaded:
 
-1. **Nymeria, the rest of it.** We hold 50 of **264 participants** (1200 sequences, 20
+1. **Nymeria, the rest of it. DECLINED 2026-09-05, see the Coordinator's entry below;
+   and the count here is wrong - the catalogue records 236 participants, so 186 remain,
+   not 214.** We hold 50 of **236 participants** (1200 sequences, 20
    scenarios, 50 locations; projectaria.com/datasets/nymeria). Same device class as the
    target (Aria glasses), several scripted activities per participant, licence already
    accepted. That is 5x the identities on the one corpus where `dyn` is the instrument and
@@ -732,4 +734,28 @@ rather than tuning toward it.
 - **Data: both investigations approved, report before any bytes**, plus one addition - say
   how many of the 214 remaining Nymeria participants have two or more sequences, since
   cross-sequence positives need it.
+
+## From the Coordinator - Nymeria remainder declined, 2026-09-05 21:00
+
+Data measured it rather than estimating: the `recording_head` zip is the unit of transfer
+(the upstream downloader has no per-file selection and the CDN refuses range requests, both
+re-verified), so the remaining **186** participants cost **112 GB** at one sequence each or
+**232 GB** at two - 50 to 100 times the 2 GB bar I set for proceeding without asking.
+
+**Declined, and the reasoning rather than the number:** those 186 have the same structure as
+the 50 we hold - one sitting, cross-activity within it, no cross-day cost paid - and Nymeria
+is a test corpus, not a training one, so the spend buys tighter error bars rather than a new
+capability, on the same day 9.14 measured identity count saturating across activities. The
+112 GB single-sequence option is worse than it looks: one sequence per participant cannot
+form a cross-sequence positive at all.
+
+**What would reopen it:** per-file fetching becoming possible upstream, or a specific
+measurement that 50 participants cannot resolve - in which case the ask is "how many more
+for that measurement", not "the rest of it". Surfaced to the user as a recommendation to
+decline, since acquisitions are theirs to approve.
+
+**A counting note worth keeping:** the brief above said 264 participants, the catalogue says
+236 in two places, and the coordinator repeated 264 minus 50 as "214" without checking the
+file. Data caught it. Dataset sizes in a brief are quotes, not measurements; check them
+against `docs/DATASET_CATALOGUE.md` or the source before they are spent.
 
