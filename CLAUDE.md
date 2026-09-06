@@ -1198,6 +1198,23 @@ published 15s is worth roughly **+0.02 AUC**; the shortfall to explain is about 
 rank-1**. Even granting that identification is more sensitive to window length than
 verification, that is an order of magnitude short.
 
+**Now measured directly on the identification axis rather than inferred from verification
+(2026-09-06).** The confound is that k and window length both buy seconds, so the design
+holds *total evidence* fixed at 80 distinct seconds: **5 s at k=16 against 10 s at k=8**, the
+same 94 clean BOXRR users, paired by seed, both indices built at full stride so neither
+inherits its training layout.
+
+| arm | rank-1 @N=17 | AUC |
+| --- | --- | --- |
+| 5 s, k=16 | **0.862 +-0.019** | 0.9619 |
+| 10 s, k=8 | 0.842 +-0.006 | 0.9597 |
+
+**-0.020, paired sd 0.018, t(4)=-2.44, won 1/5** - registered under +0.05 and it came in
+*negative*. **Enrolment evidence moves rank-1; how those seconds are packaged into windows
+does not.** So window length is retired here by measurement rather than by an
+order-of-magnitude argument carried over from verification, and the 10 s in-domain
+verification gains elsewhere in this file do not imply an identification gain.
+
 What remains, in the order worth investigating:
 
 1. **The sensor set, which is a scope decision and not a deficiency.** Every published
@@ -1852,13 +1869,44 @@ existing checkpoint, since the distance matrix is already there. For a biometric
 substance and not a technicality: the 15 users above 0.90 are exposed at a rate the headline
 hides, and the 13 at chance are protected at a rate it hides equally.
 
-**Registered before the 4096-identity checkpoints are scored**: their in-domain verification
-of 0.970 implies rank-1 **0.785** at N=17 - numerically the published figure, a coincidence,
-and one that will be read as agreement with the literature. Landing near 0.785 is **not
-news**; landing near 0.89 is what the +0.11 offset predicts, and that is the informative
-outcome. Note the offset is a *shape* property of one score set, so unlike the absolute
-rank-1 it is not obviously distorted by selection - which is what makes it reportable on
-validation users when no clean pool exists.
+**The offset repeats everywhere measured, and 0.948 clean supersedes 0.862.** Five points,
+each an exact-population reading of one score set (2026-09-06):
+
+| checkpoint / protocol | users | AUC | implied | measured | offset |
+| --- | --- | --- | --- | --- | --- |
+| 419 ids, 5 s, k=1 | 94 clean | 0.8188 | 0.340 | 0.449 | +0.109 |
+| 419 ids, 10 s, k=8 | 94 clean | 0.9597 | 0.735 | 0.842 | +0.107 |
+| 419 ids, 5 s, k=16 | 94 clean | 0.9619 | 0.746 | 0.862 | +0.116 |
+| **2096 ids, 10 s, k=8** | **92 clean** | 0.9850 | 0.874 | **0.948** | +0.074 |
+| 4096 ids, 10 s, k=8 | 1684 validation | 0.9907 | 0.914 | 0.960 | +0.046 |
+
+**0.948 on 92 users no checkpoint has seen is the largest clean identification figure in the
+project** (the 2096-identity arm trained at `max_users=BOXRR-23_Dataset=2020`, leaving 1012
+of 4020 users in neither draw). The 4096 row is a validation-user figure and must be labelled
+one wherever it appears.
+
+**The offsets fall monotonically and that trend is NOT readable.** The offset is bounded above
+by the headroom `1 - implied`, and at AUC 0.99 the implication is already 0.914, so the
+largest offset arithmetically possible there is 0.086 - smaller than what 419 identities
+measured. The ceiling forces the raw quantity down whatever the score distribution does.
+Normalising by headroom reverses the direction (fraction captured 0.404 / 0.457 / 0.587 /
+0.535) but is not a fix: the same normalisation moves from 0.165 to 0.457 with *evidence
+alone*, at fixed identity count on the same users, and the 4096 row also changes population
+from 92 to 1684, which changes impostor diversity in every N=17 draw on a corpus where
+gallery composition is already known to matter. **The entry is: positive at every point,
++0.046 to +0.116, across two identity counts, two window lengths, two enrolment sizes and two
+populations - and these data cannot say whether it trends.** Deciding that needs arms matched
+on AUC or on population, which none of these are.
+
+**The 0.785 trap dissolved structurally rather than being avoided.** The registered warning
+was that 0.970 verification implies rank-1 0.785, the published figure, and a measured 0.785
+would be misread as agreement with the literature. It never arose - because on the population
+actually scored the AUC is 0.9907, not 0.970, so the implication is 0.914 and nothing lands
+near 0.785. The 0.970 belonged to a different population. **An implication computed on one
+population and compared against a measurement on another is a lead, not a check; the fix is
+to compute both from one score set, not to annotate the mismatch.** That is the same shape as
+the `lookup_auc` rule: derive the comparison from the thing itself rather than from a
+neighbouring record.
 
 **The mechanism is the finding, not the number.** Population fixed from k=16, BOXRR:
 
