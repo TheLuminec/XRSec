@@ -2025,7 +2025,14 @@ to 3e-3 - larger than the 7e-4 CPU/GPU gap, so not arithmetic. They are **not** 
 reproduction and its target: `num_excluded_users` is 5 on the training rows and 0 on the
 rescored ones, so VR_User_Behavior is 43 users in one and 48 in the other (the documented
 `exclude_users` trap), the rescored rows record no `unseen_datasets` policy, and the pair
-draw differs everywhere. **Gate against the `mode=train` row.**
+draw differs **on every corpus, including the six whose population is unchanged** - because
+`generate_pair_manifest` runs one rng over the *pooled* index, so five extra users shift the
+stream for every user drawn after them. Gate a checkpoint against its **`mode=train`** row;
+that is the only row it can reproduce, and `score_nymeria.py`'s gate says so.
+
+Neither family is wrong and the rescored one is the better population - 48 VR_User_Behavior
+users rather than the 43 the `exclude_users` default silently produced. They are simply not
+interchangeable: say which family a quoted transfer figure comes from.
 
 The diagnostic generalises and costs one column: `lookup_auc` is training-free, so it cannot
 move for any reason involving the model. Here it moves (0.5055 -> 0.5047 pooled) and moves on
