@@ -569,7 +569,7 @@ rather than simulated by `center_position` (which leaves absolute orientation in
 recovers 0.54-0.79 of static posture).
 
 **Two lookup columns, one rule (since the amplitude-baseline merge of 2026-09-05, code
-identity `415ab7e145`).** On a `dyn` row `lookup_auc` is the lookup on the *encoded* windows -
+identity `100bd18472`).** On a `dyn` row `lookup_auc` is the lookup on the *encoded* windows -
 rounding residue that tracks movement amplitude, not a baseline of anything - and
 `position_lookup_auc` (the same lookup on each window's recorded position, standardised per
 dataset on the evaluation corpus's own position frames, the 9.10 definition) is the real
@@ -1888,9 +1888,9 @@ other corpus by more than 7e-7, so every `dyn` row after that commit is under th
 identity and PanoSaliency's `dyn` figures straddle a 1.2e-4 step. `docs/acceptance/`
 holds both sides. **A second code-identity step is on record and is not a re-baseline**: the
 amplitude / recorded-position baselines (`position_lookup_auc`, `amplitude_auc`) merged on
-2026-09-05 as code identity `415ab7e145` added columns and touched no numerics - `evaluate()`
+2026-09-05 as code identity `100bd18472` added columns and touched no numerics - `evaluate()`
 on a raw and a dyn checkpoint reproduced every pre-existing figure digit-exact on CPU before
-and after (`docs/acceptance/amplitude_*`), so rows at `bc521f7f8e` and `415ab7e145` are
+and after (`docs/acceptance/amplitude_*`), so rows at `bc521f7f8e` and `100bd18472` are
 comparable and no `dyn` figure moved.
 
 It covers all three paths — standard, boosted, and test — and records config (including `extractor` and `extractor_params`), metrics, checkpoint, run dir and git SHA (with a `-dirty` suffix for uncommitted trees). Changing `FIELDS` is safe: shards carry their own keys, so old lines are untouched and the combined view backfills blanks. (`FIELDS` is now the *column order* of the combined view plus the CSV writer that `results_path=...` still selects, not a constraint on what a line may hold.) Logging failures degrade to a warning and never abort a finished run. Add new columns to the end of `FIELDS` so existing files stay readable.

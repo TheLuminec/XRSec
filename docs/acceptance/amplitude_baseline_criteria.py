@@ -33,6 +33,7 @@ import torch  # noqa: E402
 import torch.nn as nn  # noqa: E402
 from torch.utils.data import DataLoader  # noqa: E402
 torch.set_num_threads(4)
+DEVICE = torch.device(os.environ.get("DEVICE", "cpu"))   # criterion 1's digit-exact form runs on the device that wrote the row
 
 from dataset import SiameseDataset, _seed_value  # noqa: E402
 from eval import evaluate  # noqa: E402
@@ -63,7 +64,7 @@ def _loader(ck, dirs, seed, exclude_users):
 
 
 def _evaluate(model, loader):
-    _, _, metrics = evaluate(model, loader, nn.BCEWithLogitsLoss(), torch.device("cpu"), return_metrics=True)
+    _, _, metrics = evaluate(model, loader, nn.BCEWithLogitsLoss(), DEVICE, return_metrics=True)
     return metrics
 
 
@@ -106,7 +107,7 @@ def corpora(checkpoint: str, out: str) -> None:
 
 def recorded(checkpoint: str, out: str) -> None:
     """Criterion 1: the checkpoint's own recorded row, re-scored on its own evaluation set."""
-    model, ck = load_checkpoint(checkpoint, torch.device("cpu"), 100, return_checkpoint=True)
+    model, ck = load_checkpoint(checkpoint, DEVICE, 100, return_checkpoint=True)
     es = ck["eval_split"]
     rel = str(Path(checkpoint).resolve().relative_to(DATA_ROOT)).replace("\\", "/")
     row = None
@@ -117,7 +118,7 @@ def recorded(checkpoint: str, out: str) -> None:
     recorded_by = {p.split("=")[0]: p.split("=")[1] for p in (row.get("lookup_auc_by_dataset") or "").split(";") if "=" in p}
     loader = _loader(ck, list(es["test_dirs"]), int(ck.get("seed", row["seed"])), list(es.get("exclude_users") or []))
     metrics = _evaluate(model, loader)
-    record = {"checkpoint": checkpoint, "encoding": es.get("encoding", "raw"), "run_id": row["run_id"],
+    record = {"checkpoint": checkpoint, "encoding": es.get("encoding", "raw"), "run_id": row["run_id"], "device": str(DEVICE),
               "recorded": {"lookup_auc": row["lookup_auc"], "lookup_auc_by_dataset": recorded_by,
                            "selected_test_auc": row["selected_test_auc"]},
               "rescored": {"lookup_auc": metrics.get("lookup_auc"), "position_lookup_auc": metrics.get("position_lookup_auc"),
@@ -134,7 +135,7 @@ def recorded(checkpoint: str, out: str) -> None:
     gap = abs(float(metrics["position_lookup_auc"]) - float(metrics["lookup_auc"]))
     print(f"recorded row {row['run_id']} ({record['encoding']}): lookup_auc recorded {row['lookup_auc']!r} rescored "
           f"{metrics.get('lookup_auc')!r}; position_lookup_auc {metrics.get('position_lookup_auc')!r} (gap to lookup {gap:.1e}); "
-          f"amplitude_auc {metrics.get('amplitude_auc')!r}; model AUC recorded (GPU) {row['selected_test_auc']:.6f} vs CPU {metrics['auc']:.6f}")
+          f"amplitude_auc {metrics.get('amplitude_auc')!r}; model AUC recorded {row['selected_test_auc']!r} vs rescored on {DEVICE} {metrics['auc']!r}")
     for name in sorted(recorded_by):
         e = metrics["by_dataset"].get(name, {})
         print(f"  {name[:40]:<40} lookup recorded {recorded_by[name]} rescored {e.get('lookup_auc', float('nan')):.4f}  "
