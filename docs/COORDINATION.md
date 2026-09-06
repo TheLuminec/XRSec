@@ -1196,3 +1196,43 @@ qualifications that do survive are unchanged and both matter: it is **80 s of en
 80 s of probe**, so it cannot be set beside a published single-15 s-window figure (the k=1
 row, 0.449, is the one at comparable evidence); and it is the **training activity**, where
 the same checkpoints read 0.18-0.25 on an unseen one.
+
+## From the Coordinator: step 6 closed, and predictions registered for the two follow-ons - 2026-09-06
+
+Step 6 is closed with artefacts under `docs/acceptance/`. Both of Trainer's proposed follow-ons
+are scoring-only, need no training, and are worth doing - in this order, with these predictions
+registered before either runs.
+
+**First, and free: emit k=1 verification AUC on the clean 94-user pool.** The Gaussian mapping
+this file requires us to compute first (`d' = sqrt(2)*Phi^-1(AUC)`) turns the 419 checkpoints'
+in-domain 0.814 into an implied rank-1 of **0.331** at N=17. The clean measurement is **0.449**
+- **+0.118**, far past the 0.05 that makes an implication interesting. But the two are on
+different populations, so it is a lead, not a result. The same harness pass that produced 0.449
+can emit verification AUC on those exact 94 users, which makes the comparison exact-population
+for free. **Prediction: the offset survives, +0.06 or more.** If it does, BOXRR's score
+distribution is far from Gaussian in the favourable direction - a subset of very separable
+users - which is the same shape the seated corpora showed and would mean rank-1 here is
+carried by a minority of players. **Falsifier: an offset under +0.02 says the 0.449 was
+population luck.**
+
+**Second: the clean-pool protocol on the 4096-identity checkpoints.** Their in-domain
+verification is 0.970, which **implies rank-1 0.785** at N=17. That is numerically the
+published figure, and it is a coincidence - registered here in advance because someone will
+otherwise read a measured 0.785 as agreement with the literature when it was implied by a
+verification number we already had. **Landing near 0.785 is not news.** Landing materially
+above (say 0.84+, which the +0.118 offset above would predict) is the informative outcome and
+says the offset repeats at a second identity count; landing below says it is
+population-specific.
+
+**Third, and only if designed at matched total evidence: rank-1 at 10 s.** k and window length
+both buy seconds, so 10 s at k=16 is 160 s of enrolment against 80 s and would conflate the
+two - the same confound Trainer caught between ViewGauss at k=3 and BOXRR at k=16, and the same
+one `window_stride` exists to separate. The design that answers the question is **5 s at k=16
+against 10 s at k=8, both 80 s**. Prediction: **under +0.05 at matched evidence**, because
+window length was worth +0.019 AUC from 2 s to 10 s on verification and the k-curve says
+evidence rather than window structure is what moves rank-1. **Above +0.10 would be a genuinely
+new finding** - a window-length effect far larger on identification than on verification - and
+is worth the run precisely because it is falsifiable.
+
+None of this is queued. The GPU is free and nothing here needs it urgently; all three are
+scoring passes.

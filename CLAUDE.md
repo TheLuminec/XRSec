@@ -1817,6 +1817,24 @@ single-15 s-window figure** - and that published figure also has both controller
 the training activity: the same checkpoints read 0.18-0.25 on an unseen one. alyx's row above
 is a 12-17 user gallery, a direction rather than a measurement.
 
+**BOXRR identifies better than its own verification number implies, and that is the next
+thing to check.** Under the equal-variance Gaussian mapping (`d' = sqrt(2)*Phi^-1(AUC)`) the
+419-identity checkpoints' in-domain verification of 0.814 implies rank-1 0.331 at N=17;
+the clean k=1 measurement is **0.449**. That is +0.118, well past the ~0.05 this file calls
+the interesting case, and it points the same way as the seated corpora did - a score
+distribution far from Gaussian, i.e. a subset of very separable users. The two figures are
+on different populations, so it is a lead rather than a result: the clean-pool harness can
+emit k=1 verification AUC on the same 94 users in the same pass, which makes the implication
+exact-population and costs nothing.
+
+**And the implication is already computed for the 4096-identity checkpoints, before anyone
+scores them.** Their in-domain verification is 0.970, which implies rank-1 **0.785** at
+N=17 - numerically the published figure, which is a coincidence and will be misread as
+agreement by someone. Registered now: if a clean-pool rank-1 on those checkpoints lands near
+0.785 it is **not news**, because a verification number we already had implied it; the
+informative outcomes are landing materially above it (the non-Gaussian offset above,
+repeating at a second identity count) or below it (the offset is population-specific).
+
 **The mechanism is the finding, not the number.** Population fixed from k=16, BOXRR:
 
 | k | 1 | 3 | 4 | 8 | 16 |
