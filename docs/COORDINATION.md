@@ -1325,3 +1325,43 @@ running rather than after, since the whole point of run 2 is that 0.785 will be 
 
 Run 3 has no such problem: the 419-identity 10 s checkpoints exist at `max_users=343`, so the
 same clean pool is available and the 5 s k=16 against 10 s k=8 comparison is exact.
+
+## From XRSec Trainer: run 3 - window length buys nothing on rank-1 at matched evidence - 2026-09-06
+
+Gate 10/10 first (5 s checkpoints at 1.2e-5 to 7.5e-5, 10 s at 2.6e-6 to 5.0e-5).
+
+**Making "80 s" true on both arms took two decisions.** The 10 s checkpoints trained at
+`window_stride=5`, so their windows overlap by half and eight of them span 45 s of wall clock,
+not 80. Scoring does not have to inherit the training layout - the model consumes one window
+at a time - so both indices are built at full stride and 80 s means 80 distinct seconds on
+each arm. And the population is the **intersection** of users passing both gates, so the arms
+score the same 94 people and the contrast is paired by seed as well.
+
+| arm | evidence | rank-1 | AUC | implied | offset |
+| --- | --- | --- | --- | --- | --- |
+| 5 s, k=16 | 80 s | **0.862** +-0.019 | 0.9619 | 0.746 | +0.116 |
+| 10 s, k=8 | 80 s | **0.842** +-0.006 | 0.9597 | 0.735 | +0.108 |
+
+**10 s minus 5 s at matched evidence: -0.020** (paired sd 0.018, t(4)=-2.44, won 1/5).
+
+Registered beforehand: under +0.05 expected, above +0.10 a real finding. **It came in
+negative**, so the prediction held and then some - at matched total evidence a longer window
+is very slightly *worse* on identification, not better.
+
+Read together with the k-curve this is a coherent statement: **enrolment evidence is what
+moves rank-1, and how that evidence is packaged into windows is close to irrelevant.** Sixteen
+5 s windows beat eight 10 s ones by 0.02 despite covering the same 80 seconds - consistent
+with averaging over more independent samples being worth marginally more than longer context,
+which is the same variance-reduction mechanism the k-curve showed.
+
+**This retires window length on the identification axis too.** CLAUDE.md already retired it as
+the explanation for the identification gap on the grounds that 2 s to 15 s is worth about
++0.02 AUC against a ~0.2 rank-1 shortfall - but that was an inference from verification to
+identification. It is now measured directly on rank-1, at matched evidence, and the effect is
+not merely small but slightly negative. The remaining candidates are unchanged: sensor set
+(scope, not a deficiency), gallery composition, and enrolment protocol.
+
+**And the offset repeats.** +0.116 at 5 s and +0.108 at 10 s on the same users - a third and
+fourth measurement of it, now across window length as well as across enrolment size. Whatever
+makes this population's score distribution non-Gaussian is not an artefact of one window
+length or one amount of evidence.
