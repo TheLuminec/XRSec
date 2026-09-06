@@ -297,6 +297,10 @@ def run_training(
             # in the row from one evaluation pass.
             history["lookup_auc"] = metrics.get("lookup_auc")
             history["lookup_eer"] = metrics.get("lookup_eer")
+            history["position_lookup_auc"] = metrics.get("position_lookup_auc")
+            history["position_lookup_eer"] = metrics.get("position_lookup_eer")
+            history["amplitude_auc"] = metrics.get("amplitude_auc")
+            history["amplitude_eer"] = metrics.get("amplitude_eer")
             history["selected_test_by_dataset"] = metrics.get("by_dataset") or {}
             if val_loader is not None:
                 history["best_val_acc"] = selection_metric
@@ -346,7 +350,9 @@ def run_training(
     if history.get("selected_test_by_dataset"):
         from eval import format_by_dataset
         print(f"Selected-epoch AUC {history.get('selected_test_auc', float('nan')):.4f} against the "
-              f"mean-position lookup {history.get('lookup_auc') or float('nan'):.4f}, per dataset:")
+              f"mean-position lookup {history.get('lookup_auc') or float('nan'):.4f} "
+              f"(on recorded positions {history.get('position_lookup_auc') or float('nan'):.4f}) "
+              f"and movement amplitude {history.get('amplitude_auc') or float('nan'):.4f}, per dataset:")
         print(format_by_dataset(history["selected_test_by_dataset"]))
     if history.get("test_acc"):
         print(f"Final-epoch test accuracy: {history['test_acc'][-1]:.2%}")

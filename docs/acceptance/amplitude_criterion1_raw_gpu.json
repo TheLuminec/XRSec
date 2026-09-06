@@ -1,0 +1,70 @@
+{
+ "checkpoint": "C:/Users/TheLu/Desktop/GIT/XRSec/sweeps/f24f2a6c1e/runs/bilstm_a41190094c/best.pth",
+ "encoding": "raw",
+ "run_id": "3ad3e4d5a085",
+ "device": "cuda",
+ "recorded": {
+  "lookup_auc": 0.7288151589359121,
+  "lookup_auc_by_dataset": {
+   "360-degree_Saliency_Dataset_(PanoSaliency)": "0.5853",
+   "EyeNavGS_6-DoF_Navigation_Dataset": "0.4887",
+   "Head_and_Gaze_Behavior_Dataset": "0.8706",
+   "NJIT_6DOF_VR_Navigation_Dataset": "0.6583",
+   "Panonut360_Dataset": "0.5180",
+   "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": "0.7163",
+   "ViewGauss_Head-Movement_Dataset": "0.9338"
+  },
+  "selected_test_auc": 0.6690334987940906
+ },
+ "rescored": {
+  "lookup_auc": 0.7288151589359121,
+  "position_lookup_auc": 0.7288151563455332,
+  "amplitude_auc": 0.5583654951976654,
+  "auc_cpu": 0.6690334991988373,
+  "by_dataset": {
+   "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+    "lookup_auc": 0.7162605809675415,
+    "position_lookup_auc": 0.7162605892199965,
+    "amplitude_auc": 0.514990501754538,
+    "auc": 0.6276633890336626
+   },
+   "ViewGauss_Head-Movement_Dataset": {
+    "lookup_auc": 0.9338182597257653,
+    "position_lookup_auc": 0.9338181600765306,
+    "amplitude_auc": 0.5634391068439094,
+    "auc": 0.8953955327248087
+   },
+   "Head_and_Gaze_Behavior_Dataset": {
+    "lookup_auc": 0.8706262351989746,
+    "position_lookup_auc": 0.8706262321472168,
+    "amplitude_auc": 0.5342989166259766,
+    "auc": 0.7441666305541992
+   },
+   "NJIT_6DOF_VR_Navigation_Dataset": {
+    "lookup_auc": 0.6582573313771942,
+    "position_lookup_auc": 0.6582572136396243,
+    "amplitude_auc": 0.5941272782690731,
+    "auc": 0.637989209022051
+   },
+   "360-degree_Saliency_Dataset_(PanoSaliency)": {
+    "lookup_auc": 0.5853151120116554,
+    "position_lookup_auc": 0.5853151120116554,
+    "amplitude_auc": 0.6552329112914195,
+    "auc": 0.5757548602807068
+   },
+   "Panonut360_Dataset": {
+    "lookup_auc": 0.5180257334460477,
+    "position_lookup_auc": 0.5180257680464764,
+    "amplitude_auc": 0.5168212406218998,
+    "auc": 0.5282158711059294
+   },
+   "EyeNavGS_6-DoF_Navigation_Dataset": {
+    "lookup_auc": 0.48866136409034416,
+    "position_lookup_auc": 0.4886613168007086,
+    "amplitude_auc": 0.5010302519995319,
+    "auc": 0.4997976161231679
+   }
+  }
+ },
+ "problems": []
+}

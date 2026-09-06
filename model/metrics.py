@@ -136,3 +136,26 @@ def static_position_lookup(left_positions, right_positions):
     Returns a similarity, so higher means more alike and it can be scored like any other.
     """
     return -(left_positions - right_positions).norm(dim=1)
+
+
+def movement_amplitude(windows: torch.Tensor, channels: slice) -> torch.Tensor:
+    """
+    One number per window: how much the head moved, as the norm of the per-axis sd of the
+    position channels within the window.
+
+    The training-free baseline for the dynamics branch, as the mean-position lookup is for
+    the static cue. Under `dyn` the mean-position lookup has nothing to read - every window
+    mean is zero to rounding - and what its column recorded there was rounding residue
+    whose size tracks exactly this quantity (docs/GENERALISATION_PROPOSAL.md 9.14): 0.66
+    AUC on PanoSaliency and 0.59 on NJIT with no model, above the trained model on NJIT.
+    Invariant to any translation or rotation of the window (it is the square root of the
+    position covariance's trace), so raw and `dyn` windows give the same number. Computed
+    in float64 on the windows BEFORE standardisation, in the corpus's own units, which is
+    how 9.14's table was made and what `SampleIndex.window_amplitudes` stores.
+    """
+    return windows[:, channels, :].double().std(dim=2).norm(dim=1)
+
+
+def amplitude_lookup(left_amplitude: torch.Tensor, right_amplitude: torch.Tensor) -> torch.Tensor:
+    """Similarity of two windows' movement amplitudes: higher means more alike."""
+    return -(left_amplitude - right_amplitude).abs()

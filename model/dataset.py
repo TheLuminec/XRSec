@@ -23,6 +23,7 @@ from torch.utils.data import DataLoader, Dataset, random_split
 
 import sample_cache
 from input_encoding import apply_encoding
+from metrics import movement_amplitude
 from normalization import ChannelNormalizer
 from user_profile import UserProfile, channel_count
 
@@ -285,6 +286,38 @@ def position_channel_slice(num_channels: int) -> slice:
     return slice(4, 7) if num_channels >= 7 else slice(0, 3)
 
 
+def standardised_window_mean_positions(samples: torch.Tensor, channels: slice,
+                                       window_dataset_ids: torch.Tensor) -> torch.Tensor:
+    """
+    Each window's mean position, standardised per dataset by the statistics of that
+    dataset's recorded position frames - mean and sd over every window and timestep, as
+    `ChannelNormalizer` fits them on a corpus it has not seen.
+
+    This is the input of the 9.10 mean-position lookup, computed BEFORE encoding so it
+    exists whatever the model is shown, and independent of any checkpoint: on a `raw` row
+    with target-fit standardisation the lookup on it equals `lookup_auc` to rounding, and
+    on a `dyn` row it is the static baseline that column cannot be. Standardising with the
+    *encoded* channels' statistics instead would weight the axes by the residual spread
+    rather than the position spread and move the number (ViewGauss 0.89 against 0.93).
+    """
+    means = samples[:, channels, :].mean(dim=2)
+    out = means.clone()
+    for dataset_id in torch.unique(window_dataset_ids).tolist():
+        rows = torch.nonzero(window_dataset_ids == dataset_id, as_tuple=False).view(-1)
+        total = torch.zeros(means.shape[1], dtype=torch.float64)
+        total_sq = torch.zeros_like(total)
+        count = 0
+        for start in range(0, rows.numel(), 4096):
+            block = samples[rows[start:start + 4096]][:, channels, :].double()
+            total += block.sum(dim=(0, 2))
+            total_sq += block.pow(2).sum(dim=(0, 2))
+            count += block.shape[0] * block.shape[2]
+        mean = total / count
+        std = (total_sq / count - mean.pow(2)).clamp_min(0.0).sqrt().clamp_min(1e-6)
+        out[rows] = ((means[rows].double() - mean) / std).float()
+    return out
+
+
 
 def detect_direction_vector_datasets(sample_index) -> list[str]:
     """
@@ -407,6 +440,19 @@ class SampleIndex:
         # Before encoding and centring: both destroy the norm this depends on.
         self.direction_vector_datasets = detect_direction_vector_datasets(self)
 
+        # Each window's mean position as RECORDED, before any encoding or centring: the
+        # static cue itself, kept beside windows the model may see with that cue removed,
+        # already standardised per dataset on the corpus's own recorded position frames.
+        # The training-free lookup is scored on it so a `dyn` row carries the real static
+        # baseline on its own pairs. On the encoded windows a `dyn` window's mean is zero
+        # to rounding, and a lookup on it ranks rounding residue that tracks movement
+        # amplitude (docs/GENERALISATION_PROPOSAL.md 9.14) - not a baseline of anything.
+        if self.sample_count:
+            self.window_mean_positions = standardised_window_mean_positions(
+                self.samples, position_channel_slice(self.samples.shape[1]), self.window_dataset_ids)
+        else:
+            self.window_mean_positions = torch.empty((0, 3), dtype=torch.float32)
+
         # Before centring: br already removes the absolute position, so applying both
         # would centre an already-centred signal rather than compounding.
         if encoding != "raw" and self.sample_count:
@@ -422,6 +468,16 @@ class SampleIndex:
             channels = position_channel_slice(self.samples.shape[1])
             position = self.samples[:, channels, :]
             self.samples[:, channels, :] = position - position.mean(dim=2, keepdim=True)
+
+        # Movement amplitude per window, the dynamics branch's training-free baseline
+        # (docs/GENERALISATION_PROPOSAL.md 9.14): on the windows as encoded, BEFORE any
+        # standardisation, in the corpus's own units. Translation- and rotation-invariant,
+        # so the value is the same under raw and dyn; the normaliser leaves it alone.
+        if self.sample_count:
+            self.window_amplitudes = movement_amplitude(
+                self.samples, position_channel_slice(self.samples.shape[1]))
+        else:
+            self.window_amplitudes = torch.empty(0, dtype=torch.float64)
 
     def __len__(self):
         return self.sample_count
