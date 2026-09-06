@@ -1817,23 +1817,48 @@ single-15 s-window figure** - and that published figure also has both controller
 the training activity: the same checkpoints read 0.18-0.25 on an unseen one. alyx's row above
 is a 12-17 user gallery, a direction rather than a measurement.
 
-**BOXRR identifies better than its own verification number implies, and that is the next
-thing to check.** Under the equal-variance Gaussian mapping (`d' = sqrt(2)*Phi^-1(AUC)`) the
-419-identity checkpoints' in-domain verification of 0.814 implies rank-1 0.331 at N=17;
-the clean k=1 measurement is **0.449**. That is +0.118, well past the ~0.05 this file calls
-the interesting case, and it points the same way as the seated corpora did - a score
-distribution far from Gaussian, i.e. a subset of very separable users. The two figures are
-on different populations, so it is a lead rather than a result: the clean-pool harness can
-emit k=1 verification AUC on the same 94 users in the same pass, which makes the implication
-exact-population and costs nothing.
+**BOXRR identifies far better than its own verification number implies, and every rank-1
+here is a population mean over users who differ enormously (measured 2026-09-06).** The
+Gaussian mapping (`d' = sqrt(2)*Phi^-1(AUC)`) is computed on the *same score set and the same
+users* as the rank-1 - one distance matrix read two ways - so this is exact, not a
+cross-population estimate, and the formula was gated first against alyx's published triple
+(0.593/0.661/0.539 -> 0.103/0.150/0.075 against 0.103/0.149/0.075):
 
-**And the implication is already computed for the 4096-identity checkpoints, before anyone
-scores them.** Their in-domain verification is 0.970, which implies rank-1 **0.785** at
-N=17 - numerically the published figure, which is a coincidence and will be misread as
-agreement by someone. Registered now: if a clean-pool rank-1 on those checkpoints lands near
-0.785 it is **not news**, because a verification number we already had implied it; the
-informative outcomes are landing materially above it (the non-Gaussian offset above,
-repeating at a second identity count) or below it (the offset is population-specific).
+| clean 94 BOXRR users | AUC | implied rank-1 @N=17 | measured | offset |
+| --- | --- | --- | --- | --- |
+| k=1 (5 s) | 0.8188 | 0.340 | **0.449** | **+0.109 +-0.006** |
+| k=16 (80 s) | 0.9619 | 0.746 | **0.862** | **+0.116 +-0.018** |
+
+Registered beforehand at +0.06 to survive: it survives, and it is stable across a five-fold
+change in enrolment evidence.
+
+**The minority reading was the coordinator's and it is wrong - measured, not argued.** A heavy
+right tail and a merely narrower-than-Gaussian distribution both produce this offset, so
+per-user rank-1 was compared against a simulated null in which every user is identical by
+construction: sd across users **0.283 against a null 0.012 (24x)**, p10/p50/p90
+0.067/0.442/0.898 against 0.325/0.340/0.356, **15 of 94 users above 0.80 and 13 below 0.10**
+where the null produces none of either. So the departure from the score model is enormous -
+but the *concentration* is not: the top decile carries 20.1% of correct identifications
+against a null share of 10.2%, the top quartile 45.3% against 25.6%. Twice its share, not ten
+times. That is a broad continuum of per-user separability, not a minority carrying the result,
+and **the average is real and stays**.
+
+**What changes is the sentence, and it is worth more than the minority story would have
+been.** "The model identifies BOXRR players at 0.862" and "a BOXRR player has an 0.862 chance
+of being identified" are different claims and only the first is supported. **Every rank-1 in
+this project is a population mean over a distribution 24x wider than its score model implies,
+so any per-user claim needs the distribution rather than the mean** - cheap to check on any
+existing checkpoint, since the distance matrix is already there. For a biometric that is the
+substance and not a technicality: the 15 users above 0.90 are exposed at a rate the headline
+hides, and the 13 at chance are protected at a rate it hides equally.
+
+**Registered before the 4096-identity checkpoints are scored**: their in-domain verification
+of 0.970 implies rank-1 **0.785** at N=17 - numerically the published figure, a coincidence,
+and one that will be read as agreement with the literature. Landing near 0.785 is **not
+news**; landing near 0.89 is what the +0.11 offset predicts, and that is the informative
+outcome. Note the offset is a *shape* property of one score set, so unlike the absolute
+rank-1 it is not obviously distorted by selection - which is what makes it reportable on
+validation users when no clean pool exists.
 
 **The mechanism is the finding, not the number.** Population fixed from k=16, BOXRR:
 
