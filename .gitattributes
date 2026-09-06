@@ -17,3 +17,8 @@ results/runs/*.jsonl merge=union
 # That produced 537 rows, 237 of them duplicates, seed 67 reading as 2 and run_dir
 # holding a git SHA - from two inputs that were each individually clean.
 results/runs.csv merge=union
+
+# Python is hashed into every run's code identity. The digest normalises line endings
+# since 2026-09-06, so this rule is identity-neutral; it stops the same code being checked
+# out three ways on three machines in the first place.
+*.py text eol=lf
