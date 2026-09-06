@@ -1622,7 +1622,9 @@ between), a pairwise property, does not translate into 16-way rank-1 - alyx heig
 P=0.743 and identifies at 0.16 among 17; and enrolment averaging cannot lift a static cue
 whose limit is between-session shift (alyx k=1 to k=16: flat, whole-session ceiling 0.162).
 **Head position alone as an enrolment system on the one cross-day corpus is 2.4x chance
-at N=17 and 0.057 at a 70-person gallery. It is not an enrolment system.** The full static
+at N=17 and 0.057 at a 70-person gallery. It is not an enrolment system** - but the learned
+`dyn` branch is a different matter, and the table below it was retracted and reversed on
+2026-09-05: read that paragraph before quoting anything about the model on alyx. The full static
 table (Trainer, cross-session gallery vs probe, standardised, rank-1 at N=17, k = the
 largest each corpus supports):
 
@@ -1668,27 +1670,40 @@ represents. **On the only cross-day corpus a person's own head position is 0.95 
 distance to a stranger's laterally, and 0.49 in height.** That sentence is what the static
 cue is worth for a deployment.
 
-**And the trained model never reaches what height alone gives (step 6, 2026-09-04).** Both
-alyx regimes on the same 14-user gallery, k=16, chance 0.0714, summed z-scored distances
-with no learned weight:
+**And the learned branch beats head height in every regime - after a retraction (step 6,
+2026-09-04, corrected 2026-09-05).** All rows on a 14-user alyx gallery, chance 0.0714,
+summed z-scored distances with no learned weight:
 
 | alyx, rank-1 at N=14 | `dyn` alone | height alone | height + `dyn` |
 | --- | --- | --- | --- |
-| unseen **activity** (LODO checkpoint, alyx never in training, 70 users) | 0.096 (1.3x) | 0.166 (2.3x) | 0.159 |
-| unseen **users** of a seen activity (in-domain folds `ddc9b964e5`, 11-16 users each) | 0.147 (2.1x) | **0.198 (2.8x)** | 0.197 |
+| unseen **activity**, 5 s (LODO checkpoint, alyx never in training, 70 users) | 0.181 | 0.166 | **0.239** |
+| unseen **users** of a seen activity, 5 s (in-domain folds `ddc9b964e5`) | 0.317 | 0.201 | **0.456** |
+| unseen **users**, 10 s at 4096 identities (9.14 checkpoint) | **0.586** | 0.143 | 0.443 |
 
-The model gains from being in domain (1.3x to 2.1x chance) and in neither regime reaches
-what three numbers of head height already give; **fusion is a wash in both** (0.159 vs
-0.166, 0.197 vs 0.198). The per-fold columns say why: `dyn` and height are anti-correlated
-across folds (fold 2 is height's best and dyn's second worst, fold 3 the reverse), so no
-fixed weight beats both, and a weight fitted to 70 users would be the test set. Both
-registered predictions for the fused system were too high (coordinator 0.15-0.22 and
-0.13-0.19, Trainer 0.20-0.30 twice). **The best alyx number in the whole table, 0.198 on
-unseen users of a seen activity, is head height alone and needs no model.** An earlier
-version of this paragraph compared a 17-of-70 draw against whole folds of 11-16 users as if
-they were one gallery; they were not, and the corrected pair above is the one to quote.
-Small populations, large per-fold spread (dyn 0.086-0.200, height 0.087-0.309), pooled
-means only.
+**The first version of this table was void and its conclusion was the opposite.** The `dyn`
+checkpoints record `encoding=dyn`, and their sample indices were built without passing it -
+`build_sample_index` defaults to `raw` - so a model trained on pose relative to the window's
+own mean was scored on absolute pose. That is a different input distribution, not a degraded
+one. It produced dyn 0.096 / 0.147 and fused 0.159 / 0.197, from which this file previously
+concluded that "the best alyx number is head height alone and needs no model", that "fusion
+adds nothing in either regime", and that the trained model "contributes nothing measurable".
+**All three are false.** The model beats height in every regime, four-fold at ten seconds
+with 4096 training identities, and fusion is worth +0.058 and +0.139 over the better single
+cue. The anti-correlation across folds offered here to explain the wash was real in the
+numbers and was explaining an artefact.
+
+Two things survive unchanged: every static column (xyz / y / xz, the geometry, the distance
+ratios, the same-sitting-placement versus cross-day-height split), which never ran a model
+and whose calibration gate reproduced an independent figure on 15/15 cells; and the
+no-fixed-weight problem, now with its sign reversed - at 10 s fusion *hurts* (0.443 against
+0.586) because height is weak there and an equal-weight sum drags the stronger cue down.
+
+**The lesson is about gate coverage, not about this table.** The static half had a
+digit-exact gate because there was something independent to reproduce; the model half had
+none, so nothing checked that the model was fed what it was trained on. **Any scoring of a
+checkpoint outside the training path must first reproduce that checkpoint's own recorded
+metric on its own recorded users** - if `selected_test_auc` does not come back, the harness
+is feeding it something else, and no number from it means anything.
 
 ### The identification number, measured properly
 
