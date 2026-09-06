@@ -1174,30 +1174,52 @@ ViewGauss (0.540; 35 users, four sessions in one visit). On the one cross-day co
 head position alone as an enrolment system is 2.4x chance at N=17 and 0.057 at a 70-person
 gallery. It is not an enrolment system.
 
-**The trained model never reaches what height alone gives, in either regime.** Both
-alyx regimes on the same 14-user gallery, k = 16, chance 0.0714 in every cell, summed
-z-scored distances with no learned weight:
+**Retraction (Trainer, 2026-09-05; COORDINATION.md at d1b2510): the `dyn` and fused
+columns first reported here were void, and their conclusion is reversed.** The `dyn`
+checkpoints record `encoding=dyn`; the enrolment harness built its sample indices without
+passing it, so a model trained on pose relative to the window's own mean pose was scored on
+absolute pose - a different input distribution, not a degraded one. The static columns never
+ran a model and are unaffected (their gate reproduced the per-axis figures on 15 of 15
+cells); everything in this section above this paragraph stands. Corrected - `dyn` models on
+`dyn` windows, head height from a raw index on the same window grid, one 14-user alyx
+gallery, k = 16, chance 0.071, summed z-scored distances with no learned weight:
 
-| alyx, rank-1 at N = 14 | `dyn` alone | height alone | height + `dyn` |
-| --- | --- | --- | --- |
-| unseen **activity** (LODO checkpoint, alyx never in training, 70 users) | 0.096 (1.3x chance) | 0.166 (2.3x) | 0.159 |
-| unseen **users** of a seen activity (in-domain folds `ddc9b964e5`, 11-16 users each) | 0.147 (2.1x) | **0.198 (2.8x)** | 0.197 |
+| alyx, rank-1 at N = 14 | `dyn` alone | height alone | height + `dyn` | first reported (`dyn` / fused) |
+| --- | --- | --- | --- | --- |
+| unseen **activity**, 5 s (LODO checkpoint, alyx never in training, 70 users) | **0.181** (2.5x chance) | 0.166 (2.3x) | **0.239** | 0.096 / 0.159 |
+| unseen **users** of a seen activity, 5 s (in-domain folds, 11-16 users each) | **0.317** (4.4x) | 0.201 (2.8x) | **0.456** | 0.147 / 0.197 |
+| unseen **users**, 10 s, 4096 training identities (the 9.14 checkpoint) | **0.586** (8.2x) | 0.143 | 0.443 | not run before |
 
-The model gains from being in domain (1.3x to 2.1x chance) and in neither regime reaches
-what three numbers of head height already give; **fusion is a wash in both** (0.159
-against 0.166, 0.197 against 0.198). The per-fold columns say why: `dyn` and height are
-anti-correlated across folds (fold 2 is height's best and `dyn`'s second worst, fold 3
-the reverse), so no fixed weight beats both, and a weight fitted to 70 users would be the
-test set. Both registered predictions for the fused system were too high (Coordinator
-0.15-0.22 and 0.13-0.19, Trainer 0.20-0.30 twice). **The best alyx number in the table,
-0.198 on unseen users of a seen activity, is head height alone and needs no model.** An
-earlier version of these rows compared a 17-of-70 draw against whole folds of 11-16 users
-as if they were one gallery; they were not, and the pair above, on one gallery with one
-chance, is the one to quote. Small populations, large per-fold spread (`dyn`
-0.086-0.200, height 0.087-0.309), pooled means only.
+Per fold, 5 s in domain: `dyn` 0.414 / 0.214 / 0.327 / 0.271 / 0.357, height 0.097 / 0.299 /
+0.309 / 0.114 / 0.186, fused 0.363 / 0.397 / 0.636 / 0.314 / 0.571.
 
-*Slot, pending Trainer:* the seated corpora's `dyn` columns at the same k, and the
-per-corpus LODO second column, land here when they are sent.
+Three statements the earlier text made are false and are withdrawn: that head height alone
+is the best alyx number and needs no model (the model beats height in every regime once it
+is fed the input it was trained on, four-fold at 10 s); that fusion adds nothing in either
+regime (it adds +0.058 over the better cue on unseen activity and +0.139 on unseen users at
+5 s); and that the trained model contributes nothing measurable on the deployment-facing row.
+What survives of the earlier reading is the no-fixed-weight point, now with its sign
+reversed at 10 s: `dyn` and height are anti-correlated across folds, so an equal-weight sum
+helps at 5 s, where the two cues are comparable, and *hurts* at 10 s (0.443 against 0.586),
+where height is weak at that window length and the sum drags the stronger cue down. A
+weight fitted on 70 users would be the test set, so no fused figure here is an operating
+point. **The 10 s row is the strongest evidence in this document that the learned branch
+identifies unseen users of a seen activity from movement alone**: 0.586 rank-1 on a
+14-user gallery, eight times chance, from a model that never saw those users, on the one
+cross-day corpus. It sits beside 9.14's in-domain verification figure for the same
+checkpoint (alyx 0.80 AUC on 16 validation users) and says the same thing on the field's
+own axis. Small populations and large per-fold spread apply as before: pooled means only.
+How the error got past the gate is recorded in COORDINATION.md: the static columns had a
+calibration gate that reproduced an independent number to the digit, and the `dyn` columns
+had none.
+
+*Slot for Trainer's seated `dyn` columns and the per-corpus LODO second column:* approved
+to re-run (Coordinator, 2026-09-05 20:45) with the harness gate first - reproduce each
+checkpoint's recorded `selected_test_auc` on its own users to the digit before any rank-1 -
+and Trainer's predictions registered in COORDINATION.md before the numbers: seated `dyn`
+below 0.25 at N = 17 and below alyx at matched gallery size, because seated-video motion is
+content-driven and shared; fusion worse than static there; the per-corpus LODO column within
+0.05 of the 9.3 one. The columns land here when sent.
 
 ### 9.14 Window length and identity count add on the dynamics branch: 10 s at 4096 and 2096 identities
 
@@ -1288,10 +1310,10 @@ unseen-player verification on ten seconds of head movement from 0.84 to 0.97 *wi
 training activity, and move the seated corpora by +0.019 pooled and Nymeria by +0.018.
 That is 9.1's "an easier corpus, not a better model" in its sharper form - the model
 **is** better, on the activity it was trained on, and the cross-activity gap is what
-identity count does not close. It also reopens 9.13's contest on the one cross-day corpus:
-alyx in domain is 0.80 at 16 users here, where height alone was the best alyx number, so
-the enrolment comparison on unseen users of a seen activity is worth re-running at this
-identity count (Trainer's, if wanted).
+identity count does not close. It also settled 9.13's contest on the one cross-day corpus: on this checkpoint Trainer
+measured 0.586 rank-1 on a 14-user alyx gallery from `dyn` alone against 0.143 for head
+height (9.13, corrected 2026-09-05), so 0.80 AUC on 16 validation users here and eight
+times chance there are one fact on two axes.
 
 **A correction this slot surfaced: the lookup column on a `dyn` row is not a static
 baseline, and the training-free baseline for the dynamics branch is movement amplitude.**
@@ -1360,7 +1382,7 @@ prediction registered now.
 | 3 | **A learned static branch** (CPU): a 17-number static descriptor with per-axis weights learned across corpora, leave-one-corpus-out against the three-number lookup | Can *any* learned static scorer beat the lookup out of domain? | done | **Retired (9.8).** Rule not met: +0.048 on NJIT only, -0.061 on Head_and_Gaze. The three-number lookup is the ceiling of the static cue across corpora; orientation and spread help in domain and cost out of domain (the frame problem). |
 | 4 | **Across-XR** (49 users x 5 applications, converter ready, download WAF-blocked from AVALON; retry from another machine or ask the authors) | The activity-bound finding measured directly: same users, same rig, different application. Cross-app `dyn` AUC is the number. | download 5.4 GB, one conversion, scoring only | cross-app `dyn` well below within-app; the size of that gap is the paper's second claim. |
 | 5 | **`channels=orientation` in a common frame**: quaternion-only windows, plus a converter that puts tier-2 direction vectors into the orientation channel rather than the position channel | Is head-*direction* dynamics the behavioural biometric for 360-degree viewing? PanoSaliency at 0.73 under `dyn` says direction sweeps carry more identity there than translation does, and 9.8 says orientation carries identity within a corpus and is lost across corpora to the frame - so the common frame is the point. It would also make 240 tier-2 identities usable honestly. | ~1 day of code, then the tier-2 corpora in domain | in-domain `dyn` on the seated corpora rises from 0.53-0.55 toward PanoSaliency's 0.73 if direction is the signal. |
-| 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | done, CPU (Trainer) | **Measured (9.13).** 0.4-0.6 met only on same-sitting corpora and carried by xz; on the one cross-day corpus 0.119 xyz / 0.135 height at N=17; the trained `dyn` embedding fused with height is a wash in both regimes on one 14-user gallery (0.159 vs 0.166 unseen activity, 0.197 vs 0.198 unseen users of a seen activity; chance 0.071); the best alyx number is height alone on unseen users of a seen activity, 0.198, no model. |
+| 6 | **The static cue as an enrolment system**: the three-number lookup (9.8: nothing learned beats it across corpora), templates over k windows, cohort normalisation, CMC at N=17 | Places the transferable signal on the field's own axis (rank-1) with an honest enrolment protocol, since this is what would actually ship on glasses. | done, CPU (Trainer) | **Measured (9.13).** 0.4-0.6 met only on same-sitting corpora and carried by xz; on the one cross-day corpus 0.119 xyz / 0.135 height at N=17; the `dyn` model, once scored on `dyn` windows (Trainer's retraction, 9.13), beats height in every regime on the 14-user gallery - 0.181 vs 0.166 unseen activity and 0.317 vs 0.201 unseen users at 5 s, **0.586 vs 0.143 at 10 s with 4096 identities** (chance 0.071); fusion helps at 5 s (0.239, 0.456) and hurts at 10 s (0.443), no fixed weight serves both. |
 | 7 | **Window length and identity count together on `dyn`**: 10 s at 4096 identities (the full corpus after the AVALON sync) and at 2096 (BOXRR capped to 2020), seed 1 | Do the two levers add, and does a second doubling of training identities move transfer? | 2 runs, ~3.5 h GPU. **Done (9.14).** | Coordinator 0.618 (additive), Model Generalization 0.610-0.615 -> **0.6176 and 0.6184**: additive, and the second doubling adds 0.001 out of domain while taking in-domain BOXRR from 0.845 to 0.962 to 0.970. Movement amplitude alone found to be the training-free baseline for `dyn` on the way. |
 
 **Retired by section 9, do not re-run:** the identity-count curve on the `raw`
@@ -1384,8 +1406,9 @@ not on NJIT. It rises with training identities up to about two thousand and is f
 across the next doubling out of domain, while the same identities take unseen-player
 verification within Beat Saber from 0.84 to 0.97 (9.14) - with the caveat that every
 `raw` identity-count result on BOXRR carries part of a person-specific standing offset
-(xz-only lookup 0.68; placement, not the room) and only the `dyn` curve is clean of it. As an enrolment system on head pose alone, the transferable cue identifies within a
-sitting and not across days (9.13). Across-XR (step 4) is what measures the
+(xz-only lookup 0.68; placement, not the room) and only the `dyn` curve is clean of it. As an enrolment system on head pose alone, the transferable *static* cue identifies within
+a sitting and not across days, while the learned dynamics branch identifies unseen alyx
+users at 0.586 rank-1 on a 14-user gallery at 10 s and 4096 identities (9.13, corrected). Across-XR (step 4) is what measures the
 cross-activity transfer directly rather than by inference across corpora.
 
 ## Appendix: reproduction
