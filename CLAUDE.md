@@ -1049,6 +1049,32 @@ Searched and rejected, recorded so the search is not repeated:
 | Liebers et al. | No confirmed public release; 16 users maximum. |
 | OpenNEEDS | 44 users, correct signals (head+hand+gaze), but gated behind a request process to Meta. |
 
+**The rejected list was re-read against the new criterion (2026-09-06), because a rejection
+inherits the criterion it was made under.** Three of the four were declined at least partly
+on identity count, which is no longer the argument:
+
+- **GazeBaseVR - still dead, reason untouched.** No head position or orientation channel at
+  all. Content, not size.
+- **Liebers et al. - still dead, reason untouched.** No confirmed public release.
+- **Nymeria remainder (186 of 236) - still declined, and now for a better reason.** It is real
+  AR glasses and 17 scripts, which is the axis now argued for - but we already hold 50
+  participants of exactly that device and that script set, so the remainder adds *identities*
+  of a diversity we have rather than new diversity. And every participant is **one sitting**,
+  so it can never pay the cross-session cost. Declined on structure, which is what the
+  original note meant and now says.
+- **OpenNEEDS - status genuinely changes.** 44 identities was the disqualifier and identity
+  count is no longer the question. Its task set - reading, drawing, shooting, object
+  manipulation - is unlike anything in this corpus, and `docs/DATASET_CATALOGUE.md` already
+  records its value as a **test** set rather than a training one, which is precisely the
+  activity-diversity role now wanted. Head-only scope applies as everywhere: its hand and gaze
+  channels are irrelevant to us, neither a benefit nor a cost. The remaining obstacle is a
+  **signed data-use agreement with Meta, which only the user can enter into** - a cost and a
+  decision, not a disqualification.
+
+Also worth knowing when device diversity is the argument: the catalogue searched specifically
+and found **no AR-glasses motion dataset other than Nymeria**. That axis is close to
+exhausted, and we already hold the only entry on it.
+
 **BOXRR-23** (105,852 users, ~5.35TB) is the largest identity source available and
 identity count is our binding constraint, so it is the highest-value acquisition on the
 board. The user has agreed to its Data Use Agreement and has confirmed with their advisor that ethics approval is in place, satisfying clause 9. **That agreement carries ongoing
