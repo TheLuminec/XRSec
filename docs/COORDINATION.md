@@ -759,3 +759,30 @@ decline, since acquisitions are theirs to approve.
 file. Data caught it. Dataset sizes in a brief are quotes, not measurements; check them
 against `docs/DATASET_CATALOGUE.md` or the source before they are spent.
 
+## From the Coordinator - the BOXRR cross-application question, 2026-09-05 21:15
+
+**Status: open, and it cannot be closed from metadata.** Data ran two bounded checks, no
+recordings fetched.
+
+1. **Our mirror is Beat Saber only.** All 4,716,986 records with a populated `info` block
+   read `app.name = "Beat Saber"`; the 55,044 without one are empty stubs (duration 0, no
+   frames, no metadata), checked directly - so the absence is not hiding in the unlabelled
+   remainder. Data raised that hypothesis itself and ruled it out on the records' shape.
+2. **The true release is not.** The official page counts **55,178 Google Poly (Tilt Brush)
+   recordings, 1.2%**, and the datasheet states one folder per user with the source
+   application identifiable from the included metadata. (Data also corrected its own
+   earlier misreading of that third source as "PolyGone".) `dict.json` is the XROR JSON
+   Schema, not a recording index.
+
+**So this is an index gap, not an absence**, and the coordinator's first entry in CLAUDE.md
+- "treat BOXRR as a one-activity corpus by construction" - was written on check 1 alone and
+was wrong about the dataset while right about our copy. Corrected at `6a1d339`.
+
+**Why it matters and why it stops here.** Whether any user has recordings in *both*
+applications is the thing 9.14 says would move transfer, at scale, under a DUA we already
+hold - and no index we can reach answers it. 1.2% of recordings could be a few hundred
+Tilt-Brush-only users or a thin layer across many Beat Saber players, and that distinction
+is the entire value. The remaining routes are a complete index from the authors or fetching
+per-user folders blind; the second is an acquisition decision for the user. **No further
+research on this without the user opening it.**
+
