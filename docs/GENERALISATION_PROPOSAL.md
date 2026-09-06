@@ -985,6 +985,19 @@ cross-sequence positives, within-dataset negatives, 25,600 pairs at 0.500, targe
 standardisation through each checkpoint's own normaliser, three manifest seeds drawn as
 the pipeline draws them. Nymeria was never in any training set.
 
+*Rows (2026-09-06):* every figure in this section and in 9.12 and 9.14 for Nymeria was first
+produced by scratchpad scoring with three manifest seeds; `score_nymeria.py` now scores the same
+checkpoints through the pipeline's own `SiameseDataset` and `evaluate()` and logs one shard row
+each (`experiment=nymeria_rescored`, `mode=rescore`, the checkpoint's own manifest seed), after
+the gate that each checkpoint reproduces its recorded `selected_test_auc` on its own users
+(28 of 29 within 1e-4 on the GPU, gaps 1.5e-9 to 7.5e-5; the one miss is the random-output control, noise by construction, 0.498 recorded against 0.502 rescored, kept as the chance floor passed, `docs/acceptance/nymeria_gate.json`). The rows agree with the three-seed means
+within 0.003 on every group (419 identities at 5 s 0.530 against 0.529, at 10 s 0.537 against
+0.535, at 20 s 0.538 against 0.537; 1000 identities 0.530 against 0.533; 2096 at 5 s 0.541
+against 0.541; 4096 at 10 s 0.5535 against 0.5526; random control 0.497 against 0.502) - a
+result about the harness, recorded as one: the scratchpad scoring fed the checkpoints what they
+were trained on. The rows also carry the recorded-position lookup on Nymeria, 0.73 (the location
+match of 9.9), and movement amplitude alone, 0.51-0.52.
+
 | training identities | checkpoints | Nymeria AUC (one sitting, cross-activity positives) |
 | --- | --- | --- |
 | 419 (343 BOXRR + 76 alyx) | 5 seeds | **0.529 +-0.002** |
@@ -1386,7 +1399,7 @@ for after this slot, in a worktree, announced before merge: record `amplitude_au
 `lookup_auc` on every run, and compute `lookup_auc` on the pre-encoding positions so a
 `dyn` row carries the real static baseline on its own pairs.
 
-**Nymeria.** The band registered here for the 2096 run was 0.545-0.555. The capped
+**Nymeria** (rows: `experiment=nymeria_rescored`, see 9.11). The band registered here for the 2096 run was 0.545-0.555. The capped
 checkpoint reads **0.544 +-0.002** (three manifest seeds, 25,600 pairs, one-sitting caveat
 as always) - 0.0007 under the band's edge, within one manifest sd of it - and the 4096
 checkpoint **0.553 +-0.003**, inside it. At 10 s the three identity points read 0.535 ->

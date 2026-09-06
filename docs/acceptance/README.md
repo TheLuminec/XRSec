@@ -115,4 +115,9 @@ scratchpad script scoring dyn checkpoints on CPU with three manifest seeds. `sco
 and `evaluate()` and appends a `mode=rescore`, `experiment=nymeria_rescored` row per
 checkpoint (test manifest at `_seed_value(seed, 4)` from the checkpoint's own seed, as every
 row's is; the earlier three-manifest means sit within about 0.003 of the single-manifest
-row). Every quoted dyn checkpoint was re-scored that way on CPU the day the script landed.
+row). Every quoted dyn checkpoint (29) was re-scored that way on CPU the day the script landed,
+behind the gate (`--gate`: 28 of 29 within 1e-4 on the GPU, gaps 1.5e-9 to 7.5e-5; the one miss is the random-output control, noise by construction, 0.498 recorded against 0.502 rescored, kept as the chance floor reproduced their recorded `selected_test_auc` on their own users
+on the GPU, `nymeria_gate.json`). **The rows agree with the scratchpad's three-seed means within
+0.003 on every group** - the scratchpad harness fed the checkpoints what they were trained on,
+which is the check the void step 6 columns lacked and the reason a rescore that agrees is a
+result rather than a null.
