@@ -40,12 +40,21 @@ mismatch  = {k: (expected[k], actual[k]) for k in expected if k in actual and ex
 
 print(f"manifest : {len(expected):,} files, {sum(expected.values()):,} bytes")
 print(f"on disk  : {len(actual):,} files, {sum(actual.values()):,} bytes")
+# rsync writes an in-flight file as `.<name>.<random>` and renames on completion, so a
+# leftover temp is not an unexpected FILE, it is an INCOMPLETE TRANSFER. Reporting it as
+# "extra: 1" at the end would be ambiguous at exactly the moment the answer matters.
+partials = {k: v for k, v in extra.items() if pathlib.Path(k).name.startswith('.')}
+unexpected = {k: v for k, v in extra.items() if k not in partials}
 print(f"missing  : {len(missing)}")
-print(f"extra    : {len(extra)}")
+print(f"extra    : {len(extra)}"
+      + (f"  ({len(partials)} rsync in-flight temp file(s) -> TRANSFER INCOMPLETE)" if partials else ""))
 print(f"size mismatch: {len(mismatch)}")
 for k in list(missing)[:5]:  print("   MISSING", k)
-for k in list(extra)[:5]:    print("   EXTRA  ", k)
+for k in list(partials)[:5]: print("   PARTIAL", k, "(rsync still writing, or stopped mid-file)")
+for k in list(unexpected)[:5]: print("   EXTRA  ", k, "(not in the manifest and not an rsync temp)")
 for k, (e, a) in list(mismatch.items())[:5]: print(f"   SIZE   {k}: expected {e}, got {a}")
-ok = not missing and not mismatch
+# A lingering partial means the transfer stopped early, so it must block the verdict even
+# though every file that DID arrive is intact.
+ok = not missing and not mismatch and not partials
 print("\nVERIFIED: every file present at its recorded size." if ok else "\nFAILED - do not use this corpus.")
 sys.exit(0 if ok else 1)
