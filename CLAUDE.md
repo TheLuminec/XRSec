@@ -2709,6 +2709,25 @@ licence (numpy still guarantees nothing) but did not materialise across these tw
 the calls `generate_pair_manifest` makes. Keep the caution and drop the expectation: **do not
 assume a numpy bump has moved the draw, and do not assume it has not - hash the manifest.**
 
+**A verification that happens to be true is not a verification (Miami, 2026-09-09).** When
+the gate refused, the substance was closable by hand - both own-manifests equalled the shared
+one, so the pairs provably matched. That hand-closure was *correct here and would have looked
+identical if it were wrong*: had the emitter's draw differed from the file it emitted, the
+same chain of reasoning would have produced the same confident sentence. **The mechanism
+refused and a human argument overrode it, and the argument was right by luck.** Re-run the
+tool in the mode that demonstrates the claim instead. This is the same family as the
+fixture rule one level up: there, a check passed on nothing; here, a check was bypassed by
+reasoning that happened to hold.
+
+**And scope what the pass closes, because it will be over-quoted.** The gate closes two
+things and no more: the corpora agree in **content** (identical arithmetic over 30,630
+windows drawn from those files is a content measurement, which the size manifest explicitly
+was not), and **these two stacks** compute the same **training-free** arithmetic. It says
+nothing about the model path, where cuDNN's BiLSTM is documented at up to 7e-4 between
+devices, and it does not make the missing env annotation harmless in general - it makes one
+pair of stacks measured rather than assumed, on one class of quantity. **"The stacks agree"
+is not what was shown.**
+
 **One protocol gap found by the gate refusing.** The emitting side ran with
 `--emit-manifest` only, so its report records `scored_manifest_sha256: "own"` and the guard
 correctly declined to compare - a side that scores "own" cannot be shown to have scored the
