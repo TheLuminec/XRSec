@@ -2032,3 +2032,34 @@ The two routes that would work, both requiring the user:
 
 Until one of those exists, **anything that has to leave DESKTOP-C goes through git** - which
 is why the manifests and certificates are committed and the 5.4 GB corpus is not.
+
+## Queued for the next merge window: two additive model/*.py changes - 2026-09-09
+
+Both move `code_identity`, so they batch into ONE identity step rather than two. Trainer's
+`nymeria_activity` seed 5 is the last run of arm A; the window opens when it lands and the
+shard is committed.
+
+**1. Environment annotation.** Append `python_version`, `numpy_version`, `torch_version`,
+`cuda_version` and `device` to the row. numpy goes in **ahead of torch** - it changes which
+pairs are drawn (1e-3 to 3e-3 by this project's own arbitration) rather than perturbing
+numerics, and DESKTOP-C 2.4.2 against Miami 2.5.3 is a live divergence today. The file must
+state that an absent env block means *"written before env annotation existed"*, never
+*"unknown stack"*.
+
+**2. `CrossApplicationXR_Dataset` is UNAUDITED to the tier map, and that is a real gap.**
+Data's converted Across-XR landed under that name; `DATASET_TIERS` holds `Across_XR` and
+`across_xr`. Measured rather than read: `dataset_tier("CrossApplicationXR_Dataset")` returns
+**None**. The prefix fallback cannot save it - "crossapplicationxr_dataset" does not start
+with "across_xr" - so `evaluate()` will not know the newest corpus is tier 1, and the
+mixed-tier warning that exists to stop a pooled figure averaging real positions with direction
+vectors is silently inert on it. One line: `"CrossApplicationXR_Dataset": 1`.
+
+That is this project's recurring shape once more, in a new place: **the name of the thing and
+the name the check looks for drifted apart, and nothing failed loudly.** A converter that
+names its output directory is choosing a key in a table it does not import.
+
+**Worth considering at the same time**, not decided: `dataset_tier` returning `None` is
+indistinguishable at the call site from "audited and found to be tier None". Every corpus this
+project holds is registered, so the silent case has never bitten - but it now has one live
+instance, and the fix that stops the *class* is to make an unregistered dataset loud rather
+than absent.
