@@ -2732,6 +2732,22 @@ exchanged file reproduces the AUC exactly, so the format is not quietly changing
 it exists to carry. **A comparison across machines assumes a stability within one that
 nobody had tested.**
 
+**Hash a transferred artefact, and reconcile even when the difference is harmless.** The
+gate reached origin by paste, and the two copies differed: **one extra blank line**, with
+`ast.dump` identical on both parses, so semantically nothing. Reconciled to the committed
+copy anyway, because *"it is only whitespace"* is exactly the argument that lets two
+implementations drift apart one harmless line at a time - once a file is committed it is the
+definition and every other copy is a copy. Note the asymmetry that makes the hash worth
+running (Miami): **a mangled paste breaks loudly, but a paste that drops a blank line or a
+comment does not** - and the silent case is the one a hash catches and reading does not.
+
+**Establish the layers in order, and never build a shared artefact on an unverified input.**
+A manifest emitted from a corpus that has not passed its own file-by-file check would carry a
+layer-1 fault into the exchange, where it surfaces as a layer-3 disagreement - **the wrong
+answer arriving convincingly**, with the environment blamed for a corpus problem. That
+generalises past this gate: a fault in an early layer does not announce itself as one, it
+presents as a finding in a later layer that was working correctly.
+
 And the gate must be **one implementation, not two**. Two independently written comparators
 can disagree for reasons that have nothing to do with the machines being compared, which is
 the failure the gate exists to rule out - so the script is exchanged along with the manifest,
