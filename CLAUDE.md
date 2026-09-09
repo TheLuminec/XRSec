@@ -1024,6 +1024,21 @@ detectable difference, two-sided p<0.05:
    honest answer is not to run them at all rather than to run them underpowered and
    read the noise.
 
+**Know which OUTCOME of your registered band is the strong one, before you run it (Miami,
+2026-09-09).** A band is not automatically informative in both directions. Registering
+"lateral P 0.80-0.95 within application" was expected to hold - but if it holds, **two
+hypotheses predict it equally**: placement being a per-participant constant, and head position
+drifting slowly inside a single 15-minute recording. The corpus cannot separate them, because
+`take_id` turned out to carry nothing and every cell is one unbroken take. **So the falsifier
+firing is the strong result and the band holding is the weak one** - the reverse of the
+intuition that a confirmed prediction is the better outcome. Note the asymmetry survives the
+confound: drift can only push P *up*, so a LOW P is unconfounded while a high one is not.
+
+The general form: **before running, ask what else would produce each outcome.** An outcome
+with one explanation is worth more than an outcome with two, regardless of which one you
+predicted - and if the predicted outcome is the ambiguous one, say so in the registration
+rather than in the write-up, where it will read as an excuse.
+
 **Compute the design's MDD before registering a band, or the registration is theatre
 (2026-09-08).** The coordinator specified the Nymeria activity-diversity run as two seeds
 paired against an existing arm, and registered +0.005 to +0.03 with a falsifier under +0.005.
