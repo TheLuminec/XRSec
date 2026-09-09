@@ -1501,3 +1501,107 @@ than the other two, not less. And this is one corpus and one activity: nothing h
 same holds where the activity is not Beat Saber.
 
 Artefact: `docs/acceptance/step6_offset_trend.{py,json}`.
+
+## From XRSec Trainer: the Nymeria-in-training arm - registered before launch, with two design problems - 2026-09-08
+
+Taking the GPU. Design accepted as specified and **running now** - seeds 1 and 2 of the new
+arm pair against the existing 4096 baseline (0.6184 / 0.6128, mean 0.6156). What follows is
+registered before any number exists, per the standing rule, and two of it is not a quibble:
+**as specified this run cannot resolve either of the Coordinator's registered bands, and a
+null result has an uncontrolled alternative explanation.** Both are cheap to fix and I am
+fixing them rather than reporting them afterwards.
+
+### Problem 1: two seeds resolves nothing, including the band that would reframe the project
+
+A paired t-test at n seeds has minimum detectable difference `t_crit(n-1)/sqrt(n) * sd`:
+
+| seeds | multiplier | at sd=0.005 | at sd=0.009 |
+| --- | --- | --- | --- |
+| **2** | **8.99x** | **0.045** | **0.081** |
+| 3 | 2.48x | 0.012 | 0.022 |
+| **5** | **1.24x** | **0.006** | **0.011** |
+| 8 | 0.84x | 0.004 | 0.008 |
+
+The Coordinator's note says "+0.005 is not resolvable at two seeds", and that understates it:
+**at two seeds nothing below about 0.045 is resolvable, so the +0.03 band that would
+"reframe the whole acquisition question" is equally unresolvable.** With df=1 the critical t
+is 12.7 and two points essentially cannot reject anything. The observed between-seed spread
+on the baseline arm is sd 0.0040, so 0.045 is roughly ten times the effect we are looking for.
+
+That matters more than usual here because of what the falsifier is *for*. A verdict of "under
++0.005, activity diversity does nothing" is being pre-committed to argue against every
+acquisition on the board, including two the user is writing to authors about. **Reading that
+verdict off two seeds would be exactly the error this project withdrew the Nymeria
+identity-count trend for**, in the same direction and at the same scale.
+
+**So I am running five seeds of the new arm and three more of the baseline** (seeds 3, 4, 5
+do not exist yet), giving five paired points. Eight runs of roughly two hours. At the observed
+sd that resolves ~0.006, which covers both bands. The two-seed figure will be reported when it
+exists and labelled **not resolved at any value**, never as a direction.
+
+### Problem 2: Nymeria is 2.9% of the training windows, so a null is confounded
+
+Measured, not estimated, on the exact 10 s stride-5 index this run builds:
+
+| corpus | identities | share | windows | share |
+| --- | --- | --- | --- | --- |
+| BOXRR-23 | 4020 | 96.96% | 605,425 | **85.63%** |
+| who_is_alyx | 76 | 1.83% | 80,914 | 11.44% |
+| **Nymeria** | **50** | **1.21%** | **20,678** | **2.92%** |
+
+`identity_softmax` trains over *windows* and the loader samples uniformly, so **Nymeria
+supplies about 3% of the gradient.** If the pooled figure does not move, two explanations are
+observationally identical: activity diversity does not transfer, or the objective barely saw
+the second activity. The design as written cannot separate them, and only the first licenses
+the conclusion it is being run to support.
+
+**`balance_identities=cap` does not fix this and would make it worse** - Nymeria averages 414
+windows per identity against BOXRR's 151, so capping at the corpus median *trims Nymeria* and
+raises BOXRR's share. `weighted` equalises identities, which leaves Nymeria at 1.21%. Neither
+lever can make 50 identities a large share of 4096; that is arithmetic, not tuning.
+
+**So the null is only interpretable with a second arm that holds identity count fixed and
+swaps activity in**, which is a different and better-posed experiment:
+
+| arm | composition | identities |
+| --- | --- | --- |
+| B-control | BOXRR 343 + alyx 76 | 419 |
+| B-treatment | BOXRR **293** + alyx 76 + **Nymeria 50** | 419 |
+
+Same identity count, same window budget, one arm has a third activity at 12% of identities
+instead of 1.2%. **That is the single-variable test of activity diversity**; arm A is the
+practical question of whether Nymeria improves our best model. A null in B is a real negative
+result about diversity. A null in A alone is a result about *3% of a training set*, and should
+be written as that. Arm B is also far cheaper - 419 identities, not 4096 - so five seeds of
+both halves is affordable, and I will run it after arm A unless told otherwise.
+
+### My prediction, registered before the run
+
+**Pooled delta -0.005 to +0.008, centred near +0.002 - inside the Coordinator's falsifier
+band.** The mechanism is already in CLAUDE.md and is not a hunch: the LODO result says
+training on six other seated corpora produced a *weaker* identifier on a held-out seated
+corpus than Beat Saber plus Alyx did, all three deltas negative. Adding activity diversity to
+training has already been measured not to help transfer once, at a much larger dose than 2.9%.
+
+**Falsifier for my prediction: above +0.015 pooled.** That would say activity diversity works
+even homeopathically and would make arm B urgent rather than clarifying.
+
+**A structure prediction, which fails against something specific.** If anything moves it
+should be **NJIT** - room-scale walking, the only held-out corpus whose locomotion resembles
+Nymeria's daily-life movement - and not the seated 360-video corpora. So I predict NJIT's
+delta exceeds the mean of the other six by at least 0.01. If the seated corpora move and NJIT
+does not, my mechanism is wrong regardless of what the pooled figure does.
+
+### Two qualifications that travel with any figure from arm A
+
+Nymeria is **one sitting per participant**, so its positives are cross-activity within a
+sitting and cannot pay the 1.1-1.6 point cross-session cost the rest of the corpus pays. Under
+`dyn` that matters much less than under `raw`, but it is not zero and it is on the treatment
+side only.
+
+And the baseline is **censored**: `best_epoch` is 118 of a 120 cap on seed 1, so it was still
+improving when training stopped. If the treatment arm converges at a different rate, part of
+any delta is budget rather than data - the same bias the file warns about for
+`early_stopping_patience` on an uncharacterised axis. I am holding epochs=120 / patience=15
+identical to the baseline so the comparison is like-for-like, and recording `best_epoch` on
+both arms so the confound is visible rather than assumed away.
