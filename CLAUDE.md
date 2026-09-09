@@ -2682,6 +2682,24 @@ untouched and the combined view backfills blanks - but it touches `model/*.py` a
 `code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
 the first cross-machine comparison, not after.
 
+**The training-free baselines are a free cross-machine gate, and they cover BOTH open gaps at
+once.** `position_lookup_auc` and `amplitude_auc` need no model, no GPU and no training: given
+the same sample index and the same pair manifest they are deterministic, so two machines must
+agree to floating-point precision. A disagreement can only come from the corpus content or
+the environment - which are exactly the two things nothing currently checks. The size manifest
+explicitly did **not** establish content equality, and the row records no stack, so one
+training-free run on an agreed user list and seed tests both in minutes, against ~2 h a side
+for `sha256` over 42.8 GB that would test only the first. **Run it before any cross-machine
+result is compared**, and prefer it to any check that compares bytes, because what matters is
+not whether the disks agree but whether the arithmetic does.
+
+Miami's first row supplies the encouraging-but-insufficient version: alyx
+`position_lookup_auc` **0.6006** against this file's ~0.593 for the alyx xyz lookup. It
+reported that as a consistency signal and explicitly not a reproduction - different held-out
+users, different manifest, 10 s against 5 s windows, different machine - which is the right
+call and the reason the real gate is worth running. **Do not let a near-miss on different
+inputs stand in for a match on identical ones.**
+
 **And whatever lands must say what a MISSING env block means** (Miami). The change moves
 `code_identity`, so there will be a sharp line with un-annotated rows before it and annotated
 rows after - and the rows that most need the annotation are the ones already written. State
