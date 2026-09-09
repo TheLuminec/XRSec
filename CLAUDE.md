@@ -1566,6 +1566,30 @@ the treatment**, which is worse than spending the wall clock, and it would be in
 in the results table. Use patience on axes whose epoch distribution is already known to
 sit well inside the cap; on a first look at a new axis, leave it at 0.
 
+**The budget is recoverable from the rows even when the config fields are blank
+(2026-09-08).** `epochs` and `early_stopping_patience` are recorded as `None` on the older
+transfer rows, so "both arms ran the same budget" would rest on assertion - except that
+`best_epoch` and `epochs_run` are recorded, and `epochs_run - best_epoch` is the patience
+whenever a run stopped early. Sweep `0840769514`: seeds 2, 4 and 5 read 73+15=88, 88+15=103,
+97+15=112, three exact hits, and seeds 1 and 3 sit at the 120 cap with `best_epoch` 114 and
+118. **That is patience=15 under a 120 cap, recovered arithmetically from two columns.**
+`docs/acceptance/nymeria_activity_analysis.py` derives it per arm and flags anything it
+cannot explain, so an arm that silently ran a different budget shows in the output rather
+than in a config nobody kept.
+
+**And a censored control makes the convergence check sharper, not weaker.** The coordinator
+handed over the band `98.0 +-18.6` as a constant - it is arm B's control, whose seeds stop at
+73-118 - and it is wrong for arm A, whose control has **both** seeds at the 120 cap
+(`best_epoch` 118 and 116, mean 117.0, no early stops at all). Applied there it would have
+called the arms matched or unmatched at random. **The band has to come from each arm's own
+control**, and where that control never stopped early the test becomes categorical and
+stronger: if the treatment stops on patience where the control never did, that *is* a
+convergence difference, with no mean comparison needed. Note why that matters beyond
+tidiness - at n=2 a difference of `best_epoch` means carries the same 8.98x penalty as any
+other paired comparison, so the constant band would have imported the *same* unresolvable
+design into the diagnostic written to catch it. **A check on an under-powered comparison can
+be under-powered in the same way; state its resolution too.**
+
 **The recorded distribution is right-censored and this is not a detail.** p90 is epoch 18
 against a cap of 20 and 5% select 19 or 20, so for the top decile we do not know what
 epoch those runs would have chosen with room to run. Every "best epoch" statistic above
@@ -1964,6 +1988,16 @@ Across 29 `dyn` transfer checkpoints, 28 came back within 1e-4 of their recorded
 (1.5e-9 to 7.5e-5, cuDNN run-to-run) and the only miss was the `random` control, whose score
 is noise by construction - which is the sensitivity you want from a gate: it passes what
 should reproduce and fails what cannot. Use it for any scoring outside the training path.
+
+**"It was gated" and "there is a committed certificate that it was gated" are different
+claims, and only the second survives the session** (Trainer, 2026-09-08). A gate run inline
+that prints its gaps and moves on leaves a log line; a gate that writes
+`docs/acceptance/*_gate.json` leaves something a later session can cite to skip a re-run.
+The five checkpoints reused as an experimental control were certified by the *Nymeria*
+rescoring, not by the window-length work that also gated them - because only the first wrote
+its artefact out. **Write the gate result to `docs/acceptance/` even when you only need it
+inline**; the whole value of the reusable-control pattern above depends on the certificate
+existing, not on the check having happened.
 
 ### The learned branch identifies at 0.858 in domain, and averaging is why
 
