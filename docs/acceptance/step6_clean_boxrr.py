@@ -37,7 +37,7 @@ from dataset import build_sample_index, select_user_subset       # noqa: E402
 from normalization import ChannelNormalizer                      # noqa: E402
 from utils import load_checkpoint                                # noqa: E402
 from score_nymeria import gate                                   # noqa: E402
-from step6_seated_dyn import (DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
+from step6_seated_dyn import (write_gate_certificate, DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
                               templates, euclid, cosine, rank1, zscore)
 
 BOXRR = ROOT / "processed_datasets" / "BOXRR-23_Dataset" / "users"
@@ -67,6 +67,7 @@ if __name__ == "__main__":
     print(f"device {DEVICE}; chance at N={N_SMALL} is {1/N_SMALL:.4f}\n")
 
     gates = [dict(gate(p), seed=s) for s, p in sorted(DYN_93.items())]
+    write_gate_certificate(pathlib.Path(__file__).stem, gates)
     if not all(g["passed"] for g in gates):
         print("\n*** GATE FAILED - report the mismatch, do not compute rank-1 ***")
         sys.exit(1)

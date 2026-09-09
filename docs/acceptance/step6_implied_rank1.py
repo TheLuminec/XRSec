@@ -39,7 +39,7 @@ from dataset import build_sample_index                 # noqa: E402
 from normalization import ChannelNormalizer            # noqa: E402
 from utils import load_checkpoint                      # noqa: E402
 from score_nymeria import gate                         # noqa: E402
-from step6_seated_dyn import (DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
+from step6_seated_dyn import (write_gate_certificate, DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
                               templates, cosine, rank1)
 from step6_clean_boxrr import BOXRR, unseen_pool, K_POP  # noqa: E402
 
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     print(f"implication formula gate: 3/3 against CLAUDE.md's alyx values\n")
 
     gates = [dict(gate(p), seed=s) for s, p in sorted(DYN_93.items())]
+    write_gate_certificate(pathlib.Path(__file__).stem, gates)
     if not all(g["passed"] for g in gates):
         print("\n*** GATE FAILED ***")
         sys.exit(1)

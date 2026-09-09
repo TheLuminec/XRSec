@@ -76,6 +76,24 @@ def quiet(fn, *a, **kw):
         return fn(*a, **kw)
 
 
+def write_gate_certificate(name: str, records: list[dict]) -> pathlib.Path:
+    """Persist a gate result even when the caller only needed it inline.
+
+    "It was gated" and "there is a committed certificate that it was gated" are different
+    claims, and only the second survives the session. The reusable-control pattern - comparing
+    against a checkpoint's recorded row without re-running it - depends on the certificate
+    existing, not on the check having happened, so a harness that gates a checkpoint and throws
+    the result away has done the work and kept none of the value. Same shape as reading "on
+    origin" from origin rather than from the working file: the artefact, not the recollection.
+    """
+    out = pathlib.Path("docs/acceptance") / f"{name}_gate.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(records, indent=1), encoding="utf-8")
+    passed = sum(bool(r.get("passed")) for r in records)
+    print(f"  gate certificate: {passed}/{len(records)} passed -> {out}", flush=True)
+    return out
+
+
 def build_pair(users_dir, keep=None):
     """The same windows twice: dyn for the model, raw for head height. Asserted aligned."""
     kw = dict(sample_time=5, sample_rate=20)

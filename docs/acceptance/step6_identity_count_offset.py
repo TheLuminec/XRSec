@@ -39,7 +39,7 @@ from dataset import build_sample_index, select_user_subset   # noqa: E402
 from normalization import ChannelNormalizer                  # noqa: E402
 from utils import load_checkpoint                            # noqa: E402
 from score_nymeria import gate                               # noqa: E402
-from step6_seated_dyn import (DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
+from step6_seated_dyn import (write_gate_certificate, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
                               templates, cosine, rank1)
 from step6_clean_boxrr import BOXRR, POOL_USERS              # noqa: E402
 from step6_implied_rank1 import auc_from, implied_rank1      # noqa: E402
@@ -76,10 +76,13 @@ def pool_for(ckpts: dict) -> tuple[list[str], str]:
 
 if __name__ == "__main__":
     print(f"device {DEVICE}; chance at N={N_SMALL} is {1/N_SMALL:.4f}; k={K} (80 s)\n")
-    out = {}
+    out, gates = {}, []
     for label, ckpts in ARMS.items():
         for seed, path in sorted(ckpts.items()):
-            if not gate(path)["passed"]:
+            g = dict(gate(path), seed=seed, arm=label)
+            gates.append(g)
+            if not g["passed"]:
+                write_gate_certificate(pathlib.Path(__file__).stem, gates)
                 print(f"\n*** GATE FAILED on {path} ***")
                 sys.exit(1)
         users, provenance = pool_for(ckpts)
@@ -109,5 +112,6 @@ if __name__ == "__main__":
               f"implied {np.mean(per_seed['implied']):.3f}   "
               f"measured {np.mean(per_seed['rank1']):.3f}   "
               f"OFFSET {np.mean(per_seed['offset']):+.3f}")
+    write_gate_certificate(pathlib.Path(__file__).stem, gates)
     pathlib.Path("docs/acceptance/step6_identity_count_offset.json").write_text(
         json.dumps(out, indent=1), encoding="utf-8")

@@ -37,7 +37,7 @@ from dataset import build_sample_index                 # noqa: E402
 from normalization import ChannelNormalizer            # noqa: E402
 from utils import load_checkpoint                      # noqa: E402
 from score_nymeria import gate                         # noqa: E402
-from step6_seated_dyn import (DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
+from step6_seated_dyn import (write_gate_certificate, DYN_93, DEVICE, N_SMALL, SEED, quiet, embed, population,  # noqa: E402
                               templates, cosine, rank1)
 from step6_clean_boxrr import BOXRR, unseen_pool       # noqa: E402
 from step6_implied_rank1 import auc_from, implied_rank1  # noqa: E402
@@ -64,13 +64,15 @@ def arm_population(users, sample_time, k):
 if __name__ == "__main__":
     print(f"device {DEVICE}; chance at N={N_SMALL} is {1/N_SMALL:.4f}\n")
 
-    for ckpts, st, seq, _ in ARMS.values():
+    gates = []
+    for label, (ckpts, st, seq, _) in ARMS.items():
         for seed, path in sorted(ckpts.items()):
-            g = gate(path)
-            if not g["passed"]:
-                print("\n*** GATE FAILED ***")
-                sys.exit(1)
-    print("\ncheckpoint gate: 10/10 passed\n")
+            gates.append(dict(gate(path), seed=seed, arm=label.strip()))
+    write_gate_certificate(pathlib.Path(__file__).stem, gates)
+    if not all(g["passed"] for g in gates):
+        print("\n*** GATE FAILED ***")
+        sys.exit(1)
+    print(f"\ncheckpoint gate: {len(gates)}/{len(gates)} passed\n")
 
     users = unseen_pool()
     pops, raws = {}, {}
