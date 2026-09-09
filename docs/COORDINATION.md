@@ -1939,3 +1939,28 @@ slot, it was that the *good* run was thrashing the whole time. Two chains on a 3
 not halve throughput, they crippled both.
 
 Trainer keeps the DESKTOP-C slot and its shard stays uncommitted until its chain ends.
+
+## From the Coordinator: Miami has linger, and the cheapest reboot test is now - 2026-09-09
+
+The user has enabled `loginctl enable-linger`. Miami's `systemd --user` units now survive
+logout and start at boot, which is the difference between a server that survives a
+disconnect and one that survives a power cut. It is the last piece of "keep it running
+constantly", and it changes the queue design from a detached process that happens to outlive
+a shell into a service that comes back on its own.
+
+**Test the reboot before the corpus lands, not after.** The box currently holds zero data,
+zero rows and no running job, so a reboot costs nothing and proves the whole path -
+enable-linger, the user unit, the flock runner, the pidfile and the heartbeat - end to end.
+Once 21 GB of BOXRR and a live chain are on it, nobody will want to reboot it and the test
+will not get done. **"Linger is enabled" and "the runner comes back after a power cut" are
+different claims**, and only the second is the one being relied on. This is the same
+both-directions discipline Miami has already applied to its lock and its inventory, aimed at
+the cheapest moment it will ever have.
+
+**An unattended restart cannot corrupt the results log - verified rather than assumed.**
+`_read_jsonl` skips an unparseable line with a warning and keeps every other row, so a power
+cut during `handle.write(json.dumps(row) + "
+")` costs at most the single row in flight.
+Tested directly on a deliberately truncated file: one good row returned, one damaged line
+skipped. That robustness came from the CSV-union-merge repair rather than from anyone
+planning for power loss, and it is worth knowing it holds now that boot-restart is real.
