@@ -651,7 +651,14 @@ residual static cue is height** - the one this file has consistently called a bi
 That makes the corpus usable under `raw` with a height caveat and clean under `dyn`, where
 before this measurement it looked like a `dyn`-only instrument. Two caveats stay attached:
 it is still **one sitting**, so it says nothing about temporal persistence and cannot pay
-the cross-session cost; and `take_id` separates a short break, not a day.
+the cross-session cost; and **`take_id` carries no information at all** - it is a redundant
+relabelling of `game_id`, identical on all **21,203,962 rows** of all 49 files, 245 cells and
+not one with a second take. This file previously said "`take_id` separates a short break, not
+a day", which conceded a limit while implying structure that is not there. **The honest
+caveat is harder: each (participant, game) cell is a single unbroken recording, so the corpus
+holds no within-application temporal separation of any kind.** Nothing already concluded from
+it changes - the 0.527 is cross-application and needs no takes - but a word was doing
+reassurance work it had not earned, which is worse than a caveat that is merely pessimistic.
 
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
