@@ -190,6 +190,35 @@ errors, no GitLab rate-limit headers - a different, harder block than GitLab's o
 `throttle_unauthenticated_web`). Treat that as a standing block on that machine rather than
 a short-lived throttle to wait out; fetch from elsewhere.
 
+**LANDED 2026-09-09, on DESKTOP-C.** `raw_datasets/Across_XR_Dataset_Main/`, 49 CSVs
+`0.csv`..`48.csv` contiguous plus `Readme.md`, **5,434,494,029 bytes** - quote that figure
+when copying between machines so the far end verifies on arrival rather than trusting the
+copy. `raw_datasets/Across_XR_Applications/` sits alongside holding only `fetch.sh` and
+`fetch.log` from the blocked attempt. **It is on DESKTOP-C, not AVALON** - an earlier note
+of mine said "Data has it", meaning Data owns the conversion, and it was read as a location.
+Ownership and location are different facts and a coordinator should not spend one word on
+both.
+
+**The w-first trap is handled, and this is verified rather than presumed.**
+`prepare_across_xr.py` reads rotations **by name** into x,y,z,w
+(`RAW_ROTATION_COLUMNS = [head_rot_x, head_rot_y, head_rot_z, head_rot_w]`), divides
+position by `CENTIMETRES_PER_METRE`, and computes a per-session mean `|q|`, warning and
+exiting non-zero on anything outside 0.99-1.01. `tests/unit/test_prepare_across_xr.py`
+pins it - `test_quaternion_is_reordered_from_real_scalar_first_layout` asserts w=1/x=0 from
+a scalar-first fixture - along with cm->m at 1.61, a zero-based `SessionTime` at 0.011s
+spacing, and the paper's 23/9/17 split. **10 passed.**
+
+**The session question is already decided in code**: each `(game_id, take_id)` becomes its
+own session file under one user directory, so a **cross-session positive on this corpus is a
+cross-application pair**. That is the whole point of the corpus and it is also a large
+change in what `cross_session_positives` means here relative to every other dataset - quote
+it beside any figure from this corpus.
+
+**Licence: CC BY-NC-SA 4.0** (Würzburg GitLab). Non-commercial and share-alike, so lighter
+than the BOXRR DUA but not unencumbered, and it must travel with derived data the way BOXRR's
+clause 5 does. The converter already writes `CITATION.txt` into the output root, which is the
+mechanism that makes it travel rather than a memory.
+
 ### Nymeria — the only dataset found that is recorded on real AR glasses
 
 **Accepted, and the strongest new find.** Meta Project Aria glasses, so it matches this
