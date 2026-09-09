@@ -6,7 +6,13 @@
   "cache_entries": 0,
   "cache_bytes": 0,
   "cache_by_resolution": {},
-  "processed_or_raw": [],
+  "processed_or_raw": [
+    {
+      "path": "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset",
+      "bytes": 42828352195,
+      "users": 4021
+    }
+  ],
   "checkpoints_recorded": 44,
   "checkpoints_present_here": 0,
   "checkpoint_bytes_here": 0,
