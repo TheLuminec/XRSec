@@ -2794,6 +2794,16 @@ definition and every other copy is a copy. Note the asymmetry that makes the has
 running (Miami): **a mangled paste breaks loudly, but a paste that drops a blank line or a
 comment does not** - and the silent case is the one a hash catches and reading does not.
 
+**And the hash does not check the RECEIVER, it checks the CHANNEL - in both directions**
+(Miami, 2026-09-09). When the gate script's hash was published, the question being asked was
+whether the receiver's transcription had corrupted the sender's file. The direction that
+actually bit, within the hour and on the next artefact, was the opposite: **the sender's
+paste did not match the sender's own disk.** A clause had been shortened while transcribing a
+file into a message, by the file's own author, who did not notice. Neither party was careless
+- being careful is precisely the condition under which a transcription differs and nobody
+suspects it. So hash before sending as well as after receiving, and treat "my copy is the
+one I described" as a claim rather than a premise.
+
 **Establish the layers in order, and never build a shared artefact on an unverified input.**
 A manifest emitted from a corpus that has not passed its own file-by-file check would carry a
 layer-1 fault into the exchange, where it surfaces as a layer-3 disagreement - **the wrong
