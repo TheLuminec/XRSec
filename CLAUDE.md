@@ -2112,7 +2112,15 @@ is noise by construction - which is the sensitivity you want from a gate: it pas
 should reproduce and fails what cannot. Use it for any scoring outside the training path.
 
 **"It was gated" and "there is a committed certificate that it was gated" are different
-claims, and only the second survives the session** (Trainer, 2026-09-08). A gate run inline
+claims, and only the second survives the session** (Trainer, 2026-09-08). **And a commit that
+cannot reach `origin` is not a committed certificate** (2026-09-09): Miami's harness cannot
+push to main, so its `boxrr_corpus_avalon_vs_desktopc.json` at `48ef785` exists on exactly
+one disk - durable against that session ending, useless to any other session, and therefore
+failing the property it was written for. A node that produces certificates needs a route to
+origin; where the harness forbids one, the artefact goes to a peer who can push it, and the
+commit is not cited until it is *there*. Check `git ls-tree origin/main` before treating a
+peer's commit hash as a reference.
+ A gate run inline
 that prints its gaps and moves on leaves a log line; a gate that writes
 `docs/acceptance/*_gate.json` leaves something a later session can cite to skip a re-run.
 The five checkpoints reused as an experimental control were certified by the *Nymeria*
@@ -2167,7 +2175,16 @@ generalises furthest, because it does not require the checker to be wrong.** Tha
 correct; it was pointed at an empty file.
 
 So the assertion goes on the fixture and it has to be **specific**: not "the file exists" but
-"the thing I claim to be testing is in it". `assert 'GlobalMemoryStatusEx' in body` is what
+"the thing I claim to be testing is in it". **The same rule aimed at a COMPARISON rather
+than a fixture** (Miami, 2026-09-09): before diffing two manifests, assert that a known key
+resolves on *both* sides after normalisation and that both hold the expected number of
+entries. A stated path convention is still a claim about the other machine's output, and if
+it is wrong the diff reports *everything* missing and *everything* extra - 17,874 of each -
+which reads as catastrophe and is a prefix bug. Two lines convert that into an immediate stop
+with sample keys printed. Both this project's false alarms of that shape (a coverage scan
+reporting five absent certificates that all existed, a verifier reporting 146 missing and 146
+extra on a corpus whose totals matched) would have been caught by it.
+ `assert 'GlobalMemoryStatusEx' in body` is what
 turned a silent pass into a caught error, and it is one line. A fixture check that only tests
 for existence fails in exactly the same way as the guard it is protecting.
 
