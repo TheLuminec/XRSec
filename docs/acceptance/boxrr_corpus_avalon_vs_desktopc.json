@@ -1,0 +1,37 @@
+{
+  "what": "File-by-file comparison of the BOXRR-23 processed corpus on AVALON and DESKTOP-C",
+  "why": "Two machines held identical file and user counts and identical code_identity on every row, yet differed by 191 bytes in total. code_identity() hashes only model/*.py, and all four prepare_*.py sit at the repo root, so the digest cannot see a corpus difference at all. This is the measured instance behind the corpus-digest proposal.",
+  "date": "2026-09-09",
+  "performed_by": "XRSec Miami Server (feng-MS-7B51)",
+  "inputs": {
+    "avalon_manifest": {
+      "path": "processed_datasets/.manifests/boxrr_manifest.txt (from AVALON, not committed - 1.9 MB)",
+      "sha256": "58f142afffef8c51ee99afdc1f71082da1fe00a91ccc3470772f6f18819cd7d2",
+      "lines": 17874,
+      "total_bytes": 42828352195
+    },
+    "desktopc_manifest": {
+      "path": "docs/acceptance/boxrr_manifest_desktop-c.txt.gz",
+      "sha256_uncompressed": "ebee5cd957840062b6adfd4800ed14873a5dff35e43ccd88a8a34875d8a1c5f6",
+      "sha256_verified_on_receipt": true,
+      "lines": 17874,
+      "total_bytes": 42828352004
+    },
+    "path_normalisation": "DESKTOP-C paths lead with './', AVALON's with 'BOXRR-23_Dataset/'. Both stripped. An assertion that 'PROVENANCE.md' resolves on BOTH sides gates the comparison - without it a wrong convention reports every file as simultaneously missing and extra, which is exactly what an earlier version of verify_corpus.py did on who_is_alyx."
+  },
+  "result": {
+    "only_on_avalon": 0,
+    "only_on_desktopc": 0,
+    "size_mismatches": 1,
+    "the_one_mismatch": {"file": "PROVENANCE.md", "avalon": 4832, "desktopc": 4641, "delta": 191},
+    "csv_payload_avalon": {"files": 17872, "bytes": 42828346579},
+    "csv_payload_desktopc": {"files": 17872, "bytes": 42828346579},
+    "independent_arithmetic": "42828352195 - 4832 - 784 = 42828346579, matching the coordinator's independently computed figure"
+  },
+  "conclusion": "Size-identical across all 17,872 CSV files. The entire byte difference between the two machines is PROVENANCE.md, a per-machine file that legitimately differs.",
+  "explicitly_not_shown": [
+    "Content equality at equal size. A size manifest cannot see content; sha256 over 42.8 GB was judged not worth ~2 h of disk on each end, because a size-level diff catches any plausible transfer or generation fault.",
+    "The correct sentence is 'size-identical across all 17,874 files, content unverified' - not 'identical'. Say the weaker sentence and it stays true."
+  ],
+  "consequence": "A corpus digest should be computed over the CSV payload ONLY, excluding PROVENANCE.md and CITATION.txt. Including them makes every machine report a different corpus on day one, at which point somebody switches the guard off and it protects nothing."
+}

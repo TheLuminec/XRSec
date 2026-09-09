@@ -2661,8 +2661,11 @@ check it.
 
 **The digest does not cover the DEPENDENCIES either, and nothing else records them
 (2026-09-09).** `code_identity` hashes `model/*.py`; `results_log.py` imports `platform`
-solely to name the shard file; and **a 75-key row carries no torch version, no Python
-version, no CUDA version and no device**. So two machines can produce numerically different
+solely to name the shard file; and **across all 341 rows of DESKTOP-C's shard and all 82
+entries of `FIELDS`, the number of keys naming a Python version, a torch version, a CUDA
+version, a device or a host is ZERO**. (Quote it that way rather than as a key count: rows
+carry 50-75 keys depending on the run type, modal 69, because the JSONL schema varies by
+design - so "a row has N keys" is not a fact about the format.) So two machines can produce numerically different
 rows with the same `code_identity` and nothing in the record distinguishing them - which is
 not hypothetical, because this file already documents CPU and GPU scoring differing by up to
 **7e-4 AUC** and requires same-device acceptance for numerics-touching changes, *while the
@@ -2678,6 +2681,20 @@ to the row. It is additive, which the JSONL design explicitly supports - old lin
 untouched and the combined view backfills blanks - but it touches `model/*.py` and so moves
 `code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
 the first cross-machine comparison, not after.
+
+**And whatever lands must say what a MISSING env block means** (Miami). The change moves
+`code_identity`, so there will be a sharp line with un-annotated rows before it and annotated
+rows after - and the rows that most need the annotation are the ones already written. State
+in the file that an absent env block means *"written before env annotation existed"*, never
+*"unknown stack"*, or a later reader treats the blank as a measurement. Cheap to write now,
+impossible to reconstruct later - and this project has already been bitten by a blank read as
+a value (`epochs` and `early_stopping_patience` reading `None` on the older transfer rows,
+which had to be recovered arithmetically from `best_epoch` and `epochs_run`).
+
+**The sharpest form of it is Miami's**: this is not a gap in coverage, it is **a rule with no
+referent**. The same-device requirement is not a note, it is the acceptance standard for any
+numerics-touching change - and the record it governs cannot say which device ran, so every
+acceptance that ever cited it was resting on someone remembering.
 
 **Python 3.14 is a hard blocker for the pipeline, and a green test suite did not reveal it.**
 Hydra 1.3.6 - the newest release, so there is nothing to upgrade to - passes
