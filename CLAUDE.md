@@ -532,6 +532,23 @@ The acquisition stands: **50 participants, 100 sequences, 47.1GB transfer, 20,77
 at 5s@20Hz, 17 distinct scripts.** Held at 50 rather than 100 because its value is device
 and activity diversity, not identity count.
 
+**Nymeria moves into TRAINING (user decision, 2026-09-08).** It is no longer the held-out
+AR-glasses instrument; the seven seated corpora carry testing. The reason is the criterion
+this file adopted two days earlier - identity count buys in-domain performance and nothing
+across an activity boundary, so activity diversity is the only axis left worth acquiring -
+and Nymeria is 17 scripts of daily life in the wild against Beat Saber and Alyx. **This is
+the first test of that criterion rather than an argument for it.** Its 50 identities are
+noise on the identity-count curve (4096 -> 4146), so whatever it moves is the activity and
+not the count, which makes it a clean single-variable experiment and the one that decides
+whether any future acquisition is worth making. Registered before the run: pooled transfer
+to the seven corpora **+0.005 to +0.03** over the matched-seed 4096 baseline of 0.6156;
+**falsifier under +0.005**, which would say one genuinely different activity does no better
+than identity count did and would argue against every acquisition on the board. Two
+qualifications travel with any Nymeria training figure: one sitting per participant, so its
+positives are cross-activity within a sitting and cannot pay the cross-session cost (much
+less of a problem under `dyn` than under `raw`); and the cost of the decision is that we no
+longer hold an AR-glasses *test* corpus, and the catalogue's search found no other one.
+
 ### Cross-corpus transfer: the model is BELOW the lookup, and flat in identity count
 
 The experiment the BOXRR acquisition was for. Train on BOXRR+alyx, evaluate on the seven
@@ -995,6 +1012,22 @@ transfer, at scale, under an agreement we already hold - **is unanswered and can
 answered from any metadata file we can reach.** Do not write "BOXRR is one activity"; write
 "our copy is". Resolving it needs either a complete index from the authors or fetching
 per-user folders blind, which is an acquisition decision, not a check.
+
+**That paragraph is UNDER RE-CHECK and may be wrong (2026-09-08).** The mirror's own dataset
+card says, verbatim: *"there are BeatSaber and TiltBrush users, which is noted in the field
+`info.software.app` in the metadata"*, and describes the `metadata/` BSON as exactly the
+filter-before-download index we concluded did not exist. **Our scan read `app.name`, a
+different key path.** The arithmetic that makes this urgent: we recorded 55,044 records with
+no populated info block and called them stubs, against the official Google Poly count of
+**55,178** - 0.24% apart. A Tilt Brush XROR has a different info structure (the library's own
+`fromTilt()` builds a BRUSH device and no HMD), so a scan keyed on the Beat Saber path would
+file every Poly record as an empty stub. The official datasheet independently confirms the
+release draws on **three** sources - BeatLeader, ScoreSaber **and Google Poly**. Data is
+re-reading the BSON on the exact path with the stub structure dumped verbatim; until that
+lands, do not quote "0 users with recordings in two applications" and do not ask the authors
+for an index that may be on our own disk. **This is the project's recurring bug in its
+purest form: a stand-in that looks like the thing being checked** - and it was caught by
+reading the distributor's own description of the field, not by re-running anything.
 
 **156 windows/user is below our existing median of 295, and that is fine.** The cap was
 justified by "land on the median so imbalance does not worsen", but the imbalance *ratio*
