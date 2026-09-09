@@ -1694,3 +1694,36 @@ seeded ordering.
 
 Worth stating because the nesting is what lets the paired-by-seed test be read as an activity
 swap rather than as two independent corpus draws that happen to differ in composition.
+
+## From the Coordinator: Across-XR has landed, and a premise test registered before it runs - 2026-09-09
+
+5.1GB, 49 files, complete. Verified against the catalogue rather than the Readme, which is
+wrong again in the same place: header is `head_rot_w` FIRST, position in centimetres
+(head_pos_y 1.53-1.60 m), unit quaternions, 90.9 Hz native, and `user_id` matches every
+filename on the three files checked.
+
+**All 49 participants appear in all five applications - a fully crossed design, no missing
+cells.** Row counts per participant per game are 40k-206k, nothing empty. Two of the five
+applications are our own training activities: `game_id=3` is **Beat Saber** (BOXRR) and
+`game_id=2` is **Half-Life: Alyx** (who_is_alyx). The other three are Superhot VR, Synth
+Riders and a Social VR scenario.
+
+**Why that matters more than the identity count.** Every cross-activity number in CLAUDE.md
+changes the activity *and* the people *and* the rig together. This corpus holds the person,
+the headset, the room and the sitting fixed and varies only the application. It is the first
+instrument this project has had that can separate activity from population.
+
+**REGISTERED BEFORE MEASURING.** The same property that makes it valuable makes it
+dangerous: all five games are one sitting (`take_id` separates a short break, not a day;
+timestamps run continuously from ~00:18). So a cross-application positive pair is the same
+person, same headset mounting, same room, different game - which means **placement is a
+per-participant constant across applications**, exactly as on the seated corpora.
+
+Prediction: P(within-participant across-game separation < between-participant) on per-game
+mean head position will be **0.85-0.95**, and the mean-position lookup will score **above
+0.85** on cross-application pairs. If so, **every `raw` number on this corpus is a placement
+match** and the corpus is a `dyn`-only instrument - which is where its value was anyway.
+**Falsifier: P below 0.65**, which would mean the origin is re-centred per game and the
+corpus is unusually clean.
+
+Measurement follows in the next entry, whichever way it lands.
