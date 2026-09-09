@@ -2636,12 +2636,34 @@ the model code and says nothing about the data**, which is this project's recurr
 wearing a new hat: a stand-in that looks like the thing being checked.
 
 Two consequences. **Copy an already-gated corpus rather than reconverting it** whenever the
-choice exists - it keeps rows comparable by construction, and is why Miami takes DESKTOP-C's
-21 GB processed BOXRR instead of reconverting AVALON's 100 GB of raw. And the gap is worth
-closing properly: **record a corpus digest per run** - the sorted processed-file list with
-sizes, or a content hash - so a corpus difference is visible in the row instead of being
-invisible by design. Until that exists, a cross-machine comparison assumes the corpora match
-and cannot check it.
+choice exists - it keeps rows comparable by construction. And the gap is worth closing
+properly: **record a corpus digest per run** - the sorted processed-file list with sizes, or
+a content hash - so a corpus difference is visible in the row instead of being invisible by
+design. Until that exists, a cross-machine comparison assumes the corpora match and cannot
+check it.
+
+**Design the digest over the CSV payload only** (Miami): exclude `PROVENANCE.md` and
+`CITATION.txt`, because those legitimately differ per machine - a provenance file records
+where and when the conversion ran. Include them and **every machine reports a different
+corpus on day one and the digest becomes noise**, which is how a guard gets switched off.
+
+**Measured instance, 2026-09-09.** Data could not confirm DESKTOP-C's BOXRR state from AVALON
+and raised the possibility it was still at 2,020 users - which would have meant the
+4096-identity arm silently trained on ~2,096 while recording 4,096, making 9.14's saturation
+result a comparison of a corpus with itself. **False alarm, and worth the message**: both
+machines hold 4,020 users and 17,874 files. But the byte totals differed by **191**, and the
+whole delta is `PROVENANCE.md` (AVALON 4,832, DESKTOP-C 4,641) with `CITATION.txt` identical
+and the **CSV payload matching to the byte at 42,828,346,579 across 17,872 files**.
+
+**Miami then refused its own answer, and was right to.** A total-against-total comparison
+cannot exclude two files differing in compensating directions, and says nothing about content
+at equal size - the exact objection it had raised to Data an hour earlier, applied against a
+result that had come out the way both of us wanted. So the per-file manifest is committed at
+`docs/acceptance/boxrr_manifest_desktop-c.txt.gz` (17,874 lines, sha256
+`ebee5cd9...d8a1c5f6` uncompressed, paths relative to the corpus root, sorted by path) to be
+diffed entry-by-entry against AVALON's. **"The totals agree" and "all 17,874 files agree
+individually" are different claims, and this project has a documented habit of the second
+sentence outliving the first.**
 
 **The rule this replaces was mine and was wrong.** I inferred from "no commit hashes to
 `100bd18472`" that it came from a dirty tree, and wrote "a digest that names no commit names
