@@ -946,10 +946,14 @@ documentation, and verified end-to-end against synthetic XROR files:
 | units | 1.0 = 1 metre. No conversion (unlike who-is-alyx's centimetres). |
 | time | seconds since recording start. No conversion (unlike who-is-alyx's `delta_time_ms`). |
 
-**Tilt Brush recordings may carry no head track at all.** The library's own `fromTilt()`
-adds exactly one device - `BRUSH`, `type='OTHER'` - and no HMD. If BOXRR-23's Tilt Brush
-files were produced the same way, that portion of the corpus is brush-tip trajectory
-only and is unusable here. `prepare_boxrr.py` skips any recording with no HMD/HEAD
+**Tilt Brush recordings carry no head track at all - CONFIRMED on a real file
+(2026-09-08).** The library's own `fromTilt()` adds exactly one device - `BRUSH`,
+`type='OTHER'` - and no HMD, and this file predicted that BOXRR-23's Tilt Brush portion
+would therefore be brush-tip trajectory only. One user tarball from the unlabelled pool
+settles it, verbatim: `hardware.devices` is a single `{"name": "BRUSH", "type": "OTHER"}`
+with no HMD anywhere, `software.app.name` reads **"Tilt Brush"** directly rather than by
+inference, 153,710 frames over ~4.5 hours. **A prediction registered before the data
+existed, and it held.** That portion of the corpus is unusable here. `prepare_boxrr.py` skips any recording with no HMD/HEAD
 device and reports why rather than guessing. **Confirm against real `--inspect` output
 before planning around any recording count**, and prefer Beat Saber sources
 (BeatLeader, ScoreSaber) when selecting users from the BSON index.
@@ -1044,15 +1048,21 @@ the board was pointed at - the same people recorded in two activities, at scale,
 agreement already held - **does not exist in this corpus**, and no index request or blind
 fetch would have produced it. That was one email away from being asked for.
 
-**Still open, and cheap: what the unlabelled bucket is.** Two hypotheses fit. The flag name
-`corrupt_user` says corrupted recordings whose metadata failed to parse. The count says Tilt
-Brush: 54,965 against the official Google Poly figure of 55,178, 0.24% apart, and Poly files
-arrive in the TILT format the metadata pipeline may simply not have read. **One user tarball
-settles it** (~53MB, inside the DUA we hold, not an acquisition). It matters because if that
-bucket is Tilt Brush, we already hold **13,746 users of a second activity** - the axis this
-file now says is the only one worth acquiring - with nothing to request from anyone. The
-prior is poor: `fromTilt()` builds a BRUSH device and **no HMD**, so head-only may find
-nothing usable there. Cheap either way, and a negative closes the question permanently.
+**The unlabelled bucket is Tilt Brush, and it is unusable - CLOSED (2026-09-08).** One user
+tarball from the 13,746, fetched with the user's direct approval, inspected and deleted the
+same hour so nothing was retained under the DUA's destruction obligations. `software.app.name`
+reads **"Tilt Brush"** outright, so the count-proximity coincidence (54,965 against 55,178)
+was pointing at the right answer for the wrong reason - and `hardware.devices` holds exactly
+one `BRUSH`/`OTHER` entry with **no HMD**, so a head-only pipeline can read nothing from it.
+The `corrupt_user` flag marks records whose Beat-Saber-shaped metadata parse failed, which is
+what a TILT-format file does to that pipeline.
+
+**Both halves of the cross-application question are now closed, and both closed negative.** No
+user in BOXRR-23 is recorded in two applications; and the second application that does exist
+there could not have been used by this project even if someone were. **Nothing is owed to
+anyone and nothing is left to fetch** - the corpus is Beat Saber for our purposes, by
+measurement rather than by assumption, and that sentence can now be written without the
+"our copy is" hedge this file has carried since 2026-09-05.
 
 **Method, and it is the recurring bug again from both sides.** The coordinator inferred a
 wrong-key-path mechanism from the distributor's prose and was wrong; Data had characterised
