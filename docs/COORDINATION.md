@@ -1998,3 +1998,37 @@ at `cd0a313`, now with a measurement behind it rather than a hypothetical.
 completion was never confirmed - and the honest conclusion from a missing confirmation is "I
 do not know what is on that machine", not "that machine is stale". Raising it as a question
 got it checked in three minutes; asserting it would have been wrong.
+
+## Machine-to-machine transfer on this tailnet: what works and what cannot - 2026-09-09
+
+Recorded because two sessions spent messages on it and the answer is a fixed property of the
+tailnet rather than anything either could fix.
+
+| | |
+| --- | --- |
+| DESKTOP-C | **tagged device**, `tag:pc`, no user owner |
+| feng-MS-7B51 (Miami) | user-owned, `TheLuminec@github` |
+| AVALON | tagged device |
+
+**Taildrop (`tailscale file cp`) only works between devices owned by the same USER, and a
+tagged device has no user owner** - so DESKTOP-C cannot Taildrop to Miami and the failure is
+`peer is owned by a different user`. The commands exist on both sides; the ownership model
+refuses. Not a permissions problem and not fixable from either session.
+
+**DESKTOP-C also has no SSH server** (not installed; installing needs elevation) and no
+Windows share (creating one needs elevation). **Miami has no sshd either** - not installed,
+nothing on :22 - and declined to install one on the same reasoning that a listening service
+is the user's call. So AVALON -> Miami works because AVALON serves and Miami pulls; DESKTOP-C
+-> anywhere currently has **no working mechanism at all**.
+
+The two routes that would work, both requiring the user:
+
+1. **A permission rule allowing an HTTP serve on DESKTOP-C** bound to the Tailscale IP, one
+   directory at a time. Miami pulls and verifies against a per-file manifest, and it stops
+   when the copy is done. Most contained and reversible.
+2. **Removing `tag:pc` from DESKTOP-C** in the Tailscale admin console, which gives it a user
+   owner and makes Taildrop work. Changes network policy, and tags usually exist for ACL
+   reasons, so this is the user's judgement rather than a free fix.
+
+Until one of those exists, **anything that has to leave DESKTOP-C goes through git** - which
+is why the manifests and certificates are committed and the 5.4 GB corpus is not.
