@@ -1,0 +1,40 @@
+{
+  "spec": {
+    "data_dir": "processed_datasets\\BOXRR-23_Dataset\\users",
+    "n_users": 200,
+    "first_user": "0008b0b0-dff9-443c-9942-cb8128478b09",
+    "last_user": "0cef9a69-089b-4cb9-a4bf-221d2075132f",
+    "sample_time": 10,
+    "sample_rate": 20,
+    "window_stride": 5,
+    "channels": "full",
+    "encoding": "raw",
+    "resample": "nearest",
+    "seed": 67,
+    "pairs_per_user": 64,
+    "cross_session_positives": true,
+    "device_for_metrics": "cpu"
+  },
+  "counts": {
+    "users": 200,
+    "windows": 30630,
+    "pairs": 12800
+  },
+  "manifest_sha256": "4b45ea68c92ddd708526bb6534a09ad2bc3443b6c1fcfa497d919efd21990d18",
+  "scored_manifest_sha256": "4b45ea68c92ddd708526bb6534a09ad2bc3443b6c1fcfa497d919efd21990d18",
+  "position_lookup_auc": 0.7798685424804688,
+  "amplitude_auc": 0.5664354736328125,
+  "stack": {
+    "python": "3.12.10",
+    "numpy": "2.4.2",
+    "torch": "2.10.0+cu130",
+    "cuda": "13.0",
+    "device": "NVIDIA GeForce RTX 5060 Ti",
+    "host": "DESKTOP-C"
+  },
+  "tolerance_registered_before_any_number": {
+    "pass": 1e-12,
+    "pass_with_note": 1e-09,
+    "investigate": 1e-06
+  }
+}

@@ -2682,6 +2682,40 @@ untouched and the combined view backfills blanks - but it touches `model/*.py` a
 `code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
 the first cross-machine comparison, not after.
 
+**THE CROSS-MACHINE GATE PASSED, AND THE NUMPY EXPECTATION REGISTERED BELOW WAS WRONG
+(2026-09-09).** Two machines, deliberately different on every axis, on the agreed spec -
+BOXRR, first 200 users in `sorted()` order, 10 s/20 Hz/stride 5, `raw`, seed 67, 64
+pairs/user, metrics on CPU:
+
+| | DESKTOP-C | Miami |
+| --- | --- | --- |
+| stack | py 3.12.10, numpy **2.4.2**, torch 2.10.0, RTX 5060 Ti | py 3.13.15, numpy **2.5.3**, torch 2.14.0, RTX 4060 Ti |
+| users / windows / pairs | 200 / 30,630 / 12,800 | 200 / 30,630 / 12,800 |
+| own manifest sha256 | `4b45ea68c92ddd70...` | `4b45ea68c92ddd70...` |
+| `position_lookup_auc` | 0.7798685424804688 | 0.7798685424804688 |
+| `amplitude_auc` | 0.5664354736328125 | 0.5664354736328125 |
+
+**Both AUCs are bit-identical - |delta| exactly 0.0, not merely inside the 1e-12 band** - and
+the counts match. So the two gaps this gate exists for are closed for these machines: the
+corpora agree in content and not merely in size, and two different stacks compute the same
+training-free arithmetic. That is the measurement that replaces the `explicitly_not_shown`
+content caveat in `boxrr_corpus_avalon_vs_desktopc.json`.
+
+**And the registered expectation failed in the useful direction.** Both sides predicted, in
+writing beforehand, that numpy 2.4.2 against 2.5.3 would draw *different pairs* from the same
+seed - `Generator` streams carry no stability guarantee - and that a manifest-hash mismatch
+would therefore not be a finding. **The hashes are identical.** So the hazard is real as a
+licence (numpy still guarantees nothing) but did not materialise across these two minors for
+the calls `generate_pair_manifest` makes. Keep the caution and drop the expectation: **do not
+assume a numpy bump has moved the draw, and do not assume it has not - hash the manifest.**
+
+**One protocol gap found by the gate refusing.** The emitting side ran with
+`--emit-manifest` only, so its report records `scored_manifest_sha256: "own"` and the guard
+correctly declined to compare - a side that scores "own" cannot be shown to have scored the
+*shared* pairs, even when it did. **The emitter must also pass `--use-manifest` pointing at
+its own emitted file.** The substance was verifiable by hand here only because the hash chain
+closes (both own-manifests equal the shared one), which is luck rather than design.
+
 **NUMPY'S VERSION CHANGES WHICH PAIRS ARE DRAWN, and the machines already differ (Miami,
 2026-09-09).** NumPy freezes the stream of legacy `RandomState`, but **`Generator` method
 streams are explicitly not guaranteed stable across feature releases** - and
