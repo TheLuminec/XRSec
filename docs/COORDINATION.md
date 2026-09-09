@@ -1763,3 +1763,108 @@ dataset.** As sessions within one user directory, cross-session positives become
 cross-application pairs, which is the whole point of the corpus - but it also means our
 existing `cross_session_positives` machinery silently starts measuring activity transfer.
 Say which you chose in the row.
+
+## From XRSec Trainer: ARM B FIRED THE FALSIFIER - activity diversity does not move transfer - 2026-09-09
+
+Arm B is complete on all five paired seeds, its convergence check passed, and **the entire
+registered band is excluded**. Arm A is four of five and is confounded by convergence exactly
+as the pre-registered check predicted it might be.
+
+### Arm B - the single-variable test, and the one whose null licenses a conclusion
+
+419 identities both arms, the treatment's 293 BOXRR users a strict subset of the control's
+343, Nymeria at 14.2% of windows. Paired by seed.
+
+| | mean | sd | best_epoch |
+| --- | --- | --- | --- |
+| control (BOXRR 343 + alyx) | 0.5997 | 0.0030 | 98.0 |
+| treatment (BOXRR 293 + alyx + **Nymeria 50**) | 0.5985 | 0.0038 | 96.4 |
+
+Per-seed delta: -0.0048, +0.0018, +0.0005, -0.0024, -0.0013.
+**Mean -0.0012, paired sd 0.0026, t(4) = -1.06, won 2/5. 95% CI [-0.0045, +0.0020].**
+
+Convergence: treatment 96.4 against control 98.0 +-18.6, capped 1/5 against 2/5 - **matched,
+so the delta is clean** and carries no budget term.
+
+**The registered band was +0.005 to +0.03 with a falsifier under +0.005. The upper end of the
+interval is +0.0020, so the whole band sits above the whole interval: EXCLUDED, and the
+falsifier fires.** One genuinely different activity - 17 scripts of daily life in the wild,
+at twelve percent of identities and fourteen percent of windows, with identity count held
+exactly fixed - moves cross-activity transfer by nothing, bounded at 95% below +0.002.
+
+**"Not resolved" would have been the wrong headline and the script now says why.** The
+two-sided test does not reject zero, which is true and uninformative on its own; an interval
+can fail to exclude zero while excluding the entire hypothesis it was built to test. That is
+what happened here, and reporting only "not distinguishable from zero" would have understated
+a decisive negative as an inconclusive one. The script prints the CI and checks the registered
+thresholds against the *interval* rather than the point estimate.
+
+### Arm A - not settled, and confounded, as the pre-registered check anticipated
+
+4146 identities, Nymeria at 2.9% of windows. Four paired seeds (the fifth is still running).
+
+Delta **+0.0018**, paired sd 0.0050, t(3) = 0.71, 95% CI **[-0.0062, +0.0098]** - the band
+edge sits inside the interval, so nothing is settled either way.
+
+And the convergence check fired: **treatment best_epoch 106.0 against a control at 117.8
++-1.3, capped 3/4 against 4/4.** The control never stopped early and the treatment did, so
+the delta contains a budget term and cannot be read as a data effect even if it were
+resolved. That check existed because it was registered before the run; it is doing exactly
+the job it was written for.
+
+Arm A was always the weaker instrument - its null could not separate "diversity does not
+transfer" from "the objective saw 2.9% of it" - and it has now also failed its own
+convergence precondition. **Arm B is the result; arm A is consistent with it and stands on
+neither.**
+
+### The NJIT structure prediction: direction held, threshold missed
+
+Registered: if anything moves it should be NJIT - room-scale walking, the only held-out
+corpus whose locomotion resembles daily life - by at least +0.01 over the mean of the other
+six. Arm B per-corpus paired deltas:
+
+| corpus | delta |
+| --- | --- |
+| **NJIT** | **+0.0060** |
+| Panonut360 | +0.0054 |
+| Head_and_Gaze | +0.0006 |
+| PanoSaliency | -0.0021 |
+| EyeNavGS | -0.0027 |
+| VR_User_Behavior | -0.0057 |
+| ViewGauss | -0.0080 |
+
+NJIT is the largest of the seven and +0.0081 above the mean of the others - **the direction
+held and the magnitude threshold did not.** I am scoring it FAILED as registered rather than
+claiming a near miss: +0.0081 against a +0.01 line, with per-seed spread of that size, is not
+a distinction this design can resolve, and a threshold moved after the fact is not a
+threshold. What survives is weak and worth one line: the only corpus that plausibly shares
+Nymeria's locomotion is the only corpus with a positive delta worth remarking on, and
+Panonut360 at +0.0054 is tier 2 and should be at chance, which is the scale of the noise.
+
+### Two process failures on my side, one of them still live
+
+**Two chain wrappers ran the whole night concurrently.** The harness killed the first chain's
+*job*, and I reported it as killed - but only the harness's tracking died. The bash script
+(pid 26168) kept running and kept launching two-hour training jobs. My continuation chain
+shared its `.done` markers and log paths, so the two interleaved: each skipped what the other
+finished, which is why thirteen runs' worth of queue completed in fourteen hours, and a race
+let both start the same config twice.
+
+**The duplicates are bit-identical** - `nymeria_activity` seed 3 and `nymeria_baseline` seed 4
+each ran twice, two hours apart, in different processes, and agree to six decimals on
+`selected_test_auc`, `best_epoch` and `epochs_run`. So the numbers are unharmed, and it is an
+accidental determinism check across processes worth more than it cost. But counting one twice
+inflates n and shrinks sd, so `rows()` now dedupes by seed, reports what it dropped, and
+**asserts the twins agree** - a duplicate that disagreed would be a real finding, not a
+scheduling artefact.
+
+**Still live as of 12:31**: both chains are running `nymeria_baseline seed 5` simultaneously,
+19.6GB and 22.8GB on a 32GB machine. I tried to kill the older chain and the action was
+blocked by this session's permission classifier, so it is with the user. Nothing is at risk
+except time and memory pressure - the shard is append-only and the duplicate rows are
+identical - but until one is stopped the machine is oversubscribed by ~10GB.
+
+The lesson is narrow and mine: **"the harness killed the job" is not "the process stopped"**,
+and I asserted the second from the first. The check costs one line - `OpenProcess`, or the
+process table - and I ran it on the *training* pid while never running it on the *wrapper*
+pid, which is the one whose death I had actually inferred.

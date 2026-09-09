@@ -30,7 +30,9 @@ from scipy import stats
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SHARD = ROOT / "results" / "runs" / "desktop-c.jsonl"
-CONTROL_BAND = (98.0, 18.6)      # control mean best_epoch +- sd, from sweep 0840769514
+CONTROL_BAND = (98.0, 18.6)   # superseded: the band now comes from each arm's own control
+BAND_LOW = 0.005              # the Coordinator's registered band, lower edge
+FALSIFIER = 0.005             # registered falsifier: under this says activity diversity did nothing
 
 
 def load() -> list[dict]:
@@ -49,7 +51,27 @@ def rows(all_rows, *, experiment=None, sweep_id=None, seeds=None) -> list[dict]:
         out = [r for r in out if r.get("seed") in seeds]
     modes = {(r.get("mode"), r.get("experiment")) for r in out}
     assert len(modes) <= 1, f"refusing to return a mixed row set: {modes}"
-    return sorted(out, key=lambda r: r["seed"])
+
+    # DEDUPE BY SEED. Two chain wrappers ran concurrently on 2026-09-08/09 - the first was
+    # believed killed but only its harness job had died - and they shared .done markers, so a
+    # race let both start the same config before either wrote its marker. The duplicates are
+    # bit-identical (same seed, same config, deterministic), so they are harmless as numbers
+    # and actively useful as a reproducibility check, but counting one twice inflates n and
+    # shrinks the apparent sd. Keep the earliest row per seed and report what was dropped.
+    by_seed: dict = {}
+    for r in sorted(out, key=lambda r: (r["seed"], r.get("timestamp") or "")):
+        by_seed.setdefault(r["seed"], []).append(r)
+    dropped = []
+    for seed, group in sorted(by_seed.items()):
+        for extra in group[1:]:
+            same = abs(extra["selected_test_auc"] - group[0]["selected_test_auc"]) < 1e-9
+            dropped.append((seed, "identical" if same else "DIFFERENT"))
+    if dropped:
+        print(f"    [deduped {len(dropped)} duplicate row(s): "
+              + ", ".join(f"seed {s} {how}" for s, how in dropped) + "]")
+        assert all(how == "identical" for _, how in dropped), \
+            "a duplicate run disagreed with its twin - that is not a scheduling artefact"
+    return [g[0] for _, g in sorted(by_seed.items())]
 
 
 def derive_budget(rs) -> str:
@@ -97,8 +119,23 @@ def paired(label, treat, ctrl):
     print(f"    per-seed delta " + "  ".join(f"{x:+.4f}" for x in d))
     print(f"    mean {mean_d:+.4f}   paired sd {sd_d:.4f}   t({n-1})={t:.2f}   won {sum(x>0 for x in d)}/{n}")
     print(f"    MDD at this n and sd: {mdd:.4f}"
-          + ("   <- the effect is INSIDE the noise floor; report 'not resolved', not a direction"
+          + ("   <- the effect is INSIDE the noise floor; not distinguishable from zero"
              if abs(mean_d) < mdd else "   <- resolved"))
+
+    # "Not resolved" says only that zero is not excluded. It does NOT say the design was
+    # uninformative, and reporting it alone can badly understate a decisive negative: an
+    # interval can fail to exclude zero while excluding the entire registered band. So the
+    # bound is reported beside the test, and the registered thresholds are checked against
+    # the interval rather than against the point estimate.
+    lo, hi = mean_d - crit * sd_d / n ** 0.5, mean_d + crit * sd_d / n ** 0.5
+    print(f"    95% CI [{lo:+.4f}, {hi:+.4f}]")
+    for label, thresh in (("registered band lower edge", BAND_LOW), ("falsifier", FALSIFIER)):
+        if hi < thresh:
+            print(f"      -> {label} {thresh:+.3f} is ABOVE the whole interval: EXCLUDED")
+        elif lo > thresh:
+            print(f"      -> {label} {thresh:+.3f} is BELOW the whole interval: exceeded")
+        else:
+            print(f"      -> {label} {thresh:+.3f} lies inside the interval: not settled")
 
 
 def convergence_check(label, treat, ctrl):
