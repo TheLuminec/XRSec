@@ -1999,6 +1999,24 @@ its artefact out. **Write the gate result to `docs/acceptance/` even when you on
 inline**; the whole value of the reusable-control pattern above depends on the certificate
 existing, not on the check having happened.
 
+**A scripted edit reports that the write succeeded, not that the replacement matched, and
+those come apart silently (2026-09-08).** Adding that rule to four harnesses by scripted
+string replacement, two of the replacements did not match; the import and the call landed but
+the loop that built `gates` did not, leaving `write_gate_certificate(..., gates)` with the
+name never bound. **`py_compile` passes that cleanly** - it is a `NameError` at the end of a
+two-hour run, not a syntax error. Two cheap guards, both used here: **assert the match count
+before writing** (`assert s.count(old) == 1`), which turns a silent no-op into a failure at
+edit time, and run an **undefined-name pass** over the touched files afterwards, which is what
+caught it. Note `python -m py_compile` and an AST parse are *not* that pass, and neither is a
+module-level name check - the bug lived in one function's scope. Verify the property you
+wanted, not the exit code of the thing that was supposed to produce it.
+
+The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
+reported five sweeps with no certificate when all five had one, because its regex assumed
+forward slashes and those entries hold absolute Windows paths. **A check that reports a
+failure is a claim like any other**; confirm it the cheap way (substring, or one entry read
+by eye) before acting on it.
+
 ### The learned branch identifies at 0.858 in domain, and averaging is why
 
 The largest identification figure this project has measured, and it is **entirely
