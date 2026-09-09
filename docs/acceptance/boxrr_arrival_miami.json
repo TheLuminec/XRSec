@@ -5,26 +5,18 @@
   "why_avalon_not_desktopc": "Data flagged that DESKTOP-C's copy might be a generation behind (2020 users). It was not - the coordinator confirmed 4020 - but AVALON is where every stage was produced and verified, so it is canonical as well as current. The copy-not-reconvert argument is separate and unaffected: prepare_boxrr.py sits outside code_identity's digest root, so a reconversion could differ while every row reported the same identity.",
   "boxrr": {
     "manifest_sha256": "58f142afffef8c51ee99afdc1f71082da1fe00a91ccc3470772f6f18819cd7d2",
-    "files_expected": 17874,
-    "bytes_expected": 42828352195,
-    "files_observed": 17874,
-    "bytes_observed": 42828352195,
-    "missing": 0,
-    "extra": 0,
-    "size_mismatches": 0,
+    "files_expected": 17874, "bytes_expected": 42828352195,
+    "files_observed": 17874, "bytes_observed": 42828352195,
+    "missing": 0, "extra": 0, "size_mismatches": 0,
     "users": 4021,
     "wire_bytes": 18643014132,
-    "compression_speedup": 2.3
+    "compression_speedup": 2.30
   },
   "who_is_alyx": {
     "manifest_sha256": "53f999fe7d090c74a0952730f5b9d944929f2ce9d7c328eee5c3c8d75d7166eb",
-    "files_expected": 146,
-    "bytes_expected": 1159792745,
-    "files_observed": 146,
-    "bytes_observed": 1159792745,
-    "missing": 0,
-    "extra": 0,
-    "size_mismatches": 0,
+    "files_expected": 146, "bytes_expected": 1159792745,
+    "files_observed": 146, "bytes_observed": 1159792745,
+    "missing": 0, "extra": 0, "size_mismatches": 0,
     "users": 76,
     "note": "re-verified two hours after arrival, not only at landing"
   },

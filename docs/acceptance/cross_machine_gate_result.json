@@ -2,17 +2,10 @@
   "what": "Cross-machine gate PASSED: Miami and DESKTOP-C compute bit-identical training-free baselines on a shared pair manifest",
   "date": "2026-09-09",
   "spec": {
-    "corpus": "BOXRR-23_Dataset",
-    "users": "first 200 in sorted() order",
-    "sample_time": 10,
-    "sample_rate": 20,
-    "window_stride": 5,
-    "channels": "full",
-    "encoding": "raw",
-    "seed": 67,
-    "pairs_per_user": 64,
-    "cross_session_positives": true,
-    "device_for_metrics": "cpu",
+    "corpus": "BOXRR-23_Dataset", "users": "first 200 in sorted() order",
+    "sample_time": 10, "sample_rate": 20, "window_stride": 5,
+    "channels": "full", "encoding": "raw", "seed": 67, "pairs_per_user": 64,
+    "cross_session_positives": true, "device_for_metrics": "cpu",
     "agreed_before_either_side_ran": true
   },
   "shared_manifest": {
@@ -20,43 +13,17 @@
     "hashed_on_avalon_after_the_copy_not_locally_before_it": true,
     "indices_sha256": "4b45ea68c92ddd708526bb6534a09ad2bc3443b6c1fcfa497d919efd21990d18"
   },
-  "counts_both_machines": {
-    "users": 200,
-    "windows": 30630,
-    "pairs": 12800
-  },
+  "counts_both_machines": {"users": 200, "windows": 30630, "pairs": 12800},
   "miami": {
-    "position_lookup_auc": 0.7798685424804688,
-    "amplitude_auc": 0.5664354736328125,
-    "stack": {
-      "python": "3.13.15",
-      "numpy": "2.5.3",
-      "torch": "2.14.0+cu130",
-      "cuda": "13.0",
-      "device": "NVIDIA GeForce RTX 4060 Ti"
-    }
+    "position_lookup_auc": 0.7798685424804688, "amplitude_auc": 0.5664354736328125,
+    "stack": {"python": "3.13.15", "numpy": "2.5.3", "torch": "2.14.0+cu130", "cuda": "13.0", "device": "NVIDIA GeForce RTX 4060 Ti"}
   },
   "desktopc": {
-    "position_lookup_auc": 0.7798685424804688,
-    "amplitude_auc": 0.5664354736328125,
-    "stack": {
-      "python": "3.12.10",
-      "numpy": "2.4.2",
-      "torch": "2.10.0+cu130",
-      "cuda": "13.0",
-      "device": "NVIDIA GeForce RTX 5060 Ti"
-    }
+    "position_lookup_auc": 0.7798685424804688, "amplitude_auc": 0.5664354736328125,
+    "stack": {"python": "3.12.10", "numpy": "2.4.2", "torch": "2.10.0+cu130", "cuda": "13.0", "device": "NVIDIA GeForce RTX 5060 Ti"}
   },
-  "delta": {
-    "position_lookup_auc": 0.0,
-    "amplitude_auc": 0.0,
-    "verdict": "bit-identical, not merely inside the 1e-12 band"
-  },
-  "tolerance_registered_before_any_number": {
-    "pass": 1e-12,
-    "pass_with_note": 1e-09,
-    "investigate": 1e-06
-  },
+  "delta": {"position_lookup_auc": 0.0, "amplitude_auc": 0.0, "verdict": "bit-identical, not merely inside the 1e-12 band"},
+  "tolerance_registered_before_any_number": {"pass": 1e-12, "pass_with_note": 1e-9, "investigate": 1e-6},
   "what_this_closes": [
     "CORPUS CONTENT. The AVALON/DESKTOP-C size manifest established that 17,872 CSV files match in SIZE and explicitly not in content. Identical arithmetic over 30,630 windows drawn from those files is a content measurement, and it cost minutes against ~2h a side for sha256 over 42.8 GB.",
     "ENVIRONMENT. No results row records python, torch, cuda or device, while CLAUDE.md makes same-device comparison a RULE for numerics-touching acceptance - a rule with no referent. Two stacks differing on all four compute the same numbers, so the unrecorded difference is measured rather than assumed harmless."
@@ -73,6 +40,6 @@
   "protocol_gap_found_by_the_gate_refusing": {
     "what": "The first Miami run used --emit-manifest only, so its report recorded scored_manifest_sha256='own' and compare() DECLINED the environment layer.",
     "why_that_was_correct": "A side that scored 'own' cannot be SHOWN to have scored the shared pairs even when it demonstrably did. Closing it by hand worked only because the hash chain happened to close, which is luck rather than design - and it would have looked identical had the draw differed from the emitted file. A verification that happens to be true is not a verification.",
-    "fix": "The emitter must also pass --use-manifest at its own emitted file. This certificate records the re-run, where compare() returns the formal pass on its own terms and needs no paragraph explaining why a refusal was really a success."
+    "fix": "The emitter must also pass --use-manifest at its own emitted file. This certificate records the re-run, where compare() returns the formal pass on its own terms."
   }
 }
