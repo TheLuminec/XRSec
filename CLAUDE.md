@@ -1945,6 +1945,18 @@ checkpoint outside the training path must first reproduce that checkpoint's own 
 metric on its own recorded users** - if `selected_test_auc` does not come back, the harness
 is feeding it something else, and no number from it means anything.
 
+**Gating a checkpoint once buys the right to compare against its recorded row later, without
+re-running it (Trainer, 2026-09-08).** The gate discipline was adopted to stop bad scoring,
+and its by-product is a growing set of checkpoints certified under the current code identity.
+Worked example: the five 419-identity 10 s `dyn` checkpoints of sweep `0840769514` sit at
+`71c9783a14`, which crosses the `dyn` float64 re-baseline - normally that comparison has to
+be earned. It already was, incidentally, when `score_nymeria.py --gate` reproduced all five
+recorded figures under `8db420df4c` at gaps of 2.6e-6 to 5.1e-5
+(`docs/acceptance/nymeria_gate.json`). So that arm is reusable as an experimental control and
+five training runs are saved. **The cheapest control is one you already gated**, and it is
+worth checking `docs/acceptance/` for a certificate before re-running anything for
+code-identity reasons alone.
+
 **That gate now has a harness, and it has been run: `score_nymeria.py --gate`.** It scores a
 checkpoint through the pipeline's own `SiameseDataset` and `evaluate()` and writes a full
 shard row (`mode=rescore`), after first re-scoring the checkpoint on its own recorded users.
@@ -2286,7 +2298,14 @@ free to test here.
 
 **Why it is not one CSV any more.** The log is committed from three machines and merged with `merge=union`, which unions *lines* - but a CSV's meaning lives in a header those lines share, and this schema migrates by design. The moment two machines held different column counts (57 vs 56), union filed every row from one side under the other's header: 537 rows, 237 duplicated, `seed` 67 reading as 2, `run_dir` holding a git SHA, and 151 rows appearing to have a `template_k` that was pure column shift. Both inputs were individually clean; nothing was wrong until they met. Repaired by rebuilding on column *name*.
 
-JSONL removes the class instead of patching it - a union of self-describing records is correct whatever schema either side used, adding a field is a non-event, and appending never rewrites a line. `run_id` makes every line unique so union can't coalesce two runs that agree on all fields. Tests cover the property, not just the writing: `test_union_merging_two_schemas_keeps_every_field_on_the_right_row` reproduces the exact merge that corrupted the file. **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
+JSONL removes the class instead of patching it - a union of self-describing records is correct whatever schema either side used, adding a field is a non-event, and appending never rewrites a line. `run_id` makes every line unique so union can't coalesce two runs that agree on all fields. Tests cover the property, not just the writing: `test_union_merging_two_schemas_keeps_every_field_on_the_right_row` reproduces the exact merge that corrupted the file. **`sweep_id` is only a valid grouping key for rows written at or after `5b61fc0`.** Before that commit the id ignored every top-level config key, so rows from two different experiments can share one — in this file, the 48-identity subsample runs sit under `d6cb92c8a9` alongside the 343-identity pooled runs. They separate on `max_users` (blank vs 48), but grouping on `sweep_id` alone merges them. `sweep_id` also under-partitions for a second reason: runs made before and after a bugfix share it when the config is identical. Those separate on `code_identity`. **A third instance, and it is live (2026-09-08): a `mode=rescore` row inherits the
+`sweep_id` of the checkpoint it scored.** Sweep `0840769514` holds ten rows - five
+`mode=train` transfer runs averaging **0.5997** and five `nymeria_rescored` rows averaging
+**0.5374** - and a mean over the `sweep_id` returns **0.5685**, which is neither quantity and
+looks entirely plausible. That sweep is the control arm of a queued experiment, so the
+analysis must filter `mode=='train'` and `experiment=='transfer'`; grouping on the id alone
+hands the treatment a spurious +0.03 before it runs. **Rescoring makes every gated sweep a
+mixture, so `sweep_id` is now never sufficient on its own.** When analysing rows that straddle that commit, group on the config columns (`max_users`, `objective`, `normalize`, `channels`, `center_position`, `cross_session_positives`, `num_data_dirs`) rather than trusting the id.
 
 **`code_identity` invalidation was tested once, and the trade held (2026-09-04).** The
 margin/scale grid ran at `67c63fa767`; eight `model/*.py` files changed afterwards (the
