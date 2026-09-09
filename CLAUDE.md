@@ -1310,8 +1310,21 @@ Consequences to build around rather than remember:
   derived copies, entries are keyed per user per `sample_time`/`sample_rate`, and each
   new combination writes its own set. Destruction means all of them on every machine,
   not one named directory.
-- Clause 4 makes moving BOXRR-derived data between our three machines an open question.
-  Convert wherever the raw data lands; do not centralise then copy.
+- Clause 4 governs moving BOXRR-derived data between machines. **Resolved for the Miami
+  server (user, 2026-09-09): it is the same institution and sits in its server room, so
+  putting BOXRR-derived data there is internal use by the recipient, not further
+  distribution, and clause 4 does not bite.** The general rule still stands for anything
+  outside that boundary - convert wherever the raw data lands rather than centralising and
+  copying - and "same institution" is the test, not "a machine we have an account on".
+- **BOXRR-derived data does not go to cloud storage** (user, 2026-09-09, on a Google Drive
+  the project now has for code, results and write-ups). That is a policy decision rather
+  than an interpretation, and it is the right way round: clause 15's destruction obligation
+  is far harder to honour on Drive than on a lab machine, because trash, version history and
+  other people's synced clients are all derived copies. Code, results shards and prose are
+  fine there; datasets are not.
+- A **checkpoint trained on BOXRR is plausibly a derived copy** under clause 15, so shipping
+  weights instead of data is not automatically a way around clause 4. Inside the institution
+  that is moot; outside it, treat weights as in scope.
 - Clause 5 means the citation must travel with the data, not live in someone's memory.
 - Format is `.XROR`, one tarball per user, with a BSON metadata index that allows
   selecting users by id before downloading - so a slice of N identities is possible

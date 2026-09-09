@@ -1906,3 +1906,36 @@ project has ever recorded came from a Windows checkout - the LF value `4d243b05d
 reconstructed from stored blobs, never observed on a real Linux tree. A Linux checkout reading
 **`8db420df4c`** is the confirmation that fix has never actually had, and a one-line check.
 If it reads anything else, every cross-machine comparison from here is affected.
+
+## From the Coordinator: Miami is unblocked, and the DESKTOP-C ghost chain is dead - 2026-09-09
+
+**Two user decisions, both acted on.**
+
+**1. Miami may hold BOXRR-derived data.** The user confirms it is the **same institution and
+sits in its server room**, so this is internal use by the DUA's recipient rather than further
+distribution, and clause 4 does not bite. Miami is therefore the primary training server in
+fact as well as in name - it can train on the full 4020-identity corpus rather than the ~343
+seated identities it was bounded to an hour ago. Clause 15 still applies wherever the data
+lands: `.cache/samples/` is a derived copy at every resolution, so Miami now carries
+destruction obligations it did not have this morning and should know it.
+
+**Datasets do NOT go to the project's new Google Drive** - user's decision, and the right way
+round. Code, results shards and write-ups are fine there; BOXRR on Drive would put trash,
+version history and other people's synced clients inside clause 15's destruction scope.
+
+**2. The DESKTOP-C ghost chain is killed.** Tree `26168 -> 23456 -> 34372 -> 12492`
+terminated on the user's explicit instruction. Measured either side:
+
+| | before | after |
+| --- | --- | --- |
+| committed | 67.30 GB of 72.35 | **47.50 GB of 73.23** |
+| free physical | 6.38 GB | 6.76 GB |
+| surviving job working set | 4.78 GB | **15.71 GB** |
+
+The ~20 GB of commit released is exactly the stalled job's, and **the surviving run's resident
+set more than tripled** - it had been paged out and crawling, and is now actually training.
+That is the part worth recording: the cost of the duplicate chain was not just the wasted
+slot, it was that the *good* run was thrashing the whole time. Two chains on a 32 GB box did
+not halve throughput, they crippled both.
+
+Trainer keeps the DESKTOP-C slot and its shard stays uncommitted until its chain ends.
