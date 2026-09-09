@@ -2724,6 +2724,22 @@ for `sha256` over 42.8 GB that would test only the first. **Run it before any cr
 result is compared**, and prefer it to any check that compares bytes, because what matters is
 not whether the disks agree but whether the arithmetic does.
 
+**Two preconditions neither party stated, and both were checked before the gate ran**
+(Miami): that the measurement is **deterministic on one machine** - run twice locally, same
+counts, same hash, same AUCs - because if it is not, a cross-machine comparison measures
+nothing; and that the **transport is faithful** - scoring your own pairs back through the
+exchanged file reproduces the AUC exactly, so the format is not quietly changing the number
+it exists to carry. **A comparison across machines assumes a stability within one that
+nobody had tested.**
+
+And the gate must be **one implementation, not two**. Two independently written comparators
+can disagree for reasons that have nothing to do with the machines being compared, which is
+the failure the gate exists to rule out - so the script is exchanged along with the manifest,
+and both sides run the same code. A shared manifest also indexes into the *local* index, so
+out-of-range indices must be reported as a named layer-1 corpus failure rather than dying
+with an `IndexError` - that is the case where the two user lists differ, and it should read
+as a finding rather than a crash.
+
 Miami's first row supplies the encouraging-but-insufficient version: alyx
 `position_lookup_auc` **0.6006** against this file's ~0.593 for the alyx xyz lookup. It
 reported that as a consistency signal and explicitly not a reproduction - different held-out
