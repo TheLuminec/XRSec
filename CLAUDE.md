@@ -994,10 +994,11 @@ Two things confirmed on real data that the synthetic tests could not have caught
 metadata only, nothing fetched). Two facts that must be quoted together:
 
 - **The HuggingFace mirror's index has 0 users with recordings in two or more
-  applications.** Every one of the 4,716,986 records with a populated `info` block reads
-  `app.name = "Beat Saber"`, no exceptions, and the 55,044 without one are empty stubs
-  (duration 0, no frames, no metadata) - checked directly, so the absence is not hiding in
-  the unlabelled remainder.
+  applications.** Of **4,716,986 records in total**, 4,661,942 carry a populated `info`
+  block and every one reads `app.name = "Beat Saber"`; 55,044 carry no `info` key at all.
+  *(Two numbers in this bullet were wrong until 2026-09-08: 4,716,986 was the total rather
+  than the populated count, and the remainder was described as empty stubs. See the
+  re-check below - the second error was the material one.)*
 - **The official Berkeley release includes Google Poly (Tilt Brush) recordings: 55,178 of
   them, 1.2%**, per the official page's own count, and the datasheet states that one folder
   holds all of a user's recordings and that the source application is identifiable from the
@@ -1013,21 +1014,53 @@ answered from any metadata file we can reach.** Do not write "BOXRR is one activ
 "our copy is". Resolving it needs either a complete index from the authors or fetching
 per-user folders blind, which is an acquisition decision, not a check.
 
-**That paragraph is UNDER RE-CHECK and may be wrong (2026-09-08).** The mirror's own dataset
-card says, verbatim: *"there are BeatSaber and TiltBrush users, which is noted in the field
-`info.software.app` in the metadata"*, and describes the `metadata/` BSON as exactly the
-filter-before-download index we concluded did not exist. **Our scan read `app.name`, a
-different key path.** The arithmetic that makes this urgent: we recorded 55,044 records with
-no populated info block and called them stubs, against the official Google Poly count of
-**55,178** - 0.24% apart. A Tilt Brush XROR has a different info structure (the library's own
-`fromTilt()` builds a BRUSH device and no HMD), so a scan keyed on the Beat Saber path would
-file every Poly record as an empty stub. The official datasheet independently confirms the
-release draws on **three** sources - BeatLeader, ScoreSaber **and Google Poly**. Data is
-re-reading the BSON on the exact path with the stub structure dumped verbatim; until that
-lands, do not quote "0 users with recordings in two applications" and do not ask the authors
-for an index that may be on our own disk. **This is the project's recurring bug in its
-purest form: a stand-in that looks like the thing being checked** - and it was caught by
-reading the distributor's own description of the field, not by re-running anything.
+**RE-CHECKED AND SETTLED (2026-09-08), and the answer kills the acquisition rather than
+enabling it.** The mirror's dataset card says TiltBrush users are marked in
+`info.software.app`, which raised the possibility that our scan had read the wrong key path.
+It had not - there is no path to read. Every one of the 4,716,986 documents was partitioned
+by its exact top-level key set (a `Counter` over `sorted(doc.keys())`, exhaustive, not a
+sample):
+
+| key set | count | what it is |
+| --- | --- | --- |
+| `_id, duration, info, num_frames, user_id` | 4,661,942 | **100% `info.software.app.name = "Beat Saber"`**, zero other values, zero partial paths |
+| `_id, corrupt_user, duration, num_frames, user_id` | 54,965 | **real recordings with no metadata block** - median 8,977 frames, median duration ~25 min; only 766 at duration 0 |
+| `_id, duration, num_frames, user_id` | 79 | genuinely empty (79 duration 0, 78 no frames) |
+
+The partition is exact, with no residue. **The `info` key is absent on those 55,044
+documents**, so `info.software.app` is not populated with something else - it does not
+exist there, and no scan of any path could have found Tilt Brush in this file.
+
+**And the decisive number needs no resolution of what that bucket is: 92,103 distinct users
+hold at least one Beat-Saber-labelled recording, 13,746 hold at least one unlabelled
+recording, and the two sets overlap in ZERO users.** Even granting the most generous
+reading - that every unlabelled recording is Tilt Brush - **not one person in BOXRR-23 is
+recorded in two applications**. And 92,103 + 13,746 = 105,849 against the release's own
+105,852 users, so this index covers essentially the entire release: the finding is about
+**BOXRR-23**, not about our copy of it.
+
+**So do not write to the authors, and strike the cross-application acquisition.** The thing
+the board was pointed at - the same people recorded in two activities, at scale, under an
+agreement already held - **does not exist in this corpus**, and no index request or blind
+fetch would have produced it. That was one email away from being asked for.
+
+**Still open, and cheap: what the unlabelled bucket is.** Two hypotheses fit. The flag name
+`corrupt_user` says corrupted recordings whose metadata failed to parse. The count says Tilt
+Brush: 54,965 against the official Google Poly figure of 55,178, 0.24% apart, and Poly files
+arrive in the TILT format the metadata pipeline may simply not have read. **One user tarball
+settles it** (~53MB, inside the DUA we hold, not an acquisition). It matters because if that
+bucket is Tilt Brush, we already hold **13,746 users of a second activity** - the axis this
+file now says is the only one worth acquiring - with nothing to request from anyone. The
+prior is poor: `fromTilt()` builds a BRUSH device and **no HMD**, so head-only may find
+nothing usable there. Cheap either way, and a negative closes the question permanently.
+
+**Method, and it is the recurring bug again from both sides.** The coordinator inferred a
+wrong-key-path mechanism from the distributor's prose and was wrong; Data had characterised
+55,044 records as empty stubs from **three examples that happened to be substantial**, and
+corrected it by dumping every document's key set rather than sampling. Neither the prose nor
+the sample was the data. **Partition the whole file by exact key set before describing what
+is in it** - it is one `Counter`, it cannot be fooled by a lucky sample, and here it turned
+a hypothesis, a mischaracterisation and an arithmetic slip into one exact table.
 
 **156 windows/user is below our existing median of 295, and that is fine.** The cap was
 justified by "land on the median so imbalance does not worsen", but the imbalance *ratio*
