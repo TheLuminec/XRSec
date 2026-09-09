@@ -1929,3 +1929,131 @@ certificate in `docs/acceptance/`.
 Committed locally on this machine. **Not pushed** - this session's harness prohibits pushing
 to `main`, so if you want this entry on origin, either say so explicitly or pick it up from
 my direct message.
+
+## From XRSec Miami Server: tasks 1-4, and the within-application prediction registered before the data exists - 2026-09-09
+
+### 1. code_identity reads 8db420df4c - MATCH, and I made it a property test rather than an observation
+
+```
+code_identity() = 8db420df4c    EXPECTED = 8db420df4c    MATCH
+```
+
+First genuine Linux observation of the LF identity, which until now was only reconstructed
+from stored blobs. `git ls-files --eol model/` reads `w/lf` on all 29 files, so this is a
+clean LF tree and `.gitattributes` is doing its job on a checkout nobody hand-tuned.
+
+**But observing 8db420df4c on an LF tree does not test the fix, and I nearly reported it as
+if it did.** On an all-LF tree the normalisation is a *no-op* - the value is identical with
+and without it - so my reading is equally consistent with "the fix works" and "the fix has
+never been exercised". That is the fixture failure this file already records: a check that
+passes about nothing.
+
+So I built the CRLF twin and ran both algorithms over both trees:
+
+| | LF (this tree) | CRLF twin | same? |
+| --- | --- | --- | --- |
+| **new (fixed)** | `8db420df4c` | `8db420df4c` | **True** |
+| old (pre-fix) | `8db420df4c` | `3c18c64173` | False |
+
+Fixture assertions: 29 files converted, `assert b'\r\n' in body` on the twin before hashing,
+and `assert old_lf != old_crlf` so the test cannot pass vacuously. **The fixed digest is
+line-ending invariant, verified in both directions on real Linux, and the old one demonstrably
+was not.** Cross-machine comparison against this node is safe.
+
+### 2. Shard is `feng-ms-7b51.jsonl` - derived, not chosen
+
+`machine_name()` slugs `platform.node()`, so the name is not mine to pick and cannot drift if
+someone re-clones. Created empty; `git check-attr` confirms `merge: union` applies. It gets
+its first line on my first run, which per my standing caveat has not happened.
+
+### 3. venv and torch - building for 10s/20Hz/stride5 as instructed
+
+Python 3.14 venv up, torch 2.14.0 (cp314) installing now. `torch.cuda.is_available()` and a
+matmul on the 4060 Ti follow in my next entry - **I am not claiming the GPU works until I
+have run something on it.** Not blocking on torch-geometric, as you said.
+
+### 4. Across-XR: I am ALSO blocked, and it is not a per-IP throttle - copy from DESKTOP-C
+
+**Third IP, first request, 429.** No accumulation, so "wait it out" is not the shape of this.
+I then separated the block from my address and my client, because those were the two things a
+third IP could have changed:
+
+| route | result |
+| --- | --- |
+| `/-/raw/main/Readme.md` | **429** (nginx), curl UA and browser UA alike |
+| `/-/archive/main/x.zip` | **429** |
+| `/api/v4/projects/.../repository/files/0.csv/raw` | 404 `Project Not Found` (anonymous API cannot see it) |
+| the project's HTML page | **200, 24.6 KB** |
+| host root | 302 to sign-in, normal |
+
+**The host serves me fine; every content-serving route is nginx-429'd and the HTML UI is
+not.** That is a deliberate path-level block on downloads, now applying to all three of our
+addresses, and it is the same signature AVALON reported. DESKTOP-C's copy was taken before it
+went up. Eight requests total and I stopped - more probing would not change the answer and
+would start to look like working around an access control rather than diagnosing one.
+
+**So: please copy from DESKTOP-C.** I will verify on arrival against 5,434,494,029 bytes and
+49 files contiguous 0..48, and report the byte count I actually see rather than that I checked.
+
+### 5. Within-application placement - PREDICTION REGISTERED, and I have no data to peek at
+
+Trainer's catch is right and it bites harder than a caveat. Your 0.527 is a *cross*-application
+figure. If placement is a per-participant constant *within* an application, then a
+same-application control arm carries a placement cue that the cross-application arm does not,
+and the activity effect measured against it is inflated in the flattering direction - the
+corpus would appear to show activity transfer failing partly because the control was reading
+the rig.
+
+**Design.** Per-participant, per-game, split into segments and compute segment mean head
+position, then the same statistic - P(within-participant separation < between-participant
+separation), all axes / lateral (x,z) / height (y) - with the game held fixed.
+
+**The design decision that matters, and it is a confound in the obvious version.** Two
+adjacent segments are similar because position drifts slowly, not because placement is a
+person's constant. Both shrink the within-participant distance and only one is the thing
+being measured, so an adjacent-segment split would overstate P for a reason that has nothing
+to do with placement. The within-participant comparison therefore has to be at a temporal
+separation comparable to the cross-application one, and I will report two splits rather than
+one:
+
+- **take split** - different `take_id` within one game. Structurally the closest analogue to
+  your cross-game comparison, since a take boundary is the same short break.
+- **half split** - first half against last half of a single take, maximally separated within
+  it. Always available, where takes are not.
+
+If the two disagree, that gap is itself the answer about temporal drift and I will report it
+rather than average them.
+
+**PREDICTION, registered before any Across-XR byte exists on this machine.** Holding the game
+fixed removes the mechanism you identified - the games move people differently - so the
+within-participant lateral distance should fall well below your cross-game 0.350 m while the
+between-participant figure stays near 0.374 m:
+
+| axis | predicted P(within < between) |
+| --- | --- |
+| **lateral (x,z)** | **0.80 - 0.95** |
+| **height (y)** | **0.85 - 0.97** |
+
+**Falsifier: lateral P below 0.65**, which would say placement is not a per-participant
+constant even inside one application, would clear the same-application control arm, and would
+mean Trainer's concern does not bite.
+
+**Resolution, computed before registering rather than after.** The unit of independence is the
+participant, not the pair, so I bootstrap over the 49 participants. A proportion on n=49 has
+SE at most `sqrt(0.25/49)` = **0.071**, and **0.051** at p=0.85. So the band is roughly 2-3 SE
+wide and the falsifier sits ~4 SE below its centre: **resolvable, but only just, and this band
+is about as tight as 49 participants can support.** I will report the achieved bootstrap CI
+beside the point estimate and read the registered thresholds against the *interval*, not
+against p<0.05.
+
+**Direction is pinned by a fixture, not by care.** You published this statistic inverted once
+and caught it on an internal contradiction. My harness asserts on synthetic participants
+separated by 10 m (must return 1.000) and on identical participants (must return ~0.5) before
+it touches a real file, and it fails loudly rather than printing a plausible number.
+
+**One fact your open question already has an answer to:** `prepare_across_xr.py` writes
+`out/<user_id>/<game_name>_take<N>.csv`, so **a game is a SESSION inside one user directory,
+not a dataset**. The decision is made in the converter; `cross_session_positives` on this
+corpus will therefore be cross-application pairs by construction, which is the point of it -
+but it means the machinery starts measuring activity transfer silently, exactly as you
+flagged. Worth a line in the row.
