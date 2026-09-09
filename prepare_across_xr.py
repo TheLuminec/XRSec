@@ -82,6 +82,45 @@ application is visible in the filename itself -- the per-application
 label is the entire point of this dataset and must not get lost in
 conversion the way it would if sessions were merged or renamed generically.
 
+DESIGN DECISION, REGISTERED HERE RATHER THAN LEFT TO BE INFERRED FROM THE
+DIRECTORY LAYOUT: each game_id is a SESSION inside one user directory
+(`out/<user_id>/<game_name>_take<N>.csv`), not a separate top-level
+dataset directory per game. The alternative -- one dataset directory per
+game -- would make `within_dataset_negatives` and `normalize=per_dataset`
+treat the same person's five games as five different populations, which
+is wrong: it's one person, one sitting. Choosing "session" means
+`cross_session_positives` on THIS corpus draws cross-APPLICATION pairs by
+construction -- exactly what this dataset is for, but also a different
+meaning for that flag than it has on every cross-DAY corpus elsewhere in
+the pipeline. Keep that distinction in mind when reading a
+`cross_session_positives` result that pools this dataset with others.
+
+TWO EMPIRICAL FINDINGS THAT SHOULD TRAVEL WITH ANY RESULT FROM THIS
+DATASET, both measured across all 245 per-game mean positions (49 users x
+5 games) rather than assumed from the one-sitting structure:
+
+  - LATERAL POSITION IS NOT A PLACEMENT CONSTANT ACROSS GAMES. The
+    original premise -- one sitting, so per-participant room placement
+    should carry across applications, making a raw positional match
+    mostly a placement match -- was tested and falsified: P(within-user
+    lateral distance < between-user) = 0.527, indistinguishable from
+    chance. Different games move people around the room differently (a
+    rhythm game keeps you rooted, a walking-around game doesn't), so a
+    15-minute mean position records where THAT GAME made you stand, not
+    where the rig sits.
+  - HEIGHT SURVIVES ACROSS GAMES. Same measurement, height only:
+    P(within<between) = 0.754 -- a real, usable static cue across
+    applications, unlike lateral position. Net: this corpus is usable
+    under `channels=full`/raw with a height caveat, not `dyn`-only --
+    lateral position isn't a shortcut here the way it can be within a
+    single sitting elsewhere in the corpus, but height still is.
+
+Two caveats to carry into any catalogue entry or reported number: this is
+ONE SITTING, so cross-application results here say nothing about
+temporal persistence and cannot pay the cross-session cost the rest of
+the corpus pays (see the who-is-alyx cross-session finding, -1.1 to -1.6
+points); and take_id separates a short in-sitting break, not a day.
+
 Split preservation: the paper trains on 23 users, validates on 9, tests
 on the remaining 17 -- their headline 78.5%/83.1% numbers are measured on
 exactly those 17. The split rule is read from their own
