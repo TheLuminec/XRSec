@@ -2038,11 +2038,16 @@ property you wanted, not the exit code of the thing meant to produce it.
 extraction that was supposed to pull the guard out into a file produced an **empty file**
 twice - and an empty Python file exits 0, so the test printed "PASSES" twice while validating
 nothing at all. That is the deepest form of the same defect: **a test whose subject failed to
-load reports the subject's success.** Assert that what you are testing is actually there -
-non-empty, contains the probe, imports the symbol - *before* believing anything the test says
-about it. This completes the set: a check can report a failure that is not real (a regex that
-missed Windows paths), a success it has not earned (a checker run after the fix), or a success
-about nothing (a fixture that never loaded).
+load reports the subject's success.** This completes the set - a check can report a failure
+that is not real (a regex that missed Windows paths), a success it has not earned (a checker
+run after the fix), or a success about nothing (a fixture that never loaded) - **and the third
+generalises furthest, because it does not require the checker to be wrong.** That checker was
+correct; it was pointed at an empty file.
+
+So the assertion goes on the fixture and it has to be **specific**: not "the file exists" but
+"the thing I claim to be testing is in it". `assert 'GlobalMemoryStatusEx' in body` is what
+turned a silent pass into a caught error, and it is one line. A fixture check that only tests
+for existence fails in exactly the same way as the guard it is protecting.
 
 **Two guards that would have failed open, on Windows specifically.** Both were written to
 protect the same chain and both were verified only after being challenged:
