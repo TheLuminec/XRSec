@@ -21,7 +21,8 @@
 #
 # Usage:
 #   queue_runner.sh add "<command>"      append a job
-#   queue_runner.sh run                  start the runner (refuses if one already holds the lock)
+#   queue_runner.sh run                  start the runner; exits when the queue drains
+#   queue_runner.sh daemon               same, but WAITS on an empty queue (for a service)
 #   queue_runner.sh status               liveness, current job, queue depth  -- safe from anywhere
 #   queue_runner.sh stop                 ask the runner to finish the current job and exit
 #   queue_runner.sh selftest             verify the lock in BOTH directions, in a temp root
@@ -37,6 +38,7 @@ HEARTBEAT="$ROOT/runner.heartbeat"
 CURRENT="$ROOT/current.txt"
 STOPFILE="$ROOT/stop"
 HEARTBEAT_SECONDS=30
+IDLE_POLL_SECONDS=15     # how often a daemon-mode runner re-reads an empty queue
 STALE_AFTER=120          # heartbeat older than this => not alive, whatever the pidfile says
 
 mkdir -p "$ROOT" "$DONE_DIR" "$LOG_DIR"
@@ -158,7 +160,17 @@ cmd_run() {
             [ -f "$DONE_DIR/$(job_key "$line")" ] && continue
             job="$line"; break
         done < "$QUEUE"
-        [ -z "$job" ] && { echo "queue drained"; break; }
+        if [ -z "$job" ]; then
+            if [ "${DAEMON:-0}" = "1" ]; then
+                # Idle, not finished. The heartbeat keeps ticking, so an idle runner is
+                # still visibly ALIVE from outside - which is what distinguishes "waiting
+                # for work" from "died quietly", a distinction DESKTOP-C did not have.
+                sleep "$IDLE_POLL_SECONDS"
+                continue
+            fi
+            echo "queue drained"
+            break
+        fi
 
         local key stamp log
         key=$(job_key "$job")
@@ -275,8 +287,9 @@ cmd_selftest() {
 case "${1:-status}" in
     add)    shift; cmd_add "$@" ;;
     run)    cmd_run ;;
+    daemon) DAEMON=1 cmd_run ;;
     status) shift; cmd_status "$@" ;;
     stop)   cmd_stop ;;
     selftest) cmd_selftest ;;
-    *)      echo "usage: $0 {add <cmd>|run|status [--json]|stop|selftest}" >&2; exit 2 ;;
+    *)      echo "usage: $0 {add <cmd>|run|daemon|status [--json]|stop|selftest}" >&2; exit 2 ;;
 esac
