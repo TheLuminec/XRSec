@@ -2004,12 +2004,35 @@ those come apart silently (2026-09-08).** Adding that rule to four harnesses by 
 string replacement, two of the replacements did not match; the import and the call landed but
 the loop that built `gates` did not, leaving `write_gate_certificate(..., gates)` with the
 name never bound. **`py_compile` passes that cleanly** - it is a `NameError` at the end of a
-two-hour run, not a syntax error. Two cheap guards, both used here: **assert the match count
-before writing** (`assert s.count(old) == 1`), which turns a silent no-op into a failure at
-edit time, and run an **undefined-name pass** over the touched files afterwards, which is what
-caught it. Note `python -m py_compile` and an AST parse are *not* that pass, and neither is a
-module-level name check - the bug lived in one function's scope. Verify the property you
-wanted, not the exit code of the thing that was supposed to produce it.
+two-hour run, not a syntax error. **Assert the match count before writing**
+(`assert s.count(old) == 1`) - it turns a silent no-op into a failure at edit time, and after
+three instances of a silent non-match in one evening it is the default here, not a nicety.
+
+**What caught this one was reading the diff back**, not a checker: the edit tool printed the
+result and lines 67-73 were visibly unchanged. Two claims about the checkers were made before
+either was tested, and both were wrong - tested afterwards by reconstructing the buggy file:
+
+| checker | on the buggy file |
+| --- | --- |
+| `compile()` / `py_compile` | **passes** - an unbound name is a `NameError` at runtime, not a syntax error |
+| module-level pooled name pass | **flags `gates`** |
+| per-function scoped pass | flags it |
+
+The coordinator wrote that a module-level pass would have missed it because "the bug lived in
+one function's scope". It did not - `gates` sits at **module scope**, and the failed
+replacement left it assigned *nowhere*, so pooling had nothing to hide it behind. Per-function
+scoping is still strictly stronger, for names assigned in one scope and read in another; this
+bug simply was not that class. **That error was a plausible inference drawn from a real
+general property, in a paragraph about not doing exactly that, when reconstructing the file
+and running both checkers takes a minute.**
+
+And Trainer's own claim was the mirror image: the static pass ran *after* the fix, so it
+passed a file that was already correct and caught nothing. "The checker caught it" and "the
+checker is now verified capable of catching it" are different claims. **A check that reports
+success is a claim like any other, and so is one that reports failure** - the coverage scan
+below reported five missing certificates that all existed. Same defect, opposite signs: both
+sides stated the result of *running* a tool rather than the result of *testing* it. Verify the
+property you wanted, not the exit code of the thing meant to produce it.
 
 The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
 reported five sweeps with no certificate when all five had one, because its regex assumed
