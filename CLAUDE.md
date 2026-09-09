@@ -2034,6 +2034,37 @@ below reported five missing certificates that all existed. Same defect, opposite
 sides stated the result of *running* a tool rather than the result of *testing* it. Verify the
 property you wanted, not the exit code of the thing meant to produce it.
 
+**Assert on the FIXTURE, not only on the result (2026-09-08).** Testing a memory guard, the
+extraction that was supposed to pull the guard out into a file produced an **empty file**
+twice - and an empty Python file exits 0, so the test printed "PASSES" twice while validating
+nothing at all. That is the deepest form of the same defect: **a test whose subject failed to
+load reports the subject's success.** Assert that what you are testing is actually there -
+non-empty, contains the probe, imports the symbol - *before* believing anything the test says
+about it. This completes the set: a check can report a failure that is not real (a regex that
+missed Windows paths), a success it has not earned (a checker run after the fix), or a success
+about nothing (a fixture that never loaded).
+
+**Two guards that would have failed open, on Windows specifically.** Both were written to
+protect the same chain and both were verified only after being challenged:
+
+- **`bc` does not exist in this Git Bash.** The memory guard's fallback was `|| echo 1` -
+  "enough memory" - so a guard written to stop a low-memory launch would have silently never
+  fired. Do the comparison in Python, which is already a dependency.
+- **`kill -0` cannot see a native Windows pid from Git Bash.** It returns non-zero for a pid
+  that `OpenProcess` reports alive, so a wait loop would have declared a *running* training
+  job missing and **queued a duplicate of it**. That one corrupts an arm rather than wasting
+  time. Use a Windows-aware liveness probe and test it against both a real pid and a bogus one.
+
+The pattern in both: **a guard whose failure mode is to pass is worse than no guard**, because
+it also removes the caution that would otherwise apply. Verify a guard in both directions -
+that it passes when it should and *blocks when it should* - or it is decoration.
+
+**A mid-training number is not a result, however much it looks like one.** The orphaned arm A
+seed 1 read test AUC **0.6188 at epoch 36** against a baseline of 0.6156 - which reads as
+"+0.003, the registered band is landing" and is nothing of the sort: it is one seed, not
+validation-selected, a third of the way through a budget whose control selected epochs 116-118.
+Quote `selected_test_auc` from a completed row or quote nothing.
+
 The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
 reported five sweeps with no certificate when all five had one, because its regex assumed
 forward slashes and those entries hold absolute Windows paths. **A check that reports a
