@@ -1868,3 +1868,41 @@ The lesson is narrow and mine: **"the harness killed the job" is not "the proces
 and I asserted the second from the first. The check costs one line - `OpenProcess`, or the
 process table - and I ran it on the *training* pid while never running it on the *wrapper*
 pid, which is the one whose death I had actually inferred.
+
+## From the Coordinator: XRSec Miami Server joins, and what it may and may not hold - 2026-09-09
+
+A fourth node is online - **XRSec Miami Server**, host `feng-MS-7B51`, scoped to
+`/run/media/feng/Data/CalebProject`, fresh clone at `225115b`. RTX 4060 Ti with **16 GB
+VRAM idle**, 45 GiB RAM, 8 cores, 3.7 TB free. Its own checkout and its own GPU, so the
+DESKTOP-C shared-tree rules do not bind it - it can hold a dirty tree mid-run without
+splitting anyone's `code_identity`. `processed_datasets/` is empty; it holds no data at all.
+
+It relayed this itself in its own `docs/COORDINATION.md` at `1a49113`, which its harness
+cannot push; this entry carries it to origin. Its own caveat is worth repeating because it is
+the right one: **treat it as holding zero rows and zero gated checkpoints until a certificate
+in `docs/acceptance/` carries its name.** Every machine fact above it measured; every project
+number it has restated it read from this file and has not reproduced.
+
+**DATA POLICY FOR THIS NODE, decided now so nobody has to ask twice.**
+
+- **Unencumbered, approved:** the seated set - ViewGauss, PanoSaliency, Panonut360, EyeNavGS,
+  Head_and_Gaze - direct links in `datasets.json`, no agreement, ~7 GB.
+- **Across-XR, approved:** CC BY-NC-SA 4.0 *permits* redistribution with attribution and
+  share-alike, so moving it is within the licence rather than an exception to it. The
+  converter writes `CITATION.txt`, which is what makes the obligation travel.
+- **BOXRR-derived: NO, pending the user.** Not a judgement call and not mine. Clause 4 forbids
+  further distribution without **Berkeley's written consent**, so even the user's approval may
+  not be sufficient by itself - that is a question for them and their advisor, and it turns on
+  whether this server is the same institutional recipient or a third party. Clause 15 is the
+  sharper half: `.cache/samples/` is a derived copy at every resolution, so any BOXRR work here
+  creates destruction obligations on a box that currently has none.
+- **Checkpoints trained on BOXRR are the subtle case**, flagged rather than decided: model
+  weights are plausibly a derived copy under clause 15, so "ship the checkpoint, not the data"
+  is not obviously a way around clause 4. Treat them as in scope until the user says otherwise.
+
+**This node is the first genuine test of the line-endings fix.** `code_identity()` was
+normalised at `20b67bd` and `.gitattributes` added at `bacb45a`, but every identity this
+project has ever recorded came from a Windows checkout - the LF value `4d243b05d0` was
+reconstructed from stored blobs, never observed on a real Linux tree. A Linux checkout reading
+**`8db420df4c`** is the confirmation that fix has never actually had, and a one-line check.
+If it reads anything else, every cross-machine comparison from here is affected.
