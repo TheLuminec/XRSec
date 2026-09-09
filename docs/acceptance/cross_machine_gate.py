@@ -316,7 +316,10 @@ def main() -> int:
     parser.add_argument("--resample", default="nearest")
     parser.add_argument("--seed", type=int, default=67)
     parser.add_argument("--pairs-per-user", type=int, default=64)
-    parser.add_argument("--cross-session-positives", action="store_true", default=True)
+    # BooleanOptionalAction, not store_true: `store_true` with `default=True` yields a
+    # flag that can never be turned off, which is misleading on a script another machine
+    # runs from a spec. --no-cross-session-positives now works.
+    parser.add_argument("--cross-session-positives", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--compare-with", type=Path, help="the other machine's JSON")
     parser.add_argument("--emit-manifest", type=Path, help="write our pairs as .npz for the other machine")
