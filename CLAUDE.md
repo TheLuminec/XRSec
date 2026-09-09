@@ -551,6 +551,55 @@ positives are cross-activity within a sitting and cannot pay the cross-session c
 less of a problem under `dyn` than under `raw`); and the cost of the decision is that we no
 longer hold an AR-glasses *test* corpus, and the catalogue's search found no other one.
 
+### Activity diversity does NOT transfer: the registered band is excluded (2026-09-09)
+
+The experiment the acquisition criterion was pointed at, and it came back negative. Arm B
+holds identity count **exactly** fixed at 419 and swaps 50 BOXRR identities for 50 Nymeria
+ones, so the treatment's BOXRR users are a strict subset of the control's and the only
+difference is which activity 12% of the identities did. Five paired seeds, 10 s `dyn`,
+transfer to the seven held-out corpora:
+
+| arm | pooled transfer | best_epoch |
+| --- | --- | --- |
+| control (BOXRR 343 + alyx 76) | 0.5997 +-0.0030 | 98.0 |
+| treatment (BOXRR 293 + alyx 76 + **Nymeria 50**) | 0.5985 +-0.0038 | 96.4 |
+
+Per-seed delta -0.0048 / +0.0018 / +0.0005 / -0.0024 / -0.0013; mean **-0.0012**, paired sd
+0.0026, t(4)=-1.06, won 2/5, **95% CI [-0.0045, +0.0020]**. Convergence matched (capped 1/5
+against 2/5), so the delta carries no budget term.
+
+**The registered band was +0.005 to +0.03 with a falsifier under +0.005. The entire band
+sits above the entire interval.** One genuinely different activity - daily life on AR
+glasses against Beat Saber and Alyx - at 12% of identities and 14.2% of windows, moves
+cross-activity transfer by nothing, bounded at 95% below +0.002. **Activity diversity joins
+identity count on the list of data-side levers that do not cross a domain boundary**, and
+the acquisition criterion adopted on 2026-09-06 - "argue an acquisition on activity or
+device diversity" - now has no surviving axis behind it. Argue the next acquisition on
+something this file has actually measured to work, or do not make it.
+
+**A registered band is settled by where the INTERVAL falls, not by whether p<0.05 (Trainer,
+and it generalises).** The two-sided test here is not significant and the harness would have
+printed "not resolved", which is true and badly understates the result: **an interval can
+fail to exclude zero while excluding the whole hypothesis it was built to test.** Reporting
+only the test would have turned a decisive negative into an inconclusive one - the exact
+mirror of the failure the MDD rule above guards against, and just as costly. Check registered
+thresholds against the interval; report the CI beside every registered band.
+
+**Arm A settles nothing and its convergence check fired.** Four of five seeds, CI
+[-0.0062, +0.0098] - the band edge is inside the interval - and treatment `best_epoch` 106.0
+against a control at 117.8 +-1.3 that never stopped early, capped 3/4 against 4/4. So its
+delta carries a budget term regardless of resolution, exactly the bias the patience note
+above predicts. **The categorical form of that check is what caught it**: against a control
+that never stopped early, "the treatment stopped on patience" is a binary fact needing no
+mean comparison, which is why the band-from-a-constant version would have missed it.
+
+**The NJIT structure prediction failed, and is scored failed.** Registered: if anything moves
+it should be NJIT - room-scale walking, the only held-out corpus resembling daily life - by
+at least 0.01 over the mean of the other six. NJIT came top of seven at +0.0060, which is
++0.0081 over that mean. Direction held, threshold missed, and **a line moved afterwards is
+not a line**. The noise scale is visible in the same column: Panonut360 came second at
++0.0054 and is tier 2, which should be at chance.
+
 ### Across-XR: the first instrument that separates activity from population
 
 Landed 2026-09-09, 5.1GB, 49 files. **All 49 participants appear in all five applications,
