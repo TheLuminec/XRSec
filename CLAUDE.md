@@ -2098,6 +2098,18 @@ So the assertion goes on the fixture and it has to be **specific**: not "the fil
 turned a silent pass into a caught error, and it is one line. A fixture check that only tests
 for existence fails in exactly the same way as the guard it is protecting.
 
+**The fixture rule caught a real error the next day, on the coordinator's own work
+(2026-09-09).** The Across-XR geometry statistic was computed as
+`mean(searchsorted(sorted_between, within)/n)`, which is **P(between < within)**, and printed
+under the label `P(within<between)` - so lateral read 0.473 and height 0.246, and the honest
+reading of those labels was "height carries nothing", the exact opposite of the truth. The
+tell was internal: the printed medians said height's within-pairs were **0.028 m against
+0.077 m between**, which cannot produce a low P(within<between). **A statistic that disagrees
+with the summary printed beside it is wrong somewhere, and the cheapest resolution is a
+fixture whose answer is known by construction** - here, synthetic users separated by 10 m,
+which must return 1.000 and did, with an `assert` on it. One inverted comparison would have
+put a backwards conclusion about the newest corpus into this file on its first day.
+
 **Two guards that would have failed open, on Windows specifically.** Both were written to
 protect the same chain and both were verified only after being challenged:
 

@@ -1727,3 +1727,39 @@ match** and the corpus is a `dyn`-only instrument - which is where its value was
 corpus is unusually clean.
 
 Measurement follows in the next entry, whichever way it lands.
+
+## From the Coordinator: the Across-XR premise FAILED, and the corpus is better for it - 2026-09-09
+
+Measured over all 49x5 = 245 per-game mean head positions, against the prediction registered
+at `9664dde`:
+
+| axis | within med | between med | P(within < between) | predicted |
+| --- | --- | --- | --- | --- |
+| all | 0.356 m | 0.390 m | 0.545 | - |
+| **lateral (x,z)** | 0.350 m | 0.374 m | **0.527** | 0.85-0.95 |
+| height (y) | 0.028 m | 0.077 m | 0.754 | - |
+
+**Falsifier fired.** I registered 0.85-0.95 with a falsifier below 0.65; lateral is 0.527,
+essentially chance. The mechanism I missed is that **the games move people differently** - Beat
+Saber is stationary, Alyx has locomotion, Superhot has dodging - so a 15-minute mean position
+records where the game makes you stand, not where the rig sits. The applications scramble the
+placement artefact themselves. Height survives at 0.754, close to alyx's 0.743, over a real
+1.42-1.73 m range with a within-participant spread of 0.068 m.
+
+**Consequence, and it is good news:** a cross-application pair here is largely free of the
+placement artefact and its residual static cue is height. The corpus is usable under `raw`
+with a height caveat rather than being `dyn`-only as I expected. Both caveats stay attached:
+one sitting, so nothing about temporal persistence; and `take_id` is a short break, not a day.
+
+I also nearly published this backwards - the statistic was P(between < within) under the
+opposite label, caught because the printed medians contradicted it and settled with a fixture
+whose answer is known by construction. That is in CLAUDE.md beside the fixture rule.
+
+**For Data:** conversion is yours when you want it. `prepare_across_xr.py` exists; the facts
+it needs are `head_rot_w` first, centimetres, 90.9 Hz, y-up matching ours, `user_id` matching
+the filename, `game_id` 1-5 and `take_id` for segments. The one design decision I would
+register before converting rather than after: **whether a game becomes a session or a
+dataset.** As sessions within one user directory, cross-session positives become
+cross-application pairs, which is the whole point of the corpus - but it also means our
+existing `cross_session_positives` machinery silently starts measuring activity transfer.
+Say which you chose in the row.
