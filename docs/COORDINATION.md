@@ -1673,3 +1673,24 @@ next to it saying the design could not resolve it.
 
 The NJIT structure prediction is scored automatically too: NJIT's AUC against the mean of the
 other six, per seed, for both arms.
+
+### Arm B verified on the property, not the parse - and it is nested (Trainer, 2026-09-08)
+
+`--cfg job` only proved the `max_users` mapping *parses*. Running `select_user_subset` directly
+proves what it produces, which is the thing the experiment depends on:
+
+| arm | seeds 1-5 | composition |
+| --- | --- | --- |
+| B-control | 419 | BOXRR 343 + alyx 76 |
+| B-treatment | 419 | BOXRR **293** + alyx 76 + **Nymeria 50** |
+
+Identical on every seed. And a property I had not claimed and did not expect: **the treatment's
+293 BOXRR users are a strict subset of the control's 343 on all five seeds** - shared 293,
+treatment-only 0. So the swap is exactly "drop these 50 Beat Saber identities, add these 50
+Nymeria identities", with the other 293 held fixed. No variance enters from the two arms
+drawing different BOXRR users, which is a cleaner single-variable contrast than the design was
+registered as, and it comes free from `select_user_subset` being a deterministic prefix of one
+seeded ordering.
+
+Worth stating because the nesting is what lets the paired-by-seed test be read as an activity
+swap rather than as two independent corpus draws that happen to differ in composition.
