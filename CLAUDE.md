@@ -2659,6 +2659,39 @@ a content hash - so a corpus difference is visible in the row instead of being i
 design. Until that exists, a cross-machine comparison assumes the corpora match and cannot
 check it.
 
+**The digest does not cover the DEPENDENCIES either, and nothing else records them
+(2026-09-09).** `code_identity` hashes `model/*.py`; `results_log.py` imports `platform`
+solely to name the shard file; and **a 75-key row carries no torch version, no Python
+version, no CUDA version and no device**. So two machines can produce numerically different
+rows with the same `code_identity` and nothing in the record distinguishing them - which is
+not hypothetical, because this file already documents CPU and GPU scoring differing by up to
+**7e-4 AUC** and requires same-device acceptance for numerics-touching changes, *while the
+row does not say which device was used.* The divergence is live as of today:
+
+| | Python | torch | device |
+| --- | --- | --- | --- |
+| DESKTOP-C | 3.12.10 | 2.10.0+cu130 | RTX 5060 Ti |
+| Miami (primary from today) | 3.13 (3.14 is a hard blocker, below) | rebuilding | RTX 4060 Ti |
+
+**Proposed, not done:** append `python_version`, `torch_version`, `cuda_version` and `device`
+to the row. It is additive, which the JSONL design explicitly supports - old lines are
+untouched and the combined view backfills blanks - but it touches `model/*.py` and so moves
+`code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
+the first cross-machine comparison, not after.
+
+**Python 3.14 is a hard blocker for the pipeline, and a green test suite did not reveal it.**
+Hydra 1.3.6 - the newest release, so there is nothing to upgrade to - passes
+`LazyCompletionHelp()` to `add_argument`, and 3.14's argparse added a `_check_help` that does
+`'%' not in help_string` on an object with no `__contains__`: `ValueError: badly formed help
+string`. Every entry point goes through `@hydra.main`, so train, sweep, test and curve all
+die. **475 tests passed on that machine while nothing could run**, because the suite never
+invokes Hydra's argument parser - it surfaced only when a real training smoke test was
+attempted. **A green suite adjacent to the thing you care about is not evidence about the
+thing you care about**, and "the tests pass" was reported as "the node is operational". Use a
+3.13 interpreter. Miami rejected monkeypatching the installed Hydra for the right reason: a
+patched dependency on one machine against an unpatched one elsewhere is another invisible
+cross-machine difference, of exactly the kind the paragraph above is about.
+
 **Design the digest over the CSV payload only** (Miami): exclude `PROVENANCE.md` and
 `CITATION.txt`, because those legitimately differ per machine - a provenance file records
 where and when the conversion ran. Include them and **every machine reports a different
