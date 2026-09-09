@@ -2682,6 +2682,37 @@ untouched and the combined view backfills blanks - but it touches `model/*.py` a
 `code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
 the first cross-machine comparison, not after.
 
+**NUMPY'S VERSION CHANGES WHICH PAIRS ARE DRAWN, and the machines already differ (Miami,
+2026-09-09).** NumPy freezes the stream of legacy `RandomState`, but **`Generator` method
+streams are explicitly not guaranteed stable across feature releases** - and
+`generate_pair_manifest` seeds a `default_rng` and then calls `rng.choice` five times per
+user plus `rng.permutation`. So two machines on different numpy minor versions draw
+**different pairs from the same seed**. Measured: **DESKTOP-C numpy 2.4.2, Miami numpy
+2.5.3.**
+
+This is worse than the other environment gaps rather than another instance of them. Those
+threaten numerics at 1e-7; this changes the *inputs*. This file already measures what a
+different pair draw is worth - the `transfer` against `transfer_rescored` arbitration put it
+at **1e-3 to 3e-3 AUC**, larger than the 7e-4 CPU/GPU gap - so a numpy minor bump between two
+machines can move a figure by more than the device does, invisibly, under one
+`code_identity`. **`numpy` belongs in the env annotation, ahead of `torch`**, and any
+cross-machine comparison of a manifest-derived figure is suspect until the versions are
+either matched or the manifest is exchanged.
+
+**So exchange the MANIFEST, not just its hash.** A hash tells you the streams diverged and
+then stops - and stopping there is the failure, because the layer we actually care about
+(does this stack compute the same arithmetic?) never gets tested. Ship the manifest's
+`x1_indices`, `x2_indices` and `labels` as an input and both machines score **the same
+pairs**, which isolates the environment layer even when numpy differs. It is ~300 KB as
+int32 and compresses; it is committable, and once committed the gate is reproducible by a
+third machine that has neither version.
+
+**Force CPU explicitly, and not with `CUDA_VISIBLE_DEVICES`.** The lookups run through
+`torch` (`static_position_lookup`, `amplitude_lookup` take tensors), so device is a real
+variable for them rather than a formality - and on DESKTOP-C `CUDA_VISIBLE_DEVICES=""`
+leaves `torch.cuda.is_available()` **True with zero devices**, so the usual mechanism does
+not do what it appears to. Set the device in config.
+
 **The training-free baselines are a free cross-machine gate, and they cover BOTH open gaps at
 once.** `position_lookup_auc` and `amplitude_auc` need no model, no GPU and no training: given
 the same sample index and the same pair manifest they are deterministic, so two machines must
