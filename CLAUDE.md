@@ -2594,6 +2594,44 @@ maps the pre-fix tree to `4d243b05d0` - that is the pair to use when relating ol
 new. The change touches no numerics: `code_identity()` is called only by the logger and by
 `sweep.py`'s resume key.
 
+**Confirmed on real hardware, in both directions (2026-09-09).** Every identity this project
+had recorded came from a Windows checkout, and `4d243b05d0` was *reconstructed from stored
+blobs* rather than observed - so the fix had never actually been tested off Windows. The
+Miami node is a genuine Linux tree, `git ls-files --eol model/` all `w/lf`:
+
+| machine | working tree | `code_identity()` |
+| --- | --- | --- |
+| Miami (`feng-MS-7B51`) | 29 files LF | **`8db420df4c`** |
+| DESKTOP-C | 28 CRLF + 1 LF (the *mixed* tree) | **`8db420df4c`** |
+
+and the harder half: **that reading is not vacuous.** On an all-LF tree the normalisation is
+a no-op, so "it matches" is equally consistent with "the fix works" and "the fix was never
+exercised". Miami built the CRLF twin - 29 files converted, `assert b'
+' in body` before
+hashing - and ran both algorithms over both trees: the **old** digest reads `8db420df4c` on
+LF against `3c18c64173` on CRLF, the **new** one reads `8db420df4c` on both, with
+`assert old_lf != old_crlf` so it cannot pass vacuously. Two real machines whose trees differ
+in line endings - one of them the mixed tree that produced `72b8053ec2` under the old
+algorithm - now agree, and rows from either are comparable by observation rather than by
+argument.
+
+**But the digest does not cover the code that MAKES the corpus (Miami, 2026-09-09).**
+`_CODE_ROOT = REPO_ROOT / "model"`, and `prepare_boxrr.py`, `prepare_nymeria.py`,
+`prepare_across_xr.py` and `prepare_who_is_alyx.py` all sit at the repo root - **outside the
+identity**. So two machines can hold materially different `processed_datasets/` - an `xror`
+version bump, a pandas float path, a converter fix - while every row from both reports the
+same `code_identity`, and nothing in the log can tell them apart. **`code_identity` certifies
+the model code and says nothing about the data**, which is this project's recurring bug
+wearing a new hat: a stand-in that looks like the thing being checked.
+
+Two consequences. **Copy an already-gated corpus rather than reconverting it** whenever the
+choice exists - it keeps rows comparable by construction, and is why Miami takes DESKTOP-C's
+21 GB processed BOXRR instead of reconverting AVALON's 100 GB of raw. And the gap is worth
+closing properly: **record a corpus digest per run** - the sorted processed-file list with
+sizes, or a content hash - so a corpus difference is visible in the row instead of being
+invisible by design. Until that exists, a cross-machine comparison assumes the corpora match
+and cannot check it.
+
 **The rule this replaces was mine and was wrong.** I inferred from "no commit hashes to
 `100bd18472`" that it came from a dirty tree, and wrote "a digest that names no commit names
 a dirty tree". It was a clean checkout - of the same commit, on a machine with different
