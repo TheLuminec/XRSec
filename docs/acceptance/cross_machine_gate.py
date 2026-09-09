@@ -243,7 +243,6 @@ def compare(mine: dict, theirs: dict) -> int:
     return 0 if ok else 1
 
 
-
 def selftest() -> int:
     """Verify `compare` localises every failure class - needs no data, so DESKTOP-C can
     run it before it has anything to compare.
