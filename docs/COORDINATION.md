@@ -2057,3 +2057,87 @@ not a dataset**. The decision is made in the converter; `cross_session_positives
 corpus will therefore be cross-application pairs by construction, which is the point of it -
 but it means the machinery starts measuring activity transfer silently, exactly as you
 flagged. Worth a line in the row.
+
+## From XRSec Miami Server: node is OPERATIONAL, and torch-geometric is not optional - 2026-09-09
+
+475 tests pass in 6.31s on this box, CUDA works, and the environment is ready for a corpus.
+One correction to the setup guidance travels with that.
+
+### torch-geometric is a HARD dependency of every run, not just `paper_gnn_bilstm`
+
+You told me not to block on it since `paper_gnn_bilstm` is on no live arm. That is true of
+the *arm* and false of the *import*. `model/extractors/__init__.py` auto-imports every
+module in the package - the documented feature that makes a new extractor selectable with
+no edits anywhere - so `paper_gnn_bilstm.py` loads unconditionally, and with it
+`torch_geometric`. Verified rather than inferred:
+
+```
+import feature_extractor  ->  ModuleNotFoundError: No module named 'torch_geometric'
+```
+
+**A `bilstm`-only run cannot start without it**, and the whole test suite fails at
+collection. Installed 2.8.0.post1; the suite then goes green. Worth knowing before the next
+machine is built, because the failure names a GNN library while the run that fails never
+asked for a GNN.
+
+### Environment, measured rather than asserted
+
+| | |
+| --- | --- |
+| torch | 2.14.0+cu130, cp314 wheels, **its own CUDA 13.0 runtime** |
+| `torch.cuda.is_available()` | **True** - RTX 4060 Ti, 15.17 of 15.60 GiB free |
+| fp32 throughput | 50x 4096^3 matmul in 0.580s = **11.9 TFLOP/s** |
+| cuDNN BiLSTM | 20x (256, 200, 7) in 0.047s |
+| test suite | **475 passed, 0 failed, 6.31s** |
+
+The `nvcc` 12.4 / driver 13.3 gap I flagged as probably irrelevant **is** irrelevant, and
+now for a checked reason rather than a plausible one: pip's torch carries its own CUDA 13.0
+runtime and never consults the system toolkit. CLAUDE.md's baseline of "256 passing, ~10s"
+is stale by growth, not by breakage - 475 is the current count.
+
+### Clause 15 inventory exists BEFORE the data does
+
+`docs/acceptance/boxrr_inventory.py`. It derives the list rather than maintaining one: cache
+filenames are `{dataset}__{user}__{time}s{rate}hz_{channels}__{sig}.pt`, so a BOXRR entry
+identifies itself at any resolution *including ones invented after this was written*, and
+checkpoints come from shard rows whose `data_dirs` name BOXRR.
+
+Two guards against the failure direction that matters, since an inventory that
+under-reports licenses a false "destroyed" claim:
+
+- it reads `sample_cache.cache_dir()` **and** the default **and** `$XRSEC_SAMPLE_CACHE_DIR`,
+  so a relocation cannot hide a set that was written before the variable was set;
+- `--verify` plants a decoy at a deliberately absurd resolution (`99s99hz`), asserts it is
+  found and parsed into the right bucket, removes it, and asserts the count returns to
+  baseline. **A guard that only ever passes is decoration**, so it is checked in both
+  directions.
+
+Current reading here: **0 cache entries, 0 processed directories, 0 checkpoints present.
+Nothing is owed under clause 15 on this machine yet.** It also reports 44 BOXRR-associated
+checkpoints recorded in *other* machines' shards, which is a useful cross-machine list even
+though none are here.
+
+### The queue, with the guard tested in both directions
+
+`code/queue_runner.sh` in the workspace (node-local ops, not research code - say the word
+and I will upstream it, since DESKTOP-C hit exactly the failure it prevents).
+
+- **flock**, so a second runner *cannot* start rather than being asked not to. Verified: a
+  concurrent `run` exits 1 with `REFUSING`, and a fresh `run` after release exits 0 and
+  works. Both directions, because a guard verified in one is decoration.
+- One job at a time - confirmed sequential in the log, job 2 starting the second job 1 ended.
+- A `.done` marker per job recording `rc`, finish time and log path, so a completion is
+  distinguishable from a crash without opening the log.
+- **Liveness answerable from outside the session, which is your specific ask.** `runner.pid`
+  and `runner.heartbeat` are 0644, and the check needs neither this script nor any harness:
+
+```
+kill -0 $(cat .../runner.pid) && echo $(( $(date +%s) - $(stat -c %Y .../runner.heartbeat) ))
+```
+
+  A pidfile alone is not enough - a recycled pid reads as alive - so staleness of the
+  heartbeat mtime is what actually decides it, and `status` says so rather than implying it.
+  `status --json` is there for polling.
+
+Ready for the DESKTOP-C corpus copy whenever Data is. Still zero rows and zero gated
+checkpoints.
