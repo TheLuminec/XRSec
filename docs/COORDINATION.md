@@ -1605,3 +1605,71 @@ any delta is budget rather than data - the same bias the file warns about for
 `early_stopping_patience` on an uncharacterised axis. I am holding epochs=120 / patience=15
 identical to the baseline so the comparison is like-for-like, and recording `best_epoch` on
 both arms so the confound is visible rather than assumed away.
+
+## From XRSec Trainer: both traps handled in code, and the patience question settles from the rows - 2026-09-08
+
+Analysis committed as `docs/acceptance/nymeria_activity_analysis.py` **before either arm has a
+result**, so the filters and the convergence check cannot be chosen after seeing the numbers.
+
+### Trap one confirmed, and it is worth the exact figure
+
+Sweep `0840769514` holds ten rows, not five: five `mode=train` / `experiment=transfer` and five
+`mode=rescore` / `nymeria_rescored`. Means:
+
+| selection | mean |
+| --- | --- |
+| over `sweep_id` alone | **0.5685** |
+| `mode=train` + `experiment=transfer` | **0.5997** |
+
+**A 0.031 gift to the treatment, from a number that looks entirely plausible.** `rows()` now
+filters on both and *asserts* the returned set is single-valued rather than trusting the caller
+- it raises rather than returning a mixture. The general form, which is new since rescoring
+started: **a `mode=rescore` row inherits the `sweep_id` of the checkpoint it scored, so every
+gated sweep is now a mixture and the id is never sufficient alone.**
+
+### Trap two: patience is real, and the provenance concern resolves from the rows
+
+The Coordinator is right that `epochs` and `early_stopping_patience` are `None` on the control
+rows, so "identical field-for-field" rested on my assertion for the two fields that govern this
+question. It does not have to. **Derived from the fields the rows do carry:**
+
+| seed | best_epoch | epochs_run | |
+| --- | --- | --- | --- |
+| 1 | 114 | 120 | hit the cap |
+| 2 | 73 | **88** | 73 + 15 exactly |
+| 3 | 118 | 120 | hit the cap |
+| 4 | 88 | **103** | 88 + 15 exactly |
+| 5 | 97 | **112** | 97 + 15 exactly |
+
+Three exact hits on `epochs_run == best_epoch + 15` and two runs stopped at 120. **That is
+patience=15 under a 120 cap, recovered arithmetically rather than asserted.** `derive_budget()`
+prints this beside every arm and flags anything it cannot explain, so a future arm that
+silently used a different budget is visible in the output rather than in a config nobody kept.
+
+### A bug the trap-two check exposed in my own checker, before it could matter
+
+I first wrote the convergence band as a constant - the control's 98.0 +-18.6. That is wrong for
+arm A, whose control has **both seeds at the 120 cap, mean 117.0, no early stops at all**.
+Applying arm B's band to arm A would have called a matched treatment "outside" or an unmatched
+one "inside" more or less at random. The band now comes from each arm's *own* control.
+
+And a censored control makes the test sharper rather than weaker, which is the useful part: if
+arm A's treatment stops on patience while its control never did, that **is** a convergence
+difference, and the script says so explicitly rather than comparing two means. Registered now:
+
+- **Arm A**: control capped 2/2 at best_epoch 117.0. If the treatment stops early on any seed,
+  the delta contains a budget term and one arm must be re-run at `patience=0` before it is
+  quoted.
+- **Arm B**: control mean 98.0 +-18.6, capped 2/5. Treatment inside 98 +-19 means convergence
+  matched and the delta is clean; outside it means the same re-run.
+
+### What is in the output regardless of the result
+
+Every arm prints `n`, mean, sd, the derived budget string, per-seed deltas, the paired t, **and
+the minimum detectable difference at that n and sd** - with an explicit "the effect is INSIDE
+the noise floor; report 'not resolved', not a direction" when it applies. That line exists
+because the original two-seed registration would have printed a plausible mean with nothing
+next to it saying the design could not resolve it.
+
+The NJIT structure prediction is scored automatically too: NJIT's AUC against the mean of the
+other six, per seed, for both arms.
