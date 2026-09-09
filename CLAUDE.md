@@ -551,6 +551,55 @@ positives are cross-activity within a sitting and cannot pay the cross-session c
 less of a problem under `dyn` than under `raw`); and the cost of the decision is that we no
 longer hold an AR-glasses *test* corpus, and the catalogue's search found no other one.
 
+### Across-XR: the first instrument that separates activity from population
+
+Landed 2026-09-09, 5.1GB, 49 files. **All 49 participants appear in all five applications,
+no missing cells** - the fully crossed structure BOXRR turned out not to have. Two of the
+five are our own training activities: `game_id=3` is **Beat Saber** (BOXRR's activity) and
+`game_id=2` is **Half-Life: Alyx** (who_is_alyx's). The rest are Superhot VR, Synth Riders
+and a Social VR scenario, 40k-206k rows per participant per game at 90.9 Hz.
+
+**Why this matters more than its identity count.** Every cross-activity number in this file
+changes the activity *and* the people *and* the rig together, so "the learned component is
+activity-bound" has always been confounded with "it is corpus-bound". Here the person, the
+headset, the room and the sitting are fixed and **only the application changes**. 49
+identities is far below the acquisition floor and that is not the point - this is a *test*
+instrument for a question nothing else in the corpus can ask.
+
+**The placement premise was registered and it FAILED, in the corpus's favour.** All five
+games are one sitting, so the prediction (registered at `9664dde`, before measuring) was
+that placement would be a per-participant constant across applications - P(within <
+between) of **0.85-0.95**, lookup above 0.85, making every `raw` number a placement match.
+Falsifier: P below 0.65. Per-game mean head position over all 49x5 cells:
+
+| axis | within med | between med | P(within < between) |
+| --- | --- | --- | --- |
+| all | 0.356 m | 0.390 m | 0.545 |
+| **lateral (x,z)** | 0.350 m | 0.374 m | **0.527** |
+| **height (y)** | **0.028 m** | **0.077 m** | **0.754** |
+
+**Lateral placement is at chance across applications** and the falsifier fired by a wide
+margin. The mechanism is that **the games move people differently** - Beat Saber is
+stationary, Alyx has locomotion, Superhot has dodging - so a 15-minute mean position
+records *where the game makes you stand*, not where the rig sits. The applications scramble
+the artefact themselves. Height survives at **0.754**, close to alyx's 0.743, and that is
+the legitimate cue: within-participant height spread across the five games is 0.068 m
+against a between-participant sd of 0.075 m, over a real 1.42-1.73 m range.
+
+**So a cross-application pair here is largely free of the placement artefact, and its
+residual static cue is height** - the one this file has consistently called a biometric.
+That makes the corpus usable under `raw` with a height caveat and clean under `dyn`, where
+before this measurement it looked like a `dyn`-only instrument. Two caveats stay attached:
+it is still **one sitting**, so it says nothing about temporal persistence and cannot pay
+the cross-session cost; and `take_id` separates a short break, not a day.
+
+**Conversion facts, verified on the files rather than the Readme, which is wrong again.**
+Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
+1.53-1.60 m); |q| = 1.0000; 90.9 Hz native; y-up, matching ours, so no axis remap;
+`user_id` matches the filename on every file checked. Their own deterministic test split is
+users **32-48**, so a published-comparison arm is available. See
+`docs/DATASET_CATALOGUE.md` for the full format table.
+
 ### Cross-corpus transfer: the model is BELOW the lookup, and flat in identity count
 
 The experiment the BOXRR acquisition was for. Train on BOXRR+alyx, evaluate on the seven
