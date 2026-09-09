@@ -543,7 +543,9 @@ not the count, which makes it a clean single-variable experiment and the one tha
 whether any future acquisition is worth making. Registered before the run: pooled transfer
 to the seven corpora **+0.005 to +0.03** over the matched-seed 4096 baseline of 0.6156;
 **falsifier under +0.005**, which would say one genuinely different activity does no better
-than identity count did and would argue against every acquisition on the board. Two
+than identity count did and would argue against every acquisition on the board. **That band
+was registered against a two-seed design that could not have tested it, and Trainer caught it
+before launch** - see the power note below; the run is five paired seeds and a second arm. Two
 qualifications travel with any Nymeria training figure: one sitting per participant, so its
 positives are cross-activity within a sitting and cannot pay the cross-session cost (much
 less of a problem under `dyn` than under `raw`); and the cost of the decision is that we no
@@ -905,6 +907,43 @@ detectable difference, two-sided p<0.05:
    weighed against the prediction before running, and for most small-effect ideas the
    honest answer is not to run them at all rather than to run them underpowered and
    read the noise.
+
+**Compute the design's MDD before registering a band, or the registration is theatre
+(2026-09-08).** The coordinator specified the Nymeria activity-diversity run as two seeds
+paired against an existing arm, and registered +0.005 to +0.03 with a falsifier under +0.005.
+At n=2 the paired multiplier is `t(0.975, 1)/sqrt(2)` = **8.98x**, so against the baseline's
+own between-seed sd of 0.0040 the minimum detectable difference is **0.036** - and against a
+paired sd of 0.005, **0.045**. **Every number in that registration, the band and the
+falsifier alike, sat inside the noise floor of the design meant to test it.** It was not
+under-powered, it was unfalsifiable: no outcome could have moved it either way, and a null
+would have been read as "activity diversity does nothing" and used to argue against
+acquisitions a person was writing to authors about. Five paired seeds bring the MDD to 0.005
+and cover both bands; the run is eight.
+
+| paired seeds | multiplier | MDD at sd 0.0040 |
+| --- | --- | --- |
+| 2 | 8.98x | 0.036 |
+| 3 | 2.48x | 0.010 |
+| **5** | **1.24x** | **0.005** |
+| 8 | 0.84x | 0.003 |
+
+The failure is not that the table above was missing - it is directly above this paragraph and
+says "read this before designing an experiment, not after". **A registered prediction is only
+a test if the design can resolve it, and checking that is one line of `scipy.stats.t`.** The
+drop from n=2 to n=3 is 3.6x on its own, so the cheapest fix to almost any under-powered
+paired design here is a third seed.
+
+**And state the treatment's dose before reading a null.** The same run had Nymeria supplying
+**2.9% of training windows** (50 identities of 4096; 20,678 windows of 707,017), because
+`identity_softmax` samples windows uniformly. A null there cannot distinguish "activity
+diversity does not transfer" from "the objective barely saw the second activity", and only
+the first licenses the conclusion the run exists to support. `balance_identities` cannot fix
+it and moves the wrong way: Nymeria averages **414 windows per identity** against BOXRR's
+**151**, so capping at the corpus median *trims Nymeria* and raises BOXRR's share. The fix is
+composition, not sampling - hold identity count fixed and swap identities between corpora
+(BOXRR 343 + alyx 76 against BOXRR 293 + alyx 76 + Nymeria 50, both 419), which raises the
+dose from 2.9% to **14.2%** of windows. **A dose is part of a treatment's definition; a null
+without one is a result about the dose.**
 
 The corollary is uncomfortable and worth stating plainly: **most of the remaining ideas
 in this project sit at or below the resolution of the evaluation we can afford.** The
