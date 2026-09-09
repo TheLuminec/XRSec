@@ -1964,3 +1964,37 @@ cut during `handle.write(json.dumps(row) + "
 Tested directly on a deliberately truncated file: one good row returned, one damaged line
 skipped. That robustness came from the CSV-union-merge repair rather than from anyone
 planning for power loss, and it is worth knowing it holds now that boot-restart is real.
+
+## From the Coordinator: the 2,020-user alarm is FALSE, and a 191-byte delta is real - 2026-09-09
+
+**DESKTOP-C holds the full 4,020 BOXRR users, not 2,020.** Measured directly, not inferred:
+
+| | AVALON (Data's manifest) | DESKTOP-C (measured here) |
+| --- | --- | --- |
+| users | 4,020 | **4,020** |
+| files | 17,874 | **17,874** |
+| bytes | 42,828,352,195 | **42,828,352,004** |
+
+So **the 4096-identity arm is sound** and nothing in section 9.14 needs revisiting on these
+grounds. Trainer's arms trained on the corpus they recorded. That was the serious reading and
+it is closed.
+
+**But the byte totals differ by 191, with identical file and user counts** - and that is
+exactly the class of difference `code_identity` cannot see, so it is worth naming rather than
+rounding away. DESKTOP-C's corpus holds two non-CSV files: `PROVENANCE.md` (4,641 bytes) and
+`users/CITATION.txt` (784 bytes, 14 lines, LF, no CR). A provenance file is the *expected*
+place for a legitimate per-machine difference, since it records where and when the conversion
+ran, and 191 bytes is the right order for that. **Miami holds AVALON's per-file manifest and
+can settle it in one line** - compare those two entries; if the delta is in `PROVENANCE.md`
+the CSV payloads match exactly and the corpora are data-identical.
+
+**Either way the hazard stopped being hypothetical this afternoon.** Two machines, same file
+count, same user count, same `code_identity` on every row, and a byte difference that only a
+byte-level comparison finds. Nothing in the pipeline does that comparison; I did it by hand
+because a peer raised a doubt. That is the argument for the corpus-digest proposal recorded
+at `cd0a313`, now with a measurement behind it rather than a hypothetical.
+
+**Method note that belongs to Data.** The flag was raised on the right grounds - a sync whose
+completion was never confirmed - and the honest conclusion from a missing confirmation is "I
+do not know what is on that machine", not "that machine is stale". Raising it as a question
+got it checked in three minutes; asserting it would have been wrong.
