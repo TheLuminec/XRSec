@@ -1868,3 +1868,64 @@ The lesson is narrow and mine: **"the harness killed the job" is not "the proces
 and I asserted the second from the first. The check costs one line - `OpenProcess`, or the
 process table - and I ran it on the *training* pid while never running it on the *wrapper*
 pid, which is the one whose death I had actually inferred.
+
+## From XRSec Miami Server: a fourth node exists, GPU-ready and data-blocked - 2026-09-09
+
+New session, new machine. `ListAgents` shows me as **XRSec Miami Server**; address me by
+that bare name. This is Dr. Feng's Miami University server, host `feng-MS-7B51`, and it is
+**not** DESKTOP-C or AVALON. My scope is `/run/media/feng/Data/CalebProject`, which now
+holds a fresh clone of this repo at `225115b`.
+
+### What this node has that DESKTOP-C does not
+
+| | this node | DESKTOP-C (from your own entries) |
+| --- | --- | --- |
+| GPU | **RTX 4060 Ti, 16 GB, idle** (320 MiB desktop only) | shared by three sessions |
+| RAM | **45 GiB**, 40 free, + 44 GiB swap | 32 GB, oversubscribed by ~10 GB on 09-09 |
+| disk | **3.7 TB free** (39 GB used of 3.7 TB) | |
+| checkout | **its own** | one tree shared by three sessions |
+
+Two consequences worth acting on. **The shared-working-tree rules do not bind here** - I
+can hold a dirty tree or edit `model/*.py` mid-experiment without splitting anyone else's
+`code_identity`, because no other session runs on this machine. And **16 GB of VRAM covers
+samples-resident-on-GPU at the full corpus** (~2.2 GB of window tensor at 2419 identities
+against the 4 GB laptop that made it unaffordable), which CLAUDE.md prices at ~8% on top
+of the 2.30x from removing the per-batch syncs. AMP stays off - it is measured harmful.
+
+### The blocker is data, and it is a permissions question rather than a transfer
+
+`processed_datasets/` is **empty here**: zero users, zero windows. No venv and no torch
+either, though that part is trivial and deliberate - I have not installed until I know
+which resolution lands here, since `sample_time`/`sample_rate` drives the cache footprint
+far more than the venv does.
+
+**I am not going to pull BOXRR-derived data across without an explicit decision.** CLAUDE.md
+already records clause 4 as an open question for three machines - *"convert wherever the raw
+data lands; do not centralise then copy"* - and a fourth machine does not resolve it. Clause
+15 is the sharper half: `.cache/samples/` is a derived copy at **every** resolution, so any
+BOXRR work here creates destruction obligations here, on a box that currently has none.
+
+**What I can do unilaterally** is the seated corpora - `datasets.json` carries direct
+download links for ViewGauss, PanoSaliency, Panonut360, EyeNavGS and Head_and_Gaze, no
+agreement, ~7 GB. Say the word and this node is a second independent conversion-and-training
+site for the tier-1/tier-2 seated set within a day.
+
+### One caveat on this entry itself, registered rather than buried
+
+Everything above is machine facts I measured directly. **Every project number I have
+restated is read from CLAUDE.md, not reproduced** - I have run nothing, because I cannot.
+Treat me as having zero gated checkpoints and zero rows until I have both data and a
+certificate in `docs/acceptance/`.
+
+### Two questions for the Coordinator
+
+1. **Is this node meant to hold data at all, or to stay a compute-only site?** If
+   compute-only, that is fine and cheap to arrange - but it means someone has to answer
+   the clause 4 question anyway, because a compute node with no local data still needs the
+   windows.
+2. **Which queue do you want here first?** The obvious fit is anything that has been
+   waiting on a GPU slot on DESKTOP-C, since mine is free and 16 GB.
+
+Committed locally on this machine. **Not pushed** - this session's harness prohibits pushing
+to `main`, so if you want this entry on origin, either say so explicitly or pick it up from
+my direct message.
