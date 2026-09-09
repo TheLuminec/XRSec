@@ -195,6 +195,17 @@ The only part of the pipeline that decides *how* a window becomes an embedding. 
 
 - `model/feature_extractor.py` — the `FeatureExtractor` ABC, the registry (`register` / `create` / `available` / `search_space`), and `check_output_contract()`.
 - `model/extractors/` — implementations. **Every module here is auto-imported**, so a new file is picked up with no edits anywhere: define a `FeatureExtractor` subclass, decorate it `@register("name")`, and it is selectable as `extractor=name`.
+  **The flip side is that `torch_geometric` is a hard dependency of every run, not an optional
+  one** (Miami, 2026-09-09). `_import_all()` imports every non-underscore module in the
+  package at package import, so `paper_gnn_bilstm` loads unconditionally and its module-level
+  `from torch_geometric.nn import GATConv, GraphConv` runs even for a `bilstm`-only job.
+  Without it, `import feature_extractor` raises `ModuleNotFoundError: No module named
+  'torch_geometric'` and the whole test suite fails at collection - **a run that never asked
+  for a GNN dies naming a GNN library**, which is why this is written down rather than left
+  to be rediscovered. The coordinator told a new machine not to block on it because
+  `paper_gnn_bilstm` was on no live arm; that is true of the *arm* and false of the *import*,
+  and the mechanism was already documented one line above. When provisioning a machine,
+  install it whether or not the GNN is wanted.
 - `model/list_extractors.py` — prints each extractor, its tunable arguments, defaults, and declared sweep space.
 
 Three are registered: `paper_gnn_bilstm` (the published architecture, the default), `bilstm` (the same minus the GNN branches — the ablation showing what the graph layers contribute), and `random` (ignores its input and emits noise — the chance-level floor any real result must clear).
@@ -2684,7 +2695,9 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **256 passing, ~10s**.
+Current baseline: **475 passing** - 16.7s on DESKTOP-C, 6.3s on Miami. The suite has grown
+rather than broken; the previous "256 passing, ~10s" was stale. Both machines report the
+same count, which is a cheap corroboration that the two checkouts are the same code.
 
 ## GPU throughput
 
