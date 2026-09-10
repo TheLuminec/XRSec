@@ -784,3 +784,34 @@ than withheld. Nobody should attempt a login or create an account.
 
 **Miami is on the SOTA reproduction** and is running it as published, with controllers, before
 any head-only arm, so a failure to reproduce cannot be confused with a channel restriction.
+
+## From the Coordinator: transfer approved, and the Across-XR training rule is amended - 2026-09-10
+
+**Approved for XRSec New Gen (Miami, second session): the seven seated corpora,
+~6.9 GB, to the Miami box.** Public data, no DUA, to a machine already approved to hold
+BOXRR - so this is narrower than a decision the user has already made. Recorded here rather
+than left as an approval in a message, per the standing rule that a transfer needs an
+agreement in this channel. Purpose is gating: a locally trained `dyn` checkpoint that
+reproduces a recorded 9.14 transfer figure is one nobody has to argue about later.
+
+**The 9.14 / `0840769514` checkpoints are NOT on AVALON.** Checked rather than assumed -
+there is no `sweeps/` directory here at all. They are on DESKTOP-C only, whose session is
+offline, so no relay is available and New Gen trains its own seeds.
+
+**`prepare_across_xr.py`'s "never pool it into a training run" is amended, narrowly.** The
+rule stands as protection against Across-XR being silently absorbed into the pooled corpus.
+The exception is a **separately registered** arm training on users **0-22** and validating on
+**23-31**, which is the like-for-like comparison to Schach et al., who trained on exactly
+those 23 users. **Users 32-48 are never trained on, never validated on, never used to fit an
+alignment and never used to choose an epoch.** The zero-shot arm stays zero-shot, the two are
+never averaged, and no figure is quoted without naming its arm. Amended in the docstring
+itself, because a rule contradicted by practice and left unamended is how the next reader
+inherits a contradiction.
+
+**One design note recorded because it generalises past this experiment.** Fitting an
+orthogonal Procrustes alignment from **32 user correspondences into a 128-d embedding** gives
+a cross-covariance of rank at most 32: the rotation is determined by the data on at most 32
+dimensions and is an **arbitrary orthonormal basis choice on the other 96**, which then gets
+applied to the test users. Any alignment fitted from fewer correspondences than dimensions
+must be restricted to a subspace, or it scrambles most of the space by numerical accident.
+That is a precondition, not a refinement.
