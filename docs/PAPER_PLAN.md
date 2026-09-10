@@ -122,13 +122,47 @@ noise floor - and it is one line of arithmetic to avoid.
 
 | repo | commit | what it is |
 | --- | --- | --- |
-| `cschell/Versatile-XR-User-Identification` | `97f054baf04141ccf0943d207f2ff24a8e8bd1aa` | Rack et al. 2023. Holds BOTH model families the Across-XR paper evaluates: `similarity_module.py` and `classification_module.py` |
+| `cschell/Versatile-XR-User-Identification` | `97f054baf04141ccf0943d207f2ff24a8e8bd1aa` | Rack et al. 2023. Holds the two training PARADIGMS (`similarity_module.py`, `classification_module.py`) and **not Schach's architecture** - see the correction below |
 | `cschell/Motion-Learning-Toolbox` | `b8189e6c6250527b974c0aa5ccae309964eefe5f` | their preprocessing library - the BR/BRV encodings the paper cites |
 | `cschell/Who-Is-Alyx-Code` | `2e28e22beada1fe92e5b51d088fce55d0a38244a` | same pipeline on the Alyx dataset, which we hold, so it is gateable |
 
 **AVALON's IP is not rate-limited where DESKTOP-C's was.** The 429/403 that blocked this
 acquisition for days was never about the repository; the same URLs return 200 here. Fetch
 external material from AVALON.
+
+## CORRECTION, 2026-09-10, same day: Schach's model is NOT in the public code
+
+My first brief said the Versatile repo "holds BOTH model families the Across-XR paper
+evaluates". **That is wrong and Miami caught it before spending hours on an install.** Verified
+here independently: `transformer`, `Transformer`, `nhead` and `MultiheadAttention` return
+**zero hits** across the whole clone; `machine_learning/src/models/` contains exactly
+`cnn_model.py` and `rnn_model.py`; and `similarity_module.py` takes `model: nn.Module`, so it
+is an architecture-agnostic wrapper. Schach's Transformer-into-GRU on a 480-d embedding is
+absent.
+
+**The error was conflating a training PARADIGM with an ARCHITECTURE.** The abstract names
+"similarity learning and classification models", two files carry exactly those names, and I
+read the match as the thing itself. That is this project's recurring bug once more: a stand-in
+that looks like the thing being checked, and the match was on the *words in the abstract*
+rather than on the contents. Filenames are a claim like any other.
+
+**Consequence, stated so the paper does not overclaim.** "We reproduced the SOTA" and "we
+measured ourselves against a number the SOTA published" are different claims, and on currently
+available code **only the second is available for Schach et al.** That does not block anything
+- 18.0% is a published target and their protocol is matchable exactly via the `split` column -
+but the paper must say which of the two it is doing. The auth-gated GitLab repo is the likely
+home of the missing architecture.
+
+**What IS reproducible, and it is worth having.** Rack et al. 2023 on who_is_alyx is this
+repo's own paper, and Miami verified the protocol reconstructs exactly rather than assuming it:
+`01_aggregate.py` selects players with exactly 2 sessions, which takes AVALON's 76 players to
+**63**, matching the config filename `15_fps-63_subjects-metric_learning_movement.hdf5` to the
+digit; and the shipped config equals the paper's Table IV cell for cell (GRU x3, layer 450,
+dropout 0.28, lr 2e-5, ArcFace, embedding 192). So the honest plan is **two baselines**: Rack's
+architecture, which we hold and can run end to end on Across-XR under our own control, and
+Schach's published 18.0% as an external reference we match protocol with but do not re-run.
+Two baselines is stronger than either alone, and it converts the missing code from a blocker
+into a stated limitation.
 
 ## Corpus fact recorded so nobody infers it wrongly
 
