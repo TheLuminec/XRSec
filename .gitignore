@@ -16,4 +16,9 @@ results/runs_all.csv
 
 # Any other sweep artifact root (checkpoints; the numbers live in results/runs/)
 /sweeps_*/
+
+# Pilot sweep artifact roots - same reason as /sweeps/. Untracked 2026-09-10; the
+# checkpoints stay on disk and remain in git history, and no acceptance certificate
+# references them. The balance pilot's result is recorded in CLAUDE.md as INVALID.
+/pilot_*/
 external_sota/

@@ -3085,9 +3085,9 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **475 passing** - 16.7s on DESKTOP-C, 6.3s on Miami. The suite has grown
-rather than broken; the previous "256 passing, ~10s" was stale. Both machines report the
-same count, which is a cheap corroboration that the two checkouts are the same code.
+Current baseline: **475 passing** - 16.7s on DESKTOP-C, 6.3s on Miami, 6.2s on AVALON. The suite has grown
+rather than broken; the previous "256 passing, ~10s" was stale. All three machines report
+the same count, which is a cheap corroboration that the checkouts are the same code.
 
 ## GPU throughput
 
