@@ -1112,7 +1112,23 @@ it and moves the wrong way: Nymeria averages **414 windows per identity** agains
 **151**, so capping at the corpus median *trims Nymeria* and raises BOXRR's share. The fix is
 composition, not sampling - hold identity count fixed and swap identities between corpora
 (BOXRR 343 + alyx 76 against BOXRR 293 + alyx 76 + Nymeria 50, both 419), which raises the
-dose from 2.9% to **14.2%** of windows. **A dose is part of a treatment's definition; a null
+dose from 2.9% to **14.2%** of windows.
+
+**AND EQUALISING A COUNT UPSTREAM OF A STOCHASTIC SPLIT DOES NOT EQUALISE IT DOWNSTREAM (New
+Gen, 2026-09-10, catching the coordinator's own fix).** Re-running this design on Across-XR, the
+instruction was "cap BOXRR at 577 against 600 so both arms hold 676 identities". That equalises
+the pool and **not the arms**: `val_user_fraction=0.25` then draws over each arm's *own* pool, so
+the two would validate on different people, train on **513 against 507**, and the BOXRR training
+sets would not be nested even though the *subsamples* are. The swap has to be applied to the
+**post-draw training list**, not to the pre-draw pool - here by making the validation list
+explicit (`val_user_fraction=0`, the pipeline's own 25% draw pinned to a file) and dropping the
+last 23 BOXRR *training* users in favour of Across-XR 0-22. Verified on the lists the loaders
+hold: 495 training identities in both arms, BOXRR training users 412 subset of 435, alyx
+identical.
+
+**The general form: a control matched before a random step is matched in expectation, not in
+fact**, and "both arms have N identities" is a claim about whichever list you actually counted.
+Count the one the loader hands the model. **A dose is part of a treatment's definition; a null
 without one is a result about the dose.**
 
 The corollary is uncomfortable and worth stating plainly: **most of the remaining ideas
