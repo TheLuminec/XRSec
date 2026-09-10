@@ -9,6 +9,15 @@ reopening checkpoints.
 
 Logging must never take down a run that has already done the expensive work, so
 every failure here is caught and downgraded to a warning.
+
+Environment annotation (added 2026-09-10). Every row records the interpreter, numpy,
+torch and CUDA versions, the device name, its compute capability and the arch list the
+torch build carries. numpy is listed AHEAD of torch because it changes which pairs are
+drawn (1e-3 to 3e-3 in AUC between numpy generations); and a device NAME does not say
+which code path ran on it - Miami's build lists no sm_89 while its device is (8, 9), so
+the capability tuple and the arch list travel together. A row with NO environment
+fields was written before this annotation existed; it means "unrecorded", never
+"unknown stack" - do not read an absent block as a different environment.
 """
 
 from __future__ import annotations
@@ -139,7 +148,44 @@ FIELDS = [
     "amplitude_auc",
     "amplitude_eer",
     "amplitude_auc_by_dataset",
+    # Explicit validation users (see select_validation_users); 0 on every older row.
+    "num_validation_users",
+    # Environment annotation, 2026-09-10. Absent on older rows means unrecorded.
+    "python_version",
+    "numpy_version",
+    "torch_version",
+    "cuda_version",
+    "device_name",
+    "device_capability",
+    "torch_arch_list",
 ]
+
+
+def environment() -> dict:
+    """The stack a row was produced on. Each field degrades to "" on its own, so a
+    missing library never takes the logger down with it."""
+    env = {"python_version": platform.python_version()}
+    try:
+        import numpy
+        env["numpy_version"] = numpy.__version__
+    except Exception:
+        env["numpy_version"] = ""
+    try:
+        import torch
+        env["torch_version"] = torch.__version__
+        env["cuda_version"] = torch.version.cuda or ""
+        if torch.cuda.is_available():
+            env["device_name"] = torch.cuda.get_device_name(0)
+            env["device_capability"] = ".".join(str(v) for v in torch.cuda.get_device_capability(0))
+            env["torch_arch_list"] = ";".join(torch.cuda.get_arch_list())
+        else:
+            env["device_name"] = "cpu"
+            env["device_capability"] = ""
+            env["torch_arch_list"] = ";".join(torch.cuda.get_arch_list()) if hasattr(torch.cuda, "get_arch_list") else ""
+    except Exception:
+        for key in ("torch_version", "cuda_version", "device_name", "device_capability", "torch_arch_list"):
+            env.setdefault(key, "")
+    return env
 
 
 def _git_sha() -> str:
@@ -521,6 +567,8 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "run_dir": _relative_to_repo(Path.cwd()),
             "git_sha": _git_sha(),
             "code_identity": code_identity(),
+            "num_validation_users": len(getattr(cfg, "validation_users", None) or []),
+            **environment(),
         }
         if boosting_enabled:
             row.update({

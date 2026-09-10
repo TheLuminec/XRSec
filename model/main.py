@@ -47,6 +47,8 @@ def _normalize_paths(cfg: DictConfig) -> None:
     cfg.data_dirs = [to_absolute_path(p) for p in _as_list(cfg.data_dirs)]
     cfg.test_dirs = [to_absolute_path(p) for p in _as_list(cfg.test_dirs)]
     cfg.exclude_users = [to_absolute_path(p) for p in _as_list(cfg.exclude_users)]
+    if "validation_users" in cfg:
+        cfg.validation_users = [to_absolute_path(p) for p in _as_list(cfg.validation_users)]
 
     # Hydra chdirs into a fresh run directory, so a relative sweep root would be
     # unreachable next time and resume would never find prior state.

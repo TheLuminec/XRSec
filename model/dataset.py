@@ -52,6 +52,9 @@ DATASET_TIERS = {
     "Nymeria": 1,
     "Across_XR": 1,
     "across_xr": 1,
+    # The converter's actual output name (prepare_across_xr.py). The two entries above
+    # predate it, and without this one every Across-XR row recorded an unaudited tier.
+    "CrossApplicationXR_Dataset": 1,
     "EyeNavGS_6-DoF_Navigation_Dataset": 3,
     "360-degree_Saliency_Dataset_(PanoSaliency)": 2,
     "Panonut360_Dataset": 2,
@@ -388,6 +391,12 @@ class SampleIndex:
         self.dataset_names = list(getattr(sample_dataset, "dataset_names", []))
         user_dataset_ids = getattr(sample_dataset, "user_dataset_ids", [])
         self.user_dataset_ids = list(user_dataset_ids)
+        # The user directories actually loaded, in index order. `_user_dirs_of` reads this
+        # to check that evaluation users were never trained on; until 2026-09-10 it was
+        # recorded on SampleDataset only, so on a real SiameseDataset the guard read an
+        # empty set and passed unconditionally - its tests exercised a stand-in that had
+        # the attribute the real object lacked.
+        self.user_dirs = list(getattr(sample_dataset, "user_dirs", []))
 
         self.user_sample_indices: list[torch.Tensor] = []
         dataset_session_ids = getattr(sample_dataset, "session_ids", [])
@@ -919,7 +928,8 @@ def select_user_subset(data_dir, max_users: int | None, seed: int | None) -> lis
     return sorted(kept)
 
 
-def select_validation_users(data_dir, exclude_users, fraction: float, seed: int | None) -> list[str]:
+def select_validation_users(data_dir, exclude_users, fraction: float, seed: int | None,
+                            explicit=None) -> list[str]:
     """
     Deterministically pick users to hold out for epoch selection.
 
@@ -927,29 +937,43 @@ def select_validation_users(data_dir, exclude_users, fraction: float, seed: int 
     and the reported test group, because the task is generalisation to unseen people:
     a validation split that shares users with training would select on memorisation.
 
-    Returns [] when fraction is 0, which restores the previous single-split behaviour.
-    """
-    if not fraction or fraction <= 0:
-        return []
+    `explicit` names validation users outright (absolute user directories). A corpus
+    that has any explicit validation user is left out of the fractional draw entirely,
+    so a published split can be reproduced exactly on one corpus (Across-XR: train
+    0-22, validate 23-31) while the pooled corpora beside it keep the usual random
+    fraction. Explicit users that are not under `data_dir`, or are excluded, are
+    ignored rather than silently reserved.
 
+    Returns [] when fraction is 0 and nothing is explicit, which restores the previous
+    single-split behaviour.
+    """
     excluded = set(exclude_users or [])
+    directories = [data_dir] if isinstance(data_dir, str) else list(data_dir)
+    explicit = {str(Path(u).resolve()) for u in (explicit or [])}
+    chosen_explicit: list[str] = []
+    covered_dirs: set[str] = set()
     candidates = []
-    for directory in ([data_dir] if isinstance(data_dir, str) else list(data_dir)):
+    for directory in directories:
         for name in sorted(os.listdir(directory)):
             path = os.path.join(directory, name)
-            if os.path.isdir(path) and path not in excluded:
-                candidates.append(path)
+            if not os.path.isdir(path) or path in excluded:
+                continue
+            if str(Path(path).resolve()) in explicit:
+                chosen_explicit.append(path)
+                covered_dirs.add(directory)
+            else:
+                candidates.append((directory, path))
 
-    if len(candidates) < 3:
-        # Too few users to spare any: selecting on one user would be worse than not.
-        return []
-
-    count = int(round(len(candidates) * float(fraction)))
-    count = min(max(count, 1), len(candidates) - 2)
-
-    rng = np.random.default_rng(_seed_value(seed, 21))
-    chosen = rng.choice(len(candidates), size=count, replace=False)
-    return sorted(candidates[int(i)] for i in chosen)
+    drawn: list[str] = []
+    if fraction and fraction > 0:
+        pool = [path for directory, path in candidates if directory not in covered_dirs]
+        if len(pool) >= 3:
+            # Too few users to spare any: selecting on one user would be worse than not.
+            count = int(round(len(pool) * float(fraction)))
+            count = min(max(count, 1), len(pool) - 2)
+            rng = np.random.default_rng(_seed_value(seed, 21))
+            drawn = [pool[int(i)] for i in rng.choice(len(pool), size=count, replace=False)]
+    return sorted(set(chosen_explicit) | set(drawn))
 
 
 
@@ -1062,6 +1086,7 @@ def create_dataloader_from_path(
     val_user_fraction: float = 0.0,
     return_val: bool = False,
     eval_normalize: str = "target_fit",
+    validation_users=None,
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -1107,6 +1132,9 @@ def create_dataloader_from_path(
         eval_normalize: How an evaluation dataset with no training statistics is
             brought into the training frame - "target_fit", "session" or "none". See
             normalization.UNSEEN_POLICIES. Recorded on the run.
+        validation_users: Explicit validation user directories; see
+            select_validation_users. A corpus with any explicit validation user is left
+            out of the val_user_fraction draw.
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
@@ -1158,7 +1186,8 @@ def create_dataloader_from_path(
 
     # Users reserved for epoch selection are excluded from training too, so the three
     # groups stay user-disjoint.
-    validation_users = select_validation_users(data_dir, exclude_users, val_user_fraction, seed)
+    validation_users = select_validation_users(data_dir, exclude_users, val_user_fraction, seed,
+                                               explicit=validation_users)
     if keep_users is not None:
         validation_users = [u for u in validation_users if u in set(keep_users)]
     training_exclusions = list(exclude_users or []) + validation_users

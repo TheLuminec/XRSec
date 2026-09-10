@@ -448,6 +448,7 @@ def _run_standard_training(args, device):
         return_val=True,
         return_normalizer=True,
         eval_normalize=str(getattr(args, "eval_normalize", "target_fit") or "target_fit"),
+        validation_users=[str(u) for u in (getattr(args, "validation_users", None) or [])],
     )
 
     model, criterion, optimizer, start_epoch, history, _ = prepare_training_round(args, device, round_idx=0)
@@ -498,6 +499,7 @@ def _run_standard_training(args, device):
                 "data_dirs": [str(d) for d in (getattr(args, "data_dirs", None) or [])],
                 "test_dirs": [str(d) for d in (getattr(args, "test_dirs", None) or [])],
                 "exclude_users": [str(u) for u in (getattr(args, "exclude_users", None) or [])],
+                "validation_users": [str(u) for u in (getattr(args, "validation_users", None) or [])],
                 "swap_data": bool(getattr(args, "swap_data", False)),
                 "test_on_excluded": bool(getattr(args, "test_on_excluded", False)),
                 # Plain Python, never an OmegaConf container: torch.load's default

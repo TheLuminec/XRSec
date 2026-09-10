@@ -136,6 +136,12 @@ max_users: null
 # a random-output extractor scores 0.4973 at its final epoch but 0.5173 as a
 # best-of-20. With this set, report `selected_test_acc`.
 val_user_fraction: 0.0
+# Explicit validation users (user directories), on top of the fraction above. A corpus
+# with any explicit validation user is left out of the fractional draw, so a published
+# split can be reproduced exactly on one corpus (Across-XR: train 0-22, validate 23-31)
+# while the pooled corpora beside it keep the usual random fraction. Recorded in the
+# checkpoint's eval_split. Empty keeps the historical behaviour.
+validation_users: []
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128
