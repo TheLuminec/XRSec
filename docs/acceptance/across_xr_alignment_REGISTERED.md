@@ -300,3 +300,22 @@ alone is a 100% dose and is Schach's protocol exactly.
 The counts in `unseen_users_guard_both_directions.md` (3095 / 1033) are consistent with
 `validation_users` being honoured but one user away from it being ignored; the membership
 lists (0-22 / 23-31 / 32-48) are what that certificate rests on.
+
+---
+
+# AMENDMENT 2 — 2026-09-10, after seed 1: a registration defect, recorded, not re-registered
+
+The A2′ − A1 registration named two outcomes — a band at ≥ +0.15 and a programme falsifier
+at "CI upper bound < +0.05" — and left **[+0.05, +0.15) unnamed**. Seed 1's interval,
+[−0.006, +0.053], put its upper end in the unnamed region. That is the same defect the
+within-application placement registration had twelve hours earlier (two outcomes named, the
+data choosing a third), reviewed by the Coordinator on the same day without the subtraction
+that would have caught it: a rule can be in CLAUDE.md, read by both parties, and still not
+fire at review.
+
+**The verdict does not depend on the gap.** A registered band is settled by where the
+interval falls: the whole interval sits below +0.15 by 2.8× at its upper end and 14× below
+Schach's test-fitted +0.34, so the band is excluded decisively, and whether the upper bound
+is 0.047 or 0.053 changes nothing. Nothing in the bands above is changed by this amendment;
+it exists so the next reader sees the defect beside the number rather than a paragraph
+arguing a near-miss.

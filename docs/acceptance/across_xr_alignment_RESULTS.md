@@ -35,7 +35,7 @@ cross **0.180**, 10-min cross 0.308, test-fitted alignment 0.523.
 | registered contrast | measured (paired, user bootstrap) | registered | verdict |
 | --- | --- | --- | --- |
 | A1 | 0.231 [0.175, 0.293] | P1: 0.18-0.35, falsifier < 0.12 | **inside the band**; at or above the published 0.180, not a resolved beat (interval includes 0.18; one seed; power rule needs ~0.10 or several seeds) |
-| A2′ − A1 | **+0.024 [−0.006, +0.053]** | ≥ +0.15; programme falsifier: upper bound < +0.05 | **prediction failed decisively**; the kill condition misses by 0.003 — noise on either side of the line. On this embedding the cross-application gap is barely an orthogonal difference |
+| A2′ − A1 | **+0.024 [−0.006, +0.053]** | ≥ +0.15; programme falsifier: upper bound < +0.05 | **the band is excluded decisively**: the entire interval sits below +0.15 (2.8× at its upper end) and 14× below Schach's test-fitted +0.34. Whether the upper bound is 0.047 or 0.053 changes nothing — a registered band is settled by where the interval falls. The registration left [+0.05, +0.15) unnamed and the interval's upper end landed in it (Amendment 2 of the registration records that defect). The orthogonal component *exists* — the permuted null hurts — and is an order of magnitude smaller than theirs |
 | A2 − A1 | **+0.016 [−0.011, +0.041]** | +0.05 to +0.20; falsifier < +0.05 | **band entirely excluded** — train-only fitting does not carry, and there was almost nothing to carry |
 | A2 − A2′ | −0.008 [−0.035, +0.013] | leakage if A2 above A2′ beyond the CI | no leakage |
 | A2-null − A1 | −0.080 [−0.135, −0.030] | ≤ +0.03 | holds; the permuted fit *hurts*, so the fit is person-specific |
@@ -64,11 +64,17 @@ being identified" are different claims and only the first is supported.
 
 Alignment is not the paper's contribution on the zero-shot instrument: the test-fitted
 ceiling that gave Schach +0.34 gives +0.024 here, and the honest fit is inside that. The
-likely reason is instructive rather than disappointing — their orthogonal structure was
+orthogonal component exists (the permuted null costs 0.08) and is an order of magnitude
+smaller than theirs. **Hypothesis, testable on the matched arms:** their structure was
 measured on a model trained on all five applications for the same 23 people, and this
-model never saw the applications; its cross-application embedding difference is not a
-rotation. The matched arms (C1, Z-676, C2-hi, C2-lo; queued) are the regime where that
-structure could exist, and A2 is re-run on their embeddings as registered. What survives
-regardless is A1: head only, never trained on the corpus, at or above the controller-based
-published cross-application figure on their own split, with the within-application cost of
-the head-only scope (0.499 against 0.831) visible beside it.
+model never saw the applications — if the rotation appears on C1 / C2-hi it is a property
+of training exposure rather than of the task, which is a finding either way. A2 is re-run
+on those embeddings as registered.
+
+What survives regardless is A1: head only, never trained on the corpus, 10 s against their
+15 s — three disadvantages against one (4096 training identities against 23, which this
+project has measured flat across a domain boundary) — at or above the controller-based
+published cross-application figure on their own split. **A0 is confounded and is not yet
+a result:** 0.499 against 0.831 differs in sensor set *and* in domain exposure (zero-shot
+against a model trained on those people's other applications); C1 and C2-hi separate the
+two. "The scope cost sits within-app" is a hypothesis until they land.
