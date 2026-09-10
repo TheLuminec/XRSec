@@ -16,3 +16,7 @@ results/runs_all.csv
 
 # Any other sweep artifact root (checkpoints; the numbers live in results/runs/)
 /sweeps_*/
+
+# Local Claude session state and per-session git worktrees. `git add -A` staged another
+# session's worktree as a gitlink into a commit on 2026-09-10; it must never be tracked.
+.claude/
