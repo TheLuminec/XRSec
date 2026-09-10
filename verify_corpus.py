@@ -5,7 +5,7 @@ elsewhere passes it, and that is the exact shape rsync failure takes on a flaky 
 So this compares per-file sizes and reports the three failure classes separately -
 missing, extra, and size-mismatched - rather than a single boolean.
 """
-import sys, pathlib, collections
+import re, sys, pathlib, collections
 
 manifest_path, root = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 expected = {}
@@ -13,7 +13,7 @@ for line in manifest_path.read_text().splitlines():
     if not line.strip():
         continue
     size, path = line.split(None, 1)
-    expected[path.lstrip('./')] = int(size)
+    expected[path.removeprefix('./')] = int(size)
 
 # Manifest paths are relative to the corpus's PARENT (they lead with the corpus dir),
 # so scanning from the corpus dir itself makes every path look both missing and extra.
@@ -43,7 +43,8 @@ print(f"on disk  : {len(actual):,} files, {sum(actual.values()):,} bytes")
 # rsync writes an in-flight file as `.<name>.<random>` and renames on completion, so a
 # leftover temp is not an unexpected FILE, it is an INCOMPLETE TRANSFER. Reporting it as
 # "extra: 1" at the end would be ambiguous at exactly the moment the answer matters.
-partials = {k: v for k, v in extra.items() if pathlib.Path(k).name.startswith('.')}
+_RSYNC_TMP = re.compile(r'^\..+\.[A-Za-z0-9]{6}$')
+partials = {k: v for k, v in extra.items() if _RSYNC_TMP.match(pathlib.Path(k).name)}
 unexpected = {k: v for k, v in extra.items() if k not in partials}
 print(f"missing  : {len(missing)}")
 print(f"extra    : {len(extra)}"
