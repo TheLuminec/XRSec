@@ -478,3 +478,76 @@ list.
 **The input check is evidence about what the model sees; the loss-trajectory check is evidence
 about the steps it takes.** The claim rests on the second, so no reproduction figure is quotable
 until that gate is recorded here.
+
+---
+
+# AMENDMENT 4 — 2026-09-10: the deviation's justification is FIDELITY, and my timing was wrong
+
+## First, the correction: the slowdown was overstated 4–10x
+
+Amendment 2 reported "27–43 s per batch, 29.7 h per epoch, **124 days** at `min_epochs=100`".
+**tqdm reports a CUMULATIVE average, not an instantaneous rate**, and that figure was read at
+values 3–8 of a monotonically falling series:
+
+```
+85.2 -> 42.7 -> 36.5 -> 27.5 -> 26.9 -> 22.5 -> 22.8 -> 20.0 -> 20.6 -> 18.6
+     -> 19.2 -> 17.7 -> 18.3 -> 17.0 -> 17.5 -> ... -> 4.84 / 3.89
+```
+
+Still falling at the last reading, so the marginal cost is *below* it. The honest figure is a
+**band, not a point**: ~4–12 s/batch wall clock, i.e. **12–35 days** at `min_epochs=100`.
+
+| s/batch | h/epoch | days at 100 epochs |
+|---|---|---|
+| 4 | 2.8 | 11.6 |
+| 12 | 8.3 | 34.7 |
+
+The one clean number is the direct per-item measurement, which is unaffected: 5.99 ms/item on
+2 subjects, ~62 ms implied on 27, so ~25 s/batch of CPU *work* — split across 2 workers and
+pipelined with the GPU, which is why wall clock is lower.
+
+**This is the `mid-training number` trap from this project's own rules, applied to a
+throughput figure instead of an accuracy figure, by the person who wrote the rule, the same
+day.** A progress bar's running average is a cumulative statistic; quoting it early is
+quoting a transient. The fix in the instrument: the loss-trajectory gate now records
+**per-step marginal wall clock** with `torch.cuda.synchronize()` before each reading, so the
+epoch budget comes from direct measurement rather than a progress bar, and one instrument
+yields both the equivalence evidence and the timing.
+
+## Second, and more important: the justification is FIDELITY, not speed
+
+The deviation was approved on a feasibility argument and **that is now the weaker half.**
+12–35 days of GPU-idle wall clock on a shared card is still not runnable, but it is a
+judgement call rather than an obvious one; 124 days made it look obvious and it was not.
+
+**What carries the deviation is fidelity, and that argument did not exist when it was
+approved** (Coordinator, and it is the better one):
+
+> Their code ran at **0.015 ms/item under pandas 1.5.3**. The slow path is an artefact of
+> **our dependency version**, not of their protocol. Reproducing on it would faithfully
+> reproduce pandas 2.0.3 and **unfaithfully reproduce Rack et al.** The hoist restores the
+> behaviour their environment provided, which makes it **the more faithful choice at any
+> wall-clock figure** — 124 days, 12 days, or twenty minutes.
+
+That is schedule-independent, so it is what the deviation note leads with, and the timing is
+**context rather than justification**. The source comment at `window_dataset.py:23` has been
+rewritten to the same ordering and carries the corrected band plus an explicit note that the
+earlier 124-day figure was an overstatement.
+
+**The general form, which is the transferable part:** the conclusion survived a 4–10x error in
+its headline number *because it stopped depending on that number*. An argument that rests on a
+magnitude is hostage to the magnitude being right; one that rests on a mechanism is not. When a
+decision has two justifications, find out which one is load-bearing **before** the weaker one is
+falsified rather than after.
+
+## Status of the equivalence evidence
+
+| check | status |
+|---|---|
+| output bit-identical on sampled windows (6 items) | **done** — evidence about the INPUT |
+| loss trajectory, 20 steps, same seed, both source states | **enqueued**, runs after another session's seed 1 |
+| per-step marginal wall clock, both source states | **enqueued**, same job |
+
+No reproduction figure is quotable until the trajectory gate is recorded here. The gate asserts
+state A really produced a DataFrame and state B an ndarray, so it cannot silently compare a
+source state against itself.
