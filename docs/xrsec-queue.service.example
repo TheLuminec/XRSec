@@ -1,0 +1,20 @@
+[Unit]
+Description=XRSec job queue runner (one job at a time, flock-guarded)
+Documentation=file:///run/media/feng/Data/CalebProject/XRSec/queue_runner.sh
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/run/media/feng/Data/CalebProject/XRSec
+Environment=XRSEC_QUEUE_ROOT=/run/media/feng/Data/CalebProject/scratch/queue
+# `daemon` waits on an empty queue instead of exiting, so Restart=always means
+# "restart if it dies" rather than "restart every RestartSec forever".
+ExecStart=/run/media/feng/Data/CalebProject/XRSec/queue_runner.sh daemon
+Restart=always
+RestartSec=10
+# The flock inside the runner is the real guard against two runners; this only stops
+# systemd from racing itself during a restart.
+TimeoutStopSec=30
+
+[Install]
+WantedBy=default.target

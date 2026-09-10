@@ -21,7 +21,7 @@
     "pairs": 12800
   },
   "manifest_sha256": "4b45ea68c92ddd708526bb6534a09ad2bc3443b6c1fcfa497d919efd21990d18",
-  "scored_manifest_sha256": "own",
+  "scored_manifest_sha256": "4b45ea68c92ddd708526bb6534a09ad2bc3443b6c1fcfa497d919efd21990d18",
   "position_lookup_auc": 0.7798685424804688,
   "amplitude_auc": 0.5664354736328125,
   "stack": {
