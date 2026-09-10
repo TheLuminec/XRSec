@@ -1071,6 +1071,23 @@ which is the same move as moving a line after seeing the number. Registering a b
 falsifier that do not meet leaves an unnamed region that the run is free to land in, and it is
 one subtraction to check.
 
+**IT RECURRED THE SAME DAY, IN A DIFFERENT SESSION, AFTER BEING WRITTEN HERE - AND THE
+COORDINATOR REVIEWED THE REGISTRATION AND DID NOT CATCH IT.** The Across-XR alignment programme
+registered its kill condition as band `A2' - A1 >= +0.15` with falsifier `CI upper < +0.05`,
+leaving **[+0.05, +0.15) unnamed**; it measured +0.024 with CI upper **+0.053**, inside the gap.
+Twelve hours after the placement arm did the same thing, in a session that had read this file,
+on bands the coordinator reviewed and amended in three other respects. **A rule can be recorded,
+read by both parties, and still not fire at review** - so the mitigation is not another sentence
+here but a mechanical one: **do the subtraction and write the third outcome's meaning into the
+registration**, every time, as a line of the template rather than an act of attention.
+
+**The substance was unaffected, and that is the reading to imitate.** The registered band was
+excluded by a factor of 2.8 at the interval's upper end and sits **14x below** the value Schach
+et al. measured for the same quantity (+0.34), so the conclusion - the cross-application gap on
+a zero-shot embedding is barely an orthogonal difference - rests on where the interval fell and
+not on whether a threshold was crossed. **Do not spend a paragraph on a 0.003 near-miss; it reads
+as hedging a result that is not close.**
+
 **Verified independently before it propagated (coordinator, AVALON, same day).** Recomputed from
 the same corpus with a different implementation and a fixture asserted in both directions
 (synthetic users 10 m apart must return 1.000, and inverted 0.000): lateral **0.7574**, height
