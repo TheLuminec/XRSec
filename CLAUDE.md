@@ -2880,6 +2880,52 @@ out-of-range indices must be reported as a named layer-1 corpus failure rather t
 with an `IndexError` - that is the case where the two user lists differ, and it should read
 as a finding rather than a crash.
 
+**A PUBLISHED PAPER CAN HAVE PUBLISHED TRAINING CODE AND UNPUBLISHED EVALUATION CODE, and the
+second is where the numbers live (Miami, 2026-09-10).** Rack et al.'s public repo trains
+faithfully - its shipped config equals the paper's Table IV cell for cell - and **cannot compute
+any figure the paper reports.** Verified by grep on both machines rather than inferred: zero
+hits for `def test_step`, `def test_epoch_end`, `trainer.test` and `.test(` anywhere in `src/`
+or `run.py`; the string "test" appears **zero times** in `src/train.py`; use-time is hardcoded
+`sequence_lengths_minutes=[5, 10, 15]` as a constructor argument rather than a config key; and
+enrolment is the single fixed condition `session_1_embeddings[::150]`. So the code evaluates
+**9 validation subjects at one enrolment and three use-times**, while the paper's figures are
+**27 test subjects over an enrolment sweep including a 1-minute use-time**. Figure 3 was
+produced by something that is not in the repository. **"Their code is public" and "their
+numbers are reachable from their code" are different claims**, and the gap between them is
+invisible until someone greps for a test path.
+
+**The consequence inverts, and this is the useful half.** Writing our own evaluation harness is
+a cost for *reproduction* - "we reproduced their published number" stops being available - and
+a **benefit for comparison**, which is what the paper actually claims. This file already carries
+the rule: *the gate must be one implementation, not two, because two independently written
+comparators can disagree for reasons that have nothing to do with the thing being compared.* A
+SOTA table where their model is scored by their harness and ours by ours has exactly that
+defect. **One harness scoring both arms removes the largest confound in any published
+comparison**, so the missing code costs a claim we can afford to lose and buys one we need.
+
+**Gate the new plumbing against THEIR code, not against your reading of their paper.** The
+harness must first reproduce `sequence_top_1_accuracy_5_mins` on the validation split under
+their hardcoded `[::150]` enrolment, as their own module computes it. That is the same rule as
+"an out-of-path harness should reproduce something from the column it will be compared against"
+- it gives new plumbing a referent in running code rather than in prose.
+
+**AMEND A REGISTRATION FOR A FACT ABOUT THE INSTRUMENT, NEVER FOR A MEASUREMENT.** Two of three
+registered gate cells turned out to be uncomputable by the code under test. Amending there is
+legitimate; amending because a number came back wrong is moving the line. **The test is whether
+the fact could have been known without running the experiment** - here it is a grep, so it
+could. Discipline that makes the difference auditable rather than asserted: the amendment is
+recorded *as* an amendment with its reason, and **the original registration stays in the file
+rather than being edited away**. A registration whose history is not visible is not a
+registration.
+
+**And a published Dockerfile is not a reproducible environment.** Theirs pins Python 3.8 and
+CUDA 11.4 and then installs **unpinned** requirements, while the config passes `gpus: 1` and
+`auto_scale_batch_size`, both removed in PL 2.0 - so it does not build a working environment
+today. Reproducing on pins the authors never gave reproduces their protocol and not their
+environment, which is a deviation to record rather than a detail to absorb. Worth turning on
+ourselves before we ship anything: this repo's own pins should be read with the same eye.
+
+
 Miami's first row supplies the encouraging-but-insufficient version: alyx
 `position_lookup_auc` **0.6006** against this file's ~0.593 for the alyx xyz lookup. It
 reported that as a consistency signal and explicitly not a reproduction - different held-out
