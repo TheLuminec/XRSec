@@ -97,3 +97,16 @@ C2-hi / Z-676 pair chooses its epoch on identical people. Numerics-free; real-ob
 three-user corpus; landed before the first row, so every row of this programme carries
 `517cdaa57b`. Certificates at `8db420df4c` (cross-machine gate, the smoke row) and the
 rank/nesting checks made at `73ecbf9232` stand as statements about those identities.
+
+## What the guard does NOT cover, recorded so the next person knows the guarantee's source
+
+`assert_evaluation_users_are_unseen` checks training against evaluation only; validation is a
+third set it never looks at. On every arm here that is safe by construction - the fractional
+draw holds out *training* users, so validation sits inside the training pool and cannot meet
+the exclude list. In **C1** both `validation_users` (23-31) and `exclude_users` (32-48) are
+explicit lists over one corpus and nothing in the code asserts they are disjoint: that
+invariant is held by `c2_pair_lists.py` / `guard_matched_shapes.py` reading the loaders (ids
+0-22 / 23-31 / 32-48, no intersection), not by the guard whose name reads as though it
+covered it. A one-line `assert not set(validation_users) & set(exclude_users)` closes it the
+next time that path is touched; deliberately not added now, since it would move the identity
+every programme row carries for a hazard that is hypothetical and verified by hand.
