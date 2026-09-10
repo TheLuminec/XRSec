@@ -186,3 +186,112 @@ as a recorded deviation.
 **And a note to turn on ourselves:** their Dockerfile pins Python 3.8 under *unpinned*
 requirements, which is exactly how a repo stops building eighteen months later. Our own pins
 should be audited the same way before we ship, rather than having a reviewer find it.
+
+---
+
+# Instrument notes — added 2026-09-10, still before any training run
+
+## Their code runs UNMODIFIED on Python 3.8.20
+
+Their Dockerfile's interpreter. All of `similarity_module`, `classification_module`,
+`rnn_model`, `similarity_datamodule`, `window_dataset` and `accuracy_calculator` import
+cleanly with no edits to their source. Choosing the interpreter rather than patching
+`collections.abc` turned a deviation into a match.
+
+## Their test suite: 17 passed / 3 failed — AND THE INVOCATION IS PART OF THE CLAIM
+
+From the repo root the suite reads **12 failed / 8 passed**; from `tests/` it reads
+**3 failed / 17 passed**. Nine failures are `FileNotFoundError` on a relative fixture path —
+cwd dependence, not breakage. **"12 failed" would have been a false finding about their
+repo, reported with complete confidence.** Record the invocation beside any test count.
+
+The three real failures:
+
+| test | cause |
+|---|---|
+| `window_dataset_test.py` | constructs `WindowDataHyperparameters` without `original_fps`, which their own dataclass requires. **Test out of date with source** |
+| `bin_dataset_test.py` | `dataset_keys have to be of type 'list'` — same shape, bin path, not on our route |
+| `brv_data_test.py::test_compute_velocities_simple` | **fixture artefact — investigated below, production path is correct** |
+
+## The velocity failure: right mechanism, wrong fixture, production path clean
+
+Symptom: only row 0 of the slice differs — expected `NaN` at a take's first frame, got real
+values — so velocity differenced *across* the take boundary.
+
+Mechanism: `velocities.values[invalid_frames, :] = np.nan` writes through `.values`, which
+is a **view on a single-block frame and a copy on a multi-block one**. Their test builds the
+frame from `np.random.randint`; the float assignment upcasts int64→float64 and splits the
+manager into three blocks, so the boundary NaN is silently discarded.
+
+| input | blocks | `.values` write lands |
+|---|---|---|
+| int64 (their test fixture) | 3 | **no** |
+| float64 (real position data) | 1 | yes |
+
+**My first test of this hypothesis refuted it, and the refutation was wrong** — I used a
+float fixture, which exercises the code path perfectly and cannot trigger the behaviour.
+Hence the rule: *a fixture must reproduce the conditions that trigger the behaviour, not
+merely exercise the code path* — and a hypothesis refuted by such a fixture has not been
+refuted.
+
+**TWO sites share the pattern, and the untested one is also on our route** (Coordinator):
+
+| site | function | data | test coverage |
+|---|---|---|---|
+| `helpers.py:175` | `compute_velocities_simple` | positions | their failing test |
+| `helpers.py:214` | `compute_velocities_quats` | rotations | **none** |
+
+Site 214 is the higher risk: it does `velocities[:] = np.nan` then **three separate `.loc`
+assignments on column subsets**, one per joint, which is how a frame acquires extra blocks.
+**Both verified BEHAVIOURALLY on realistic float64 data** — head plus both controllers,
+three takes, `frame_step_size` 1 and 3 — by asserting the property itself (every take's
+first `frame_step_size` rows must be all-NaN) rather than a block-count proxy:
+
+```
+input dtype float64, blocks 1
+fss=1: take-boundary rows that should be NaN but are NOT: none
+fss=3: take-boundary rows that should be NaN but are NOT: none
+positions fss=1: boundary rows NOT NaN: none
+```
+
+**Still to do on the real corpus** rather than on a faithful synthetic: repeat the same
+behavioural check inside the actual prep run.
+
+## pandas is a CORRECTNESS pin, not just an install pin
+
+Measured by the Coordinator on AVALON (pandas 3.0.1); this node runs **2.0.3**:
+
+| pandas | frame | `.values` write |
+|---|---|---|
+| 2.x | float64 single block | lands — **our case, correct** |
+| 2.x | multi-block | **silently discarded** — the latent bug |
+| 3.x | any | **raises** `ValueError: assignment destination is read-only` (Copy-on-Write) |
+
+So their code is correct on pandas 2 with float data, silently wrong on multi-block, and
+**inoperable on pandas 3**. `pandas==2.0.3` joins the deviation list as load-bearing for
+correctness rather than convenience.
+
+**The sharper line for the paper:** the repo is runnable today only on a narrow,
+now-unsupported interpreter **and** a superseded pandas major — stated as an observation
+about reproducibility practice, not as criticism.
+
+## Two things that went our way
+
+Their **datamodule does support a test split** — `setup(stage="test")`, `test_dataloader()`,
+and `return_frame_ids = True` set on test only (which is what an enrolment-limited analysis
+needs, and nothing else in the shipped code uses). Only the *module* lacks `test_step`, so
+the harness reuses more of their code than expected.
+
+Their split uses `np.random.seed` + `np.random.shuffle` — the **legacy RandomState**, whose
+stream numpy freezes — so the 27/9/27 partition is reproducible across numpy versions. The
+exact mirror of the `Generator` hazard that bit the cross-machine gate, and by luck rather
+than design.
+
+## Corroboration that their evaluation code is genuinely absent
+
+`tests/test_dml_mean_std_references.py:4` imports
+`analysis.dml_paper.computations.metrics_computation_helper.compute_mean_std_reference_and_query_data`
+— and **no `analysis/` package exists anywhere in the release**. A test referencing a
+missing module by name, whose name is gallery/probe statistics for the DML paper, is
+independent evidence for the missing-evaluation finding rather than an inference from the
+absence of `test_step`.
