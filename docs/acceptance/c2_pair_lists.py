@@ -81,6 +81,14 @@ print(f"Z-676: train {len(zt)} / val {len(zv)} / test {z_te.dataset.num_users}; 
       f"C2-hi: train {len(ht)} / val {len(hv)} / test {h_te.dataset.num_users}")
 print(f"BOXRR train: Z {len(z_b)}, C2-hi {len(h_b)}, strict subset {h_b < z_b}; alyx train identical {({u for u in zt if u.startswith(ALYX)} == {u for u in ht if u.startswith(ALYX)})}; "
       f"validation identical on BOXRR+alyx {(zv == {u for u in hv if not u.startswith(XR)})}; C2-hi Across-XR train ids {h_x[0]}..{h_x[-1]} ({len(h_x)})")
+# The guard's return value on C2-hi's own build - the path that uses drop_users - observed
+# rather than inferred from "the build did not raise": 0 from NON-EMPTY sets on both sides.
+from dataset import assert_evaluation_users_are_unseen
+for arm, tr_, te_ in (("Z-676", z_tr, z_te), ("C2-hi", h_tr, h_te)):
+    n_train, n_test = len(_user_dirs_of(tr_.dataset)), len(_user_dirs_of(te_.dataset))
+    g = assert_evaluation_users_are_unseen(tr_.dataset, te_.dataset)
+    print(f"{arm}: guard returned {g} while seeing {n_train} training and {n_test} evaluation directories")
+    assert g == 0 and n_train > 0 and n_test == 17
 assert len(zt) == len(ht), (len(zt), len(ht))
 assert zv == hv, "the two arms must validate on identical people"
 assert not any(u.startswith(XR) for u in hv) and not ({f"{XR}/{u}" for u in range(23, 32)} & (ht | hv))
