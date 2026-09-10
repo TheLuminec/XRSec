@@ -48,11 +48,37 @@ to run on every loader build on three machines. Two real loader builds, no train
 | `sweep.folds`: who_is_alyx, `build_folds` fold 0 of 5, `test_on_excluded=true` | **0** | 46 / 15 / 15 (fold list 15) | train 46, test 15 |
 | cross-corpus: `data_dirs` BOXRR-23 + alyx, `test_dirs` CrossApplicationXR, `exclude_users` 32-48, `test_on_excluded=true` | **0** | 3072 / 1024 / **17** | train 3072 |
 
+The load-bearing detail is a **zero from non-empty sets**: the guard saw 46 and 15 real
+directories and found no overlap, which is a different claim from the empty-set zero it
+returned for a week. The fold build carries the real weight - same corpus both sides,
+separated only by user list. **The cross-corpus shape cannot fail by construction**
+(BOXRR+alyx and Across-XR share no directory), so its zero proves the sets are populated
+and the paths resolve, and nothing about overlap detection. And the one configuration in
+which train and test users genuinely overlap - the random pair split (`test_dirs` empty,
+`test_on_excluded=false`) - **skips the guard by design**, because that is a deliberate
+seen-user protocol; a reader finding the guard silent there is seeing intent, not a second
+dormancy.
+
 The second shape is the zero-shot instrument of `across_xr_alignment_REGISTERED.md`: 3072
 training identities is the 9.14 split to the identity, and 17 is Schach's test split. Paths
 on this node pass through a symlink (worktree `processed_datasets` -> the main checkout's)
 and the resolved-path comparison produced no spurious overlap. Pinned for the fixture
 corpus by `test_guard_passes_on_real_disjoint_datasets`.
+
+## Direction 2, the shape the fix exists for — one corpus, three disjoint lists
+
+The configuration this project had never run, and the reason the guard stopped being free:
+train, validate and test drawn from the *same* corpus, separated only by user lists, through
+the `validation_users` path that is new in the same identity step. Loader builds only,
+`docs/acceptance/guard_matched_shapes.py`, asserting on the directories the loaders hold:
+
+| arm | guard returned | train / val / test users | directories seen | Across-XR ids held |
+| --- | --- | --- | --- | --- |
+| C1: Across-XR alone | **0** | 23 / 9 / 17 | 23 / 9 / 17 | train 0-22, val 23-31, test 32-48 |
+| C2: BOXRR + alyx + Across-XR | **0** | 3095 / 1033 / 17 | 3095 / 1033 / 17 | train 0-22, val 23-31, test 32-48 |
+
+C2's 3095 = 3072 + 23 and 1033 = 1024 + 9: the 25% draw applied to BOXRR and alyx and left
+Across-XR alone, as `select_validation_users` specifies. No list intersects another.
 
 ## The rule
 
