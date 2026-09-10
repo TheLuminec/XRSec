@@ -252,7 +252,19 @@ count, so the only variable inside a pair is whether Across-XR 0-22 was trained 
 | arm | training | Across-XR dose | control |
 | --- | --- | --- | --- |
 | **C2-lo** | BOXRR (all 4020) + alyx + Across-XR 0-22 | **3.0%** | the zero-shot arm above (4096 ids) |
-| **C2-hi** | BOXRR capped at **600** (`max_users={BOXRR-23_Dataset:600}`, seeded subsample) + alyx + Across-XR 0-22 | **≈14%** (21.9k of ≈151k training windows: 600 × 151 × 0.75 + 76 × 1065 × 0.75 + 21.9k) | **Z-676**: BOXRR capped at 600 + alyx, no Across-XR, same seed - a new zero-shot arm at 676 identities |
+| **C2-hi** | Z-676's users and Z-676's validation list, minus the **last 23 BOXRR training users** of the seeded permutation, plus Across-XR 0-22 (train) and 23-31 (validation) | **14.1%** measured (20,896 of 147,921 training windows, seed 1) | **Z-676**: BOXRR seeded subsample of 600 + alyx 76, no Across-XR, validation = the pipeline's own 25% draw made explicit and shared with C2-hi |
+
+**Exact by construction, not by argument (Coordinator's swap, made exact 2026-09-10).** A
+cap of 577 against 600 equalises identities only before the validation draw: the 25% draw
+runs over each arm's own pool, so the arms would validate on different people and train on
+513 against 507 identities, with BOXRR training sets not nested. So both arms take the same
+explicit validation list (`val_user_fraction=0`) and C2-hi drops 23 BOXRR *training* users.
+Verified on the lists the loaders hold (`docs/acceptance/c2_pair_lists.py`, seed 1,
+`c2_pair_users_seed1.json`): Z-676 train **495** / val 181 / test 17; C2-hi train **495** /
+val 190 (the same 181 + Across-XR 23-31) / test 17; BOXRR training users 435 against 412, a
+strict subset; alyx training users identical; C2-hi's Across-XR training ids exactly 0-22.
+The only difference inside the pair is which 23 identities did which activity - the Nymeria
+arm-B design. The lists are regenerated per seed and committed.
 
 Registered:
 

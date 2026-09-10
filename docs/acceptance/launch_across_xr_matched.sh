@@ -35,11 +35,24 @@ VAL="";  for u in $(seq 23 31); do VAL="${VAL:+$VAL,}$XR/$u"; done
 BOXRR="$MAIN/processed_datasets/BOXRR-23_Dataset/users"
 ALYX="$MAIN/processed_datasets/who_is_alyx/users"
 CAP="max_users=null"
+VALFRAC=0.25
+# The C2-hi / Z676 pair is exact by construction, from per-seed lists written and verified
+# by docs/acceptance/c2_pair_lists.py: the same BOXRR subsample of 600, the SAME explicit
+# validation people in both arms (val_user_fraction=0 so nothing is re-drawn), and C2-hi
+# drops the last 23 BOXRR TRAINING users of the seeded permutation while adding Across-XR
+# 0-22 - so trained identities are equal, BOXRR training users are a strict subset, and the
+# only difference inside the pair is which 23 identities did which activity.
+LISTS="$TREE/docs/acceptance/c2_pair_users_seed$SEED.json"
+lst() { "$PY" -c "import json,sys; print(','.join(json.load(open(sys.argv[1]))[sys.argv[2]]))" "$LISTS" "$1"; }
 case "$ARM" in
     C1)      DATA="[$XR]";                 NAME=across_xr_matched_c1_dyn10s ;;
     C2|C2-lo) DATA="[$BOXRR,$ALYX,$XR]";   NAME=across_xr_matched_c2lo_dyn10s ;;
-    C2-hi)   DATA="[$BOXRR,$ALYX,$XR]";    NAME=across_xr_matched_c2hi_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}" ;;
-    Z676)    DATA="[$BOXRR,$ALYX]";        NAME=across_xr_zero_shot_676_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VAL="" ;;
+    C2-hi)   [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
+             DATA="[$BOXRR,$ALYX,$XR]"; NAME=across_xr_matched_c2hi_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
+             EXCL="$EXCL,$(lst c2hi_dropped_boxrr_train_users)"; VAL="$(lst z676_validation_users),$VAL" ;;
+    Z676)    [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
+             DATA="[$BOXRR,$ALYX]"; NAME=across_xr_zero_shot_676_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
+             VAL="$(lst z676_validation_users)" ;;
     *) echo "arm must be C1, C2, C2-lo, C2-hi or Z676" >&2; exit 2 ;;
 esac
 cd "$TREE"
@@ -54,7 +67,7 @@ exec "$PY" model/main.py mode=train \
     encoding=dyn sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
     normalize=per_dataset eval_normalize=target_fit within_dataset_negatives=true \
     cross_session_positives=true center_position=false \
-    epochs=120 early_stopping_patience=15 val_user_fraction=0.25 \
+    epochs=120 early_stopping_patience=15 "val_user_fraction=$VALFRAC" \
     batch_size=1024 lr=0.001 weight_decay=0.0 samples_per_user=512 embedding_dim=128 \
     "$CAP" balance_identities=false \
     "seed=$SEED"
