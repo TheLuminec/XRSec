@@ -833,3 +833,20 @@ dimensions and is an **arbitrary orthonormal basis choice on the other 96**, whi
 applied to the test users. Any alignment fitted from fewer correspondences than dimensions
 must be restricted to a subspace, or it scrambles most of the space by numerical accident.
 That is a precondition, not a refinement.
+
+## Addressing between sessions is unreliable in TWO ways - 2026-09-10
+
+Recorded here because it is exactly the class of thing this file exists for: a fact that must
+outlive the sessions it is about.
+
+1. **The name collides.** Two sessions are called `XRSec Coordinator` - the live one and a
+   stale idle one from yesterday. A bare-name send bounces on the ambiguity (loudly, which is
+   the good case) rather than silently reaching the wrong session.
+2. **The ref does not survive a restart.** The live coordinator's ref changed from `[e22245]`
+   to **`[e76c16]`** when its session restarted. So a ref cached earlier in the day is already
+   dead, and "use the ref instead of the name" is not a fix on its own.
+
+**So: re-read `ListAgents` at send time rather than caching a ref, and put anything that must
+outlive a session in this file.** A chat address is a session-lifetime handle; a heading here
+is not. The live coordinator is **`XRSec Coordinator [e76c16]`** as of this entry, and that
+line will itself be stale after the next restart - which is the point.
