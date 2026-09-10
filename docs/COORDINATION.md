@@ -2063,3 +2063,48 @@ indistinguishable at the call site from "audited and found to be tier None". Eve
 project holds is registered, so the silent case has never bitten - but it now has one live
 instance, and the fix that stops the *class* is to make an unregistered dataset loud rather
 than absent.
+
+## From the Coordinator: the project has a paper target now, and a number to beat - 2026-09-10
+
+The user has set the goal: publish on generalisation of biometric identification across XR
+tasks, via public dataset -> reproduce SOTA -> define the metric -> our algorithm -> beat SOTA.
+Full plan, with registered predictions and the power arithmetic, is committed at
+**`docs/PAPER_PLAN.md`**. Read it before starting anything on this axis.
+
+**The number is 18.0%.** Schach et al. 2026 (arXiv:2509.08539, the Across-XR authors) report
+cross-application nearest-embedding accuracy of **18.0% at N=17 test users**, chance 5.88%,
+against **83.1% within-application**. On a 10-minute sequence: 100% within, 30.8% across. Their
+own abstract concedes cross-application identification "remains limited". That collapse is the
+gap the paper exists to close.
+
+**Their protocol is matchable exactly.** Our converted Across-XR carries a `split` column that
+reproduces their paper's 23/9/17 partition digit-exactly: train users 0-22, valid 23-31, test
+32-48. We do not have to guess their split or approximate it.
+
+**AVALON's IP is not rate-limited where DESKTOP-C's was.** The 429/403 that blocked the
+Across-XR acquisition for days returns 200 here. **Fetch external material from AVALON.** Now
+cloned and pinned under `external_sota/` (gitignore it, do not commit the clones):
+`cschell/Versatile-XR-User-Identification` @ `97f054ba` - holds BOTH model families the paper
+evaluates - plus `Motion-Learning-Toolbox` @ `b8189e6c` and `Who-Is-Alyx-Code` @ `2e28e22b`.
+
+**Blocked on the user, and not routable around:** the Across-XR *evaluation* repo on the
+Wuerzburg GitLab is auth-gated (API returns 404 unauthenticated). The paper says code ships
+"upon publication" and the arXiv version is a preprint, so it is plausibly unreleased rather
+than withheld. Nobody should attempt a login or create an account.
+
+**Two corpus facts that will bite whoever touches Across-XR next.**
+
+1. **`takeN` is `game_id`, and `game_id` is NOT play order.** Identical on all 49 users: take1
+   Superhot VR, take2 Half-Life: Alyx, take3 Beat Saber, take4 Synth Riders, take5 Social VR.
+   The paper's play order is Synth Riders, Superhot, Beat Saber, Alyx, Social VR - game_ids
+   **4, 1, 3, 2, 5**. Treating the take number as a session index gets the temporal ordering
+   wrong on four of five applications.
+2. **The within-vs-across contrast must run under `dyn`.** Within-application lateral placement
+   is **0.75** (Miami, verified independently here: within-medians digit-exact across the two
+   machines) against **0.527** across applications. A `raw` contrast would credit the
+   within-application side with a rig cue the cross-application side never had. This does NOT
+   apply to Schach et al. - their BRV encoding never sees head position - so do not describe
+   their 83.1% as a placement number.
+
+**Miami is on the SOTA reproduction** and is running it as published, with controllers, before
+any head-only arm, so a failure to reproduce cannot be confused with a channel restriction.

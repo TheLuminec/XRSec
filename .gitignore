@@ -16,3 +16,4 @@ results/runs_all.csv
 
 # Any other sweep artifact root (checkpoints; the numbers live in results/runs/)
 /sweeps_*/
+external_sota/
