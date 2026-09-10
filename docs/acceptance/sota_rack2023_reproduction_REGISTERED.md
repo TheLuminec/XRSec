@@ -295,3 +295,99 @@ than design.
 missing module by name, whose name is gallery/probe statistics for the DML paper, is
 independent evidence for the missing-evaluation finding rather than an inference from the
 absence of `test_step`.
+
+---
+
+# AMENDMENT 2 — 2026-09-10: the published configuration is INFEASIBLE as shipped
+
+**A measurement about the instrument, not a result.** No gate number exists and none is
+affected; this records why one cannot yet be produced. Original registration and Amendment 1
+left intact above.
+
+## The arithmetic
+
+`SimilarityDatamodule` builds `MPerClassSampler(..., length_before_new_iter=1_000_000)` and
+`MPerClassSampler.__len__` returns exactly that, so at `batch_size: 400` **one epoch is 2,500
+train batches**. Measured on this node (RTX 4060 Ti, Python 3.8.20, torch 2.0.1+cu118):
+
+| | |
+|---|---|
+| observed | **27–43 s per batch**, GPU at **0–5%** |
+| per epoch, train only | **17–30 hours** |
+| `min_epochs: 100` | **72–124 days** |
+| `max_epochs: 500` | **360–619 days** |
+
+The GPU is idle. This is not a hardware limitation.
+
+## Root cause: multi-block `.values` on every `__getitem__`
+
+`WindowMaker.to_windows` (`window_maker.py:58-59`):
+
+```python
+if type(unwindowed_data) != np.ndarray:
+    unwindowed_data: np.ndarray = unwindowed_data.values
+```
+
+`BaseDataset` stores `self.frames` as a **DataFrame with 18 blocks — one per column**,
+because `_prepare_data` assigns columns individually. **`.values` on a multi-block frame is a
+full copy**, so every `__getitem__` copies the entire training set to cut one 500-frame
+window. Cost is O(dataset size) per item, measured:
+
+| subjects | rows | per `__getitem__` | per batch of 400 |
+|---|---|---|---|
+| 2 | 169,557 | 5.99 ms | 2.4 s |
+| 27 (training split) | ~13x larger | ~62 ms (implied) | **~25 s — matches the observed 27–43 s** |
+
+**This is the SAME pandas property as the velocity bug recorded above, with the opposite
+symptom.** Multi-block `.values` **silently discards a WRITE** (`helpers.py:175/214`, the
+take-boundary NaN, which their own test catches) and **silently COPIES on READ** (here). One
+line of pandas semantics, two failure modes, neither visible without measuring.
+
+## The proposed fix, verified bit-identical rather than argued
+
+`to_windows` already branches on DataFrame-vs-ndarray — the branch above exists precisely to
+accept either. So the change is **which of the two types their own function already supports
+gets stored in `self.frames`**. No logic of theirs is altered.
+
+Verified, shipped vs hoisted, same dataset and indices:
+
+```
+items 0, 1, 7, 123, 1000, 5000: identical=True on data AND targets, float64 both sides
+ALL ITEMS BIT-IDENTICAL: True
+per item  5.99 ms -> 0.022 ms   =  270x on 2 subjects (larger on 27: the copy scales, the slice does not)
+```
+
+**Status: NOT APPLIED. With the Coordinator**, because editing their source turns "we ran
+their code" into "we ran our fork" and that is not a call to make unilaterally. Options put to
+them: (1) apply and record as a deviation with this verification attached; (2) run unpatched at
+reduced scope and state the budget differs from theirs; (3) declare the arm not reproducible on
+available hardware. Recommendation is (1), precisely because equivalence is measured.
+
+## Two further instrument facts found en route
+
+- **`callbacks=null` does not work on Hydra 1.3** — `ValueError: Config group override must be
+  a string or a list. Got NoneType`. Their `configs/config.yaml` comment says "set this to null
+  if you don't want to use callbacks". Another instance of their documentation not matching the
+  dependency versions their code requires.
+- **A starved validation split breaks the checkpoint callbacks.** With `limit_val_batches=2`
+  the `[::150]` gallery subsample can yield zero reference embeddings, so
+  `_compute_and_log_validation_metrics` skips logging and every `ModelCheckpoint` monitor
+  raises `MisconfigurationException`. Their code is correct; a too-aggressive smoke restriction
+  is not.
+
+## Memory, for anyone running this
+
+Their dataset is fully resident and the DataLoader **forks it per worker**: ~7.5 GB per
+process, so `NUM_WORKERS=2` reached ~22 GB RSS and `Committed_AS` 36 GB. Our own CLAUDE.md
+carries the same warning for `num_workers`. Note also that the harness's low-memory guard reads
+`MemFree`, which sat at 1.3–1.9 GB while `MemAvailable` was 34–42 GB and swap was untouched —
+it killed five watcher processes today and never a real job. **Read `Committed_AS` and
+`MemAvailable`, not `MemFree`.**
+
+## And the fixture lesson, for the third time in one day
+
+My first measurement of the `.values` hypothesis **refuted it** — the conversion looked free.
+The fixture was a uniform float32 frame, hence single-block, hence a view. The real frame is 18
+blocks. Identical to the morning's velocity investigation, on the same day, after the rule was
+written down. Going back to the fixture rather than abandoning the hypothesis is the only
+reason this diagnosis exists; the rule is evidently not yet a reflex.
