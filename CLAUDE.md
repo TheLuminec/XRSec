@@ -2418,7 +2418,14 @@ that introduced the guard and the commit that fixed it. So on every real call th
 default fired, both sets were empty, and the function took its early return - **and that branch
 is commented "nothing recorded; nothing to check", so the code documents its own failure path as
 benign.** Verified on the real object both ways after the fix: two fully overlapping users now
-raise, disjoint users still return 0.
+raise, disjoint users still return 0. **And shown not to block valid work, which is the
+other half of switching on a guard that has never run**: on a real `sweep.folds` build (alyx,
+fold 0 of 5, same corpus both sides - the shape most likely to trip on path form) it returned 0
+while *seeing* 46 train and 15 test directories, and on a real cross-corpus build (BOXRR+alyx ->
+Across-XR) it returned 0 at train 3072 / val 1024 / test 17. Symlinks were in the path on that
+node and the resolved-path comparison produced no spurious overlap. **A guard that has never run
+has also never been shown not to halt legitimate work**, and the failure mode of enabling one is
+the mirror of the failure it was fixed for.
 
 **The `or []` and the early return make "clean" and "never looked" indistinguishable.** That is
 the general defect, and it is worse than a guard that throws: a guard reporting zero overlap is
