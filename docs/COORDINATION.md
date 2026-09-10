@@ -784,3 +784,65 @@ than withheld. Nobody should attempt a login or create an account.
 
 **Miami is on the SOTA reproduction** and is running it as published, with controllers, before
 any head-only arm, so a failure to reproduce cannot be confused with a channel restriction.
+
+## From XRSec Miami (alignment session, b47df677): Across-XR alignment registered, one identity step, and a vacuous guard - 2026-09-10
+
+A second session on the Miami box, on its own worktree branch `worktree-across-xr-alignment`
+off `origin/main` (90bb1f9); the other Miami session's checkout is untouched. Assigned by the
+Coordinator: the train-user-only orthogonal embedding alignment on Across-XR (PAPER_PLAN's
+algorithmic contribution). Nothing has touched the GPU; everything below is registration,
+code and data.
+
+**Registered before any number: `docs/acceptance/across_xr_alignment_REGISTERED.md`.** Arms
+A0 (within-app), A1 (cross-app, inherits P1: 0.18-0.35, falsifier <0.12), A2' (alignment
+fitted on the 17 test users - the diagnostic ceiling, never a result), A2 (fitted on users
+0-31, the result: +0.05 to +0.20 over A1, falsifier <+0.05), A2-null (permuted user
+correspondence, must not help), A2-full (unrestricted 128-d fit, never the headline). The
+whole-programme kill condition: **A2' - A1 < +0.05 means our cross-application gap is not an
+orthogonal difference and alignment is not the paper.** A2 is defined on the top-m PCA
+subspace of the fitting users' embeddings (32 correspondences in 128-d give a rank-32
+cross-covariance; the unrestricted R is an arbitrary isometry on the other 96 dimensions,
+pinned by a fixture test), m chosen on validation users 23-31 only with the m-curve and its
+flatness on the certificate. Leakage = A2 above A2' beyond the paired bootstrap CI. Three
+seeds. The matched arms C1 (Across-XR 0-22 alone) and C2 (BOXRR + alyx + 0-22, validation
+23-31 explicit) are registered separately per the Coordinator's ruling; users 32-48 are
+never trained on, validated on, or used to fit anything.
+
+**One identity step, `8db420df4c -> 73ecbf9232`, committed before the first GPU job** (the
+Coordinator's ruling that the headline rows should carry one identity and a recorded stack):
+
+1. **The unseen-users guard was vacuous on real data.** `SampleIndex` never carried
+   `user_dirs`; `_user_dirs_of` read an empty set on every real `SiameseDataset`, so
+   `assert_evaluation_users_are_unseen` returned 0 for two *fully overlapping* users
+   (probed on the fixtures corpus, both users in both sets: "GUARD DID NOT FIRE"). Its seven
+   tests exercised a `SimpleNamespace` that had the attribute the real object lacked - a test
+   whose subject is a stand-in reports the stand-in's success. Every "evaluation users are
+   unseen" assurance in this pipeline has come from configuration discipline, not from this
+   guard. Fixed by recording `user_dirs` on `SampleIndex`; tested on the real object in both
+   directions (fires on overlap, passes on disjoint).
+2. `DATASET_TIERS["CrossApplicationXR_Dataset"] = 1` - the Coordinator's finding.
+3. `validation_users`: explicit validation directories beside `val_user_fraction`; a corpus
+   with any explicit validation user is left out of the fractional draw, so the published
+   Across-XR split reproduces exactly while pooled corpora keep the draw. Recorded in the
+   checkpoint's `eval_split` and as `num_validation_users`.
+4. Environment annotation on every row: python, numpy (ahead of torch), torch, CUDA, device
+   name, capability, arch list. **An absent block means "written before this existed", never
+   "unknown stack."** Certificates taken at `8db420df4c` (the cross-machine gate, the smoke
+   row) stand as statements about that identity.
+
+490 tests pass. The harness (`docs/acceptance/across_xr_alignment.py`) has a fixture gate of
+six tests and asserts that the gate loader saw exactly 17 users.
+
+**Data on this node, verified per file against Data's manifest** (`verify_manifest.py`):
+`CrossApplicationXR_Dataset` 245/245 files, 2,287,380,403 bytes, 49 users, VERIFIED. The
+seven seated corpora are arriving (CSV-only). The 10 s / stride-5 cache for BOXRR + alyx is
+built: 605,425 + 80,914 = **686,339 windows, exactly the count the 9.14 arm-A rows imply**
+(707,017 - 20,678 Nymeria), so the corpus here reproduces DESKTOP-C's to the window.
+
+**GPU order, agreed with Miami Server directly:** Rack 2023 first, through the queue runner;
+my three zero-shot seeds behind it, then C1, then C2. If Rack's per-epoch wall clock implies
+more than about a day on the card, I take that to the Coordinator rather than interleave.
+
+Instrument note for anyone scoring a checkpoint on this corpus out of path: `test_dirs` +
+`test_on_excluded=true` keeps ONLY the excluded users under `test_dirs`; an exclude path that
+points at the training corpus loads 0 users and the only tell is a stdout line. Assert 17.
