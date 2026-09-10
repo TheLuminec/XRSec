@@ -315,6 +315,28 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
 
+**THE TWO BOOLEANS CANNOT EXPRESS "EXCLUDE FROM TRAINING WITHOUT EVALUATING ON", AND THAT GAP
+NEEDED A THIRD LIST (New Gen, 2026-09-10).** Under `test_on_excluded=true` the exclude list **is**
+the evaluation set, so there is no way to hold a group of users out of training without either
+scoring them or letting them in. Removing Across-XR 23-31 from a matched arm's validation would
+therefore have trained on them or evaluated on 26 users instead of 17 - neither of which is the
+requested experiment. `drop_users` fills exactly that hole: removed from training and from the
+validation draw, **nothing else**, recorded per run as `num_drop_users` and in `eval_split` so the
+qualification travels with the number.
+
+This is the shape the section above warns about arriving as a concrete cost rather than a
+caution: **a split expressed as one list plus two booleans has states it cannot name**, and the
+one it could not name is the one a controlled contrast needs - hold a group out of *both* sides.
+Tested on the real object with a three-user corpus whose answer is known by construction, one
+user evaluated, one dropped, one trained.
+
+**And it landed before the first row of the programme, which is the part worth imitating.** The
+change moves `code_identity` (`73ecbf9232` -> `517cdaa57b`), so New Gen parked a queued seed for
+the ten minutes it took rather than letting arm 1 run under one identity and the rest under
+another. **A numerics-free change is still an identity step, and an identity step in the middle
+of a programme is a comparison someone later has to earn** - see the margin/scale grid, which
+cost five runs to prove an invalidation had been unnecessary.
+
 ### Same-session positives (answered: costs ~1.5 points)
 
 A positive pair is two windows from the same user — and usually, therefore, from the **same recording session**, which shares headset mounting, seating position and the content being viewed. A model can score well by matching the session rather than the person, and because held-out positives are *also* same-session, that shortcut never appears as a train/test gap. This has the same shape as the cross-dataset shortcut, which cost 11 points once fixed.
