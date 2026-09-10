@@ -2249,6 +2249,43 @@ extra on a corpus whose totals matched) would have been caught by it.
 turned a silent pass into a caught error, and it is one line. A fixture check that only tests
 for existence fails in exactly the same way as the guard it is protecting.
 
+**AND A FIXTURE MUST REPRODUCE THE CONDITIONS THAT TRIGGER THE BEHAVIOUR, NOT MERELY EXERCISE
+THE CODE PATH (Miami, 2026-09-10).** Chasing a failing test in Rack et al.'s velocity encoding,
+Miami formed the right mechanism - `velocities.values[invalid_frames, :] = np.nan` writes
+through `.values`, which is a *view* on a single-block frame and a *copy* on a multi-block one,
+so on a multi-block frame the take-boundary NaN is silently discarded - **tested it, and the
+test refuted the correct hypothesis**, because the fixture was a float DataFrame where the write
+lands. Only a fixture matching their integer dtype path, which upcasts and splits the manager
+into three blocks, reproduces it. **A float frame exercises `.values` assignment perfectly well
+and cannot see the bug.** So "assert on the fixture" needs its second half: the fixture has to
+recreate the *conditions*, and **a hypothesis refuted by a fixture that cannot trigger the
+behaviour has not been refuted.**
+
+Verified independently here, and it extends in two directions. **There are two such sites, not
+one** - line 175 in `compute_velocities_simple` (positions) and line 214 in
+`compute_velocities_quats` (rotations), both called from
+`compute_velocities_for_position_and_rotations` - and only the first is covered by their test
+suite, so **the untested site is the quaternion one**. And the fragility has a hard version
+boundary: on pandas 2.x a single-block float frame lands the write and a multi-block frame
+discards it silently, while on **pandas 3.x Copy-on-Write makes `.values` read-only and the same
+line raises `ValueError: assignment destination is read-only`**. So their code is correct on
+pandas 2 with float data, silently wrong on multi-block, and **inoperable on pandas 3** - which
+sharpens "runnable only on a narrow, unsupported stack" from a claim about Python 3.8 into one
+about pandas as well.
+
+**The general form is a guard whose correctness depends on an invariant nothing asserts.**
+Take-boundary invalidation is correct only while the frame stays single-block, which depends on
+input dtype and on pandas' block consolidation - neither checked, neither stated. One line at
+each site fixes it: assert the block count, or write through `.iloc` rather than `.values`.
+**This is the failure-open pattern again** - a guard that stops guarding and says nothing - and
+it is worth looking for wherever this repo writes through `.values`.
+
+**A TEST-SUITE COUNT IS A CLAIM ABOUT THE INVOCATION AS MUCH AS ABOUT THE CODE (Miami, same
+day).** Their suite reads **12 failed / 8 passed** from the repo root and **3 failed / 17
+passed** from `tests/`; nine of the twelve are `FileNotFoundError` on relative fixture paths.
+"12 failed" was one message away from being reported as a finding about their repository.
+Record the invocation beside the count.
+
 **The fixture rule caught a real error the next day, on the coordinator's own work
 (2026-09-09).** The Across-XR geometry statistic was computed as
 `mean(searchsorted(sorted_between, within)/n)`, which is **P(between < within)**, and printed
