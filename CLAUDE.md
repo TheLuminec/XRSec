@@ -2460,6 +2460,21 @@ seed 1 read test AUC **0.6188 at epoch 36** against a baseline of 0.6156 - which
 validation-selected, a third of the way through a budget whose control selected epochs 116-118.
 Quote `selected_test_auc` from a completed row or quote nothing.
 
+**AND THE SAME TRAP CAUGHT A TIMING NUMBER THAT DROVE A DECISION (Miami, 2026-09-10).** The
+"124 days" that justified editing Rack et al.'s source was read off **tqdm, whose displayed rate
+is a CUMULATIVE average, not an instantaneous one** - taken at batches 3-8 of a monotonically
+falling series that ran `85.2 -> 42.7 -> 36.5 -> ... -> 4.84 s/batch` and was still falling. The
+early batches carry dataset construction and statistics computation, so a running mean read early
+overstates the steady state by **4-10x here**; the honest figure is 12-35 days rather than 124.
+
+**A running mean is not a rate, and warm-up is not steady state.** Quote a marginal cost measured
+over a late window, or instrument per-step wall clock, and until you have one quote a **band
+rather than a point**. The conclusion happened to survive - and note *why* it survived, because
+that is the transferable part: it did not rest on the magnitude at all once the pandas regression
+was measured (their code ran at 0.015 ms/item, so the slow path is an artefact of our dependency
+version rather than their protocol). **An argument that depends on a number you read off a
+progress bar is worth re-deriving from one you measured.**
+
 The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
 reported five sweeps with no certificate when all five had one, because its regex assumed
 forward slashes and those entries hold absolute Windows paths. **A check that reports a
