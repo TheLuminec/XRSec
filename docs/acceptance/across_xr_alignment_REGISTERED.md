@@ -225,3 +225,57 @@ Explicit validation users require a small change to the training path (a
 `validation_users` list beside `val_user_fraction`); it is a `model/*.py` edit on this
 node's own checkout, committed before any matched row is written, and its identity is
 recorded on those rows.
+
+---
+
+# AMENDMENT 1 — 2026-09-10, before any matched row: C2's dose is 3.0%, so C2 becomes a pair
+
+**Amended for a fact about the instrument, known before any number exists.** The original
+text above is left intact. Measured by the Coordinator on the real files: Across-XR users
+0-22 hold 9,963,704 rows = 30.4 h = **~21,900 windows** at 10 s / stride 5, against 707,017
+BOXRR+alyx windows at 4096 identities - **3.0% of C2's training windows**, the same dose at
+which the Nymeria activity-diversity null was uninterpretable (2.9%). `identity_softmax`
+samples windows uniformly, so 23 identities of 3,095 is not the quantity that matters. A
+null on C2 as registered cannot distinguish "seeing the applications does not carry" from
+"the objective barely saw them", and only the first licenses the conclusion. **A dose is
+part of a treatment's definition; a null without one is a result about the dose.**
+
+The fix is composition, not sampling: `balance_identities=cap` would trim Across-XR (≈950
+windows per identity against BOXRR's ≈150) and lower the dose further - the identical
+wrong-direction fix the Nymeria arm found. And cutting BOXRR is measured to cost nothing on
+the axis C2 reports: transfer is flat in identity count across a domain boundary (419 →
+2096 moved pooled transfer by 0.001, 2096 → 4096 by 0.000).
+
+**C2 is therefore two arms, and each has its own zero-shot control at the same identity
+count, so the only variable inside a pair is whether Across-XR 0-22 was trained on:**
+
+| arm | training | Across-XR dose | control |
+| --- | --- | --- | --- |
+| **C2-lo** | BOXRR (all 4020) + alyx + Across-XR 0-22 | **3.0%** | the zero-shot arm above (4096 ids) |
+| **C2-hi** | BOXRR capped at **600** (`max_users={BOXRR-23_Dataset:600}`, seeded subsample) + alyx + Across-XR 0-22 | **≈14%** (21.9k of ≈151k training windows: 600 × 151 × 0.75 + 76 × 1065 × 0.75 + 21.9k) | **Z-676**: BOXRR capped at 600 + alyx, no Across-XR, same seed - a new zero-shot arm at 676 identities |
+
+Registered:
+
+- **C2-hi − Z-676 in +0.05 to +0.20** on the 20 cross-application cells at N=17 (the band
+  the original C2 carried, now attached to the arm that can test it). Falsifier: **< +0.03**,
+  which at a 14% dose does say that seeing the five applications on 23 people does not
+  carry to unseen people.
+- **C2-lo − A1**: registered as a dose statement, not a treatment test. Above +0.05 is
+  informative (a 3% dose already carries); a null is a result about 3% and is reported as
+  exactly that.
+- **Z-676 − A1 within ±0.03**: the identity-count flatness measured elsewhere in this file,
+  re-measured here at 676 against 4096 on Across-XR. If it fails, the C2-hi comparison is
+  read against Z-676 only and the pooled-vs-capped difference is reported separately.
+- **C2-hi − C2-lo**: the dose effect itself; predicted positive. If C2-hi ≤ C2-lo the dose
+  argument was wrong and both arms are read against their own controls without it.
+- The alignment (A2) is re-run on C2-hi's embeddings; prediction unchanged from the
+  original text (gain shrinks once the applications were seen).
+
+Order on the card, after the three zero-shot seeds: C1 (seed 1), Z-676 (seed 1), C2-hi
+(seed 1), C2-lo (seed 1); further seeds as the card allows, C2-hi and Z-676 first because
+that is the pair that resolves the question. C1 is untouched by this amendment - 23 users
+alone is a 100% dose and is Schach's protocol exactly.
+
+The counts in `unseen_users_guard_both_directions.md` (3095 / 1033) are consistent with
+`validation_users` being honoured but one user away from it being ignored; the membership
+lists (0-22 / 23-31 / 32-48) are what that certificate rests on.

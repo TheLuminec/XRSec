@@ -77,8 +77,11 @@ the `validation_users` path that is new in the same identity step. Loader builds
 | C1: Across-XR alone | **0** | 23 / 9 / 17 | 23 / 9 / 17 | train 0-22, val 23-31, test 32-48 |
 | C2: BOXRR + alyx + Across-XR | **0** | 3095 / 1033 / 17 | 3095 / 1033 / 17 | train 0-22, val 23-31, test 32-48 |
 
-C2's 3095 = 3072 + 23 and 1033 = 1024 + 9: the 25% draw applied to BOXRR and alyx and left
-Across-XR alone, as `select_validation_users` specifies. No list intersects another.
+**The id lists carry this check, not the counts.** C2's 3095 = 3072 + 23 and 1033 = 1024 + 9
+is consistent with `validation_users` being honoured, but an ignored list gives 3096 / 1032 -
+one user apart - so cardinality would not have caught a subtler failure. Membership does:
+the loaders hold Across-XR ids exactly 0-22 / 23-31 / 32-48, the 25% draw left Across-XR
+alone as `select_validation_users` specifies, and no list intersects another.
 
 ## The rule
 
