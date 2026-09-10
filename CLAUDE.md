@@ -2280,6 +2280,54 @@ each site fixes it: assert the block count, or write through `.iloc` rather than
 **This is the failure-open pattern again** - a guard that stops guarding and says nothing - and
 it is worth looking for wherever this repo writes through `.values`.
 
+**AND THE SAME PROPERTY HAS A SECOND FACE: MULTI-BLOCK `.values` COPIES ON READ, WHICH MADE THE
+PUBLISHED CONFIGURATION UNRUNNABLE (Miami, 2026-09-10).** `WindowMaker.to_windows` does
+`unwindowed_data.values` to slice one 500-frame window, and `BaseDataset` holds an 18-column
+frame assigned **column by column**, so `.values` is a full copy of the entire training set on
+**every `__getitem__`** - cost O(dataset size) per item. Their `SimilarityDatamodule` sets
+`length_before_new_iter=1_000_000` at `batch_size: 400`, so one epoch is **2,500 batches**, and
+Miami measured **27-43 s per batch with the GPU at 0-5%**: ~30 h per epoch, and at their
+`min_epochs=100` that is **72 to 124 days**. The published configuration cannot be run to
+completion as shipped, and nothing about that is visible without profiling - the code is
+correct, the GPU is idle, and the job simply never ends.
+
+Reproduced here on a frame built the same way, before ruling on the fix:
+
+| | |
+| --- | --- |
+| before `_scale_data` | 18 blocks |
+| **after `_scale_data`** | **18 blocks** - pandas arithmetic PRESERVES the split |
+| `.values` shares memory with block 0 | **False** |
+| per-access cost | **5.142 ms** against **0.0004 ms** for the ndarray, values identical |
+
+**So one pandas property produced two unrelated-looking failures in one codebase: a silently
+discarded write and an O(n) copy on every read.** Neither is visible by reading, both need
+measurement, and the second masquerades as a hardware complaint.
+
+**Two things that change how such a fix should be written up.** `.copy()` **collapses the
+18-block frame to a single block**, after which `.values` is a view - so eager consolidation
+makes the shipped code fast with no edit at all, which raises the question the timing arithmetic
+cannot answer on its own: *how did the authors ever run 100 epochs?* If an older pandas
+consolidated here, this is a **version regression rather than a defect in their code**, and the
+honest note is "we restored the single-block property their environment provided". Establish
+which before writing the deviation; it changes the sentence. And **scope the edit to the
+narrowest assignment that already exists** - here `window_dataset.py:23`, not
+`base_dataset.py:221`, because the latter would break `bin_maker.py`'s `self.frames.rolling(...)`,
+and a fix that silently breaks a sibling class is a larger deviation than the one being
+requested.
+
+**Gate an equivalence claim on the OPTIMISATION, not on a sample of the inputs.** Six
+bit-identical items is evidence about the input; the quantity that must be unchanged is the
+training. Run N steps both ways from one seed and compare the loss sequence - it is minutes, and
+it converts "we checked six windows" into "the model saw the same data and took the same steps".
+
+**A note on the fixture rule, which missed here for the third time in a day and should not be
+read as carelessness.** The refuting fixture was a uniform float32 frame - single-block, hence a
+view, hence `.values` looked free. **The triggering condition cannot be constructed without
+already knowing the mechanism**, which is what makes this class hard rather than what makes it a
+lapse. The behaviour that produced all three diagnoses was going back to the fixture instead of
+dropping a refuted hypothesis.
+
 **A TEST-SUITE COUNT IS A CLAIM ABOUT THE INVOCATION AS MUCH AS ABOUT THE CODE (Miami, same
 day).** Their suite reads **12 failed / 8 passed** from the repo root and **3 failed / 17
 passed** from `tests/`; nine of the twelve are `FileNotFoundError` on relative fixture paths.
