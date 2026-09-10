@@ -115,3 +115,74 @@ and must be ruled out before concluding the port is wrong.
 If any cell's published value sits outside our measured seed spread, OR the ordering
 breaks, the reproduction **FAILS** and is reported as failed. A failure is a real result at
 this stage and will be reported as prominently as a pass.
+
+---
+
+# AMENDMENT 1 — 2026-09-10, before any run
+
+**Amended for a fact about the INSTRUMENT, not a measurement.** The test of legitimacy is
+whether the fact could have been known without running the experiment: this one is a grep,
+so it could. **The original registration above is left intact rather than edited** — a
+registration whose history is not visible is not a registration.
+
+## What changed: their published numbers are not reachable from their published code
+
+Verified by grep on both this machine and AVALON independently:
+
+| block | evidence |
+|---|---|
+| **no test path at all** | zero hits for `def test_step`, `def test_epoch`, `trainer.test`, `.test(` across `src/` and `run.py`. "test" appears **zero times** in `src/train.py`. `SimilarityModule` defines `training_step`, `validation_step`, `validation_epoch_end`, `predict_step` — nothing else |
+| **use-time hardcoded** | `sequence_lengths_minutes=[5, 10, 15]` is a constructor argument at `similarity_module.py:27`, not a config key. There is no 1-minute use-time |
+| **one fixed enrolment** | `reference_embeddings = session_1_embeddings[::150]` at `similarity_module.py:99`. No enrolment sweep |
+
+So the code computes: **validation split (9 subjects), one enrolment condition, use-times
+5/10/15 min.** The paper's Figure 3 needs the test split, an enrolment axis and a 1-minute
+use-time. **None of the three cells registered above is reachable from this code.** Their
+*training* code is complete and faithful; their *evaluation* is not published.
+
+"Their code is public" and "their numbers are reachable from their code" are different
+claims, and the gap is invisible until someone greps for a test path.
+
+## The amended approach: their model, their protocol, our plumbing
+
+Train with their code, their config and their data — nothing of ours in the training path.
+Evaluate with a harness written here implementing the protocol **they state in prose**: test
+split, enrolment sweep, 5-minute and 1-minute use-time.
+
+**This is a limitation on REPRODUCTION and an advantage on COMPARISON, in that order.** It
+forecloses "we reproduced their published number". But this project's own rule is that a
+gate must be one implementation rather than two, because two independently written
+comparators can disagree for reasons having nothing to do with the thing compared. A SOTA
+table scoring their model with their harness and ours with ours has exactly that defect, and
+no reader could separate a model difference from a plumbing difference. **One harness
+scoring both arms removes the largest confound in the comparison.**
+
+## The harness is gated before it is trusted
+
+Pointed at the **validation** split with their hardcoded `[::150]` enrolment and 5-minute
+use-time, the harness must reproduce `sequence_top_1_accuracy_5_mins/validation/mean` as
+*their own module computes it*. That gives the new plumbing a referent in **running code**
+rather than in my reading of their prose — the same rule as "an out-of-path harness must
+reproduce something from the column it will be compared against".
+
+**No number from the harness on the test split is quotable until that validation gate is
+green, and the gap will be reported before any test-split figure.**
+
+## Rejected fallback, and why
+
+Reporting what their code computes on the 9 validation subjects was considered and is
+rejected. Not only because it matches no published number: **N=9 against N=27 is a different
+task.** Gallery size moves rank-1 hard, so an N=9 figure printed beside published N=17 and
+N=27 numbers would be actively misleading rather than merely uninformative. Quote no rank-1
+without its N.
+
+## Unchanged by this amendment
+
+Three seeds with measured spread rather than an invented tolerance; the curve-shape
+requirement (ordering and dynamic range, not a single point); the 1-min/1-min cell as the
+discriminating primary once reachable; the 63 subject identities; and every environment pin
+as a recorded deviation.
+
+**And a note to turn on ourselves:** their Dockerfile pins Python 3.8 under *unpinned*
+requirements, which is exactly how a repo stops building eighteen months later. Our own pins
+should be audited the same way before we ship, rather than having a reviewer find it.
