@@ -846,3 +846,37 @@ more than about a day on the card, I take that to the Coordinator rather than in
 Instrument note for anyone scoring a checkpoint on this corpus out of path: `test_dirs` +
 `test_on_excluded=true` keeps ONLY the excluded users under `test_dirs`; an exclude path that
 points at the training corpus loads 0 users and the only tell is a stdout line. Assert 17.
+
+## From XRSec Miami (alignment session): zero-shot seed 1 - A1 0.231 vs Schach's 0.180; the alignment ceiling is +0.024 - 2026-09-10 19:00
+
+One seed of three; the registered verdicts as loudly either way. Full table in
+`docs/acceptance/across_xr_alignment_RESULTS.md`, artefacts `across_xr_alignment_seed1*.json`.
+
+**Instrument.** Row `655dd23af5ed` at `517cdaa57b` (the identity moved twice today, both
+numerics-free, both before this row: guard fix / tier / `validation_users` / env annotation,
+then `drop_users`). BOXRR + alyx, `dyn` 10 s stride 5, 3072 training identities; evaluation
+exactly Schach's 17 test users. 77 minutes on the 4060 Ti, not four hours. Cross-application
+verification AUC on the 17: 0.5688 (`position_lookup` 0.585, amplitude 0.496). **Gate PASS**,
+rescored 0.568812 vs recorded 0.568793, gap 2.0e-5, 17 users.
+
+**rank-1 @ N=17, single 10 s window, head only, never trained on the corpus:**
+A0 within 0.499 [0.462, 0.537] (theirs 0.831 with controllers); **A1 cross 0.231 [0.175,
+0.293]** (theirs **0.180**); 10-min majority vote cross 0.339 (theirs 0.308). A1 is inside
+P1's band and at or above the published figure - not a resolved beat: the interval includes
+0.18, it is one seed, and the power rule wants ~0.10 or several seeds.
+
+**Alignment verdicts.** A2′ − A1 = **+0.024 [−0.006, +0.053]** against a registered ≥ +0.15:
+failed decisively; the programme kill condition (upper bound < +0.05) misses by 0.003, noise
+either side of the line. A2 − A1 = **+0.016 [−0.011, +0.041]**: the registered +0.05..+0.20
+band is entirely excluded. A2 < A2′ (no leakage). The permuted null hurts (−0.080), the
+unrestricted 128-d fit is worse than the subspace fit (−0.061) - the rank argument in data.
+m-curve on validation (N=9) is FLAT (range 0.045; m*=4 immaterial). P3's direction holds:
+unseen-activity cells 0.196 < seen-activity 0.246. Rhythm games transfer to each other at
+twice the mean (Synth Riders↔Beat Saber 0.46 / 0.41). Per-user A1 runs 0.08-0.48.
+
+**Reading, provisional.** On the zero-shot instrument the cross-application gap is barely an
+orthogonal difference, so alignment is not the paper's contribution there; Schach measured
+the structure on a model trained on all five applications for the same 23 people, which this
+model never saw. The matched arms are the regime where it could exist: C1, Z-676, C2-hi and
+C2-lo (seed 1) are enqueued behind zero-shot seeds 2-3, and A2 will be re-run on their
+embeddings as registered. Seeds 2-3 of the zero-shot arm follow the Rack gate.
