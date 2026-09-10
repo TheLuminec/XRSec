@@ -2276,7 +2276,9 @@ about pandas as well.
 **The general form is a guard whose correctness depends on an invariant nothing asserts.**
 Take-boundary invalidation is correct only while the frame stays single-block, which depends on
 input dtype and on pandas' block consolidation - neither checked, neither stated. One line at
-each site fixes it: assert the block count, or write through `.iloc` rather than `.values`.
+each site fixes it - but **not** an assert on the block count, which is the wrong discriminator
+(see the amendment below): use `np.shares_memory(df.values, df.iloc[:, 0].values)`, or write
+through `.iloc` rather than `.values`.
 **This is the failure-open pattern again** - a guard that stops guarding and says nothing - and
 it is worth looking for wherever this repo writes through `.values`.
 
@@ -2327,6 +2329,41 @@ view, hence `.values` looked free. **The triggering condition cannot be construc
 already knowing the mechanism**, which is what makes this class hard rather than what makes it a
 lapse. The behaviour that produced all three diagnoses was going back to the fixture instead of
 dropping a refuted hypothesis.
+
+**AMENDMENT (Miami, 2026-09-10, measured on both versions): BOTH of today's `.values` findings
+are ONE pandas 1.x -> 2.x regression, and neither is a defect in Rack et al.'s code.** The
+coordinator's hunch that `.copy()` consolidating implied a version story was right, and testing
+it settles both:
+
+| | blocks after `_scale_data` | `.values` is a view | per access |
+| --- | --- | --- | --- |
+| **pandas 1.5.3** (their era) | 18 | **True** | **0.015 ms** |
+| pandas 2.0.3 | 18 | False | 7.873 ms |
+
+**525x, on the same frame.** And the velocity bug goes the same way: under 1.5.3 the upcast frame
+consolidates to one block, the take-boundary NaN write **lands**, and their failing test
+**passes**. So the correct sentences are that **we restored the single-array access property
+their environment provided**, not that we fixed their bug; and that their test is a correct test
+passing correctly in its own environment, not - as recorded here this morning - "a latent
+fragility" doing "useful work by accident". Both of those readings were wrong and are withdrawn.
+It also answers what the timing arithmetic could not: they ran 100 epochs because
+`__getitem__` cost them 0.015 ms.
+
+**AND BLOCK COUNT IS NOT THE DISCRIMINATOR - the rule this file circulated for a day was
+version-scoped without saying so.** Both versions report **18 blocks**; only view-versus-copy
+differs, because pandas 1.x consolidated on access and 2.x does not. So "multi-block means copy"
+holds only for pandas 2+, and an `assert len(df._mgr.blocks) == 1` would pass or fail for reasons
+unrelated to the property being protected. **The version-independent check is
+`np.shares_memory(df.values, df.iloc[:, 0].values)`, or timing a single access.** Confirmed here
+on pandas 3.0.1: blocks stay 18 across a `.values` access, no consolidation, `shares_memory`
+False. The 1.5.3 half is Miami's measurement on the 3.8 environment and was not reproducible on
+this interpreter - stated so rather than folded in.
+
+**The general lesson is not about pandas.** A behaviour that is a *property of the dependency
+version* was diagnosed twice as a property of the code, in opposite directions, by two sessions,
+in one day. **Before attributing a defect to code you did not write, price the version you are
+running it on** - especially where the authors pinned nothing, because then the environment is a
+free variable and the code is the only thing that looks fixed.
 
 **A TEST-SUITE COUNT IS A CLAIM ABOUT THE INVOCATION AS MUCH AS ABOUT THE CODE (Miami, same
 day).** Their suite reads **12 failed / 8 passed** from the repo root and **3 failed / 17
