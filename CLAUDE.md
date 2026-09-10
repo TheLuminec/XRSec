@@ -1039,6 +1039,45 @@ with one explanation is worth more than an outcome with two, regardless of which
 predicted - and if the predicted outcome is the ambiguous one, say so in the registration
 rather than in the write-up, where it will read as an excuse.
 
+**A BAND AND ITS FALSIFIER MUST PARTITION THE LINE (Miami, 2026-09-10).** The within-application
+placement arm registered "lateral P 0.80-0.95, falsifier below 0.65" and measured **0.7525,
+CI95 [0.7114, 0.7748]** - the whole interval below the band and the whole interval above the
+falsifier. **The band was excluded and the falsifier did not fire: two outcomes were registered
+and the data chose a third.** That is a registration defect, not a surprising result, and the
+fix is to register what the gap MEANS before running rather than to widen the band afterwards,
+which is the same move as moving a line after seeing the number. Registering a band and a
+falsifier that do not meet leaves an unnamed region that the run is free to land in, and it is
+one subtraction to check.
+
+**Verified independently before it propagated (coordinator, AVALON, same day).** Recomputed from
+the same corpus with a different implementation and a fixture asserted in both directions
+(synthetic users 10 m apart must return 1.000, and inverted 0.000): lateral **0.7574**, height
+**0.8892**, all **0.7811** - inside Miami's CI, with the **within-medians digit-exact on both
+machines** (0.1677 m lateral, 0.0089 m height). The between-medians differ slightly (0.4004
+against 0.4077) because the two sides enumerate between-pairs differently - 23,520 against
+11,760 - which is the expected place for two implementations to differ and the reason the
+agreement of the *within* medians is the informative half.
+
+**And the ambiguous outcome was weak about the MECHANISM and strong about the DECISION - those
+come apart.** The registration flagged that a high P is predicted equally by placement being a
+per-participant constant and by slow drift inside one unbroken recording, and that this corpus
+cannot separate them. It still cannot. But **both mechanisms imply the same design consequence**
+- either way it is a per-recording constant that a same-application arm carries and a
+cross-application arm does not. So the outcome-asymmetry question above has to be asked twice,
+separately: *which outcome is strong about the mechanism*, and *which is strong about the
+decision this experiment feeds*. An outcome can be uninformative about why and decisive about
+what to do next.
+
+**The consequence, and it now governs the paper's headline arm.** Within-application lateral
+placement reads **0.75** against **0.527** across applications (this file, same corpus). So a
+same-application arm is NOT placement-free while a cross-application arm largely is, and a
+`raw` comparison of the two would credit the within-application side with a rig cue the
+cross-application side never had - inflating the very collapse the paper is about. **The
+within-versus-across contrast must run under `dyn`.** Note this does not touch Schach et al.'s
+own numbers: their BR referencing fixes the HMD at its own origin and BRV then differentiates,
+so head position never reaches their model. The correction applies to our `raw` rows and to the
+field, not to the SOTA baseline we are measuring against.
+
 **Compute the design's MDD before registering a band, or the registration is theatre
 (2026-09-08).** The coordinator specified the Nymeria activity-diversity run as two seeds
 paired against an existing arm, and registered +0.005 to +0.03 with a falsifier under +0.005.
