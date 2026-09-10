@@ -2361,6 +2361,55 @@ The pattern in both: **a guard whose failure mode is to pass is worse than no gu
 it also removes the caution that would otherwise apply. Verify a guard in both directions -
 that it passes when it should and *blocks when it should* - or it is decoration.
 
+**AND ONE OF OURS HAD NEVER RUN AT ALL - `assert_evaluation_users_are_unseen` was vacuous from
+its first day (New Gen, 2026-09-10; blast radius established from code and git history, nothing
+re-run).** The guard reads user directories off the *sample index*:
+
+```
+index = getattr(inner, "sample_index", None)
+return {... for d in getattr(index, "user_dirs", []) or []}      # dataset.py:960
+...
+if not train_users or not test_users:
+    return 0                      # "nothing recorded; nothing to check"   dataset.py:982-983
+```
+
+but **`user_dirs` is set on `SampleDataset`, and `SampleIndex` never had it** - `SampleIndex`
+copies a curated eight attributes off the dataset (`sample_time`, `sample_rate`, `seq_len`,
+`num_users`, `num_channels`, `channels`, `dataset_names`, `user_dataset_ids`) and `user_dirs`
+is not among them. `git log -S'self.user_dirs' -- model/dataset.py` returns exactly the commit
+that introduced the guard and the commit that fixed it. So on every real call the `getattr`
+default fired, both sets were empty, and the function took its early return - **and that branch
+is commented "nothing recorded; nothing to check", so the code documents its own failure path as
+benign.** Verified on the real object both ways after the fix: two fully overlapping users now
+raise, disjoint users still return 0.
+
+**The `or []` and the early return make "clean" and "never looked" indistinguishable.** That is
+the general defect, and it is worse than a guard that throws: a guard reporting zero overlap is
+read as evidence, so it does not merely fail to help, it manufactures confidence.
+
+**Its test passed because the fixture had a property the subject lacks.** The seven tests build
+`SimpleNamespace(sample_index=SimpleNamespace(user_dirs=[...]))` - the only place that attribute
+has ever existed on a sample index. Note this is the *mirror* of the pandas fixture miss the same
+day: there the fixture **lacked** a triggering property the real object has; here it **has** a
+property the real object lacks. One rule covers both - **the fixture and the subject must agree
+on the property under test** - and neither direction is caught by "the tests pass".
+
+**What it costs, stated precisely, because the difference matters.** Every training row written
+since 2026-09-03 that used `test_dirs` (all cross-corpus transfer rows, the Nymeria arms, LODO,
+window length) or `test_on_excluded=true` (every `sweep.folds` fold) had this guard in its path
+and got 0 without a comparison. **On those rows "evaluation users were unseen" rests on the
+configuration - different corpora in `data_dirs` and `test_dirs`, or disjoint exclude lists from
+`build_folds` - and on nothing else. No row has been found where that configuration is wrong.
+The claim is UNVERIFIED, not false**, and the honest statement is that we had one line of defence
+where we believed we had two. `mode=test`, `score_nymeria.py` and every `docs/acceptance` harness
+never called it.
+
+**And the timing is worth noticing rather than being lucky about twice.** The case this guard
+exists for - train and test drawn from the *same* corpus, separated only by user list - had never
+once occurred in this project until the Across-XR matched arm (train users 0-22, test 32-48).
+The fix landed in the identity step immediately before that arm's first job. A guard that is
+vacuous costs nothing until the day the configuration it protects is first used.
+
 **A mid-training number is not a result, however much it looks like one.** The orphaned arm A
 seed 1 read test AUC **0.6188 at epoch 36** against a baseline of 0.6156 - which reads as
 "+0.003, the registered band is landing" and is nothing of the sort: it is one seed, not
