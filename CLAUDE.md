@@ -2737,6 +2737,19 @@ row does not say which device was used.* The divergence is live as of today:
 | DESKTOP-C | 3.12.10 | 2.10.0+cu130 | RTX 5060 Ti |
 | Miami (primary from today) | 3.13 (3.14 is a hard blocker, below) | rebuilding | RTX 4060 Ti |
 
+**A DEVICE NAME DOES NOT SAY WHICH CODE PATH RAN ON IT (Miami, 2026-09-10).** On the Miami box
+`torch.cuda.get_arch_list()` reads `[sm_37, 50, 60, 70, 75, 80, 86, 90]` while the device is
+capability **(8, 9)** - so **sm_89 is not natively compiled into that torch build** and its
+kernels reach the GPU through CUDA's compatibility path. They run and return finite results,
+verified by an actual matmul and a 3x450 cuDNN GRU rather than inferred from
+`is_available()` being True. But two machines can both record `device = "RTX 4060 Ti"` and
+`torch = 2.0.1+cu118` with one running native kernels and the other JIT-compiling from PTX, and
+**this file already prices cuDNN's BiLSTM at up to 7e-4 AUC between devices.** So the env block
+below is insufficient as specified: record **`torch.cuda.get_arch_list()` and the device
+capability tuple** alongside the device name, because it is the *pair* that says whether the
+arithmetic took a native or a compatibility path. Cheap to add now, impossible to reconstruct
+from a row later - the same argument that put the block there in the first place.
+
 **Proposed, not done:** append `python_version`, `torch_version`, `cuda_version` and `device`
 to the row. It is additive, which the JSONL design explicitly supports - old lines are
 untouched and the combined view backfills blanks - but it touches `model/*.py` and so moves
