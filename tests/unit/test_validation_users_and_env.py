@@ -86,3 +86,26 @@ def test_every_row_carries_the_environment_and_the_validation_count(tmp_path):
         assert row[key] == env[key], key
     assert row["num_validation_users"] == 1
     assert all(key in results_log.FIELDS for key in env)
+
+
+def test_drop_users_leave_training_and_validation_without_joining_evaluation(monkeypatch, tmp_path):
+    """Under test_on_excluded=true the exclude list IS the evaluation set, so a user that must
+    be in neither training, evaluation nor epoch selection needs its own list. Real loaders on
+    a three-user corpus built from the fixture CSVs: a evaluated, b dropped, c trained."""
+    import shutil
+    monkeypatch.setenv("XRSEC_SAMPLE_CACHE", "0")
+    import torch
+    from dataset import create_dataloader_from_path, _user_dirs_of
+    fixtures = Path(__file__).resolve().parents[1] / "fixtures" / "users"
+    users = tmp_path / "Corpus" / "users"
+    for name, source in (("a", "1"), ("b", "2"), ("c", "1")):
+        shutil.copytree(fixtures / source, users / name)
+    a, b, c = (str(users / n) for n in "abc")
+    train, val, test = create_dataloader_from_path(
+        str(users), 8, torch.device("cpu"), is_train=True, test_dir=str(users),
+        sample_time=1, sample_rate=10, samples_per_user=4, exclude_users=[a], swap_data=False,
+        test_on_excluded=True, seed=1, return_val=True, val_user_fraction=0.0, drop_users=[b])
+    resolved = lambda p: str(Path(p).resolve())                     # noqa: E731
+    assert _user_dirs_of(test) == {resolved(a)}                    # evaluation is the exclude list only
+    assert _user_dirs_of(train) == {resolved(c)}                   # b dropped, a evaluated, c trained
+    assert val is None

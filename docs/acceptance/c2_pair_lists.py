@@ -61,16 +61,19 @@ common = dict(sample_time=10, sample_rate=20, samples_per_user=64, channels="ful
 dev = torch.device("cpu")
 
 
-def build(dirs, exclude, val):
+def build(dirs, exclude, val, drop=None):
     with contextlib.redirect_stdout(io.StringIO()):
         return create_dataloader_from_path(dirs, 256, dev, is_train=True, test_dir=[XR], exclude_users=exclude,
                                            swap_data=False, test_on_excluded=True, seed=SEED, return_val=True,
-                                           validation_users=val, max_users=CAP, **common)
+                                           validation_users=val, max_users=CAP, drop_users=drop, **common)
 
 
 t0 = time.time()
 z_tr, z_va, z_te = build([BOXRR, ALYX], xr_test, z_val)
-h_tr, h_va, h_te = build([BOXRR, ALYX, XR], xr_test + dropped, z_val + xr_val)
+# Across-XR 23-31 are DROPPED from C2-hi - neither trained on, validated on nor evaluated - so
+# both arms choose their epoch on the identical 181 people and no target-corpus user is in
+# C2-hi's selection signal (Coordinator, 2026-09-10).
+h_tr, h_va, h_te = build([BOXRR, ALYX, XR], xr_test + dropped, z_val, drop=xr_val)
 zt, zv, ht, hv = (_user_dirs_of(d) for d in (z_tr.dataset, z_va.dataset, h_tr.dataset, h_va.dataset))
 z_b = {u for u in zt if u.startswith(BOXRR)}; h_b = {u for u in ht if u.startswith(BOXRR)}
 h_x = sorted(int(os.path.basename(u)) for u in ht if u.startswith(XR))
@@ -79,6 +82,8 @@ print(f"Z-676: train {len(zt)} / val {len(zv)} / test {z_te.dataset.num_users}; 
 print(f"BOXRR train: Z {len(z_b)}, C2-hi {len(h_b)}, strict subset {h_b < z_b}; alyx train identical {({u for u in zt if u.startswith(ALYX)} == {u for u in ht if u.startswith(ALYX)})}; "
       f"validation identical on BOXRR+alyx {(zv == {u for u in hv if not u.startswith(XR)})}; C2-hi Across-XR train ids {h_x[0]}..{h_x[-1]} ({len(h_x)})")
 assert len(zt) == len(ht), (len(zt), len(ht))
+assert zv == hv, "the two arms must validate on identical people"
+assert not any(u.startswith(XR) for u in hv) and not ({f"{XR}/{u}" for u in range(23, 32)} & (ht | hv))
 assert h_b < z_b and len(z_b) - len(h_b) == SWAP
 assert h_x == list(range(0, 23)) and z_te.dataset.num_users == h_te.dataset.num_users == 17
 idx = h_tr.dataset.sample_index

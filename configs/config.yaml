@@ -142,6 +142,11 @@ val_user_fraction: 0.0
 # while the pooled corpora beside it keep the usual random fraction. Recorded in the
 # checkpoint's eval_split. Empty keeps the historical behaviour.
 validation_users: []
+# Users removed from training and from the validation draw, and from nothing else. Under
+# test_on_excluded=true `exclude_users` names the evaluation set, so a user that must be in
+# neither training nor evaluation nor epoch selection has no other place to go. Recorded in
+# the checkpoint's eval_split. Empty keeps the historical behaviour.
+drop_users: []
 batch_size: 1024
 num_workers: 0
 embedding_dim: 128

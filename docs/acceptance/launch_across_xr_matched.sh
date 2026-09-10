@@ -36,6 +36,7 @@ BOXRR="$MAIN/processed_datasets/BOXRR-23_Dataset/users"
 ALYX="$MAIN/processed_datasets/who_is_alyx/users"
 CAP="max_users=null"
 VALFRAC=0.25
+DROP=""
 # The C2-hi / Z676 pair is exact by construction, from per-seed lists written and verified
 # by docs/acceptance/c2_pair_lists.py: the same BOXRR subsample of 600, the SAME explicit
 # validation people in both arms (val_user_fraction=0 so nothing is re-drawn), and C2-hi
@@ -47,9 +48,12 @@ lst() { "$PY" -c "import json,sys; print(','.join(json.load(open(sys.argv[1]))[s
 case "$ARM" in
     C1)      DATA="[$XR]";                 NAME=across_xr_matched_c1_dyn10s ;;
     C2|C2-lo) DATA="[$BOXRR,$ALYX,$XR]";   NAME=across_xr_matched_c2lo_dyn10s ;;
+    # C2-hi validates on Z676's 181 people and nobody else: Across-XR 23-31 are DROPPED
+    # (neither trained on, validated on, nor evaluated), so the epoch is chosen on identical
+    # people in both arms and no target-corpus user is in C2-hi's selection signal.
     C2-hi)   [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
              DATA="[$BOXRR,$ALYX,$XR]"; NAME=across_xr_matched_c2hi_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
-             EXCL="$EXCL,$(lst c2hi_dropped_boxrr_train_users)"; VAL="$(lst z676_validation_users),$VAL" ;;
+             EXCL="$EXCL,$(lst c2hi_dropped_boxrr_train_users)"; VAL="$(lst z676_validation_users)"; DROP="$(lst xr_validation_users)" ;;
     Z676)    [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
              DATA="[$BOXRR,$ALYX]"; NAME=across_xr_zero_shot_676_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
              VAL="$(lst z676_validation_users)" ;;
@@ -62,6 +66,7 @@ exec "$PY" model/main.py mode=train \
     "test_dirs=[$XR]" \
     "exclude_users=[$EXCL]" \
     "validation_users=[$VAL]" \
+    "drop_users=[$DROP]" \
     test_on_excluded=true swap_data=false \
     extractor=bilstm objective=identity_softmax identity_margin=0.35 identity_scale=30.0 \
     encoding=dyn sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \

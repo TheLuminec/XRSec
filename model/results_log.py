@@ -150,6 +150,8 @@ FIELDS = [
     "amplitude_auc_by_dataset",
     # Explicit validation users (see select_validation_users); 0 on every older row.
     "num_validation_users",
+    # Users dropped from training and epoch selection (drop_users); 0 on every older row.
+    "num_drop_users",
     # Environment annotation, 2026-09-10. Absent on older rows means unrecorded.
     "python_version",
     "numpy_version",
@@ -568,6 +570,7 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "git_sha": _git_sha(),
             "code_identity": code_identity(),
             "num_validation_users": len(getattr(cfg, "validation_users", None) or []),
+            "num_drop_users": len(getattr(cfg, "drop_users", None) or []),
             **environment(),
         }
         if boosting_enabled:

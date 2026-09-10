@@ -1087,6 +1087,7 @@ def create_dataloader_from_path(
     return_val: bool = False,
     eval_normalize: str = "target_fit",
     validation_users=None,
+    drop_users=None,
 ):
     """
     Create DataLoader(s) from dataset paths.
@@ -1135,6 +1136,12 @@ def create_dataloader_from_path(
         validation_users: Explicit validation user directories; see
             select_validation_users. A corpus with any explicit validation user is left
             out of the val_user_fraction draw.
+        drop_users: User directories removed from TRAINING and from the validation draw,
+            and from nothing else. Under test_on_excluded=true, `exclude_users` names the
+            evaluation set, so a user that must be in neither training nor evaluation
+            nor epoch selection has no other place to go. Exists for a matched pair whose
+            two arms must choose their epoch on identical people (Across-XR 23-31 out of
+            C2-hi's validation without joining its evaluation set).
     Returns:
         If is_train is True: tuple of (train_loader, test_loader)
         If is_train is False: test_loader
@@ -1186,11 +1193,14 @@ def create_dataloader_from_path(
 
     # Users reserved for epoch selection are excluded from training too, so the three
     # groups stay user-disjoint.
-    validation_users = select_validation_users(data_dir, exclude_users, val_user_fraction, seed,
-                                               explicit=validation_users)
+    drop_users = [str(u) for u in (drop_users or [])]
+    validation_users = select_validation_users(data_dir, list(exclude_users or []) + drop_users,
+                                               val_user_fraction, seed, explicit=validation_users)
     if keep_users is not None:
         validation_users = [u for u in validation_users if u in set(keep_users)]
-    training_exclusions = list(exclude_users or []) + validation_users
+    training_exclusions = list(exclude_users or []) + validation_users + drop_users
+    if drop_users:
+        print(f"  {len(drop_users)} user(s) dropped from training and epoch selection (drop_users)")
 
     train_dataset = SiameseDataset(
         data_dir,
