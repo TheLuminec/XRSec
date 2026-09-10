@@ -1,0 +1,55 @@
+{
+  "registered": {
+    "lateral": [
+      0.8,
+      0.95
+    ],
+    "height": [
+      0.85,
+      0.97
+    ],
+    "falsifier_lateral_below": 0.65
+  },
+  "splits": {
+    "take": {
+      "skipped": "no cell has 2+ segments"
+    },
+    "half": {
+      "n_participants": 49,
+      "n_cells": 245,
+      "all": {
+        "p": 0.7764388102179647,
+        "within_median": 0.17177630369310337,
+        "between_median": 0.41657712576461403,
+        "n_within": 490,
+        "n_between": 23520,
+        "ci95": [
+          0.7333888136887408,
+          0.7983090031931139
+        ]
+      },
+      "lateral": {
+        "p": 0.7524946202970983,
+        "within_median": 0.16772303072333683,
+        "between_median": 0.40043335004963654,
+        "n_within": 490,
+        "n_between": 23520,
+        "ci95": [
+          0.7114406063445786,
+          0.7748247778703318
+        ]
+      },
+      "height": {
+        "p": 0.889396605581008,
+        "within_median": 0.008899013226803643,
+        "between_median": 0.0773721531963556,
+        "n_within": 490,
+        "n_between": 23520,
+        "ci95": [
+          0.8482507982784951,
+          0.900680354539775
+        ]
+      }
+    }
+  }
+}
