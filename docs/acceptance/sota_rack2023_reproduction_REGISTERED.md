@@ -391,3 +391,90 @@ The fixture was a uniform float32 frame, hence single-block, hence a view. The r
 blocks. Identical to the morning's velocity investigation, on the same day, after the rule was
 written down. Going back to the fixture rather than abandoning the hypothesis is the only
 reason this diagnosis exists; the rule is evidently not yet a reflex.
+
+---
+
+# AMENDMENT 3 — 2026-09-10: it is a pandas REGRESSION, not a defect in their code
+
+**Amends Amendment 2 and the instrument notes. An instrument fact — the dependency version —
+discovered without running the experiment, which is the case the amendment rule licenses.
+Nothing above is edited away.**
+
+## The measurement
+
+Same frame construction as theirs (per-column assignment, then `_scale_data`'s
+`(X - means) / stds`), measured on this node:
+
+| pandas | blocks after `_scale_data` | `.values` is a view | per access |
+|---|---|---|---|
+| **1.5.3** | 18 | **True** | **0.015 ms** |
+| 2.0.3 | 18 | False | 7.873 ms |
+
+**525x, on an identical frame.** pandas 1.x consolidated on access; 2.x does not. Their
+unpinned `requirements.txt` would have installed 1.5.x in 2023, so **their code was never slow
+in their own environment** — which also answers the question Amendment 2 raised and could not
+settle: they ran 100 epochs because `__getitem__` cost 0.015 ms.
+
+The honest framing is therefore **"we restored the single-array access property their
+environment provided"**, NOT "we fixed their bug".
+
+## WITHDRAWN: two readings recorded above are wrong
+
+The instrument notes called the velocity failure **"a latent fragility rather than a current
+bug"** in their code, and their failing test **"doing useful work by accident"**. Both are
+withdrawn. Same mechanism, measured:
+
+| pandas | blocks | boundary-NaN write lands | their test |
+|---|---|---|---|
+| **1.5.3** | 1 | **True** | **PASSES** |
+| 2.0.3 | 3 | False | FAILS |
+
+Under 1.x the int64→float upcast consolidated to **one** block and the write landed. **It is a
+correct test, passing correctly in its own environment, broken by a pandas 2 behaviour
+change.** The earlier readings were wrong in the direction that made someone else's code look
+worse than it is, which is the direction that deserves the loudest correction.
+
+**So both of today's `.values` findings are ONE pandas 1.x→2.x change with two opposite
+symptoms** — silently discarding a write, and silently copying on read. One regression, not two
+defects.
+
+## The discriminator in the notes above is ALSO wrong
+
+Those notes recommend asserting `len(df._mgr.blocks) == 1` before a `.values` write. **Both
+pandas versions report 18 blocks**; only view-vs-copy differs. That assert would pass or fail
+for reasons unrelated to the property it protects. Use instead:
+
+```python
+np.shares_memory(df.values, df.iloc[:, 0].values)   # False => .values is copying
+```
+
+or time a single access. (The block-count advice originated with the Coordinator and was
+relayed by this node to XRSec New Gen; corrected to both.)
+
+## The lesson, which is bigger than pandas
+
+**A behaviour that is a property of the DEPENDENCY VERSION was diagnosed twice as a property
+of the code, in opposite directions, by two sessions, in one day.** Before attributing a defect
+to code you did not write, price the version you are running it on — **especially where the
+authors pinned nothing, because then the environment is the free variable and the code is the
+only thing that looks fixed.**
+
+## PERFORMANCE DEVIATION — kept separate from the environment deviations
+
+The environment pins above change the stack and their effect is bounded by *argument*. This one
+is *measured* not to change the output. Different kinds of claim; they do not belong in one
+list.
+
+| | |
+|---|---|
+| what | `window_dataset.py:23` — `self._scale_data(self.frames)` → `self._scale_data(self.frames).values` |
+| why | restores the view semantics pandas 1.5.3 gave their code; without it, 124 days at `min_epochs=100` with the GPU idle |
+| their code changed | **none.** `WindowMaker.to_windows` (`window_maker.py:58`) already branches on DataFrame-vs-ndarray and accepts either |
+| scope | **WindowDataset only.** `base_dataset.py:221` was rejected — `bin_maker.py:38` calls `self.frames.rolling(...)`, so that edit would silently break `BinDataset`. **BinDataset remains bit-identical to shipped** |
+| verified (input) | six items across the index, `identical=True` on data and targets, float64 both sides |
+| verified (optimisation) | loss-trajectory gate — **PENDING**, recorded here when run |
+| method | `assert s.count(old) == 1` before writing; shipped copy retained for diffing |
+
+**The input check is evidence about what the model sees; the loss-trajectory check is evidence
+about the steps it takes.** The claim rests on the second, so no reproduction figure is quotable
+until that gate is recorded here.
