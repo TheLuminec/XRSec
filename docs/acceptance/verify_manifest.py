@@ -21,7 +21,9 @@ import os
 import pathlib
 import sys
 
-IGNORE_NAMES = {"PROVENANCE.md", "CITATION.txt"}
+# Sidecars the manifest convention excludes on purpose: provenance and citation differ per
+# machine by design, and splits.json is the converter's copy of the split column.
+IGNORE_NAMES = {"PROVENANCE.md", "CITATION.txt", "splits.json"}
 
 
 def read_manifest(path: pathlib.Path, prefix: str | None) -> dict[str, int]:
