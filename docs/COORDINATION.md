@@ -711,6 +711,24 @@ is why the manifests and certificates are committed and the 5.4 GB corpus is not
 
 ## Queued for the next merge window: two additive model/*.py changes - 2026-09-09
 
+> **REASSIGNED AND UNGATED 2026-09-10.** These two now batch with a third - New Gen's
+> `validation_users` - into **one** identity step, to be committed by **XRSec New Gen on its
+> own checkout BEFORE its first GPU job**. The gate on Trainer's `nymeria_activity` seed 5 no
+> longer applies: New Gen has a separate checkout, so DESKTOP-C is unaffected until it pulls,
+> and its running chain cannot be disturbed by a commit it has not taken.
+>
+> **Why it moved ahead of the runs rather than after them.** These are the paper's headline
+> rows. Miami and DESKTOP-C differ on numpy, torch and device, and the paper compares figures
+> across those machines. Running the headline arm first would leave *the most important rows
+> this project produces* as the only ones with no stack recorded, while every later and less
+> important row carries one - and that is not fixable afterwards.
+>
+> The env block also gained a third element since it was queued: **`torch.cuda.get_arch_list()`
+> and the device capability tuple**, because Miami measured `sm_89` absent from its own build's
+> arch list while its device is capability (8, 9). A device *name* does not say whether the
+> arithmetic took a native or a compatibility path.
+
+
 Both move `code_identity`, so they batch into ONE identity step rather than two. Trainer's
 `nymeria_activity` seed 5 is the last run of arm A; the window opens when it lands and the
 shard is committed.
