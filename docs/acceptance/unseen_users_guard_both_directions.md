@@ -89,3 +89,11 @@ The fixture and the subject must agree on the property under test. The pandas fi
 earlier the same day *lacked* a property the real object had (an int frame where the real
 one is float, so the multi-block write never triggered); this one *had* a property the real
 object lacked. Neither direction is caught by "the tests pass".
+
+## Second identity step, same day: `73ecbf9232 -> 517cdaa57b`
+
+`drop_users` (out of training and epoch selection without joining evaluation), needed so the
+C2-hi / Z-676 pair chooses its epoch on identical people. Numerics-free; real-object test on a
+three-user corpus; landed before the first row, so every row of this programme carries
+`517cdaa57b`. Certificates at `8db420df4c` (cross-machine gate, the smoke row) and the
+rank/nesting checks made at `73ecbf9232` stand as statements about those identities.

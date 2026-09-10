@@ -252,7 +252,7 @@ count, so the only variable inside a pair is whether Across-XR 0-22 was trained 
 | arm | training | Across-XR dose | control |
 | --- | --- | --- | --- |
 | **C2-lo** | BOXRR (all 4020) + alyx + Across-XR 0-22 | **3.0%** | the zero-shot arm above (4096 ids) |
-| **C2-hi** | Z-676's users and Z-676's validation list, minus the **last 23 BOXRR training users** of the seeded permutation, plus Across-XR 0-22 (train) and 23-31 (validation) | **14.1%** measured (20,896 of 147,921 training windows, seed 1) | **Z-676**: BOXRR seeded subsample of 600 + alyx 76, no Across-XR, validation = the pipeline's own 25% draw made explicit and shared with C2-hi |
+| **C2-hi** | Z-676's users and Z-676's validation list, minus the **last 23 BOXRR training users** of the seeded permutation, plus Across-XR 0-22 (train); Across-XR 23-31 **dropped** (`drop_users`: neither trained on, validated on, nor evaluated) | **14.1%** measured (20,896 of 147,921 training windows, seed 1) | **Z-676**: BOXRR seeded subsample of 600 + alyx 76, no Across-XR, validation = the pipeline's own 25% draw made explicit and shared with C2-hi |
 
 **Exact by construction, not by argument (Coordinator's swap, made exact 2026-09-10).** A
 cap of 577 against 600 equalises identities only before the validation draw: the 25% draw
@@ -260,11 +260,20 @@ runs over each arm's own pool, so the arms would validate on different people an
 513 against 507 identities, with BOXRR training sets not nested. So both arms take the same
 explicit validation list (`val_user_fraction=0`) and C2-hi drops 23 BOXRR *training* users.
 Verified on the lists the loaders hold (`docs/acceptance/c2_pair_lists.py`, seed 1,
-`c2_pair_users_seed1.json`): Z-676 train **495** / val 181 / test 17; C2-hi train **495** /
-val 190 (the same 181 + Across-XR 23-31) / test 17; BOXRR training users 435 against 412, a
-strict subset; alyx training users identical; C2-hi's Across-XR training ids exactly 0-22.
-The only difference inside the pair is which 23 identities did which activity - the Nymeria
-arm-B design. The lists are regenerated per seed and committed.
+`c2_pair_users_seed1.json`): Z-676 train **495** / val **181** / test 17; C2-hi train **495** /
+val **181** (the identical people) / test 17; BOXRR training users 435 against 412, a strict
+subset; alyx training users identical; C2-hi's Across-XR training ids exactly 0-22, and
+23-31 nowhere in it. The only difference inside the pair is which 23 identities did which
+activity - the Nymeria arm-B design. The lists are regenerated per seed and committed.
+
+**Why 23-31 are dropped rather than validated on (Coordinator, 2026-09-10).** With 23-31 in
+C2-hi's validation the arms would validate on 181 against 190, and C2-hi would choose its
+epoch with nine target-corpus users in the signal - under 5%, but pointing at the arm we
+hope wins, the shape this project has already paid for once. Under `test_on_excluded=true`
+the exclude list *is* the evaluation set, so removing them needed a third list:
+`drop_users`, added as a second numerics-free identity step (`73ecbf9232 → 517cdaa57b`; see the
+certificate) before the first row, so every row still carries one identity. C1 keeps
+23-31 as validation: it is Schach's protocol and is not improved into something else.
 
 Registered:
 
