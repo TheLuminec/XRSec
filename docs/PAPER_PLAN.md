@@ -11,7 +11,7 @@ they are dated, they have falsifiers, and they were written before any of the ru
 | 1. public dataset | **DONE** - Across-XR, 49 users x 5 applications, CC BY-NC-SA 4.0, converted and on three machines |
 | 2. SOTA work: run their code, understand the story | **paper obtained and read; their two models' code obtained; their own wrapper repo is auth-gated** (see Blocked) |
 | 3. evaluation metric | **defined below**, matched to theirs, with one addition of our own |
-| 4. our algorithm | `dyn` + `identity_softmax`, head-only. Design fixed; the cross-application arm is unrun |
+| 4. our algorithm | `dyn` + `identity_softmax`, head-only, **plus train-user-only orthogonal embedding alignment** - see "The algorithmic contribution" below. Unrun |
 | 5. beat SOTA | **the target is 18.0% and it is written down before we run** |
 
 ## The SOTA: Schach, Rack, McMahan, Latoschik 2026 (Frontiers in VR; arXiv:2509.08539)
@@ -74,6 +74,45 @@ code already contains a `MinAccuracy` (worst-class) metric and their Figure 3 sh
 box plots, so the ingredients are theirs; nobody reports the worst case as a headline. **"The
 model identifies users at 18%" and "a user has an 18% chance of being identified" are
 different claims and only the first is supported.**
+
+## The algorithmic contribution: the SOTA published its own ceiling and disqualified it
+
+**Schach et al. section 6.2.5 is the most important paragraph in their paper and it is an
+invitation.** They find that the embedding spaces learned for different applications differ by
+an **orthogonal transformation only** - rotation and reflection, no scaling, no translation -
+and that aligning them moves cross-application accuracy **18.0% -> 52.3%** on a single window
+and **30.8% -> 94.3%** at ten minutes. They then disqualify their own result in section 9,
+because the rotations were fitted **on the test users**: "a diagnostic upper bound, not a
+deployable, generalizing solution." Their section 8 names the fix as future work in as many
+words - learn the orthogonal transformations on training/validation users only, then apply them
+to unseen test users.
+
+**So the ceiling is published, the illegitimacy of their route to it is published, and the
+protocol that would make it legitimate is published as an open problem.** We hold the corpus,
+and our converted copy carries their exact 23/9/17 split, so the training/validation users to
+fit on are the ones their own paper names.
+
+**52.3% is simultaneously the target and the leakage detector.** It is a test-fitted upper
+bound, so an honest train-user-only result must land below it. **Exceeding 52.3% is evidence of
+leakage rather than of success** - a registered prediction carrying a built-in falsifier for its
+own best outcome, which is rare enough to be worth stating as the design's main virtue.
+
+**The prior negative is real, is scoped, and its own stated mechanism sets the scope.**
+`docs/GENERALISATION_PROPOSAL.md` 5.5 lists GOPA-style adaptation under "what not to spend runs
+on", measured at zero on alyx over five checkpoints. It does not govern this experiment, for two
+reasons the proposal itself supplies. Everything tested there - centring, CORAL, donor
+statistics - is **label-free and correspondence-free**, fitted across corpora with **disjoint
+populations**, and a rotation cannot be fitted without paired points. Schach's alignment works
+because **the same 49 people appear in all five applications**. And the proposal's stated reason
+for its null is an embedding "mostly a position lookup", which is a `raw` property; under `dyn`,
+and under their equally static-free BRV, it does not hold - and that is the regime Schach
+measured the orthogonal difference in. **A negative with a stated mechanism can be checked for
+scope; that is what makes stating the mechanism worth the words.**
+
+Related, and second in line rather than first: section 5.3 rejected DANN because "with two or
+three source domains the dataset classifier is trivial". Across-XR is **five applications over
+one population**, so the stated reason no longer applies unexamined. Not an endorsement - a note
+that it needs re-deciding rather than inheriting.
 
 ## Registered predictions - 2026-09-10, before any cross-application run
 
