@@ -423,3 +423,16 @@ edge sits 0.01 under the line on one seed per application; it is also the first 
 in this project of a data-side lever moving anything across an activity boundary, and the
 honest sentence is "partial carry, unresolved at the registered threshold, a second seed
 away from either verdict".
+
+**Stated at the right strength (Coordinator, 2026-09-11 07:00).** Supported: **exposure to
+four applications carries to an unseen fifth** — the whole interval above zero, the falsifier
+excluded, and the first data-side lever in this project measured to cross an activity
+boundary (identity count was flat across one; activity diversity of other people fired its
+falsifier). Not yet supported: "by at least 0.03", the stricter phrase the registration set
+for the headline, which read +0.022 at the lower bound. The lead instance is **Synth Riders**:
+a rhythm game in no pretraining corpus, reached essentially fully (+0.077, P3 ≈ C2-hi) from
+exposure to the other four. The coverage control (uncovered +0.052 against covered +0.055) is
+what answers the first reviewer objection. The prediction is scored in both halves: "rhythm
+games carry best" held (Beat Saber and Synth Riders are the top two); "Social VR least"
+failed (Alyx is least). Two re-seeds (Synth Riders, Social VR) run under the third addendum's
+purpose and rules.

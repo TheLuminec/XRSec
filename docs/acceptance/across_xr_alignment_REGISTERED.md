@@ -478,3 +478,20 @@ Social VR}. So far: Superhot +0.034, Alyx +0.026, Beat Saber +0.084 (full carry:
 VR carries least, below +0.03. "Exposure crosses an activity boundary" is claimed only if the
 uncovered triple's pooled interval has its lower bound above +0.03; the covered pair is
 reported as "corpus exposure at a pretraining-covered activity".
+
+**Third addendum to Amendment 4 — the two re-seeds, registered before they run (Coordinator,
+2026-09-11 07:00).** Purpose: **to measure whether the per-application P3 estimates are
+seed-stable**, which the pooled interval assumes and does not test — not to move an estimate.
+The +0.030 headline threshold does not move. Both results are reported whichever way they
+fall, and this can make things worse: if the re-seeds disagree with seed 1 the pooled interval
+widens and the headline recedes. No third seed whatever the second says. The two: **Synth
+Riders** and **Social VR**, seed 2 — both ends of the uncovered triple, so the stability
+assumption is tested where the pooled interval's shape is most sensitive; they are also the
+extremes, where regression toward the mean is largest, so an inward move is expected and is
+not read as instability. The C2-hi lists for seed 2 (`c2_pair_users_seed2.json`) apply.
+
+Recorded as measurements rather than controls: the non-X dose control −0.009 [−0.025,
++0.008] is a null — 20% less in-domain data cost nothing on seen cells, the free dose reading
+the second addendum predicted, supporting the C2-hi / C2-lo reading that dose is not binding
+in this range; and A2′ present on three of five P3 runs at identical configuration, added to
+C2-lo's one of two, confirms run-dependence across two arms and seven runs.
