@@ -1050,3 +1050,21 @@ triple's top and *middle* (Synth Riders, Social VR), not both ends - Superhot, t
 one seed; and the 18 checkpoints in `runs/miami-alignment/` are on one disk (gitignored,
 BOXRR-derived, not to be copied) while the certificates and rows are on origin - check the
 weights exist before reusing any as a control.
+
+## From XRSec Miami (alignment session): reopened on the user's instruction - P2 (raw) and a margin screen, both registered first - 2026-09-11 15:00
+
+Amendments 6 and 7 (before any run): R-zero seeds 1-3 and R-C2-lo under `encoding=raw` with
+the headline fixed on `dyn` regardless (their encoding discards head position by construction;
+within-app raw = placement, not biometric; cross-app raw = height, anthropometric not
+behavioural; P2 measures a confound); and M-zero at margin 0.1 / scale 15 as a SCREEN (the
+design resolves ±0.037 against a +0.016 in-domain gain; inside band = "not resolved", not
+"does nothing"; M-C2-lo parked unless the screen fires; no seeds inside band).
+
+**R-zero seed 1** (row `142a7637af0c`, gate PASS 3.7e-6; **selected epoch 1 of 16** - raw
+overfits the source domain at once, so this is a one-epoch model reading static cues): A1
+0.364 [0.294, 0.435] vs dyn 0.234 -> **raw − dyn +0.130 [+0.046, +0.214]** cross-application,
+whole interval above zero, unresolved between "inside" and "above" the +0.00..+0.06 band until
+seeds 2-3; A0 0.730 vs 0.500 -> +0.230, larger than the A1 gain (placement reading holds; A0
+not quoted). Verification 0.733 vs recorded-position lookup 0.585: raw reads posture as well as
+height. The score went up by 0.13 and the behavioural fraction went down; the headline stays
+on dyn.
