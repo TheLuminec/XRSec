@@ -1,4 +1,36 @@
-# Across-XR alignment — results certificate (zero-shot 3 seeds; C1 / Z-676 / C2-hi / C2-lo seed 1; C1-full and P3 pending)
+# Across-XR alignment — results certificate (zero-shot 3 seeds; C1, C1-full, Z-676, C2-hi seed 1; C2-lo 2 seeds; P3 and the half arm in progress)
+
+## C2-lo, seed 2 — the headline replicates; the rotation does not (2026-09-11 03:30)
+
+Row `f55fd57db721` at `517cdaa57b`, epoch 116/120, verification AUC 0.701 (seed 1: 0.699).
+Gate PASS at 1.6e-4.
+
+| C2-lo | A1 | 10-min | A2′ − A1 | A2 − A1 | A2-null − A1 |
+| --- | --- | --- | --- | --- | --- |
+| seed 1 | 0.368 [0.318, 0.424] | 0.693 | **+0.148** [+0.124, +0.168] | −0.008 | −0.286 |
+| seed 2 | 0.378 [0.314, 0.450] | 0.709 | **−0.004** [−0.016, +0.008] | −0.002 | −0.210 |
+| two seeds, pooled over users | **0.373 [0.319, 0.437]** | 0.701 | per seed only — the pooled +0.072 averages two different solutions | −0.005 [−0.016, +0.007] | −0.248 |
+
+**C2-lo − zero-shot(4096) = +0.143 [+0.099, +0.187] over two paired seeds**; C2-hi − C2-lo
+stands at −0.061 (one paired seed). The 0.37 headline and the +0.14 exposure gain are
+replicated.
+
+**The orthogonal structure is run-dependent.** At the same configuration, seed 1 carries
++0.148 of recoverable orthogonal structure and seed 2 none; the permuted null costs 0.21-0.29
+on both, so the person-specific structure is equally strong — what differs is whether any of
+it is an orthogonal difference between applications. Across the exposed, trained-out arms
+the ceiling reads C1-full +0.089, C2-hi +0.002, C2-lo +0.148 / −0.004: **present in some
+runs and absent in others, not a property of scale, exposure or budget but of the solution a
+run converges to.** The "aligned ceiling rises monotonically with pretraining scale" sentence
+below rested on one seed per point and is withdrawn with it; "C2-hi already at its ceiling"
+was the common case, not an anomaly. What holds on every instrument and every seed (nine
+checkpoints): **the honest train-user fit never carries** (A2 − A1 ≤ 0 everywhere), and the
+corpus-limitation sentence stands as the whole alignment result — with the addition that
+even the test-fitted ceiling Schach reported is run-dependent here, so it was never a target.
+Seed 3 (queued) decides how often the structure appears; the half arm's A2′ reading is
+dropped as uninformative.
+
+---
 
 ## C2-lo, seed 1 — the dose prediction is falsified, and the orthogonal structure appears (2026-09-11 00:40)
 

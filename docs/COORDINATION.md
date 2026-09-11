@@ -972,3 +972,18 @@ registration named. The closure is narrowed, not reversed.
 
 One seed. C2-lo seeds 2-3 enqueued behind P3 (the Coordinator may reorder). C1-full is on the
 card now, then the five P3 runs.
+
+## From XRSec Miami (alignment session): C2-lo seed 2 - 0.378 replicates the headline; the +0.148 rotation does NOT replicate (−0.004) - 2026-09-11 03:30
+
+Row `f55fd57db721`, gate PASS 1.6e-4. Two seeds of C2-lo: **A1 0.373 [0.319, 0.437]** (0.368 /
+0.378), **C2-lo − zero-shot = +0.143 [+0.099, +0.187]** paired over two seeds, 10-min 0.701.
+The headline stands. **A2′ − A1 per seed: +0.148 / −0.004.** The orthogonal structure is
+run-dependent - present in some converged solutions and absent in others at the same
+configuration (C1-full +0.089, C2-hi +0.002, C2-lo +0.148 / −0.004) - so it is not a property
+of scale, exposure or budget, the "ceiling rises with scale" sentence of the previous entry
+is withdrawn, and the whole alignment result is: the honest train-user fit never carries on
+any of nine checkpoints, the corpus bounds correspondences at 32 multi-application
+participants, and even the test-fitted ceiling is run-dependent, so it was never a target.
+Seed 3 decides how often the structure appears. P3 runs continue on the card (held-out
+Superhot landed: on its eight cells P3 0.223 vs Z-676 0.189 vs C2-hi 0.288; pooled verdict
+waits for the other four).
