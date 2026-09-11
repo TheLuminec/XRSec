@@ -716,3 +716,16 @@ fraction of the score falls accordingly; the headline stays on `dyn`; **(7)** th
 advantage belongs to exposure, not encoding — ten minutes is worth +0.336 to a behavioural
 model trained on the application and ~+0.10 to anything else; **(8)** the 0.1/15 lever does
 not transfer and the default stands. Nothing else is open.
+
+**Two notes attached to the screen (Coordinator, 2026-09-11 22:00).** (i) The registered
+resolution of ±0.037 was averaged from contrasts between arms that differ in *training
+composition*; the screen differs only in a hyperparameter (same data, users and seed), and
+its measured half-width is ±0.017 — **a same-composition contrast is about twice as well
+powered as a different-composition one on the same 17 users, and the two must not share a
+resolution estimate.** The conclusion survived (a +0.016 effect would have read
+[−0.001, +0.033], marginal rather than invisible); the calibration erred in the direction
+that discourages running things. (ii) The result supersedes live advice in CLAUDE.md: "if a
+result lands within ~0.016 of a target, ask whether the margin change closes it" was written
+from the 419-identity grid, and at 4,096 the lever subtracts roughly twice what it added —
+**a hyperparameter gain measured at one identity count is a claim about that count**, and
+the file's own explanation of why 0.1/15 helped at 419 is what predicted the reversal.
