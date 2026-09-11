@@ -70,7 +70,15 @@ case "$ARM" in
              DROP=""; for u in $(seq 23 31); do DROP="${DROP:+$DROP,}$XR/$u"; done
              DATA="[$BOXRR,$ALYX,$XR]"; NAME="across_xr_p3_loao_${HELD}_dyn10s"; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
              EXCL="$EXCL,$(lst c2hi_dropped_boxrr_train_users)"; VAL="$(lst z676_validation_users)" ;;
-    *) echo "arm must be C1, C2, C2-lo, C2-hi or Z676" >&2; exit 2 ;;
+    # Amendment 5: C2-lo with every Across-XR session truncated to its first half
+    # (build_half_corpus.py) - dose halved at fixed identity count and fixed people. The
+    # training row's own evaluation is users 32-48 of the half copy (the gate referent); the
+    # harness scores the full corpus with --normalizer-dataset CrossApplicationXR_HALF.
+    C2-lo-half) XR="$MAIN/processed_datasets/CrossApplicationXR_HALF/users"; [ -d "$XR" ] || { echo "no HALF copy" >&2; exit 2; }
+             EXCL=""; for u in $(seq 32 48); do EXCL="${EXCL:+$EXCL,}$XR/$u"; done
+             VAL="";  for u in $(seq 23 31); do VAL="${VAL:+$VAL,}$XR/$u"; done
+             DATA="[$BOXRR,$ALYX,$XR]"; NAME=across_xr_matched_c2lohalf_dyn10s ;;
+    *) echo "arm must be C1, C2, C2-lo, C2-hi, Z676, P3-<app> or C2-lo-half" >&2; exit 2 ;;
 esac
 [ "$PATIENCE" = "0" ] && NAME="${NAME}_full"
 cd "$TREE"

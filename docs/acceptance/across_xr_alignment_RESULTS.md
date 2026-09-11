@@ -38,13 +38,34 @@ evaluations bought +0.005 there.
 | C1-full A1 below zero-shot 0.234 | 0.164 [0.128, 0.205] | holds; falsifier not fired. Their protocol on our model, trained out, is still 0.07 below zero-shot from 4,096 identities of other activities |
 | alignment on C1 unchanged (A2′ − A1 < +0.05) | **+0.089** | **fails — and it is the informative failure.** Trained out, the 23-identity exposed model carries the orthogonal structure C1 at epoch 15 did not (+0.011) |
 
-**The alignment structure, across every instrument, then reads:** zero-shot +0.026 (three
-seeds); Z-676 +0.011; C2-hi +0.002; C1 (under-trained) +0.011; **C1-full +0.089; C2-lo
-+0.148.** The rotation needs *exposure and enough training*, and scale amplifies it. The
-honest train-user fit never carries (A2 − A1 ≤ 0 everywhere), and the reason is **not the
-rank argument** — that one is A2-full's, and holds in 6/6 checkpoints — but the test-fitted
-advantage: A2′ fits on the 17 people it is scored on and reaches +0.148; A2 fits on 32
-*other* people and reaches −0.008, so more correspondences did not help. The recommendation
+**The alignment structure across every instrument, with the budget each arm actually ran
+(read from `best_epoch` / `epochs_run`) and the headroom-normalised form
+`(A2′ − A1) / (1 − A1)` beside the raw one:**
+
+| arm | identities | exposure | selected / run epochs | A1 | A2′ − A1 raw | normalised |
+| --- | --- | --- | --- | --- | --- | --- |
+| C1 | 23 | yes | 15 / 30 (patience fired; under-trained) | 0.131 | +0.011 | 0.013 |
+| C1-full | 23 | yes | 102 / 120 | 0.164 | +0.089 | 0.106 |
+| Z-676 | 676 | no | 119 / 120 | 0.218 | +0.011 | 0.014 |
+| C2-hi | 676 | yes | **120 / 120** (full budget, censored) | 0.307 | **+0.002** | 0.003 |
+| zero-shot (3 seeds) | 4,096 | no | 120 / 116 / 118 of 120 | 0.234 | +0.026 | 0.034 |
+| C2-lo | 4,096 | yes | 119 / 120 | 0.368 | +0.148 | 0.234 |
+
+**C2-hi ran the full budget and sits at +0.002 between C1-full's +0.089 and C2-lo's
++0.148, so the relationship to scale is not monotone and is not resolved on three points**
+— the earlier "scale amplifies it" sentence is withdrawn. What every point supports: the
+rotation needs *exposure and enough training* (C1 → C1-full moved it eight-fold at fixed
+identities and fixed exposure), and it is absent without exposure at any scale. The
+normalised column keeps the same ordering (C2-lo > C1-full > zero-shot > C2-hi), so
+headroom neither produces nor removes the anomaly. Selection inflation on the verification
+columns, measured on C1-full: selected 0.545 against final 0.540, **+0.005** — nine-user
+selection over 120 epochs bought almost nothing, which retires the +0.02 caveat for figures
+whose metric did not choose the epoch, as the file's own rule said it would.
+
+The honest train-user fit never carries (A2 − A1 ≤ 0 everywhere), and the reason is **not
+the rank argument** — that one is A2-full's, and holds in 6/6 checkpoints — but the
+test-fitted advantage: A2′ fits on the 17 people it is scored on and reaches +0.148; A2 fits
+on 32 *other* people and reaches −0.008, so more correspondences did not help. The recommendation
 to the field that follows: **the correspondences available for fitting an alignment are
 bounded by the number of people recorded in two or more applications — 32 here, and Schach
 had the same 32 — and no amount of pretraining raises it.** The honest answer to their
