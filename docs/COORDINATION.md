@@ -1028,3 +1028,19 @@ control (−0.009 for a 20% cut) the reading is a modest, probably real dose cos
 than the exposure effect, which cannot account for C2-hi losing to C2-lo by 0.061. The last
 two queued jobs are the P3 re-seeds (Synth Riders, Social VR); after them the programme's
 card time is spent.
+
+## From XRSec Miami (alignment session): programme CLOSED - 18 gated checkpoints, five supported claims - 2026-09-11 11:00
+
+The two P3 re-seeds landed (rows `faedc2ab5179`, `59de81d60826`; gates 2.8e-5, 3.9e-5). Seed
+stability, the registered purpose: Synth Riders +0.077 / +0.053 (range 0.024), Social VR +0.044 /
++0.032 (range 0.012) - stable in sign and size, inward as predicted for extremes. Seed-averaged
+pooled P3 − Z-676 = **+0.049 [+0.021, +0.078]**, uncovered triple +0.046 [+0.017, +0.074]: the
+supported sentence stands (falsifier excluded on every seed), the +0.030 headline threshold is
+still not met, and the re-seeds moved the mean down by 0.004 - reported as such. No third seed.
+
+The certificate now opens with the five claims (`docs/acceptance/across_xr_alignment_RESULTS.md`),
+matching the Coordinator's list, with the unresolved items and P2-not-tested beside them. Every
+row of the programme is at `517cdaa57b` on the branch `worktree-across-xr-alignment` (pushed);
+the 18 checkpoints are copied to the main checkout under `runs/miami-alignment/` so they outlive
+the worktree, and remain BOXRR-derived under clause 15. Nothing new is opened. Card time
+returns to Miami Server.

@@ -1,4 +1,57 @@
-# Across-XR alignment — results certificate (zero-shot 3 seeds; C1, C1-full, Z-676, C2-hi seed 1; C2-lo 2 seeds; P3 and the half arm in progress)
+# Across-XR alignment — results certificate (programme COMPLETE, 2026-09-11 11:00)
+
+**Registration:** `across_xr_alignment_REGISTERED.md` with Amendments 1-5. **Instrument:** head-only
+`dyn` 10 s / stride 5 `bilstm` `identity_softmax`, every row at code identity `517cdaa57b` on this
+node (RTX 4060 Ti, numpy 2.5.3, torch 2.14.0+cu130), every checkpoint gated against its own
+recorded row through the pipeline's loader (18 gates, all PASS, gaps 1.0e-6 to 2.9e-4). Every
+figure is rank-1 at **N = 17** on Schach et al.'s test users 32-48 (chance 0.0588), single 10 s
+probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate.json`,
+`_p3.json`, `_p3_split.json`, `_p3_stability.json`, `_dose.json`.
+
+## The five claims the programme supports
+
+1. **Head-only, zero-shot, never trained on the corpus: 0.234 [0.181, 0.292] cross-application
+   at N=17 (3 seeds: 0.231 / 0.230 / 0.240)** against a published **0.180** that used head plus both
+   controllers, 15 s windows and training on those people's other applications. A placement
+   against a published mean, not a beat (their distribution is unpublished). 10-min 0.357 vs 0.308.
+2. **With in-domain exposure (their protocol plus 4,096 pretraining identities): 0.375 [0.321,
+   0.435] (3 seeds: 0.368 / 0.378 / 0.377), +0.141 [+0.100, +0.183] over zero-shot, paired on the
+   same users; ten-minute 0.711 against their 0.308.**
+3. **Exposure carries to an unseen application** (leave-one-application-out, unseen users): +0.049
+   [+0.021, +0.078] on the held-out application's cells against no exposure, five applications,
+   two of them re-seeded (Synth Riders +0.077 / +0.053, Social VR +0.044 / +0.032 — seed-stable);
+   the coverage control is clean (uncovered triple +0.046 [+0.017, +0.074] against covered pair
+   +0.055); Synth Riders, in no pretraining corpus, is reached essentially fully (+0.077, P3 ≈
+   C2-hi). **The stricter registered threshold for the headline phrase — lower bound above +0.030 —
+   was not met (0.017-0.022) and is reported as not met.** The first data-side lever in this project
+   measured to cross an activity boundary; "by at least 0.03" is not claimed.
+4. **Their section 8 (train-user-only orthogonal alignment) is answered negatively with a
+   mechanism**: the train-user fit never carries (A2 − A1 ≤ 0 on all 18 checkpoints); the
+   correspondences available are capped at 32 multi-application participants by the corpus, and no
+   amount of pretraining raises that; and the test-fitted ceiling that motivates the idea is itself
+   run-dependent at identical configuration (+0.148 / −0.004 / +0.001 on three seeds of C2-lo;
+   present in three of five P3 runs), so it was never a target — a single-run test-fitted bound is
+   not evidence that application embeddings differ by a rotation.
+5. **Identity count is flat without exposure and not flat with it** (Z-676 − zero-shot −0.013
+   [−0.039, +0.013]; C2-hi − C2-lo −0.061 [−0.099, −0.026] with the treatment's people and lists
+   fixed and the pair's composition closed arithmetically on loader counts); **dose is a small,
+   roughly linear effect** (halving −0.028 [−0.062, +0.009]; a 20% cut −0.009 [−0.025, +0.008])
+   that works in C2-hi's favour and therefore widens, not narrows, the scale effect.
+
+**Recorded as unresolved, and left so:** A0 within-application against their 0.831 (confounded
+by sensor set and model family; 23 identities sits below this project's measured behavioural
+floor); the C2-hi alignment dip (0.8 σ at that arm's own seed spread); how often the orthogonal
+structure appears (present in one of three C2-lo runs — never a rate); the dose contrast's
+position on the −0.03 edge. P2 of PAPER_PLAN (`raw` minus `dyn`) was not run and is recorded as
+not tested. Two predictions scored in both halves: "rhythm games carry best" held, "Social VR
+carries least" failed. Three sentences withdrawn on evidence are kept in the body below where
+they were made. The "dose 3.0%" label in the C2-lo seed-1 section is the pre-run estimate; the
+loader-counted figure is 3.9% (reconciliation below).
+
+---
+
+# Body, in the order the runs landed (newest first)
+
 
 ## C2-lo, seed 2 — the headline replicates; the rotation does not (2026-09-11 03:30)
 
