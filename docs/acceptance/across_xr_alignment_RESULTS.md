@@ -687,3 +687,32 @@ observation is worth a great deal against a model trained on your application an
 little against one that has not seen it. The enrolment-averaging mechanism measured on BOXRR
 (+0.45 learned against +0.02 static), reproduced across applications with its missing
 condition attached.
+
+## Amendment 7 — the margin/scale screen (M-zero, one seed; 2026-09-11 21:00)
+
+Row `5d3d4995555e` at `517cdaa57b`: the zero-shot arm at `identity_margin=0.1`,
+`identity_scale=15` (recorded on the row), nothing else changed; epoch 120/120; verification
+AUC on the 17 0.556 (0.35/30: 0.569-0.588). Gate PASS at 1.3e-4. Aggregate:
+`across_xr_alignment_margin.json`.
+
+| paired on the 17 (0.1/15 one seed vs 0.35/30 three seeds) | 0.1/15 | 0.35/30 | difference | registered | verdict |
+| --- | --- | --- | --- | --- | --- |
+| **A1 cross-application** | 0.206 [0.158, 0.262] | 0.234 | **−0.028 [−0.045, −0.012]** | screen: ≥ +0.05 shows; band −0.02..+0.04 reads "not resolved"; below −0.02 the default stands | **the screen did not fire, and the direction is resolved: the whole interval is below zero.** Its size against the −0.02 edge is not resolved (the interval spans it). The registered sign-flip mechanism is the reading: the +0.016 measured at 419 identities came from a default tuned for tens of thousands pushing too hard; at 4,096 the default's assumption is closer to true and the lower margin costs. The default stands |
+| A0 within-application | 0.461 | 0.500 | −0.039 | | same direction |
+| 10-min cross-application | 0.312 | 0.357 | −0.045 | | same direction |
+
+Consequences as registered: M-C2-lo stays parked (the screen did not fire); no seeds. The
+one measured, unspent lever does not transfer to cross-application rank-1 at this identity
+count, and a negative with a mechanism registered before the run is what makes that a
+result rather than a null.
+
+## Close-out of the reopened work (2026-09-11 21:00)
+
+Two amendments, six gated checkpoints (raw ×3, raw C2-lo, M-zero; 24 gates PASS across the
+whole programme, gaps 5.3e-8 to 2.9e-4), every row at `517cdaa57b`. What they add to the five
+claims at the head of this certificate: **(6)** the static-cue audit of our own headline — raw
+adds +0.117 [+0.042, +0.192] cross-application on a one-epoch model and the behavioural
+fraction of the score falls accordingly; the headline stays on `dyn`; **(7)** the time
+advantage belongs to exposure, not encoding — ten minutes is worth +0.336 to a behavioural
+model trained on the application and ~+0.10 to anything else; **(8)** the 0.1/15 lever does
+not transfer and the default stands. Nothing else is open.
