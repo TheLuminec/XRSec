@@ -475,3 +475,23 @@ on the full corpus under the copy's name.
 
 The half arm's A2′ (−0.004) is not read, per the rule that a single-seed value of a
 run-dependent quantity is uninformative.
+
+**Dose figures reconciled from the loaders' own window counts (Coordinator, 2026-09-11
+10:00).** The C2-lo dose was stated as 3.0% from a pre-run estimate against the whole 707k
+corpus *including validation windows*. The loaders say: zero-shot training set 519,211
+windows (BOXRR + alyx after the 25% draw); C2-lo 540,107 with the same draw plus Across-XR
+0-22, so Across-XR contributes exactly **20,896 → 3.87%**; C2-lo-half 529,594, so **10,383 →
+1.96%**, i.e. halved, consistent. C2-hi's 14.1% (20,896 of 147,921) was already the loader's
+figure. **Every "3.0%" above reads 3.9%**; the C2-hi / C2-lo contrast is 14.1% against 3.9%.
+
+**Why one seed is defensible for the half arm, and only there.** The arm reports an A1
+difference; A1's seed range on C2-lo is 0.010 (0.368 / 0.378 / 0.377) against a user-bootstrap
+interval width of 0.071, so seeds are a seventh of the uncertainty and one is enough. A2′'s
+seed range on the same three runs is 0.152, which is why its one-seed values are not read.
+Declining to seed is defensible only when the measurement that makes it so can be pointed at;
+this is that measurement.
+
+**The dose reading, stated at full strength.** Halving costs −0.028, a 20% cut −0.009 —
+roughly linear and modest — and **C2-hi has the higher dose and still loses to C2-lo by
+0.061**, so dose was working in C2-hi's favour: correcting for it *widens* the scale effect
+rather than narrowing it.
