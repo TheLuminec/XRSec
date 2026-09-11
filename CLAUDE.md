@@ -2088,6 +2088,34 @@ Switching the default is a single deliberate decision, made once, with a note in
 table that straddles it - and the remaining 22 cells are the price of calling any setting
 "best".
 
+**TESTED AT SCALE AND IT REVERSES: 0.1/15 COSTS -0.028 AT 4,096 IDENTITIES (New Gen, 2026-09-11).**
+Registered as a **screen** rather than a test, with the sign-flip named in advance: the +0.016 was
+measured at **419** identities, where face-recognition defaults tuned for tens of thousands push
+too hard, and at 4,096 the default's own assumption is closer to true. Measured, paired on the
+same 17 users, cross-application rank-1: **-0.028 [-0.045, -0.012]**, whole interval below zero,
+with A0 (-0.039) and the ten-minute figure (-0.045) agreeing in sign. The direction is resolved;
+its size against the registered -0.02 edge is not.
+
+**So the live advice above is superseded and following it would send you the wrong way.** "If a
+result lands within ~0.016 of a target, the first question is whether the margin change closes
+it" was written from the 419-identity grid and **does not hold at scale** - at 4,096 the lever
+subtracts roughly twice what it added at 419. The default stands, and now for a measured reason
+rather than a procedural one. **A hyperparameter gain measured at one identity count is a claim
+about that count**, and this file's own explanation of *why* 0.1/15 helped at 419 predicted the
+reversal, which is what makes this a negative with a mechanism rather than a null.
+
+**And the coordinator's power estimate for that screen was 2.2x too pessimistic - worth fixing
+because it nearly stopped the run.** I registered the design as resolving about +/-0.037,
+averaging the paired-interval half-widths observed across the programme (0.031 / 0.042 / 0.041 /
+0.035). The screen came in at **+/-0.017**. The error: **every interval I averaged came from arms
+differing in TRAINING COMPOSITION**, while this one differs only in a hyperparameter - same data,
+same users, same seed - so the per-user differences are far more consistent and the bootstrap is
+correspondingly tighter. **A same-composition contrast is roughly twice as well powered as a
+different-composition one on the same 17 users**, and the two must not share a resolution
+estimate. The conclusion survived ("+0.016 could not be cleanly resolved" - at half-width 0.017
+it reads [-0.001, +0.033], marginal rather than invisible), but the calibration was wrong, and a
+too-pessimistic MDD argues against running a screen that turns out to be informative.
+
 ### Window counts per identity span 77x, and that costs ~38% of our identities
 
 `WindowDataset` is flat over windows and the loader shuffles uniformly over them, so an
