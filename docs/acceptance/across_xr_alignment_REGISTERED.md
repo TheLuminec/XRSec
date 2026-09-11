@@ -414,3 +414,23 @@ cells of each P3 run are a within-run control: the applications the model *did* 
 
 Power: 8 cells × 17 users per run, five runs pooled, user bootstrap. The bands are
 narrower than the single-arm ones because the comparison is paired on cells *and* users.
+
+**Addendum to Amendment 4, before any P3 run (Coordinator, 2026-09-11 00:05).**
+(i) **Removing an application changes the dose**: C2-hi 20,896 of 147,921 windows (14.1%,
+five applications); P3 ≈ 16,717 of 143,742 (≈11.6%, four) — 20% less Across-XR data. So
+**P3 − Z-676 is clean** (Z-676 has 0%; the dose *is* the treatment and 11.6% is what the
+band is about), **P3 − C2-hi is dose-confounded** (exposure to X *and* 20% less in-domain
+data; a negative there has two sufficient explanations and it stays a direction, not a
+measurement), and the non-X control **P3(non-X) − C2-hi(non-X)** is a free measurement of
+what 20% less in-domain data is worth at fixed exposure — expected to lean slightly negative
+for that reason; a fired control is read as a dose reading, and only a large one degrades the
+runs to Z-676-only comparison. The actual dose per run is recorded from the loader.
+(ii) **No seed replication**: five runs, one per held-out application, pooled over
+applications — the unit is the application, and seed variance is *imported* from the
+zero-shot arm's observed seed agreement (~0.01), which is an assumption written down as one.
+If the pooled interval lands near the +0.03 headline threshold, a second seed on one X is
+the cheapest way to stop it resting on an import.
+(iii) **The per-application ordering is the mechanism claim** and is protected: rhythm games
+(Beat Saber, Synth Riders — stationary, task-structured) carrying best and Social VR (no
+predefined task) least would say exposure transfers along task structure rather than along
+corpus identity. The per-X breakdown is reported whatever the pooled interval does.
