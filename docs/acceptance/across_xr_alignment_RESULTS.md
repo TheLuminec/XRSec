@@ -1,4 +1,53 @@
-# Across-XR alignment — results certificate (living; seed 1 of 3 as of 2026-09-10 19:00)
+# Across-XR alignment — results certificate (zero-shot arm complete, 3 seeds; matched arms pending)
+
+## Zero-shot arm, three seeds — the registered verdicts (2026-09-10 21:30)
+
+Rows `655dd23af5ed` / `f2f947553746` / `981aa86f4bd4` (seeds 1-3), all at `517cdaa57b`, 77
+min each on the 4060 Ti; cross-application verification AUC on the 17: 0.5688 / 0.5807 /
+0.5880 (position lookup 0.585 / 0.592 / 0.598, amplitude 0.50); selected epochs 120 / 116 /
+118 of 120. Gates PASS at 2.0e-5 / 2.9e-4 / 7.0e-5. Aggregation:
+`across_xr_alignment_aggregate.py` → `across_xr_alignment_aggregate.json` (per-user
+accuracies averaged over seeds inside each user, then bootstrapped over the 17 users, so a
+seed never counts as an extra person).
+
+| arm | rank-1 @17, 3 seeds | CI95 (users) | per seed | 10-min majority |
+| --- | --- | --- | --- | --- |
+| A0 within-application | 0.500 | [0.462, 0.538] | 0.499 / 0.505 / 0.497 | 0.947 |
+| **A1 cross-application, no alignment** | **0.234** | **[0.181, 0.292]** | 0.231 / 0.230 / 0.240 | 0.357 |
+| A2 alignment fitted on users 0-31 (m=4 in every seed) | 0.245 | [0.216, 0.276] | 0.247 / 0.241 / 0.246 | 0.482 |
+| A2′ alignment fitted on the 17 test users (ceiling) | 0.260 | [0.222, 0.304] | 0.255 / 0.259 / 0.265 | 0.517 |
+| A2-null permuted correspondence | 0.160 | [0.143, 0.179] | 0.151 / 0.161 / 0.167 | 0.271 |
+| A2-full unrestricted 128-d fit | 0.189 | [0.165, 0.215] | 0.186 / 0.194 / 0.188 | 0.319 |
+
+Schach et al., same 17 users, head + both controllers, 15 s: within 0.831, cross **0.180**,
+10-min cross 0.308, test-fitted alignment 0.523.
+
+| registered contrast | 3 seeds, paired, user bootstrap | per seed (range) | registered | verdict |
+| --- | --- | --- | --- | --- |
+| A1 | 0.234 [0.181, 0.292] | 0.231 / 0.230 / 0.240 (0.010) | P1: 0.18-0.35, falsifier < 0.12 | **inside the band.** Every seed above the published 0.180 and the interval's lower edge sits on it; by the registered power rule (≈0.10 absolute, or paired across seeds *and* an interval clear of the target) this is **"at or above the published controller-based figure, head-only, zero-shot" — not a resolved beat** |
+| A2′ − A1 | **+0.026 [+0.000, +0.051]** | +0.024 / +0.029 / +0.025 (0.005) | ≥ +0.15; kill condition: upper bound < +0.05 | **band excluded decisively** — the whole interval is below +0.15 by 3× at its upper end and 13× below Schach's +0.34. The orthogonal component exists (below) and is an order of magnitude smaller than theirs. The registration's unnamed region [+0.05, +0.15) is recorded in Amendment 2 and does not bear on this |
+| A2 − A1 | **+0.011 [−0.020, +0.041]** | +0.016 / +0.011 / +0.006 (0.010) | +0.05 to +0.20; falsifier < +0.05 | **band excluded** — train-only fitting does not carry, and there was almost nothing to carry |
+| A2 − A2′ | −0.015 [−0.034, +0.000] | −0.008 / −0.018 / −0.019 | leakage if above A2′ beyond the CI | no leakage; the honest fit sits just under the ceiling in every seed |
+| A2-null − A1 | −0.074 [−0.126, −0.029] | −0.080 / −0.069 / −0.073 | ≤ +0.03 | holds; the permuted fit costs 0.07 in every seed — the fit is person-specific, it is simply small |
+| A2-full − A2 | −0.055 [−0.086, −0.029] | −0.061 / −0.047 / −0.057 | ≤ 0 in expectation | holds in every seed — the rank argument (32 correspondences, 128-d, arbitrary 96-d complement) appears in the data |
+| seed spread of A2 − A1 | range 0.010 | | means within 0.05 | holds; the headline is the mean, not the spread |
+| m-curve (validation, N=9) | flat in 3/3 seeds (ranges 0.045 / 0.050 / 0.048), m* = 4 in all three | | report flat or peaked | **FLAT**; the choice of m is immaterial |
+| P3 direction (A1) | unseen-activity cells below seen-activity cells in every seed (seed 1: 0.196 vs 0.246) | | unseen < seen | holds |
+
+**What the zero-shot arm establishes.** (1) Head-only `dyn`, trained on 4,096 identities of
+Beat Saber and Alyx and never on this corpus, identifies Schach's 17 test users across
+applications at 0.234 on a single 10 s window — at or above their controller-based 0.180
+on the same users, with three of four confounds running against us (fewer sensors, zero-shot,
+10 s vs 15 s; the fourth, identity count, this project has measured flat across a domain
+boundary). (2) On this embedding the cross-application gap is barely an orthogonal
+difference: the test-fitted ceiling that gave them +0.34 gives +0.026 here, and the honest
+train-user fit is inside it. Alignment is not the paper's contribution on the zero-shot
+instrument. (3) A0 is confounded (sensor set *and* domain exposure) and is not a result until
+C1 / C2-hi separate the two.
+
+---
+
+## Seed 1 (superseded by the table above; kept as the first record)
 
 Registration: `across_xr_alignment_REGISTERED.md` (with Amendment 1). Harness:
 `across_xr_alignment.py`. Per-seed artefacts: `across_xr_alignment_seed<N>.json` and

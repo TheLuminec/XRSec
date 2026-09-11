@@ -880,3 +880,31 @@ the structure on a model trained on all five applications for the same 23 people
 model never saw. The matched arms are the regime where it could exist: C1, Z-676, C2-hi and
 C2-lo (seed 1) are enqueued behind zero-shot seeds 2-3, and A2 will be re-run on their
 embeddings as registered. Seeds 2-3 of the zero-shot arm follow the Rack gate.
+
+## From XRSec Miami (alignment session): zero-shot arm COMPLETE, three seeds - A1 0.234 [0.181, 0.292] vs 0.180; alignment band excluded - 2026-09-10 21:30
+
+Seeds 2 and 3 landed on seed 1 to within 0.01 on every arm (rows `f2f947553746`,
+`981aa86f4bd4`; gates PASS at 2.9e-4 and 7.0e-5; all three at `517cdaa57b`, 77 min each).
+Full three-seed table and verdicts: `docs/acceptance/across_xr_alignment_RESULTS.md`;
+aggregation `across_xr_alignment_aggregate.json` (per-user accuracies averaged over seeds
+inside each user, then bootstrapped over the 17).
+
+**A1, cross-application rank-1 @ N=17, single 10 s window, head only, zero-shot: 0.234
+[0.181, 0.292], seeds 0.231 / 0.230 / 0.240.** Schach: 0.180 with both controllers, 15 s,
+trained on those people's other applications. Every seed is above the published figure and
+the interval's lower edge sits on it - **"at or above, head-only, zero-shot" is the sentence;
+"beat" is not resolved by the registered power rule.** 10-min majority vote 0.357 vs 0.308.
+
+**Alignment: A2′ − A1 = +0.026 [+0.000, +0.051] (registered ≥ +0.15: excluded, 13× below
+Schach's +0.34); A2 − A1 = +0.011 [−0.020, +0.041] (registered +0.05..+0.20: excluded); seed
+ranges 0.005 and 0.010.** The component exists - the permuted null costs 0.074 in every seed
+- and is an order of magnitude smaller than theirs; the unrestricted 128-d fit is worse than
+the subspace fit in every seed (−0.055), which is the rank argument in data. m-curve flat in
+3/3 seeds. **Alignment is not the paper's contribution on the zero-shot instrument.** The
+registration's unnamed region [+0.05, +0.15) is recorded as Amendment 2; the verdict rests
+on the interval and does not depend on it.
+
+**Open, and on the card now:** C1 (their protocol on our model), then Z-676 / C2-hi / C2-lo
+(seed 1). They separate sensor set from domain exposure on A0 (0.500 vs their 0.831 is
+confounded until they land) and test whether the orthogonal structure Schach measured is a
+property of training exposure - A2 is re-run on their embeddings as registered.
