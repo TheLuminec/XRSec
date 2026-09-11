@@ -780,8 +780,43 @@ window.
 **Recorded as unresolved and staying so:** the within-application gap (confounded between sensor
 set and architecture, not isolable without their architecture head-only); the C2-hi alignment dip,
 which is **0.8 sigma of its own arm's spread** and never needed explaining; and how often the
-orthogonal structure appears. **P2** (`raw` minus `dyn`) is marked **not tested** rather than
-quietly dropped.
+orthogonal structure appears.
+
+**P2 WAS THEN RUN, AND IT IS THE STATIC-CUE AUDIT OF OUR OWN HEADLINE (2026-09-11).** Three `raw`
+seeds, zero-shot, every field identical to the `dyn` arms. **All three selected EPOCH 1 of 16** -
+patience fired immediately, the "raw overfits the source domain at once" pattern this file already
+records. Paired on the same 17 users:
+
+| | `raw` | `dyn` | delta |
+| --- | --- | --- | --- |
+| cross-application A1 | **0.351** (0.364/0.353/0.335) | 0.234 | **+0.117** [+0.042, +0.192] |
+| within-application A0 | 0.730 | 0.500 | +0.223 - larger, so the placement reading holds |
+| verification AUC on the 17 | 0.704-0.733 | | against a recorded-position lookup of 0.585-0.598 |
+
+**Epoch 1 is the finding, not a caveat on it.** A model one epoch from initialisation reaching
+0.351 says the cue is **sitting on the surface of the input** rather than being something a model
+must learn - which is worse news than a trained model reaching the same place. The verification
+figure against the lookup says it reads **more than mean position**: posture as well as height.
+
+**The privacy reading is the contribution, and it lands on Schach et al.'s own framing.** Their
+paper is explicitly a risk assessment, and their BRV encoding discards head position by
+construction - so it assesses **behavioural** risk. On this corpus **static anthropometry and
+posture, available at epoch 1 with no behaviour required, add +0.117 head-only across applications
+and reach 0.351 - within a seed spread of the 0.375 a trained, exposed behavioural model reaches.**
+That does not contradict them; it says **a behaviour-only assessment understates the risk**, which
+is a finding their framing asks for and their method cannot produce.
+
+**The headline stays on `dyn` - decided before any raw number existed** - because `dyn` is the
+like-for-like comparison against a controller-based BRV model, and a `raw` figure would beat them
+partly on a cue their encoding discards on purpose. **The audit sits beside the headline, not in a
+footnote**: this project's methodological contribution has been auditing static cues out of other
+people's numbers, and declining to run that audit on our own - or running it and burying it -
+would be indefensible.
+
+**And epoch-1 selection is ~3x less stable than a trained-out one**: observed seed range **0.029**
+against 0.010 for 120-epoch arms, measured rather than imported from a neighbouring arm. That
+import is exactly the error this file records one entry above; the warning was issued before the
+seeds ran and the measurement is what settled it.
 
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
