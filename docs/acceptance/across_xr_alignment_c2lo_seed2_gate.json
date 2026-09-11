@@ -1,0 +1,16 @@
+[
+ {
+  "checkpoint": "runs/2026-09-10/23-44-03_train/checkpoints/across-xr-matched-c2lo-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "run_id": "f55fd57db721",
+  "seed": 2,
+  "device": "cpu",
+  "recorded": 0.7008753581855537,
+  "rescored": 0.7007129497594075,
+  "gap": 0.0001624084261462322,
+  "tolerance": 0.002,
+  "eval_users": 17,
+  "position_lookup_recorded": 0.591607776892639,
+  "position_lookup_rescored": 0.591607776892639,
+  "passed": true
+ }
+]
