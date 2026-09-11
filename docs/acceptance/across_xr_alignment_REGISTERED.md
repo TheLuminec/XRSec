@@ -495,3 +495,47 @@ Recorded as measurements rather than controls: the non-X dose control −0.009 [
 the second addendum predicted, supporting the C2-hi / C2-lo reading that dose is not binding
 in this range; and A2′ present on three of five P3 runs at identical configuration, added to
 C2-lo's one of two, confirms run-dependence across two arms and seven runs.
+
+---
+
+# AMENDMENT 6 — 2026-09-11 13:00, before any run: P2, the `raw` counterpart of the two headline arms
+
+Opened on the user's instruction to keep improving the unseen-task score after the alignment
+programme closed. PAPER_PLAN's P2 — `raw` minus `dyn` on the same cells, "the anthropometric
+contribution to cross-application identification" — was registered there and never run; every
+arm above is `dyn`. This corpus's own measurement says head height survives across
+applications (P(within < between) = 0.754 on per-game mean position) while lateral placement
+does not (0.527) — but within a single application placement is a per-participant constant
+(0.7525), so a `raw` within-application figure carries a rig cue and is reported with that
+caveat, never as a biometric claim.
+
+**Arms**, identical to their `dyn` counterparts in every field but `encoding=raw` (launchers
+take `ENCODING=raw`; the experiment name carries the encoding so the families are never
+pooled): **R-zero** (zero-shot, seeds 1-3) and **R-C2-lo** (their protocol plus 4,096
+pretraining identities, seed 1, then seeds 2-3 if the first lands inside its band). Scored by
+the same harness (the checkpoint's own encoding is read from `eval_split`; the alignment arms
+are computed but not read for `raw`). Every `raw` row quotes `position_lookup_auc` beside the
+model, as the standing rule requires.
+
+**Registered.**
+- **R-zero A1 − dyn zero-shot A1 (paired on the 17 users, three seeds each): +0.00 to +0.06.**
+  Height is a real cross-application cue and the model can read it in `raw`; the learned
+  component was measured elsewhere to be smaller under `raw` across corpora, so the sum is
+  small and positive. Falsifier: **below −0.03** — the cross-corpus frame problem (BOXRR's and
+  Across-XR's coordinate references differ, which per-channel standardisation cannot undo)
+  costs more than height returns, and `dyn` stays the encoding for this task.
+- **R-C2-lo A1 − dyn C2-lo A1: +0.00 to +0.06**, same reasoning with the frame problem removed
+  by exposure; falsifier below −0.03.
+- **A0 under `raw` above A0 under `dyn` by more than the A1 difference** — the within-application
+  placement cue (P=0.7525) inflating the within cell and not the cross cell. If A0's gain is
+  *not* larger than A1's, placement is not what `raw` is reading here and the height reading
+  strengthens. Reported either way; A0 under `raw` is never quoted as a biometric figure.
+- **position_lookup_auc on the 17** already reads 0.585-0.598 on every row (the mean-position
+  lookup on recorded positions is the same whatever the encoding); a `raw` model that does not
+  beat its own row's lookup on verification has learned nothing height did not already give.
+- **10-minute sequence**: expected to move with A1, not more.
+
+Power as before: per-cell sd 0.093 at 17 users; paired over users and seeds; the +0.03
+falsifier sits at a third of a single-cell sd and is resolvable only paired. GPU order is
+negotiated with Miami Server (Rack has priority if it is on the card); nothing runs until the
+card is confirmed free.
