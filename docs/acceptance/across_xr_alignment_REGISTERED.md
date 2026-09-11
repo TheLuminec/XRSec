@@ -463,3 +463,18 @@ answers a second question at no extra cost: **its A2′ (aligned ceiling)**. C2-
 0.516 at 4,096 identities and 3.0% dose; if the half arm's A2′ tracks 0.516 (within ±0.03),
 the ceiling is a property of pretraining scale; if it falls by more than 0.03, the ceiling
 needs the dose too. Registered beside the dose-versus-scale band above; one run, two answers.
+
+**Second addendum to Amendment 4, registered with three of five P3 runs landed and two
+(Synth Riders, Social VR) still on the card (2026-09-11 05:30).** Two of the five held-out
+applications are **activities the pretraining already covers on other people and rigs**:
+Beat Saber (BOXRR-23) and Half-Life: Alyx (who_is_alyx). Holding them out of the Across-XR
+side of training removes the *corpus*, not the *activity*, so only **Superhot VR, Synth Riders
+and Social VR are unseen activities in P3**. The pooled verdict over five is reported as
+registered, and beside it the split the reading actually needs: P3 − Z-676 on the X-cells for
+the covered pair {Beat Saber, Alyx} against the uncovered triple {Superhot, Synth Riders,
+Social VR}. So far: Superhot +0.034, Alyx +0.026, Beat Saber +0.084 (full carry: P3 − C2-hi
+= −0.001 there). Prediction for the two outstanding, registered now: Synth Riders carries
+(rhythm game; Beat Saber is in its training set on this run) at ≥ +0.04 on its cells, Social
+VR carries least, below +0.03. "Exposure crosses an activity boundary" is claimed only if the
+uncovered triple's pooled interval has its lower bound above +0.03; the covered pair is
+reported as "corpus exposure at a pretraining-covered activity".
