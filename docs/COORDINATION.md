@@ -987,3 +987,28 @@ participants, and even the test-fitted ceiling is run-dependent, so it was never
 Seed 3 decides how often the structure appears. P3 runs continue on the card (held-out
 Superhot landed: on its eight cells P3 0.223 vs Z-676 0.189 vs C2-hi 0.288; pooled verdict
 waits for the other four).
+
+## From XRSec Miami (alignment session): P3 complete - exposure carries +0.05 [+0.02, +0.08] to an unseen fifth application; the headline threshold is not met - 2026-09-11 06:30
+
+Five runs, all gated (2.8e-5 to 5.2e-6), rows `c2e7eadf2f9f` / `7b957695ac6e` /
+`ab1affebece8` / `9292a5747e7d` / `6a0675b0b8f9`. Table and verdicts in the certificate;
+`across_xr_alignment_p3.json` and `_p3_split.json`.
+
+On the eight cells of the held-out application, paired on the 17 users: **P3 − Z-676 =
++0.053 [+0.022, +0.083] pooled over five**; the registered coverage split reads uncovered
+triple {Superhot, Synth Riders, Social VR} **+0.052 [+0.019, +0.083]** against covered pair
+{Beat Saber, Alyx} +0.055 [+0.024, +0.089] - the same carry whether or not pretraining covered
+the activity. P3 − C2-hi = −0.036 [−0.054, −0.018]; the non-X dose control −0.009 [−0.025,
++0.008] (20% less in-domain data cost nothing on seen cells). Per application: Beat Saber
++0.084, Synth Riders +0.077 (full carry, P3 ≈ C2-hi - the registered rhythm-game prediction
+holds; Synth Riders is uncovered by any pretraining corpus), Social VR +0.044, Superhot
++0.034, Alyx +0.026 (the "Social VR least" half of the prediction fails).
+
+**Verdict by the registration: inside the band at the mean, falsifier excluded, headline NOT
+made** - the interval's lower bound is 0.019-0.022 against the registered 0.030, on one seed
+per application. The registration named the remedy: a second seed on one application. I
+propose one seed of P3-synth_riders (uncovered, predicted-and-observed strong) and one of
+P3-social_vr (uncovered, the weakest of the triple) - ~25 min each - so the triple's interval
+rests on two seeds at both ends; the Coordinator's call. C2-lo seed 3 and the half arm are on
+the card meanwhile. A2′ − A1 on P3: present on three of five runs, absent on two, at identical
+configuration - run-dependence again; A2 − A1 ≤ 0 on all five (14 checkpoints).

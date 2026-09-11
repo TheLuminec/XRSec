@@ -383,3 +383,43 @@ with scale" (one seed per point). Seed variance is a property of an arm, not of 
 when the choice is between an elegant account of n = 1 and a second run, take the run.
 Seed 3 of C2-lo, when it lands, is reported as "present in k of three runs", never as a
 rate; three seeds cannot estimate one. The half arm's A2′ column is dropped as uninformative.
+
+## P3 — leave-one-application-out on unseen users, five runs (2026-09-11 06:30)
+
+Five checkpoints, one per held-out application, on C2-hi's exact lists (495 trained /
+181 validation / 17 evaluated; 23-31 dropped) with the held-out application's sessions absent
+from every Across-XR user (`CrossApplicationXR_LOAO_<X>`, four sessions per user; dose
+≈11.6%); all at `517cdaa57b`; gates PASS at 2.8e-5 / 1.9e-5 / 2.5e-5 / 1.5e-5 / 5.2e-6; scored
+on the full corpus with each checkpoint's own statistics under its copy's name. Unit: the
+eight ordered cells involving X, paired on the 17 users against Z-676 (no exposure) and C2-hi
+(full exposure), pooled over X (`across_xr_alignment_p3.py`, `_p3.json`, `_p3_split.py`).
+
+| held out X | rows | P3 on X-cells | Z-676 | C2-hi | **P3 − Z-676** | P3 − C2-hi | non-X control | A2′ − A1 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Superhot VR | `c2e7eadf2f9f` | 0.223 | 0.189 | 0.288 | +0.034 [−0.005, +0.070] | −0.065 | +0.003 | +0.003 |
+| Half-Life: Alyx | `7b957695ac6e` | 0.231 | 0.205 | 0.292 | +0.026 [−0.004, +0.058] | −0.061 | −0.029 | +0.039 |
+| Beat Saber | `ab1affebece8` | 0.351 | 0.267 | 0.352 | **+0.084 [+0.043, +0.122]** | −0.001 | −0.013 | +0.135 |
+| Synth Riders | `9292a5747e7d` | 0.324 | 0.247 | 0.337 | **+0.077 [+0.038, +0.115]** | −0.013 | −0.001 | +0.136 |
+| Social VR | `6a0675b0b8f9` | 0.224 | 0.180 | 0.265 | +0.044 [−0.000, +0.084] | −0.041 | −0.004 | +0.131 |
+| **pooled, five** | | 0.271 | | | **+0.053 [+0.022, +0.083]** | −0.036 [−0.054, −0.018] | −0.009 [−0.025, +0.008] | |
+| uncovered triple (Superhot, Synth, Social) | | | | | **+0.052 [+0.019, +0.083]** | −0.040 [−0.059, −0.020] | | |
+| covered pair (Beat Saber, Alyx) | | | | | +0.055 [+0.024, +0.089] | −0.031 [−0.055, −0.007] | | |
+
+| registered (Amendment 4) | measured | verdict |
+| --- | --- | --- |
+| P3 − Z-676 pooled in +0.02..+0.07; headline needs lower bound > +0.03; falsifier ≤ 0; (0, +0.02] unresolved | +0.053 [+0.022, +0.083]; uncovered triple +0.052 [+0.019, +0.083] | **inside the band at the mean; the falsifier is excluded; the headline is NOT made** (lower bound 0.019-0.022 against 0.030). Exposure to four applications carries about +0.05 of the +0.09 in-set gain to an unseen fifth on unseen people; whether the boundary claim holds sits on the interval's lower edge, and the registration's own remedy applies: a second seed on one application |
+| P3 − C2-hi < 0 (direction, dose-confounded) | −0.036 [−0.054, −0.018] | holds; two sufficient explanations (the held-out application, and 20% less Across-XR data) |
+| control P3(non-X) − C2-hi(non-X) within ±0.03 | −0.009 [−0.025, +0.008] | holds: 20% less in-domain data at fixed exposure cost nothing measurable on the seen cells, so the runs are comparable to C2-hi |
+| rhythm games carry best | Beat Saber +0.084, Synth Riders +0.077 — full carry (P3 ≈ C2-hi on their cells) | **holds**: Synth Riders is an activity no pretraining corpus covers, and with Beat Saber in training it is reached as if seen |
+| Social VR carries least, below +0.03 | +0.044 [−0.000, +0.084]; Alyx is least at +0.026 | **fails** — Social VR carries about as much as the mean; the task-structure ordering holds at the top and not at the bottom |
+| covered vs uncovered | +0.055 vs +0.052 | the carry is the same whether or not pretraining covered the activity — it is not pretraining leaking through the hold-out |
+| A2′ − A1 below +0.03 | +0.003 / +0.039 / +0.135 / +0.136 / +0.131 | run-dependent, as established on C2-lo: present on three of five, absent on two, at identical configuration; A2 − A1 ≤ 0 on all five (14 checkpoints now) |
+
+**What P3 establishes.** Exposure to a set of applications on 23 people carries to an
+application none of them played *in the training set*, for people never seen: +0.05
+[+0.02, +0.08] against no exposure, against +0.09 for full exposure, with the two rhythm
+games reached as if seen. It is registered as not the headline, because the interval's lower
+edge sits 0.01 under the line on one seed per application; it is also the first measurement
+in this project of a data-side lever moving anything across an activity boundary, and the
+honest sentence is "partial carry, unresolved at the registered threshold, a second seed
+away from either verdict".
