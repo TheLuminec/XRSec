@@ -31,5 +31,34 @@
   "sequence_10min_diff": 0.0771241830065359,
   "verdict_A1": "interval spans a registered edge: unresolved",
   "A0_gain_exceeds_A1_gain": true
+ },
+ "C2-lo": {
+  "A1": {
+   "raw_mean": 0.4039190733327563,
+   "dyn_mean": 0.3745298070557513,
+   "diff": 0.02938926627700503,
+   "lo": -0.06772688053347933,
+   "hi": 0.13446779341560924,
+   "raw_per_seed": [
+    0.4039190733327563
+   ],
+   "n_raw": 1,
+   "n_dyn": 3
+  },
+  "A0": {
+   "raw_mean": 0.7304002958342878,
+   "dyn_mean": 0.6160113367408577,
+   "diff": 0.1143889590934301,
+   "lo": 0.05522441454379077,
+   "hi": 0.17501388979658972,
+   "raw_per_seed": [
+    0.7304002958342878
+   ],
+   "n_raw": 1,
+   "n_dyn": 3
+  },
+  "sequence_10min_diff": -0.21372549019607862,
+  "verdict_A1": "interval spans a registered edge: unresolved",
+  "A0_gain_exceeds_A1_gain": true
  }
 }

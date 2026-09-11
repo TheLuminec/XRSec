@@ -1080,3 +1080,11 @@ applications and reach 0.351, within a seed spread of the 0.375 a trained expose
 model reaches; a behaviour-only risk assessment understates the risk on this corpus. The
 headline stays on `dyn`; the raw arm is the audit beside it. R-C2-lo and the M-zero screen
 remain on the card.
+
+**R-C2-lo (2026-09-11 19:00):** row `fa9ec92e5c82`, raw with exposure, epoch 1 of 16 again,
+gate PASS 5.3e-8. A1 0.404 [0.323, 0.486] vs dyn C2-lo 0.375 -> **+0.029 [−0.068, +0.134]**,
+unresolved (spans both band edges; no further seeds by Amendment 6's rule); A0 +0.114
+(placement). **10-min: raw 0.497 vs dyn 0.711, −0.214** - with exposure the trained behavioural
+model accumulates evidence over ten minutes and the epoch-1 static model does not, the
+enrolment-averaging finding reproduced across applications. P2 is closed; the M-zero screen is
+the last job on the card.

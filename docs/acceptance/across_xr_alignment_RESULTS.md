@@ -642,3 +642,22 @@ cross-application identification risk on this corpus. The headline comparison st
 audit this project runs on every number, its own included. The controlled comparison is raw
 against dyn at fixed exposure (+0.117); "0.351 against 0.375" is a juxtaposition across
 encoding *and* exposure and is labelled one.
+
+### R-C2-lo, one seed — raw with exposure (2026-09-11 19:00)
+
+Row `fa9ec92e5c82` at `517cdaa57b` (`encoding=raw`, recorded on the row; the experiment name
+carries `_raw` appended to the dyn base name); **selected epoch 1 of 16 even with the
+applications in training**; verification AUC on the 17 0.760 against the 0.585 lookup. Gate
+PASS at 5.3e-8.
+
+| paired on the 17 (raw 1 seed vs dyn 3 seeds) | raw | dyn | raw − dyn | verdict |
+| --- | --- | --- | --- | --- |
+| A1 cross-application | 0.404 [0.323, 0.486] | 0.375 | **+0.029 [−0.068, +0.134]** | unresolved: the interval spans both edges of the +0.00..+0.06 band; by Amendment 6's rule ("seeds 2-3 if the first lands inside its band") no further seeds |
+| A0 within-application | 0.730 | 0.616 | +0.114 [+0.055, +0.175] | larger than A1's gain: placement holds; not quoted |
+| **10-min cross-application** | **0.497** | **0.711** | **−0.214** | the informative number: with exposure, the trained behavioural model's evidence accumulates over ten minutes and the epoch-1 static model's does not — the enrolment-averaging result this project measured on BOXRR (a static cue's error is a between-session bias that averaging cannot remove; a learned cue's is per-window variance that it can), reproduced across applications |
+
+**What P2 closes on.** Static cues give the raw encoding a +0.12 single-window advantage
+zero-shot and nothing resolvable with exposure; over ten minutes the behavioural model with
+exposure is ahead by 0.21. The audit stands beside the headline: a behaviour-only assessment
+understates single-window risk, and a static-only one understates what a trained behavioural
+model does with time.
