@@ -1812,6 +1812,17 @@ cosine head is saved. `identity_softmax` forces `head=cosine` — scoring
 angular-margin embeddings with a learned linear layer over `|e1 - e2|` would throw
 away the structure the objective just created.
 
+**The TRAINING accuracy `identity_softmax` reports is on MARGIN-ADJUSTED logits and sits below
+chance early on - it is not a measure of fit (2026-09-10).** `train_identity_epoch` computes
+`logits = head(model.embed(windows), labels)`, and the head subtracts the margin from the true
+class before scaling, so `correct` is an argmax over `s*(cos - m)` for the right class against
+`s*cos` for every other. At the defaults that is a **10.5 logit-unit penalty** applied only to the
+answer, so the true class loses early argmaxes by construction: a C1 run on 23 identities reported
+**1.3% training accuracy against a 4.35% chance level**, which reads as a broken run and is the
+metric behaving as designed. **Do not cite it as evidence of under- or over-fitting in either
+direction** - use the training *loss* and the validation curve, which is what the same run's
+diagnosis correctly rested on.
+
 **Calibration matters here.** Cosine ranks well but says nothing about where the
 accept threshold belongs, and accuracy is read at `logit > 0`. After every epoch the
 cosine head's two scalars are refitted on *training* pairs with the extractor frozen.
