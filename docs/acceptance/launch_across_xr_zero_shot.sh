@@ -19,6 +19,9 @@ SEED="${1:?seed}"
 # P2 of PAPER_PLAN (raw minus dyn on the same cells) uses the same script with ENCODING=raw;
 # the experiment name carries the encoding so the two families can never be pooled by name.
 ENCODING="${ENCODING:-dyn}"
+# MARGIN/SCALE override the AM-softmax defaults for Amendment 7 (0.1 / 15); the name carries them.
+MARGIN="${MARGIN:-0.35}"; SCALE="${SCALE:-30.0}"
+SUFFIX=""; [ "$MARGIN" != "0.35" ] && SUFFIX="_m${MARGIN}s${SCALE}"
 TREE=/run/media/feng/Data/CalebProject/XRSec/.claude/worktrees/across-xr-alignment
 MAIN=/run/media/feng/Data/CalebProject/XRSec
 PY="$MAIN/.venv313/bin/python"
@@ -30,12 +33,12 @@ for u in 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48; do
 done
 cd "$TREE"
 exec "$PY" model/main.py mode=train \
-    "experiment_name=across_xr_zero_shot_${ENCODING}10s" \
+    "experiment_name=across_xr_zero_shot_${ENCODING}10s${SUFFIX}" \
     "data_dirs=[$MAIN/processed_datasets/BOXRR-23_Dataset/users,$MAIN/processed_datasets/who_is_alyx/users]" \
     "test_dirs=[$XR]" \
     "exclude_users=[$EXCL]" \
     test_on_excluded=true swap_data=false \
-    extractor=bilstm objective=identity_softmax identity_margin=0.35 identity_scale=30.0 \
+    extractor=bilstm objective=identity_softmax "identity_margin=$MARGIN" "identity_scale=$SCALE" \
     "encoding=$ENCODING" sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
     normalize=per_dataset eval_normalize=target_fit within_dataset_negatives=true \
     cross_session_positives=true center_position=false \

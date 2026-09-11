@@ -30,6 +30,8 @@ ARM="${1:?C1|C2|C2-lo|C2-hi|Z676}"; SEED="${2:?seed}"
 PATIENCE="${PATIENCE:-15}"
 # ENCODING=raw gives the P2 counterparts of Amendment 6; the name carries the encoding.
 ENCODING="${ENCODING:-dyn}"
+# MARGIN/SCALE override the AM-softmax defaults for Amendment 7 (0.1 / 15); the name carries them.
+MARGIN="${MARGIN:-0.35}"; SCALE="${SCALE:-30.0}"
 TREE=/run/media/feng/Data/CalebProject/XRSec/.claude/worktrees/across-xr-alignment
 MAIN=/run/media/feng/Data/CalebProject/XRSec
 PY="$MAIN/.venv313/bin/python"
@@ -84,6 +86,7 @@ case "$ARM" in
 esac
 [ "$PATIENCE" = "0" ] && NAME="${NAME}_full"
 [ "$ENCODING" != "dyn" ] && NAME="${NAME}_${ENCODING}"
+[ "$MARGIN" != "0.35" ] && NAME="${NAME}_m${MARGIN}s${SCALE}"
 cd "$TREE"
 exec "$PY" model/main.py mode=train \
     "experiment_name=$NAME" \
@@ -93,7 +96,7 @@ exec "$PY" model/main.py mode=train \
     "validation_users=[$VAL]" \
     "drop_users=[$DROP]" \
     test_on_excluded=true swap_data=false \
-    extractor=bilstm objective=identity_softmax identity_margin=0.35 identity_scale=30.0 \
+    extractor=bilstm objective=identity_softmax "identity_margin=$MARGIN" "identity_scale=$SCALE" \
     "encoding=$ENCODING" sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
     normalize=per_dataset eval_normalize=target_fit within_dataset_negatives=true \
     cross_session_positives=true center_position=false \

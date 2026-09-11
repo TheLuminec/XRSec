@@ -539,3 +539,44 @@ Power as before: per-cell sd 0.093 at 17 users; paired over users and seeds; the
 falsifier sits at a third of a single-cell sd and is resolvable only paired. GPU order is
 negotiated with Miami Server (Rack has priority if it is on the card); nothing runs until the
 card is confirmed free.
+
+**Addendum to Amendment 6, before any raw number exists (Coordinator, 2026-09-11 13:30).**
+(i) **Hard constraint: the headline comparison to Schach stays on `dyn` whatever `raw` scores.**
+Their 18 features are HMD rotation plus both controllers under BR referencing, so head
+position never reaches their model by construction; `dyn` removes it too, which is what makes
+0.234-against-0.180 like for like on behaviour. A `raw` figure would beat them partly on a cue
+their encoding discards on purpose; if R-zero reads 0.29 that is a measurement of what height
+adds, not a better headline. Decided now, not after the number. (ii) **Two caveats, not one.**
+Within-application `raw` carries placement (P=0.7525, a rig artefact) and is not a biometric
+figure; cross-application `raw` carries height (P=0.754) while lateral placement is at chance
+(0.527), so a cross-application `raw` gain is a biometric — **anthropometric, not behavioural** —
+and P2 positive would be the anthropometric contribution to cross-task identification measured
+on the one corpus where placement cannot contaminate it. (iii) **P2 measures a confound, not an
+improvement.** If it comes back positive the score went up and the fraction of it that is
+behaviour went down; both are reported in one sentence.
+
+---
+
+# AMENDMENT 7 — 2026-09-11 13:30, before any run: the one measured, unspent lever
+
+`identity_margin=0.1, identity_scale=15` against the 0.35 / 30 default: **+0.016 AUC, t(4)=4.31,
+won 5/5 folds** in the 2026-09-04 grid (in-domain verification, 419 identities, 8 corpora),
+never applied because the default was kept so 300+ rows stayed comparable; CLAUDE.md records
+that every 0.35/30 run is knowingly ~0.016 below what the configuration can do. It is the only
+lever on the board with a measured positive that has never been spent, it changes no encoding
+(behaviour only, so it bears on the honest score), and it costs one configuration change.
+
+**Arms**: **M-zero** (zero-shot `dyn`, margin 0.1 / scale 15, seed 1; seeds 2-3 if seed 1 lands
+inside its band) and **M-C2-lo** (their protocol plus 4,096 identities, `dyn`, 0.1 / 15, seed 1;
+likewise). Every other field identical to the 0.35/30 arms; the experiment name carries the
+margin so the families are never pooled; scored by the same gated harness.
+
+**Registered as an open question, not an expected gain**: the +0.016 was in-domain verification
+AUC at 419 identities and may not transfer to cross-application rank-1 at 4,096. Bands: M-zero
+A1 − zero-shot A1 (paired on the 17) in **−0.02 to +0.04**; M-C2-lo A1 − C2-lo A1 in **−0.02 to
++0.04**. Named outcomes: **above +0.04** — the lever transfers and the honest score moves by more
+than the in-domain measurement; **below −0.02** — a margin tuned at 419 identities is wrong at
+4,096, where the default's "tens of thousands of identities" assumption is closer to true, and
+the default stands. The P3 threshold registered and missed by 0.008 is **not** re-run under this
+configuration; a missed threshold is not chased. Runs go behind the raw arms; Miami Server has
+been told before the card was touched.
