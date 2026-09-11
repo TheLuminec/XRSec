@@ -357,3 +357,13 @@ the verification metric — and stated as a verification-metric figure, not a ra
 margin from the true class before the argmax, so training accuracy sits below chance early in
 every `identity_softmax` run; the under-training diagnosis rests on the validation curve
 still rising and the training loss still falling steeply, which are sufficient.
+
+**Narrowing of (ii), same evening (Coordinator).** The epoch is chosen on validation
+*verification* accuracy and A1 is rank-1 identification; CLAUDE.md's 2026-09-06 measurement
+puts selection inflation on a metric that did not choose the epoch at +0.004 (the wrong sign
+for optimism) and says not to carry the +0.02 onto such a figure. So the
+`selected_test_acc` / `final_test_acc` diagnostic measures the inflation where it exists -
+the verification columns - and is not read as contaminating A1; the residual on rank-1 is
+bounded by how tightly the two metrics track, measured once at 4096 identities on 94 users,
+which is a different regime from nine validation users at 23 and is why the free diagnostic
+is still recorded.
