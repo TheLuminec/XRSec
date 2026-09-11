@@ -1,0 +1,16 @@
+[
+ {
+  "checkpoint": "runs/2026-09-10/20-05-56_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+  "run_id": "981aa86f4bd4",
+  "seed": 3,
+  "device": "cpu",
+  "recorded": 0.587957626395572,
+  "rescored": 0.5878872722902925,
+  "gap": 7.035410527955754e-05,
+  "tolerance": 0.002,
+  "eval_users": 17,
+  "position_lookup_recorded": 0.5977019999678984,
+  "position_lookup_rescored": 0.5977019999678984,
+  "passed": true
+ }
+]
