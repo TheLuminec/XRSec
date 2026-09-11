@@ -570,3 +570,52 @@ outlive everything; `runs/` is gitignored, so the 18 gated checkpoints in
 copied elsewhere). A gated checkpoint buys the right to compare against its recorded row
 without re-running it — whoever next plans to reuse one of these as a control should check
 the weights still exist before planning around them.
+
+# Reopened on the user's instruction — Amendments 6 and 7 (2026-09-11)
+
+## P2 — the `raw` audit of the headline (R-zero seed 1 of 3; provisional until seeds 2-3)
+
+Row `142a7637af0c` at `517cdaa57b`: the zero-shot arm with `encoding=raw` and nothing else
+changed (519,211 training windows / 3,072 classes / 1,024 validation / exactly the 17 — the
+loader lines match the dyn arm's). Gate PASS at 3.7e-6.
+
+**The finding is the epoch, not the number.** Validation on the BOXRR+alyx users selected
+**epoch 1 of 16**; patience fired immediately — the "raw overfits the source domain at once"
+pattern this project recorded for cross-corpus raw transfer. A model one epoch from
+initialisation reaches **0.364 [0.294, 0.435]** cross-application at N=17 on their test users.
+Had it taken 120 epochs the model could be said to have found something; at epoch 1 the cue is
+sitting on the surface of the input — **height and posture are immediately available and are
+nearly all of what raw scores.**
+
+| controlled pair (same corpus, same everything but the encoding), paired on the 17 | raw | dyn (3 seeds) | raw − dyn |
+| --- | --- | --- | --- |
+| **A1 cross-application** | **0.364** [0.294, 0.435] | 0.234 | **+0.130 [+0.046, +0.214]** — whole interval above zero; the band +0.00..+0.06 is exceeded at the mean and the lower bound sits inside it: unresolved between "inside" and "above" until seeds 2-3 |
+| A0 within-application | 0.730 [0.683, 0.773] | 0.500 | +0.230 [+0.186, +0.273] — larger than the A1 gain, as registered: the within cell carries placement (P=0.7525) and is not a biometric figure |
+| 10-min cross-application | 0.454 | 0.357 | +0.097 |
+| verification AUC on the 17 | 0.733 | 0.569-0.588 | the recorded-position lookup on the same pairs is 0.585, so raw reads **more than mean position** — mean orientation (posture) is the other static cue it keeps; the same decomposition this file runs on every corpus |
+
+**Juxtaposition, flagged as one:** the one-epoch raw model (0.364) reaches what the trained-out,
+exposed dyn model reaches (C2-lo, 0.375) — those two differ in encoding *and* exposure, so it is
+striking and fair to state and is not a controlled comparison; the controlled number is the
++0.130 above.
+
+**The two caveats, both registered before the number:** cross-application raw carries height
+(P=0.754; lateral placement is at chance across applications, 0.527) — a biometric,
+*anthropometric not behavioural*; within-application raw carries placement and is never quoted.
+**The headline comparison to Schach stays on `dyn`**, decided before this number existed: their
+encoding discards head position by construction, so `dyn` against their BRV is like for like
+on behaviour and `raw` would beat them partly on a cue their method removes on purpose.
+
+**What it means, on their own framing.** Their paper is a risk assessment of unwanted
+identification, and their encoding assesses *behavioural* risk. On this corpus, static
+anthropometry alone — available at epoch 1, no behaviour required — matches what a fully
+trained behavioural model achieves across applications. That does not contradict them; it says a
+behaviour-only analysis **understates the risk**, which their framing asks for and their method
+could not produce. The cross-application score went up by 0.13 and the fraction of it that is
+behaviour went down; the audit sits beside the headline, not under it.
+
+**Seed variance is not imported here.** Every seed-agreement figure this programme holds
+(~0.010 on A1) comes from trained-out models; an epoch-1 model has had nothing wash out its
+initialisation and has no reason to share that spread. Seeds 2-3 matter more for this arm than
+anywhere else; the observed range is reported when they land and is itself a result about how
+stable an epoch-1 selection is.
