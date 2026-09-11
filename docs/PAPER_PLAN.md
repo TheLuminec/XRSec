@@ -114,6 +114,56 @@ three source domains the dataset classifier is trivial". Across-XR is **five app
 one population**, so the stated reason no longer applies unexamined. Not an endorsement - a note
 that it needs re-deciding rather than inheriting.
 
+## OUTCOMES - 2026-09-11, after the programme. Scored against the registrations below.
+
+**The three predictions registered in this file, scored.**
+
+| | registered | measured | verdict |
+| --- | --- | --- | --- |
+| **P1** head-only `dyn` cross-application rank-1 @ N=17 | band 0.18-0.35, falsifier < 0.12 | **0.234** [0.181, 0.292], 3 seeds | **HELD**, inside the band |
+| **P2** `raw` minus `dyn` positive | (no band) | **UNRUN** - the programme ran `dyn` only | not tested |
+| **P3** unseen-application cell below the seen-application cell | directional | **-0.036** [-0.054, -0.018] | **HELD** |
+
+**The five claims the programme ends on.**
+
+1. **Head-only, zero-shot, never trained on the corpus: 0.234** cross-application at N=17 over
+   three gated seeds, against a published **0.180** that used head **plus both controllers**.
+   Reported as a **placement against a published mean, not a beat** - the interval excludes
+   0.180 by 0.001, and their figure is a mean whose per-cell distribution was never published,
+   so no formal test is available at any margin.
+2. **With in-domain exposure: 0.375** (three seeds, range 0.010), **+0.141** over zero-shot;
+   ten-minute sequence **0.711** against their 0.308.
+3. **Exposure carries to an UNSEEN application: +0.053** [+0.022, +0.083], interval excluding
+   zero, falsifier excluded. The coverage control is what makes it stand - applications absent
+   from every pretraining corpus read **+0.052** against **+0.055** for those present, so the
+   carry is not pretraining leaking through the hold-out, and **Synth Riders (+0.077) has no
+   pretraining coverage at all**. The stricter registered threshold for the phrase "crosses an
+   activity boundary" (CI lower above +0.030) read +0.022 and is **reported as not met**.
+   **This is the first data-side lever this project has measured to cross an activity
+   boundary** - identity count is flat across one, activity diversity was null.
+4. **Schach et al.'s section 8 is answered negatively, with a mechanism.** The honest
+   train-user-only orthogonal fit **never carries** (A2 - A1 <= 0 on 14 checkpoints); the
+   correspondences available for fitting are **capped at 32 by the corpus** - the number of
+   people recorded in two or more applications - and no amount of pretraining raises it; and
+   **the test-fitted ceiling that motivates the whole idea is itself run-dependent**, present in
+   one of three runs at one configuration and three of five at another. So it was never a
+   target, and a single-run diagnostic bound of that kind is not evidence that application
+   embeddings differ by a rotation. **That raises the evidential bar for every claim of this
+   shape, including the published +0.34 this programme set out to reproduce.**
+5. **Identity count is flat without exposure and not flat with it.** Dose is a small,
+   roughly linear effect (halving in-domain windows costs -0.028; a 20% cut, -0.009) and cannot
+   account for the pair - the higher-dose arm loses by 0.061, so **correcting for dose widens
+   the scale effect rather than narrowing it**.
+
+**Recorded as unresolved, and staying that way:** the within-application gap (confounded between
+sensor set and architecture, and not isolable without their architecture head-only); the C2-hi
+alignment dip; and how often the orthogonal structure appears.
+
+**The composition is provable rather than asserted.** The loaders' own window counts close
+exactly: C2-lo 540,107 minus Across-XR 20,896 = **519,211**, which is the zero-shot arm's
+training set to the window. So the treatment arm is the control's corpus plus Across-XR 0-22 and
+nothing else, and the dose is **3.87%** with the half arm at **1.96%**, exactly halved.
+
 ## Registered predictions - 2026-09-10, before any cross-application run
 
 **P1. Head-only `dyn`, cross-application rank-1 at N=17 on users 32-48: band 0.18 to 0.35;
