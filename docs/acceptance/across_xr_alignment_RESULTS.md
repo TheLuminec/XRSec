@@ -495,3 +495,12 @@ this is that measurement.
 roughly linear and modest — and **C2-hi has the higher dose and still loses to C2-lo by
 0.061**, so dose was working in C2-hi's favour: correcting for it *widens* the scale effect
 rather than narrowing it.
+
+**The pair's composition is verified by the numbers, not by the procedure that produced
+them:** C2-lo 540,107 − Across-XR 20,896 = 519,211 = the zero-shot arm's training set,
+exactly. The treatment arm is provably the control's training windows plus Across-XR 0-22
+and nothing else. The 3.0% was a pre-run estimate against a 707k denominator that included
+validation windows — a wrong denominator, the commonest way a dose figure goes wrong — and
+the count was made even though the cause had been guessed correctly, because a correct
+guess is exactly the moment checking stops. P2 of PAPER_PLAN (`raw` minus `dyn`) was not
+run by this programme and is recorded as not tested, not dropped; it does not open here.
