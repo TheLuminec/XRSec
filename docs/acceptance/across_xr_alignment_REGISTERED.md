@@ -580,3 +580,16 @@ than the in-domain measurement; **below −0.02** — a margin tuned at 419 iden
 the default stands. The P3 threshold registered and missed by 0.008 is **not** re-run under this
 configuration; a missed threshold is not chased. Runs go behind the raw arms; Miami Server has
 been told before the card was touched.
+
+**Addendum to Amendment 7, before it runs (Coordinator, 2026-09-11 14:00): this is a SCREEN,
+not a test.** The paired-difference intervals actually observed on these 17 users are 0.061 to
+0.083 wide (half-widths 0.031-0.042, mean 0.037), so the design resolves about ±0.037; the
+in-domain gain being chased is +0.016, 0.43× that. Seeds do not fix it — the bootstrap is over
+users, seed averaging shrinks only the seed component, and the user component has a floor at
+N = 17. Registered outcomes therefore: a shift of about +0.05 or more **shows** (the screen
+fires); an inside-band result reads **"not resolved; the design cannot see an effect of the
+size measured in domain"**, never "the lever does nothing"; below −0.02 the sign-flip mechanism
+(a margin tuned at 419 identities against a default whose assumption is closer to true at 4,096)
+is the informative reading. Consequences: **M-zero only** — M-C2-lo (already enqueued, now
+parked) runs only if the screen fires; **no seeds on an inside-band result**. The Nymeria band
+was unfalsifiable by exactly this arithmetic; this one is calibrated before launch.
