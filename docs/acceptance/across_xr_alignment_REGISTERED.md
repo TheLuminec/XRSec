@@ -434,3 +434,26 @@ the cheapest way to stop it resting on an import.
 (Beat Saber, Synth Riders — stationary, task-structured) carrying best and Social VR (no
 predefined task) least would say exposure transfers along task structure rather than along
 corpus identity. The per-X breakdown is reported whatever the pooled interval does.
+
+---
+
+# AMENDMENT 5 — 2026-09-11 01:30, before any run: dose separated from scale by window count
+
+C2-hi − C2-lo (−0.061 [−0.099, −0.026]) falsified the dose direction, but with the treatment
+corpus fixed at 23 identities `dose = axr_windows / (axr_windows + base_windows)`, so raising
+the base mechanically lowers the dose: the two arms differ on one variable read two ways, and
+a 1,500-identity point would land on the same confounded line (withdrawn). What separates
+them is to **vary the Across-XR window count at fixed identity count**: at C2-lo's 3,095
+identities, the same 23 people and the same lists, with **the first half of every Across-XR
+session only** (a real-file copy `CrossApplicationXR_HALF`, each session CSV truncated to its
+first half by row; users 32-48's sessions truncated too, so the training row's own
+evaluation is on half-sessions and is the gate referent; scoring is on the full corpus with
+the checkpoint's statistics under the copy's name). Dose ≈ 1.5% against 3.0%; scale and
+people fixed.
+
+Registered: **C2-lo-half − C2-lo (A1, same users) within ±0.03** — dose is not the binding
+variable in this range, and the falsification of the dose direction is explained rather than
+merely observed. Named outcomes: below −0.03, dose does bind (and the C2-hi/C2-lo pair is
+read as scale *minus* a dose cost); above +0.03, less in-domain data helps, which would be
+read as a regularisation effect and flagged for a seed before anything is concluded.
+A2′ − A1 expected to stay near C2-lo's +0.148 (scale and exposure unchanged).

@@ -20,6 +20,37 @@ PASS at 1.1e-4.
 | A2 − A1 on C2-lo | −0.008 [−0.029, +0.015] | the result arm | **the honest train-user fit still does not carry** — Schach's situation reproduced on a head-only model: the rotation exists, and 32 correspondences in 128-d cannot learn it for unseen people. Their section 8's future work is answered on this instrument: *not with this many training users* |
 | A2-null − A1 | −0.286 | ≤ +0.03 | the person-specific structure is the strongest in the programme |
 
+## C1-full, seed 1 — the budget-matched C1 (2026-09-11 01:15)
+
+Row `9bc8a8908f69` at `517cdaa57b`: C1 at the 120-epoch cap with patience 0; selected
+epoch 102; cross-application verification AUC 0.572 (C1 at epoch 15: 0.528). Gate PASS
+at 2.0e-6. Selection diagnostic on the verification columns, as the row records it:
+`selected_test_acc` 0.545 against `final_test_acc` 0.540 — nine-user selection over 120
+evaluations bought +0.005 there.
+
+| C1-full | A0 | **A1** | CI95 | 10-min | A2′ − A1 | A2 − A1 | A2-null − A1 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 23 identities, 120 epochs | 0.291 | **0.164** | [0.128, 0.205] | 0.324 | **+0.089 [+0.077, +0.102]** | −0.004 | −0.106 |
+
+| registered (Amendment 3) | measured | verdict |
+| --- | --- | --- |
+| C1-full − C1 in [0, +0.08] | **+0.033** | inside the band: C1 was under-trained by about 0.03, and nine-user selection did no measurable harm beyond that |
+| C1-full A1 below zero-shot 0.234 | 0.164 [0.128, 0.205] | holds; falsifier not fired. Their protocol on our model, trained out, is still 0.07 below zero-shot from 4,096 identities of other activities |
+| alignment on C1 unchanged (A2′ − A1 < +0.05) | **+0.089** | **fails — and it is the informative failure.** Trained out, the 23-identity exposed model carries the orthogonal structure C1 at epoch 15 did not (+0.011) |
+
+**The alignment structure, across every instrument, then reads:** zero-shot +0.026 (three
+seeds); Z-676 +0.011; C2-hi +0.002; C1 (under-trained) +0.011; **C1-full +0.089; C2-lo
++0.148.** The rotation needs *exposure and enough training*, and scale amplifies it. The
+honest train-user fit never carries (A2 − A1 ≤ 0 everywhere), and the reason is **not the
+rank argument** — that one is A2-full's, and holds in 6/6 checkpoints — but the test-fitted
+advantage: A2′ fits on the 17 people it is scored on and reaches +0.148; A2 fits on 32
+*other* people and reaches −0.008, so more correspondences did not help. The recommendation
+to the field that follows: **the correspondences available for fitting an alignment are
+bounded by the number of people recorded in two or more applications — 32 here, and Schach
+had the same 32 — and no amount of pretraining raises it.** The honest answer to their
+section 8 is not "we failed to make it work" but "this corpus cannot support it; a corpus
+that could would need far more multi-application participants."
+
 **What C2-lo changes.** (1) The best cross-application number on their split is **0.368 single
 window / 0.693 at ten minutes, head only**, against their 0.180 / 0.308 — on their own
 protocol (train on 0-22, validate 23-31, test 32-48) with 4,096 pretraining identities of Beat
