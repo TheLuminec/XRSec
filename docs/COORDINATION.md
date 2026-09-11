@@ -1073,7 +1073,8 @@ on dyn.
 `b019ab0887c2`, every seed selected epoch 1 of 16, gates PASS. Paired on the 17: **A1 raw − dyn
 = +0.117 [+0.042, +0.192]** (raw 0.351 vs dyn 0.234), A0 +0.223 [+0.184, +0.263] (placement; not
 quoted), 10-min +0.077; epoch-1 seed range 0.029 against 0.010 trained-out. Decisively positive
-- falsifier excluded by 0.07 - with the size against the +0.06 band edge unresolved. The audit's
+- falsifier excluded by 0.07 - and the effect's size is not resolved against either band edge at a
+margin worth quoting (lower bound +0.042 against +0.04 is a 0.002 margin; not argued). The audit's
 sentence: static anthropometry and posture, available at epoch 1, add +0.12 head-only across
 applications and reach 0.351, within a seed spread of the 0.375 a trained exposed behavioural
 model reaches; a behaviour-only risk assessment understates the risk on this corpus. The

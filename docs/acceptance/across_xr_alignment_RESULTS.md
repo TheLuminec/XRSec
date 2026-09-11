@@ -628,7 +628,7 @@ against recorded-position lookups of 0.585 / 0.592 / 0.598. Aggregate: `across_x
 
 | paired on the 17, seeds averaged inside each user | raw (3 seeds) | dyn (3 seeds) | raw − dyn | registered | verdict |
 | --- | --- | --- | --- | --- | --- |
-| **A1 cross-application** | **0.351** (0.364 / 0.353 / 0.335) | 0.234 | **+0.117 [+0.042, +0.192]** | +0.00..+0.06; falsifier < −0.03 | **decisively positive** — the whole interval above zero, the falsifier excluded by 0.07; the interval spans the band's +0.06 edge, so *whether height and posture are worth more than the registered +0.06* is unresolved and *that they are worth at least +0.04* is not |
+| **A1 cross-application** | **0.351** (0.364 / 0.353 / 0.335) | 0.234 | **+0.117 [+0.042, +0.192]** | +0.00..+0.06; falsifier < −0.03 | **decisively positive — the falsifier is excluded by 0.07 — and the effect's SIZE is not resolved against either band edge at a margin worth quoting** (lower bound +0.042 against +0.04, upper end past +0.06; a 0.002 margin is the size of the near-misses this programme refuses to argue in either direction) |
 | A0 within-application | 0.723 (0.730 / 0.732 / 0.707) | 0.500 | +0.223 [+0.184, +0.263] | A0's gain > A1's | **holds**: the within cell carries placement (P=0.7525); never quoted as biometric |
 | 10-min cross-application | 0.434 | 0.357 | +0.077 | moves with A1 | holds |
 | observed seed range of A1 | 0.029 | 0.010 | | reported, not checked against the trained-out figure | an epoch-1 selection is three times less seed-stable than a trained-out one — a result about the selection, as registered |
