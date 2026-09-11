@@ -36,14 +36,46 @@ Schach et al., same 17 users, head + both controllers, 15 s: within 0.831, cross
 
 **What the zero-shot arm establishes.** (1) Head-only `dyn`, trained on 4,096 identities of
 Beat Saber and Alyx and never on this corpus, identifies Schach's 17 test users across
-applications at 0.234 on a single 10 s window — at or above their controller-based 0.180
-on the same users, with three of four confounds running against us (fewer sensors, zero-shot,
-10 s vs 15 s; the fourth, identity count, this project has measured flat across a domain
-boundary). (2) On this embedding the cross-application gap is barely an orthogonal
-difference: the test-fitted ceiling that gave them +0.34 gives +0.026 here, and the honest
-train-user fit is inside it. Alignment is not the paper's contribution on the zero-shot
-instrument. (3) A0 is confounded (sensor set *and* domain exposure) and is not a result until
-C1 / C2-hi separate the two.
+applications at 0.234 on a single 10 s window; every seed sits above their reported mean of
+0.180 (controllers, 15 s, trained on those people's other applications), with three of four
+confounds running against us (the fourth, identity count, this project has measured flat
+across a domain boundary). **This is a placement against a published figure, not a test:**
+their 0.180 is a mean with an across-cell sd of 15.1 and an unpublished distribution, our
+interval is over users, and a significance claim against a published mean whose
+distribution was not published is not available at any margin — the interval's excluding
+0.180 by 0.001 is treated exactly as a 0.003 near-miss the other way was treated. (2) On
+this embedding the cross-application gap is barely an orthogonal difference: the
+test-fitted ceiling that gave them +0.34 gives +0.026 here, 13× smaller, and the honest
+train-user fit is inside it; the component is real (the permuted null costs 0.074 in every
+seed), person-specific and small. Alignment is not the paper's contribution on the
+zero-shot instrument, and "there is no rotation" would be wrong. (3) A0 is confounded
+(sensor set *and* domain exposure) and is not a result on its own; see C1 below.
+
+## Matched arm C1 — Schach's protocol on our model (seed 1, 2026-09-10 22:00)
+
+Row `984f4a622b4f`: Across-XR users 0-22 alone in training (23 identities, all five
+applications, cross-application positives), validation 23-31, evaluation 32-48; patience
+fired at epoch 15 of 30; cross-application verification AUC 0.528. Gate PASS at 1.0e-6.
+
+| C1, seed 1 | rank-1 @17 | CI95 | 10-min | registered | verdict |
+| --- | --- | --- | --- | --- | --- |
+| A0 within-application | 0.252 | [0.200, 0.307] | 0.453 | — | against their 0.831 under the same protocol and exposure |
+| A1 cross-application | **0.131** | [0.088, 0.177] | 0.194 | 0.10-0.25, falsifier < 0.089 | inside the band; the lower edge sits on the falsifier |
+| A2′ − A1 | +0.011 | [−0.005, +0.027] | | | no orthogonal structure from exposure alone at 23 identities |
+| A2 − A1 | −0.002 | [−0.017, +0.013] | | | nothing to carry |
+| A2-null − A1 | −0.051 | [−0.083, −0.020] | | | the small component is still person-specific |
+| m-curve | flat (range 0.021) | | | | |
+
+What C1 separates, and what it does not: it matches Schach on protocol, split and exposure
+and differs in **sensor set and model family together**, so 0.252 against 0.831 bounds
+"head-only plus our architecture at 23 identities" and does not isolate the sensor set on
+its own (that needs their architecture head-only, which the public code does not contain).
+On the same cells the zero-shot model reads 0.500, so 4,096 identities of other activities
+are worth +0.25 within-application over 23 identities of the applications themselves — and
+**+0.10 cross-application (0.234 against 0.131)**: identity count from other corpora is
+worth more than seeing the applications on 23 people. Exposure alone does not create the
+orthogonal structure Schach measured; C2-hi against Z-676 tests exposure on top of 653
+pretraining identities.
 
 ---
 
