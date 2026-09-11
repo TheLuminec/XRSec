@@ -729,6 +729,60 @@ arms decisive rather than confirmatory.
 their 0.831 varies the sensor set *and* domain exposure together. C1 is head-only **and** trained
 on the applications, so C1 against 0.831 is the comparison that isolates the sensor set.
 
+**PROGRAMME COMPLETE (2026-09-11): 18 gated checkpoints, one code identity, every arm registered
+before it ran.** Final numbers, all cross-application rank-1 at N=17 on Schach et al.'s own test
+users 32-48:
+
+| arm | trained identities | Across-XR exposure | A1 |
+| --- | --- | --- | --- |
+| zero-shot (3 seeds) | 3,072 | none | **0.234** |
+| Z-676 | 495 | none | 0.218 |
+| C2-hi | 495 | yes, 14.1% dose | 0.307 |
+| **C2-lo (3 seeds, range 0.010)** | 3,095 | yes, 3.87% dose | **0.375** |
+| C1 (their protocol, our model) | 23 | yes | 0.131 |
+
+**Three findings, and the second is the one nobody registered in advance.**
+
+1. **Head-only and zero-shot places at or above a controller-based published figure** - 0.234
+   against 0.180, on their split, having never seen the corpus. Reported as a placement against a
+   published mean and **not a beat**: the interval excludes 0.180 by 0.001 and their number is a
+   mean whose distribution was never published, so no formal test is available at any margin.
+2. **Exposure carries to an UNSEEN application: +0.049** [+0.021, +0.078] seed-averaged, falsifier
+   excluded on every seed. The control is what makes it stand - applications absent from every
+   pretraining corpus read **+0.046** against **+0.055** for those present, so this is not
+   pretraining leaking through the hold-out, and **Synth Riders has no pretraining coverage at
+   all**. The stricter registered threshold (CI lower above +0.030) was **not met** and is
+   reported as not met. **This is the first data-side lever this project has measured to cross an
+   activity boundary** - identity count is flat across one, activity diversity was null.
+3. **Identity count is flat without exposure and not flat with it** (+0.016 against +0.061), and
+   dose cannot explain it: halving in-domain windows costs -0.028, a 20% cut -0.009, and the
+   *higher*-dose arm loses by 0.061 - so correcting for dose **widens** the scale effect.
+
+**The alignment route is closed, in three sentences that survive every seed.** The honest
+train-user-only orthogonal fit **never carries** (A2 - A1 <= 0 on 14 checkpoints). The
+correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
+or more applications - and no amount of pretraining raises that; a corpus that could support the
+method would need far more multi-application participants, which is an actionable specification
+rather than a null. And **the test-fitted ceiling that motivates the idea is run-dependent**,
+present in one of three runs at one configuration and three of five at another, **so it was never
+a target** - a single-run diagnostic bound of that kind is not evidence that application
+embeddings differ by a rotation, which raises the bar for every claim of that shape including the
+published +0.34 this programme set out to reproduce.
+
+**Two process notes worth as much as the numbers.** The final P3 seeds were run under a rule fixed
+in advance - purpose, threshold and "report whichever way it falls" all registered before launch -
+and they moved the estimate **down** by 0.004 and were reported. **A result that survived seeds
+run under a fixed rule that could have sunk it is worth more than one that was never tested that
+way.** And the composition is provable rather than asserted: the loaders' own counts close
+exactly, C2-lo 540,107 minus Across-XR 20,896 = **519,211**, the zero-shot training set to the
+window.
+
+**Recorded as unresolved and staying so:** the within-application gap (confounded between sensor
+set and architecture, not isolable without their architecture head-only); the C2-hi alignment dip,
+which is **0.8 sigma of its own arm's spread** and never needed explaining; and how often the
+orthogonal structure appears. **P2** (`raw` minus `dyn`) is marked **not tested** rather than
+quietly dropped.
+
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
 1.53-1.60 m); |q| = 1.0000; 90.9 Hz native; y-up, matching ours, so no axis remap;
