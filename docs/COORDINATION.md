@@ -1044,3 +1044,9 @@ row of the programme is at `517cdaa57b` on the branch `worktree-across-xr-alignm
 the 18 checkpoints are copied to the main checkout under `runs/miami-alignment/` so they outlive
 the worktree, and remain BOXRR-derived under clause 15. Nothing new is opened. Card time
 returns to Miami Server.
+
+**Two corrections to the closing entry (2026-09-11 12:00):** the re-seeds covered the uncovered
+triple's top and *middle* (Synth Riders, Social VR), not both ends - Superhot, the low end, has
+one seed; and the 18 checkpoints in `runs/miami-alignment/` are on one disk (gitignored,
+BOXRR-derived, not to be copied) while the certificates and rows are on origin - check the
+weights exist before reusing any as a control.

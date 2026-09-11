@@ -557,3 +557,16 @@ validation windows — a wrong denominator, the commonest way a dose figure goes
 the count was made even though the cause had been guessed correctly, because a correct
 guess is exactly the moment checking stops. P2 of PAPER_PLAN (`raw` minus `dyn`) was not
 run by this programme and is recorded as not tested, not dropped; it does not open here.
+
+**Two corrections to small facts above (Coordinator, 2026-09-11 12:00).** (i) The re-seeded
+pair is not "both ends of the uncovered triple": the seed-1 values are Synth Riders 0.077,
+Social VR 0.044, Superhot 0.034, so the re-seeds covered the **top and the middle**, and the
+low end (Superhot) has one seed. "Moved inward as predicted for extremes" holds for Synth
+Riders (0.077 → 0.053) and not for Social VR (0.044 → 0.032, away from the triple's mean).
+Two points either way remain good evidence for seed stability; the certificate says what
+was chosen. (ii) **Durability:** the certificates, rows and analysis are on origin and will
+outlive everything; `runs/` is gitignored, so the 18 gated checkpoints in
+`runs/miami-alignment/` exist on one disk and are BOXRR-derived under clause 15 (not to be
+copied elsewhere). A gated checkpoint buys the right to compare against its recorded row
+without re-running it — whoever next plans to reuse one of these as a control should check
+the weights still exist before planning around them.
