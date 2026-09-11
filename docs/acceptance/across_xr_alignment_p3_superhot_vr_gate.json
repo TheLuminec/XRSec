@@ -1,0 +1,16 @@
+[
+ {
+  "checkpoint": "runs/2026-09-10/23-24-01_train/checkpoints/across-xr-p3-loao-superhot-vr-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "run_id": "c2e7eadf2f9f",
+  "seed": 1,
+  "device": "cpu",
+  "recorded": 0.6749467156750109,
+  "rescored": 0.674918574032899,
+  "gap": 2.8141642111845222e-05,
+  "tolerance": 0.002,
+  "eval_users": 17,
+  "position_lookup_recorded": 0.5963316128740673,
+  "position_lookup_rescored": 0.5963316128740673,
+  "passed": true
+ }
+]
