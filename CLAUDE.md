@@ -682,6 +682,53 @@ holds no within-application temporal separation of any kind.** Nothing already c
 it changes - the 0.527 is cross-application and needs no takes - but a word was doing
 reassurance work it had not earned, which is worse than a caveat that is merely pessimistic.
 
+**FIRST CROSS-APPLICATION RESULT: head-only and zero-shot sits at or above the published
+controller-based figure, and the alignment route their own paper named as future work does NOT
+work on a zero-shot embedding (New Gen, 2026-09-10).** Three seeds, all gated (2.0e-5 to 2.9e-4),
+one code identity, `dyn` 10 s head-only trained on BOXRR+alyx and **never trained on Across-XR**,
+scored on Schach et al.'s own test users 32-48 at N=17:
+
+| | ours | Schach et al. |
+| --- | --- | --- |
+| **cross-application rank-1, single window** | **0.234** [0.181, 0.292] | **0.180** |
+| cross-application, 10-minute sequence | 0.357 | 0.308 |
+| within-application | 0.500 (confounded, below) | 0.831 |
+
+**It is NOT reported as a beat, and the reason is the durable half.** The interval's lower edge
+is 0.181 against their 0.180, so it technically excludes - by 0.001. Twelve hours earlier this
+file told a session not to argue a 0.003 near-miss that went *against* a result; **a 0.001
+near-miss that goes in favour gets the same treatment or the rule is not a rule**, and applying
+an interval standard only when it flatters is the shape of motivated reasoning that is hardest to
+catch because every step looks principled. There is also a stronger reason no beat is available:
+**their 0.180 is a mean with a reported across-cell sd of 15.1 and no published per-cell or
+per-user distribution**, so the comparison treats their point estimate as exact, and the two
+intervals are over different sources of variation (users against application pairs). **A formal
+significance claim against a published mean whose distribution was not published is not available
+at any margin.** The sentence that is available, and is unattackable: every seed sits above their
+reported mean, head-only and zero-shot.
+
+**Alignment is excluded decisively and is a finding rather than a null.** `A2' - A1` - the
+*test-fitted* diagnostic ceiling, Schach's own illegitimate route reproduced on our embedding -
+came to **+0.026** [+0.000, +0.051] against a registered +0.15 and against **their +0.34**:
+**13x smaller**. Train-user-only fitting added +0.011, its registered +0.05..+0.20 band wholly
+excluded. But the permuted-correspondence null **hurts** by -0.074 in every seed, so the
+orthogonal component is real and person-specific and merely tiny - *"there is no rotation"* is the
+wrong sentence, *"the rotation is 13x smaller than on a model trained on the applications"* is the
+right one. The unrestricted 128-d fit was worse than the subspace fit by -0.055 in 3/3 seeds,
+which is the SVD rank argument appearing in data; the subspace dimension was flat over 4-32.
+
+**The mechanism hypothesis, and it is what the matched arms decide.** Schach measured their
+orthogonal structure on a model trained on **all five applications for the same 23 people**; ours
+never saw any of them. So the rotation may be a property of *training exposure* rather than of the
+task - testable by re-running the same alignment on C1 (their protocol) and C2-hi. **If it appears
+there, alignment returns as a positive contribution on the matched arm; if it does not, the
+negative stands with a mechanism attached.** Either way it is a result, which is what makes those
+arms decisive rather than confirmatory.
+
+**A0 is confounded and "the scope cost sits within-application" is not yet earned.** 0.500 against
+their 0.831 varies the sensor set *and* domain exposure together. C1 is head-only **and** trained
+on the applications, so C1 against 0.831 is the comparison that isolates the sensor set.
+
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
 1.53-1.60 m); |q| = 1.0000; 90.9 Hz native; y-up, matching ours, so no axis remap;
