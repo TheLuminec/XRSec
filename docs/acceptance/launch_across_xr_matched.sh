@@ -28,6 +28,8 @@ ARM="${1:?C1|C2|C2-lo|C2-hi|Z676}"; SEED="${2:?seed}"
 # PATIENCE=0 gives the budget-matched C1-full of Amendment 3 (the zero-shot arm's 120-epoch
 # cap with no early stopping); the experiment name carries it so the two are never pooled.
 PATIENCE="${PATIENCE:-15}"
+# ENCODING=raw gives the P2 counterparts of Amendment 6; the name carries the encoding.
+ENCODING="${ENCODING:-dyn}"
 TREE=/run/media/feng/Data/CalebProject/XRSec/.claude/worktrees/across-xr-alignment
 MAIN=/run/media/feng/Data/CalebProject/XRSec
 PY="$MAIN/.venv313/bin/python"
@@ -81,6 +83,7 @@ case "$ARM" in
     *) echo "arm must be C1, C2, C2-lo, C2-hi, Z676, P3-<app> or C2-lo-half" >&2; exit 2 ;;
 esac
 [ "$PATIENCE" = "0" ] && NAME="${NAME}_full"
+[ "$ENCODING" != "dyn" ] && NAME="${NAME}_${ENCODING}"
 cd "$TREE"
 exec "$PY" model/main.py mode=train \
     "experiment_name=$NAME" \
@@ -91,7 +94,7 @@ exec "$PY" model/main.py mode=train \
     "drop_users=[$DROP]" \
     test_on_excluded=true swap_data=false \
     extractor=bilstm objective=identity_softmax identity_margin=0.35 identity_scale=30.0 \
-    encoding=dyn sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
+    "encoding=$ENCODING" sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
     normalize=per_dataset eval_normalize=target_fit within_dataset_negatives=true \
     cross_session_positives=true center_position=false \
     epochs=120 "early_stopping_patience=$PATIENCE" "val_user_fraction=$VALFRAC" \
