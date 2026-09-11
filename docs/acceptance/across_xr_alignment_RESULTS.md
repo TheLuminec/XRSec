@@ -66,16 +66,33 @@ fired at epoch 15 of 30; cross-application verification AUC 0.528. Gate PASS at 
 | A2-null − A1 | −0.051 | [−0.083, −0.020] | | | the small component is still person-specific |
 | m-curve | flat (range 0.021) | | | | |
 
-What C1 separates, and what it does not: it matches Schach on protocol, split and exposure
-and differs in **sensor set and model family together**, so 0.252 against 0.831 bounds
-"head-only plus our architecture at 23 identities" and does not isolate the sensor set on
-its own (that needs their architecture head-only, which the public code does not contain).
-On the same cells the zero-shot model reads 0.500, so 4,096 identities of other activities
-are worth +0.25 within-application over 23 identities of the applications themselves — and
-**+0.10 cross-application (0.234 against 0.131)**: identity count from other corpora is
-worth more than seeing the applications on 23 people. Exposure alone does not create the
-orthogonal structure Schach measured; C2-hi against Z-676 tests exposure on top of 653
-pretraining identities.
+**C1 is under-trained, read from its own checkpoint history (Coordinator's ask).** At the
+selected epoch 15 the nine-user validation accuracy was still rising monotonically (0.514 →
+0.523 over epochs 10-15), training loss was still falling steeply (14.57 → 12.49) and
+training accuracy was 1.3%; patience then fired because the nine-user signal never exceeded
+0.523 in epochs 16-30. Nine users is the smallest selection set in the programme, and
+"patience fired" on nine people reads as noise, not convergence. **So 0.131 is depressed by
+an unknown amount**, and every comparison involving C1 below carries a budget term until
+C1-full (Amendment 3: the same arm at the zero-shot arm's 120-epoch cap, patience 0) lands.
+
+What C1 separates, and what it does not. It matches Schach on protocol, split and exposure
+and differs in **sensor set and model family together**, and it trains on **23 identities —
+below the 48 at which this project measured the behavioural arm at chance**. So 0.252
+within-application is roughly what our own prior says 23 identities buy, and **the
+surprising number is their 0.831 at the same 23 identities, 3.3× ours**: the candidates are
+the sensor set, their architecture's sample efficiency, or both, and isolating the sensor
+set needs their architecture head-only, which the public code does not contain. "Head-only
+costs 0.58 within-application" is not a claim this experiment can support and is not made.
+
+On the same cells the zero-shot model reads 0.500 within-application and **0.234 against
+0.131 cross-application** — identity count from other corpora over exposure on 23 people,
+in the direction everything this project has measured about identity count points.
+**Stated with its budget term:** the two arms ran different budgets (zero-shot censored at
+120/120 and still improving; C1 stopped at 15 on nine users, under-trained), so the +0.10 is
+not registered and is a lower bound only in the sense that the censoring runs against it —
+the C1 side is the weak half. C1-full is the number to quote once it exists. Exposure alone
+does not create the orthogonal structure Schach measured (+0.011); C2-hi against Z-676 tests
+exposure on top of 653 pretraining identities and is the decisive run of the programme.
 
 ---
 

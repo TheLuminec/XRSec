@@ -319,3 +319,24 @@ Schach's test-fitted +0.34, so the band is excluded decisively, and whether the 
 is 0.047 or 0.053 changes nothing. Nothing in the bands above is changed by this amendment;
 it exists so the next reader sees the defect beside the number rather than a paragraph
 arguing a near-miss.
+
+---
+
+# AMENDMENT 3 — 2026-09-10 22:30, after C1 seed 1: C1-full, a budget-matched C1
+
+C1 seed 1 (row `984f4a622b4f`) selected epoch 15 on nine validation users with the
+validation curve still rising, training loss still falling steeply and training accuracy at
+1.3%, then stopped on patience at epoch 30. The zero-shot arm it is compared with ran the
+full 120-epoch cap and was still improving there. The two arms therefore differ in budget as
+well as in identity count and exposure, and this file's own rule says patience on an
+uncharacterised axis cuts short whichever arm converges slower.
+
+**C1-full**: identical to C1 (Across-XR 0-22 alone in training, validation 23-31, evaluation
+32-48, 10 s `dyn`) with `early_stopping_patience=0` and the same 120-epoch cap as the
+zero-shot arm. Registered before it runs: **C1-full − C1 in [0, +0.08]** on A1 (a
+budget-only difference; if it exceeds +0.08 the nine-user selection was doing real harm and
+every nine-user-selected figure in the programme carries that note); A1 of C1-full still
+below the zero-shot 0.234 (falsifier: at or above it, which would mean exposure on 23 people
+matches 4,096 identities of other activities once trained out); the alignment verdict on C1
+unchanged (A2′ − A1 < +0.05). C1's own figures stay on the certificate as the
+patience-selected run they are.

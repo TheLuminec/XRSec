@@ -25,6 +25,9 @@
 # (CLAUDE.md); it is a seeded subsample, recorded on the row and in the checkpoint.
 set -euo pipefail
 ARM="${1:?C1|C2|C2-lo|C2-hi|Z676}"; SEED="${2:?seed}"
+# PATIENCE=0 gives the budget-matched C1-full of Amendment 3 (the zero-shot arm's 120-epoch
+# cap with no early stopping); the experiment name carries it so the two are never pooled.
+PATIENCE="${PATIENCE:-15}"
 TREE=/run/media/feng/Data/CalebProject/XRSec/.claude/worktrees/across-xr-alignment
 MAIN=/run/media/feng/Data/CalebProject/XRSec
 PY="$MAIN/.venv313/bin/python"
@@ -59,6 +62,7 @@ case "$ARM" in
              VAL="$(lst z676_validation_users)" ;;
     *) echo "arm must be C1, C2, C2-lo, C2-hi or Z676" >&2; exit 2 ;;
 esac
+[ "$PATIENCE" = "0" ] && NAME="${NAME}_full"
 cd "$TREE"
 exec "$PY" model/main.py mode=train \
     "experiment_name=$NAME" \
@@ -72,7 +76,7 @@ exec "$PY" model/main.py mode=train \
     encoding=dyn sample_time=10 sample_rate=20 window_stride=5 resample=nearest channels=full \
     normalize=per_dataset eval_normalize=target_fit within_dataset_negatives=true \
     cross_session_positives=true center_position=false \
-    epochs=120 early_stopping_patience=15 "val_user_fraction=$VALFRAC" \
+    epochs=120 "early_stopping_patience=$PATIENCE" "val_user_fraction=$VALFRAC" \
     batch_size=1024 lr=0.001 weight_decay=0.0 samples_per_user=512 embedding_dim=128 \
     "$CAP" balance_identities=false \
     "seed=$SEED"
