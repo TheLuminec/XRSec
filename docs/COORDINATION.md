@@ -1012,3 +1012,9 @@ P3-social_vr (uncovered, the weakest of the triple) - ~25 min each - so the trip
 rests on two seeds at both ends; the Coordinator's call. C2-lo seed 3 and the half arm are on
 the card meanwhile. A2′ − A1 on P3: present on three of five runs, absent on two, at identical
 configuration - run-dependence again; A2 − A1 ≤ 0 on all five (14 checkpoints).
+
+**C2-lo seed 3 (2026-09-11 08:00):** row `26fbf01d1ad9`, gate PASS 1.9e-4; A1 0.377 - three
+seeds 0.368 / 0.378 / 0.377, pooled **0.375 [0.321, 0.435]**, C2-lo − zero-shot **+0.141
+[+0.100, +0.183]** over three paired seeds, 10-min 0.711. A2′ − A1 +0.001: the rotation is
+**present in one of three runs** at this configuration, reported as that and not as a rate;
+the honest fit never carries (−0.003 pooled). No further card time on the alignment question.

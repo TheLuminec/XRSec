@@ -436,3 +436,22 @@ what answers the first reviewer objection. The prediction is scored in both halv
 games carry best" held (Beat Saber and Synth Riders are the top two); "Social VR least"
 failed (Alyx is least). Two re-seeds (Synth Riders, Social VR) run under the third addendum's
 purpose and rules.
+
+## C2-lo, three seeds — the headline is firm; the rotation is present in one of three (2026-09-11 08:00)
+
+Seed 3: row `26fbf01d1ad9`, epoch 116/120, verification AUC 0.719, gate PASS at 1.9e-4.
+
+| C2-lo | seed 1 | seed 2 | seed 3 | three seeds, pooled over users |
+| --- | --- | --- | --- | --- |
+| A1 cross-application @17 | 0.368 | 0.378 | 0.377 | **0.375 [0.321, 0.435]** (range 0.010) |
+| 10-min majority vote | 0.693 | 0.709 | 0.731 | 0.711 |
+| A2′ − A1 | +0.148 | −0.004 | +0.001 | **present in one of three runs** — reported as that, never as a rate |
+| A2 − A1 | −0.008 | −0.002 | −0.000 | −0.003 [−0.011, +0.005]: never carries |
+| A2-null − A1 | −0.286 | −0.210 | −0.209 | −0.235: person-specific structure on every seed |
+
+**C2-lo − zero-shot(4096) = +0.141 [+0.100, +0.183] over three paired seeds.** The best
+cross-application figure on Schach's own split — head only, their protocol plus 4,096
+pretraining identities — is 0.375 on a single 10 s window and 0.711 at ten minutes,
+against their 0.180 / 0.308 with controllers, as a placement against a published mean.
+The alignment section's three sentences stand on twelve checkpoints of this programme
+plus the five P3 runs.
