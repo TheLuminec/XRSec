@@ -68,8 +68,8 @@ fired at epoch 15 of 30; cross-application verification AUC 0.528. Gate PASS at 
 
 **C1 is under-trained, read from its own checkpoint history (Coordinator's ask).** At the
 selected epoch 15 the nine-user validation accuracy was still rising monotonically (0.514 →
-0.523 over epochs 10-15), training loss was still falling steeply (14.57 → 12.49) and
-training accuracy was 1.3%; patience then fired because the nine-user signal never exceeded
+0.523 over epochs 10-15) and training loss was still falling steeply (14.57 → 12.49);
+patience then fired because the nine-user signal never exceeded
 0.523 in epochs 16-30. Nine users is the smallest selection set in the programme, and
 "patience fired" on nine people reads as noise, not convergence. **So 0.131 is depressed by
 an unknown amount**, and every comparison involving C1 below carries a budget term until

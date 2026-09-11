@@ -340,3 +340,20 @@ below the zero-shot 0.234 (falsifier: at or above it, which would mean exposure 
 matches 4,096 identities of other activities once trained out); the alignment verdict on C1
 unchanged (A2′ − A1 < +0.05). C1's own figures stay on the certificate as the
 patience-selected run they are.
+
+**Addendum to Amendment 3, before C1-full runs (Coordinator, 2026-09-10 22:45).** Three
+corrections. (i) The band `[0, +0.08]` left **C1-full − C1 < 0 unnamed** — the third unnamed
+region today; it is a live outcome (23 identities for 120 epochs with no patience can
+overfit) and is registered as *"the 23-identity arm is capacity-limited rather than
+budget-limited, and the zero-shot comparison stands as measured"*. (ii) C1-full does not
+remove what broke C1 — the nine-user selection signal — it keeps it over a four-fold longer
+budget, so part of any gain is selection inflation (this file prices a max over ~20
+evaluations at about +0.02). The pipeline writes only the validation-selected checkpoint, so
+the final-epoch weights will not exist and rank-1 at the final epoch cannot be scored
+without a code change that would move the identity mid-programme; the diagnostic is taken
+from the row as it is already recorded — `selected_test_acc` against `final_test_acc` on
+the verification metric — and stated as a verification-metric figure, not a rank-1 one.
+(iii) The "training accuracy 1.3%" line is struck as evidence: AM-softmax subtracts the
+margin from the true class before the argmax, so training accuracy sits below chance early in
+every `identity_softmax` run; the under-training diagnosis rests on the validation curve
+still rising and the training loss still falling steeply, which are sufficient.
