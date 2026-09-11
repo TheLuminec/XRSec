@@ -551,3 +551,80 @@ falsified rather than after.
 No reproduction figure is quotable until the trajectory gate is recorded here. The gate asserts
 state A really produced a DataFrame and state B an ndarray, so it cannot silently compare a
 source state against itself.
+
+---
+
+# AMENDMENT 5 — 2026-09-11: the gate PASSES, and my own gate's statistic was wrong
+
+## Equivalence: PASS, bit-identical
+
+20 training steps, seed 42, both source states, via Hydra's own composition:
+
+```
+step   0   shipped 43.026791   patched 43.026791
+step   1   shipped 42.028809   patched 42.028809
+step   2   shipped 37.931763   patched 37.931763
+step   3   shipped 38.269428   patched 38.269428   ... all 20 identical
+LOSS SEQUENCES BIT-IDENTICAL: True    max|delta| = 0.0
+```
+
+The state assertions held — `shipped: frames=DataFrame blocks=18 values_is_view=False`,
+`patched: frames=ndarray` — so the comparison was between two genuinely different source
+states and not, as a bug in the first attempt would have had it, a state against itself.
+
+**The deviation provably does not change the optimisation.** That discharges the condition
+set above: a reproduction figure is now quotable.
+
+## Timing: a THIRD correction, and this time my own instrument misled me
+
+| statistic | shipped | patched | ratio |
+|---|---|---|---|
+| median per step (excl. first) | 0.436 s | 0.424 s | **1.03x** |
+| **mean per step (excl. first)** | **11.33 s** | **0.42 s** | **26.8x** |
+| steps over 5 s, out of 20 | **76.2, 69.3, 71.0, 68.2** | none | |
+
+**The shipped path's cost is concentrated in periodic stalls, not spread across steps.** Six
+workers prefetch; when the queue drains they all re-copy the whole frame at once, so ~4 steps
+in 20 cost ~70 s each while the other 16 cost 0.436 s. **The median is blind to exactly the
+events that constitute the cost.**
+
+I wrote `median_step_seconds_excl_first` deliberately, to strip the warm-up transient that had
+misled me earlier in the day — and it stripped the signal instead. **A robust statistic chosen
+to remove a transient removed the thing being measured.** For a cost concentrated in rare large
+events the mean, or simply total elapsed time, is the estimator that sets epoch duration;
+robustness is the wrong property to want here.
+
+**Corrected budget, from the mean:**
+
+| | s/step | h/epoch | 100 epochs |
+|---|---|---|---|
+| shipped | 11.33 | 7.87 | **32.8 days** |
+| patched | 0.42 | 0.29 | **1.2 days** |
+
+## Where that leaves three successive claims about one number
+
+| claim | value at 100 epochs | verdict |
+|---|---|---|
+| Amendment 2 — tqdm cumulative average read at batches 3–8 | 124 days | **wrong, ~4x over** |
+| Amendment 4 — corrected band from direct per-item measurement | 12–35 days | **brackets the truth** |
+| this amendment — mean of measured marginal steps | **32.8 days** | load-bearing |
+
+So the original figure was wrong, the corrected *band* was right, and my gate's median then
+said the patch was worth 3% when it is worth 26.8x. **Two errors in opposite directions on the
+same quantity, from two different statistics of the same underlying data.**
+
+**And this is why the Coordinator's reframing mattered.** The deviation's justification was
+moved off feasibility and onto fidelity — their code ran at 0.015 ms/item under pandas 1.5.3,
+so the slow path is our dependency version rather than their protocol — *before* the feasibility
+figure moved twice more. An argument resting on a magnitude would have had to be re-made three
+times; the fidelity argument never moved. **Find out which justification is load-bearing before
+the weaker one is falsified, not after.**
+
+## The real run
+
+Enqueued at `max_epochs=100` — their own `min_epochs`, so a published floor rather than a number
+of mine — which is ~29 h at the measured 0.42 s/step. Their `ModelCheckpoint` callbacks save
+best-by-metric, so the run yields a usable checkpoint whatever epoch it reaches. Their config
+ships `max_epochs: 500` with early stopping commented out; 500 would be ~6.1 days on a shared
+card. **If the monitored metric is still climbing at epoch 100 the budget gets extended and the
+extension is recorded here.** `NUM_WORKERS` left at their default 6.
