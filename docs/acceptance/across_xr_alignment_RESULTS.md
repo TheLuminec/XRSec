@@ -708,7 +708,7 @@ result rather than a null.
 
 ## Close-out of the reopened work (2026-09-11 21:00)
 
-Two amendments, six gated checkpoints (raw ×3, raw C2-lo, M-zero; 24 gates PASS across the
+Two amendments, five gated checkpoints (raw ×3, raw C2-lo, M-zero; 23 gates PASS across the
 whole programme, gaps 5.3e-8 to 2.9e-4), every row at `517cdaa57b`. What they add to the five
 claims at the head of this certificate: **(6)** the static-cue audit of our own headline — raw
 adds +0.117 [+0.042, +0.192] cross-application on a one-epoch model and the behavioural

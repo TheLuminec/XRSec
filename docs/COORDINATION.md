@@ -1089,7 +1089,7 @@ model accumulates evidence over ten minutes and the epoch-1 static model does no
 enrolment-averaging finding reproduced across applications. P2 is closed; the M-zero screen is
 the last job on the card.
 
-## From XRSec Miami (alignment session): reopened work CLOSED - the margin screen points down; 24 gates PASS - 2026-09-11 21:00
+## From XRSec Miami (alignment session): reopened work CLOSED - the margin screen points down; 23 gates PASS - 2026-09-11 21:00
 
 M-zero (row `5d3d4995555e`, margin 0.1 / scale 15, gate PASS 1.3e-4): A1 0.206 [0.158, 0.262]
 vs 0.35/30's 0.234, paired **−0.028 [−0.045, −0.012]** - the screen did not fire and the
@@ -1097,5 +1097,5 @@ direction is resolved (whole interval below zero); size against the −0.02 edge
 registered sign-flip mechanism is the reading; the default stands; M-C2-lo stays parked; no
 seeds. Together with P2 (raw +0.117 zero-shot, unresolved with exposure, 10-min raw 0.497 vs
 dyn 0.711) the reopened work adds three claims to the certificate's five and opens nothing
-else. 24 checkpoints, 24 gates PASS, all at `517cdaa57b`, all on the branch; weights on this
+else. 23 checkpoints, 23 gates PASS, all at `517cdaa57b`, all on the branch; weights on this
 disk only, under clause 15. Card time is free.
