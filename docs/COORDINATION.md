@@ -1018,3 +1018,13 @@ seeds 0.368 / 0.378 / 0.377, pooled **0.375 [0.321, 0.435]**, C2-lo − zero-sho
 [+0.100, +0.183]** over three paired seeds, 10-min 0.711. A2′ − A1 +0.001: the rotation is
 **present in one of three runs** at this configuration, reported as that and not as a rate;
 the honest fit never carries (−0.003 pooled). No further card time on the alignment question.
+
+**Amendment 5 landed (2026-09-11 09:30):** C2-lo-half (dose ≈2.0% at 3,095 identities, same 23
+people; row `67e26f8e9022`, gate PASS 2.2e-4): A1 0.347 [0.290, 0.410]; paired against C2-lo's
+three seeds **−0.028 [−0.062, +0.009]**, 10-min −0.124 - the interval spans the registered
+−0.03 edge, so it is **unresolved between "dose not binding" and "dose binds modestly"**, on
+one seed. Halving in-domain windows costs ≈0.03 single-window at the mean; with P3's non-X
+control (−0.009 for a 20% cut) the reading is a modest, probably real dose cost far smaller
+than the exposure effect, which cannot account for C2-hi losing to C2-lo by 0.061. The last
+two queued jobs are the P3 re-seeds (Synth Riders, Social VR); after them the programme's
+card time is spent.

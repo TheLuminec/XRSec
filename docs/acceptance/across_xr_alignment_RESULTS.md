@@ -455,3 +455,23 @@ pretraining identities — is 0.375 on a single 10 s window and 0.711 at ten min
 against their 0.180 / 0.308 with controllers, as a placement against a published mean.
 The alignment section's three sentences stand on twelve checkpoints of this programme
 plus the five P3 runs.
+
+## Amendment 5 — dose separated from scale by window count (2026-09-11 09:30)
+
+Row `67e26f8e9022` at `517cdaa57b`: C2-lo's composition with every Across-XR session
+truncated to its first half (`CrossApplicationXR_HALF`; Across-XR ≈10,400 of 529,594
+training windows, dose ≈2.0% against C2-lo's 3.0%; the same 3,095 identities and the same
+23 people); epoch 109/120; gate PASS at 2.2e-4 on its own half-session evaluation; scored
+on the full corpus under the copy's name.
+
+| | A0 | **A1** | CI95 | 10-min | A2′ − A1 | A2-null − A1 |
+| --- | --- | --- | --- | --- | --- | --- |
+| C2-lo-half, seed 1 | 0.639 | **0.347** | [0.290, 0.410] | 0.587 | −0.004 (uninformative by rule) | −0.145 |
+| C2-lo, three seeds | 0.616 | 0.375 | [0.321, 0.435] | 0.711 | | −0.235 |
+
+| registered | measured (paired on 17 users, half vs the mean of C2-lo's three seeds) | verdict |
+| --- | --- | --- |
+| within ±0.03 → dose not binding; below −0.03 → dose binds | **−0.028 [−0.062, +0.009]**; 10-min −0.124 | **unresolved between the two named outcomes**: the mean sits on the −0.03 edge and the interval spans it, on one seed. Halving the in-domain windows at fixed identities and people costs about 0.03 single-window at the mean and 0.12 at ten minutes. Read with the non-X dose control of P3 (−0.009 [−0.025, +0.008] for a 20% cut): dose has a modest, probably real cost in this range that is far smaller than the exposure effect (+0.14) and does not overturn the C2-hi / C2-lo reading — the 14% arm on 495 identities lost to the 3% arm on 3,095 by 0.061, which a dose cost of this size cannot account for |
+
+The half arm's A2′ (−0.004) is not read, per the rule that a single-seed value of a
+run-dependent quantity is uninformative.
