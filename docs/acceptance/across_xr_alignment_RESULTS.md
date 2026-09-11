@@ -619,3 +619,26 @@ behaviour went down; the audit sits beside the headline, not under it.
 initialisation and has no reason to share that spread. Seeds 2-3 matter more for this arm than
 anywhere else; the observed range is reported when they land and is itself a result about how
 stable an epoch-1 selection is.
+
+### P2, three raw seeds — final (2026-09-11 17:30)
+
+Rows `142a7637af0c` / `c39ab0ce8c3d` / `b019ab0887c2`; **every seed selected epoch 1 of 16**;
+gates PASS at 3.7e-6 / 1.1e-5 / 3.0e-6; verification AUC on the 17: 0.733 / 0.704 / 0.711
+against recorded-position lookups of 0.585 / 0.592 / 0.598. Aggregate: `across_xr_alignment_p2.json`.
+
+| paired on the 17, seeds averaged inside each user | raw (3 seeds) | dyn (3 seeds) | raw − dyn | registered | verdict |
+| --- | --- | --- | --- | --- | --- |
+| **A1 cross-application** | **0.351** (0.364 / 0.353 / 0.335) | 0.234 | **+0.117 [+0.042, +0.192]** | +0.00..+0.06; falsifier < −0.03 | **decisively positive** — the whole interval above zero, the falsifier excluded by 0.07; the interval spans the band's +0.06 edge, so *whether height and posture are worth more than the registered +0.06* is unresolved and *that they are worth at least +0.04* is not |
+| A0 within-application | 0.723 (0.730 / 0.732 / 0.707) | 0.500 | +0.223 [+0.184, +0.263] | A0's gain > A1's | **holds**: the within cell carries placement (P=0.7525); never quoted as biometric |
+| 10-min cross-application | 0.434 | 0.357 | +0.077 | moves with A1 | holds |
+| observed seed range of A1 | 0.029 | 0.010 | | reported, not checked against the trained-out figure | an epoch-1 selection is three times less seed-stable than a trained-out one — a result about the selection, as registered |
+
+**The audit's sentence.** On Schach's own test users, static anthropometry and posture —
+available one epoch from initialisation, no behaviour required — add +0.12 to head-only
+cross-application identification and reach 0.351, within a seed spread of the 0.375 a fully
+trained, exposed behavioural model reaches; a behaviour-only risk assessment understates the
+cross-application identification risk on this corpus. The headline comparison stays on `dyn`
+(their encoding removes head position by construction); the raw arm sits beside it as the
+audit this project runs on every number, its own included. The controlled comparison is raw
+against dyn at fixed exposure (+0.117); "0.351 against 0.375" is a juxtaposition across
+encoding *and* exposure and is labelled one.

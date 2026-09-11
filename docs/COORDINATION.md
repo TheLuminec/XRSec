@@ -1068,3 +1068,14 @@ seeds 2-3; A0 0.730 vs 0.500 -> +0.230, larger than the A1 gain (placement readi
 not quoted). Verification 0.733 vs recorded-position lookup 0.585: raw reads posture as well as
 height. The score went up by 0.13 and the behavioural fraction went down; the headline stays
 on dyn.
+
+**P2 complete, three raw seeds (2026-09-11 17:30):** rows `142a7637af0c` / `c39ab0ce8c3d` /
+`b019ab0887c2`, every seed selected epoch 1 of 16, gates PASS. Paired on the 17: **A1 raw − dyn
+= +0.117 [+0.042, +0.192]** (raw 0.351 vs dyn 0.234), A0 +0.223 [+0.184, +0.263] (placement; not
+quoted), 10-min +0.077; epoch-1 seed range 0.029 against 0.010 trained-out. Decisively positive
+- falsifier excluded by 0.07 - with the size against the +0.06 band edge unresolved. The audit's
+sentence: static anthropometry and posture, available at epoch 1, add +0.12 head-only across
+applications and reach 0.351, within a seed spread of the 0.375 a trained exposed behavioural
+model reaches; a behaviour-only risk assessment understates the risk on this corpus. The
+headline stays on `dyn`; the raw arm is the audit beside it. R-C2-lo and the M-zero screen
+remain on the card.
