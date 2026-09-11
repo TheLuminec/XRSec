@@ -355,3 +355,31 @@ published cross-application figure on their own split. **A0 is confounded and is
 a result:** 0.499 against 0.831 differs in sensor set *and* in domain exposure (zero-shot
 against a model trained on those people's other applications); C1 and C2-hi separate the
 two. "The scope cost sits within-app" is a hypothesis until they land.
+
+## The alignment section, as it stands after nine checkpoints (2026-09-11 04:00)
+
+Three sentences that survive every seed, in the order the paper should give them:
+
+1. **The honest train-user fit never carries.** A2 − A1 ≤ 0 on all nine checkpoints
+   (zero-shot ×3, C1, C1-full, Z-676, C2-hi, C2-lo ×2), whatever the arm, the scale, the
+   exposure or the budget.
+2. **The correspondences available for fitting are capped by the corpus at 32
+   multi-application participants**, and no amount of pretraining raises that; Schach had
+   the same 32. The recommendation to the field is a corpus specification, not a method.
+3. **The test-fitted ceiling that motivates the idea is itself run-dependent at identical
+   configuration** — +0.148 and −0.004 on two seeds of C2-lo — so **a single-run test-fitted
+   diagnostic bound is not evidence that application embeddings differ by a rotation.** This
+   is the form of evidence their +0.34 is; we do not claim their number is wrong, we show the
+   quantity has run-to-run variance a single measurement cannot see, which raises the bar for
+   every claim of this shape, including ours.
+
+The permuted null costing 0.21-0.29 on every exposed arm stays as the evidence that the
+structure is person-specific and strong; what varies between runs is only whether any of it
+is *orthogonal between applications*. Two sentences withdrawn on this evidence, both the
+Coordinator's and recorded as such: "the C2-hi dip is thirty sigma" (seed variance was
+imported from a different arm — 0.003 on zero-shot against 0.152 on C2-lo, thirty times
+larger; the dip is 0.8 σ at this arm's spread) and "the aligned ceiling rises monotonically
+with scale" (one seed per point). Seed variance is a property of an arm, not of a pipeline;
+when the choice is between an elegant account of n = 1 and a second run, take the run.
+Seed 3 of C2-lo, when it lands, is reported as "present in k of three runs", never as a
+rate; three seeds cannot estimate one. The half arm's A2′ column is dropped as uninformative.
