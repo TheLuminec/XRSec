@@ -1,4 +1,41 @@
-# Across-XR alignment — results certificate (zero-shot arm complete, 3 seeds; C1 / Z-676 / C2-hi seed 1 landed; C2-lo and C1-full pending)
+# Across-XR alignment — results certificate (zero-shot 3 seeds; C1 / Z-676 / C2-hi / C2-lo seed 1; C1-full and P3 pending)
+
+## C2-lo, seed 1 — the dose prediction is falsified, and the orthogonal structure appears (2026-09-11 00:40)
+
+Row `a34056530b9d` at `517cdaa57b`: BOXRR (all 4,020) + alyx + Across-XR 0-22 (3,095
+training identities, 540,107 windows of which 20,896 Across-XR — **dose 3.0%**), validation
+1,033 (the 25% draw plus 23-31 explicit), evaluation 32-48; epoch 119 of 120. Cross-application
+verification AUC on the 17 **0.699** (C2-hi 0.683, Z-676 0.556, zero-shot 0.569-0.588). Gate
+PASS at 1.1e-4.
+
+| C2-lo, seed 1 | A0 within | **A1 cross** | CI95 | 10-min cross | A2′ − A1 | A2 − A1 | A2-null − A1 | A2-full − A2 | m-curve |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BOXRR 4020 + alyx + Across-XR 0-22 | 0.624 | **0.368** | [0.318, 0.424] | **0.693** | **+0.148 [+0.124, +0.168]** | −0.008 [−0.029, +0.015] | −0.286 | −0.042 | flat (range 0.023), m*=16 |
+
+| registered contrast (paired on the same 17 users) | measured | registered | verdict |
+| --- | --- | --- | --- |
+| **C2-lo − zero-shot(4096)** | **+0.137 [+0.084, +0.189]** | "above +0.05 is informative: a 3% dose already carries" | **a 3% dose carries, decisively** — the largest cross-application gain in the programme, on Schach's own protocol plus 4,096 pretraining identities |
+| **C2-hi − C2-lo** | **−0.061 [−0.099, −0.026]** | predicted positive, "the dose effect itself" | **FALSIFIED, whole interval on the wrong side.** The 14% arm on 495 identities loses to the 3% arm on 3,095. Dose was not what limited C2; the two arms differ in dose *and* identity count and the pair cannot separate them, but both registered directions assumed dose was binding and both were wrong. A null at 3% would have been misread as "the objective barely saw Across-XR" — the registered reading — and the data say the opposite |
+| A2′ − A1 on C2-lo | **+0.148 [+0.124, +0.168]** | mechanism hypothesis | **the orthogonal structure APPEARS.** The test-fitted ceiling lands at almost exactly the +0.15 the zero-shot registration expected and never saw. It is absent on zero-shot (+0.026), on 23 identities with exposure (+0.011), on 495 identities with exposure (+0.002), and present on 3,095 identities with exposure — so it is a property of a large-identity model that has seen the applications, not of exposure alone and not of the task |
+| A2 − A1 on C2-lo | −0.008 [−0.029, +0.015] | the result arm | **the honest train-user fit still does not carry** — Schach's situation reproduced on a head-only model: the rotation exists, and 32 correspondences in 128-d cannot learn it for unseen people. Their section 8's future work is answered on this instrument: *not with this many training users* |
+| A2-null − A1 | −0.286 | ≤ +0.03 | the person-specific structure is the strongest in the programme |
+
+**What C2-lo changes.** (1) The best cross-application number on their split is **0.368 single
+window / 0.693 at ten minutes, head only**, against their 0.180 / 0.308 — on their own
+protocol (train on 0-22, validate 23-31, test 32-48) with 4,096 pretraining identities of Beat
+Saber and Alyx added. It is a placement against their published mean, as before, and it is
+double. (2) Identity count is flat across a domain boundary *without* exposure (Z-676 ≈
+zero-shot, three measurements in this file agree) and **is not flat with it**: the same
+23 exposed people are worth +0.089 on a 676-identity base and +0.137 on a 4,096-identity
+base, with the whole C2-hi − C2-lo interval below zero. Pretraining scale and exposure
+interact. (3) The alignment closure is narrowed, not reversed: the rotation Schach measured
+exists on our embedding at their scale of exposure plus ours of identities, and the honest
+route still fails for the rank reason the registration named. One seed; seeds 2-3 of C2-lo
+are queued.
+
+---
+
+## The matched pair, seed 1 — the decisive run (2026-09-10 23:30)
 
 ## The matched pair, seed 1 — the decisive run (2026-09-10 23:30)
 

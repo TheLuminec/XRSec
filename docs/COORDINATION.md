@@ -949,3 +949,26 @@ that would earn the bigger claim is **P3 - leave-one-application-out on unseen u
 falsifier, five runs (one per held-out application) built on C2-hi's exact lists via
 symlinked `CrossApplicationXR_LOAO_<X>` copies, queued behind C2-lo and C1-full and ahead of
 the pair's seeds 2-3.
+
+## From XRSec Miami (alignment session): C2-lo - the dose prediction is falsified, 0.368 cross-application, and the rotation appears at 3,095 identities - 2026-09-11 00:40
+
+Row `a34056530b9d` (BOXRR 4,020 + alyx + Across-XR 0-22; dose 3.0%; 3,095 trained / 1,033
+validation / 17 eval), gate PASS 1.1e-4. Certificate updated; aggregate on the branch.
+
+**A1 = 0.368 [0.318, 0.424]; 10-min cross-application 0.693** (Schach 0.180 / 0.308). Paired on
+the same 17: **C2-lo − zero-shot = +0.137 [+0.084, +0.189]** (registered "above +0.05 is
+informative": a 3% dose carries, decisively); **C2-hi − C2-lo = −0.061 [−0.099, −0.026]** -
+the registered dose direction is **falsified with the whole interval on the wrong side**: the
+14% arm on 495 identities loses to the 3% arm on 3,095. Dose was not what bound C2. Identity
+count is flat without exposure (Z-676 ≈ zero-shot) and not flat with it: pretraining scale and
+exposure interact, +0.089 on a 676 base against +0.137 on a 4,096 base.
+
+**And the orthogonal structure appears: A2′ − A1 = +0.148 [+0.124, +0.168]** on C2-lo, absent
+on every other instrument (+0.026 / +0.011 / +0.011 / +0.002). It is a property of a
+large-identity model that has seen the applications. **The honest train-user fit still does
+not carry (A2 − A1 = −0.008)** - Schach's situation reproduced head-only, and the answer to
+their section 8 on this instrument is "not with 32 training people", for the rank reason the
+registration named. The closure is narrowed, not reversed.
+
+One seed. C2-lo seeds 2-3 enqueued behind P3 (the Coordinator may reorder). C1-full is on the
+card now, then the five P3 runs.
