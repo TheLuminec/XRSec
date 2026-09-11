@@ -2738,7 +2738,38 @@ more informative rather than less; and this is one corpus and one activity.
 
 **A free diagnostic fell out of it.** *Which* monotone map reproduces an improvement tells you
 the shape of that improvement - uniform, proportional, or rank-only - and it costs nothing
-wherever two checkpoints are scored on one population. Worth reaching for on any axis where
+wherever two checkpoints are scored on one population.
+
+**A REFRAME IS NOT A SUBSTITUTE FOR A REPLICATION, AND SEED VARIANCE DOES NOT TRANSFER BETWEEN
+ARMS (coordinator's own error, 2026-09-11).** The Across-XR alignment programme produced a
+test-fitted ceiling `A2' - A1` of **+0.089 / +0.002 / +0.148** on three single-seed arms. Asked
+whether the middle value was an anomaly, I did two things and both were wrong. I argued it was
+**not noise** - "thirty sigma" - from a seed variance of 0.003 **measured on a different arm**,
+having written "if that transfers" and then reasoned as though it did. And I explicitly said
+**not** to spend a seed on it, offering instead a tidier description: that the aligned *ceiling*
+was monotone in scale while only the *gain* was not, and that the dip was "already at its
+ceiling" rather than anomalous.
+
+A replication of one point settled it: the same configuration, a second seed, gave **-0.004
+against +0.148 - a range of 0.152, thirty times the variance I had asserted.** At this arm's own
+observed spread the dip is **0.8 sigma**, so it never needed explaining at all, and the monotone
+ceiling rested on one seed per point. Both sentences are withdrawn.
+
+**Two rules, and the second is the one I would put on a wall.** Seed variance is a property of an
+arm, not of a pipeline - **a spread measured on one configuration bounds nothing on another**, and
+a conditional ("if that transfers") does not license the conclusion that follows it. And **a
+reframe that makes single-seed points describable is not evidence about them**: it costs nothing,
+which is exactly why it is tempting in place of the replication that costs eighty minutes - and it
+does not make a fragile claim sturdier, it makes it *more persuasive*, which is worse. **When the
+choice is between an elegant account of n=1 and a second run, take the run.**
+
+**What survived the replication is worth more than what it killed.** The headline replicated
+(0.368 / 0.378, range 0.010). The train-user-only fit never carries on any instrument or seed
+(9 checkpoints). And the *new* finding is sharper than the one withdrawn: **the test-fitted
+ceiling is run-dependent at identical configuration**, so a single-run diagnostic bound of this
+kind is not evidence of an orthogonal relationship between application embeddings - which raises
+the evidential bar for every claim of that shape, including the published +0.34 this programme
+set out to reproduce. Worth reaching for on any axis where
 "who did it help?" matters and only the mean is in hand.
 
 **The 0.785 trap dissolved structurally rather than being avoided.** The registered warning
