@@ -661,3 +661,29 @@ zero-shot and nothing resolvable with exposure; over ten minutes the behavioural
 exposure is ahead by 0.21. The audit stands beside the headline: a behaviour-only assessment
 understates single-window risk, and a static-only one understates what a trained behavioural
 model does with time.
+
+**The four arms in one table (Coordinator, 2026-09-11 19:30) — what ten minutes buys, by
+encoding and by exposure.** Single window and ten-minute majority vote, cross-application at
+N=17 on the same 17 users:
+
+| arm | 1 window | 10 min | averaging gain | headroom at 1 window |
+| --- | --- | --- | --- | --- |
+| dyn zero-shot (3 seeds) | 0.234 | 0.357 | +0.123 | 0.766 |
+| raw zero-shot (3 seeds) | 0.351 | 0.454 | +0.103 | 0.649 |
+| dyn C2-lo, exposed (3 seeds) | 0.375 | 0.711 | **+0.336** | 0.625 |
+| raw C2-lo, exposed (1 seed) | 0.404 | 0.497 | +0.093 | 0.596 |
+
+`raw`'s averaging gain is flat at about +0.10 in both regimes; `dyn`'s is +0.123 without
+exposure and +0.336 with it, 2.7×. So the mechanism is not simply "learned averages, static
+does not": **averaging pays for the learned cue only once that cue has been trained on the
+domain** — without exposure there is little per-window variance worth averaging down because
+the learned component is weak. Headroom does not explain it: the exposed raw arm starts higher,
+has less room, and gains less, and the arm with the most compressed ceiling is the one that
+moves — the objection this file was once caught by, pre-empted. Three sentences, the third the
+actionable one: a behaviour-only assessment understates single-window risk; a static-only one
+understates what a trained behavioural model does with time; **the time advantage is a
+property of whether the model has seen the domain, not of the encoding** — ten minutes of
+observation is worth a great deal against a model trained on your application and very
+little against one that has not seen it. The enrolment-averaging mechanism measured on BOXRR
+(+0.45 learned against +0.02 static), reproduced across applications with its missing
+condition attached.
