@@ -457,3 +457,9 @@ merely observed. Named outcomes: below −0.03, dose does bind (and the C2-hi/C2
 read as scale *minus* a dose cost); above +0.03, less in-domain data helps, which would be
 read as a regularisation effect and flagged for a seed before anything is concluded.
 A2′ − A1 expected to stay near C2-lo's +0.148 (scale and exposure unchanged).
+
+**Addendum to Amendment 5, before it runs (Coordinator, 2026-09-11 02:00).** The half arm
+answers a second question at no extra cost: **its A2′ (aligned ceiling)**. C2-lo's ceiling is
+0.516 at 4,096 identities and 3.0% dose; if the half arm's A2′ tracks 0.516 (within ±0.03),
+the ceiling is a property of pretraining scale; if it falls by more than 0.03, the ceiling
+needs the dose too. Registered beside the dose-versus-scale band above; one run, two answers.

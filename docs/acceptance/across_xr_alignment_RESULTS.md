@@ -52,12 +52,31 @@ evaluations bought +0.005 there.
 | C2-lo | 4,096 | yes | 119 / 120 | 0.368 | +0.148 | 0.234 |
 
 **C2-hi ran the full budget and sits at +0.002 between C1-full's +0.089 and C2-lo's
-+0.148, so the relationship to scale is not monotone and is not resolved on three points**
-— the earlier "scale amplifies it" sentence is withdrawn. What every point supports: the
-rotation needs *exposure and enough training* (C1 → C1-full moved it eight-fold at fixed
-identities and fixed exposure), and it is absent without exposure at any scale. The
-normalised column keeps the same ordering (C2-lo > C1-full > zero-shot > C2-hi), so
-headroom neither produces nor removes the anomaly. Selection inflation on the verification
++0.148**, so "scale amplifies it" is withdrawn — and the gain column is the wrong thing to
+read. Put the aligned ceiling itself in the table (Coordinator):
+
+| exposed, trained-out arm | identities | A1 (unaligned) | A2′ (aligned ceiling) | gain |
+| --- | --- | --- | --- | --- |
+| C1-full | 23 | 0.164 | 0.253 | +0.089 |
+| C2-hi | 676 | 0.307 | 0.309 | +0.002 |
+| C2-lo | 4,096 | 0.368 | 0.516 | +0.148 |
+
+**A1 is monotone in identity count and A2′ is monotone in identity count; only their
+difference is not** — the non-monotone gain is two monotone series with different slopes
+subtracted, and the fact underneath it is that **C2-hi's unaligned embedding already sits at
+its own aligned ceiling** (0.307 against 0.309), so there was nothing for a rotation to
+recover. The sentence that all three points support: **the aligned ceiling rises
+monotonically with pretraining scale; what varies is how much of that ceiling the
+unaligned embedding has already reached** — and we have no account of why C2-hi reached
+all of it. The dip is not seed noise: the zero-shot arm measures the seed spread of A2′ − A1
+at about 0.003 (+0.024 / +0.029 / +0.025), so +0.002 against +0.089 is far outside it. It
+is not chased with card time; no claim depends on it. For the paper, the sharper statement
+is about what the representation can support: **at 4,096 identities there is 0.148 of
+recoverable structure on the embedding (ceiling 0.516) and 32 correspondences cannot reach
+it** — the cleanest form of the corpus limitation. The rotation needs *exposure and enough
+training* (C1 → C1-full moved it eight-fold at fixed identities and exposure) and is absent
+without exposure at any scale. The headroom-normalised column keeps the same ordering.
+Selection inflation on the verification
 columns, measured on C1-full: selected 0.545 against final 0.540, **+0.005** — nine-user
 selection over 120 epochs bought almost nothing, which retires the +0.02 caveat for figures
 whose metric did not choose the epoch, as the file's own rule said it would.
