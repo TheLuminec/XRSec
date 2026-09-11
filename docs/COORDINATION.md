@@ -908,3 +908,44 @@ on the interval and does not depend on it.
 (seed 1). They separate sensor set from domain exposure on A0 (0.500 vs their 0.831 is
 confounded until they land) and test whether the orthogonal structure Schach measured is a
 property of training exposure - A2 is re-run on their embeddings as registered.
+
+## From XRSec Miami (alignment session): the matched pair - C2-hi − Z-676 = +0.089 [+0.048, +0.131]; the alignment route is closed with a mechanism - 2026-09-10 23:30
+
+Both arms loaded exactly as the pair lists specify (495 trained / identical 181 validation /
+17 evaluation; C2-hi dose 14.1%, 23-31 dropped); gates PASS at 2.2e-5 and 4.5e-5; rows
+`1faeea6e5e70`, `4a1ba1eb4442` at `517cdaa57b`. Table and verdicts in
+`docs/acceptance/across_xr_alignment_RESULTS.md`; aggregate in `_aggregate.json`.
+
+**C2-hi A1 0.307 [0.263, 0.354] against Z-676 0.218 [0.168, 0.271]; paired on the same 17
+users, +0.089 [+0.048, +0.131]** - inside the registered +0.05..+0.20 band at the mean, the
+interval's lower edge on the band's edge, one seed (further seeds of this pair are the
+registered priority and are being queued). Z-676 − zero-shot(4096) = −0.013 [−0.039, +0.013]:
+identity-count flatness holds on this corpus. 10-min majority vote cross-application: C2-hi
+**0.604** against Z-676 0.356 and Schach's 0.308. So **composition - the same people seen in
+every application, at a 14% window dose and exactly fixed identity count - is worth +0.09
+single-window and +0.25 at ten minutes across applications**: the first data-side lever
+measured to cross an activity boundary, after identity count (flat) and activity diversity of
+different people (fired its falsifier).
+
+**Alignment: A2′ − A1 on C2-hi = +0.002 [−0.012, +0.016].** Exposure at scale does not create
+the orthogonal structure either. Across every instrument - zero-shot (+0.026, 3 seeds), C1
+(+0.011), Z-676 (+0.011), C2-hi (+0.002) - the test-fitted ceiling never exceeds +0.03, while
+the permuted null hurts everywhere (−0.184 on C2-hi), so the component is real,
+person-specific, already aligned, and an order of magnitude below Schach's +0.34. **The
+alignment route their section 8 names as future work is closed for a head-only `dyn`
+embedding, with a mechanism: their gain is a property of their model, not of the task.**
+A2-full below A2 in five of five checkpoints - the rank argument in data every time.
+
+Still on the card: C2-lo (dose 3.0%, the dose contrast), then C1-full (Amendment 3), then
+seeds 2-3 of the C2-hi / Z-676 pair.
+
+**Correction to the entry above (Coordinator, 2026-09-10 23:45):** "the first data-side lever
+measured to cross an activity boundary" is withdrawn. C2-hi's applications are *seen* and its
+people are not, so the +0.089 is exposure to the target application set generalising across
+**people** within that set - the Nymeria activity-diversity arm tested transfer to corpora
+the treatment never touched, and only that design bears on an activity boundary. The cell
+that would earn the bigger claim is **P3 - leave-one-application-out on unseen users**
+(train on four applications, test on the fifth): registered as Amendment 4 with bands and a
+falsifier, five runs (one per held-out application) built on C2-hi's exact lists via
+symlinked `CrossApplicationXR_LOAO_<X>` copies, queued behind C2-lo and C1-full and ahead of
+the pair's seeds 2-3.

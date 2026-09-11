@@ -149,7 +149,7 @@ class Corpus:
     """All 49 users of Across-XR at the checkpoint's own resolution and encoding, with every
     window labelled by user id, application and start time."""
 
-    def __init__(self, ck: dict, device, model, batch: int = 512):
+    def __init__(self, ck: dict, device, model, batch: int = 512, normalizer_dataset: str | None = None):
         from dataset import SampleDataset, SampleIndex
         from normalization import ChannelNormalizer
 
@@ -162,6 +162,12 @@ class Corpus:
                    sample_rate=self.sample_rate, channels=ck.get("channels", "full"),
                    resample=es.get("resample", "nearest"), window_stride=self.stride)
         index = SampleIndex(ds, encoding=self.encoding)
+        # A leave-one-application-out checkpoint (Amendment 4) was trained on a symlinked
+        # copy named CrossApplicationXR_LOAO_<X>; its normaliser holds statistics under that
+        # name. Scoring is always on the full corpus, so the name is overridden here to apply
+        # the checkpoint's OWN training-fitted statistics rather than a target fit.
+        if normalizer_dataset:
+            index.dataset_names = [normalizer_dataset]
         normalizer = ChannelNormalizer.from_state(ck.get("normalizer"), unseen="target_fit")
         if normalizer.enabled:
             quiet(normalizer.transform, index)
@@ -339,7 +345,8 @@ def gate(ckpt_path: str, device) -> dict:
 # Main: one checkpoint = one seed
 # --------------------------------------------------------------------------------------
 
-def run_seed(ckpt_path: str, device, rng: np.random.Generator, skip_gate: bool = False) -> dict:
+def run_seed(ckpt_path: str, device, rng: np.random.Generator, skip_gate: bool = False,
+             normalizer_dataset: str | None = None) -> dict:
     from utils import load_checkpoint
     if skip_gate:
         model, ck = quiet(load_checkpoint, ckpt_path, device, 100, return_checkpoint=True)
@@ -353,7 +360,7 @@ def run_seed(ckpt_path: str, device, rng: np.random.Generator, skip_gate: bool =
         # stdout line Hydra does not capture. Exactly Schach's 17, or nothing is read.
         assert g["eval_users"] == 17, f"the gate loader saw {g['eval_users']} users, not 17"
     t0 = time.time()
-    corpus = Corpus(ck, device, model)
+    corpus = Corpus(ck, device, model, normalizer_dataset=normalizer_dataset)
     print(f"  embedded {len(corpus.embeddings)} windows ({corpus.encoding}, {corpus.sample_time}s, "
           f"stride {corpus.stride}) in {time.time() - t0:.0f}s", flush=True)
     test, train, valid = corpus.split["test"], corpus.split["train"], corpus.split["valid"]
@@ -411,6 +418,9 @@ def run_seed(ckpt_path: str, device, rng: np.random.Generator, skip_gate: bool =
         summary[name] = {
             "mean": mean, "ci95": [lo, hi], "sequence_10min": seq, "per_cell": per_cell,
             "per_user": vec.tolist(),
+            # Per-cell per-user accuracies, so a subset of cells (the held-out application's,
+            # for P3) can be re-aggregated and paired across checkpoints without re-embedding.
+            "per_cell_user": {f"{a}->{b}": cells[(a, b)]["per_user"].tolist() for (a, b) in cells},
             "unseen_activity_cells": float(np.nanmean(mean_over_cells({c: cells[c] for c in unseen}))) if unseen else None,
             "seen_activity_cells": float(np.nanmean(mean_over_cells({c: cells[c] for c in seen}))) if seen else None,
         }
@@ -437,13 +447,16 @@ def main() -> int:
     ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     ap.add_argument("--out", default=str(ROOT / "docs" / "acceptance" / "across_xr_alignment.json"))
     ap.add_argument("--skip-gate", action="store_true", help="development only; the certificate says so")
+    ap.add_argument("--normalizer-dataset", default=None,
+                    help="apply the checkpoint's statistics recorded under this dataset name (P3's LOAO copies)")
     args = ap.parse_args()
     device = torch.device(args.device)
     rng = np.random.default_rng(67)
     results = []
     for ck in args.checkpoints:
         print(f"\n=== {ck} ===", flush=True)
-        results.append(run_seed(ck, device, rng, skip_gate=args.skip_gate))
+        results.append(run_seed(ck, device, rng, skip_gate=args.skip_gate,
+                                normalizer_dataset=args.normalizer_dataset))
     gates = [r["gate"] for r in results]
     gate_path = pathlib.Path(args.out).with_name(pathlib.Path(args.out).stem + "_gate.json")
     gate_path.write_text(json.dumps(gates, indent=1), encoding="utf-8")

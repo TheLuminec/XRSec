@@ -1,4 +1,43 @@
-# Across-XR alignment — results certificate (zero-shot arm complete, 3 seeds; matched arms pending)
+# Across-XR alignment — results certificate (zero-shot arm complete, 3 seeds; C1 / Z-676 / C2-hi seed 1 landed; C2-lo and C1-full pending)
+
+## The matched pair, seed 1 — the decisive run (2026-09-10 23:30)
+
+Rows `1faeea6e5e70` (Z-676) and `4a1ba1eb4442` (C2-hi), both at `517cdaa57b`, both loaded
+exactly as the pair lists specify (495 training identities; the identical 181 validation
+people; 17 evaluation users; C2-hi additionally 147,921 training windows of which 20,896 are
+Across-XR 0-22, dose 14.1%, and Across-XR 23-31 dropped). Gates PASS at 2.2e-5 and 4.5e-5.
+Cross-application verification AUC on the 17: Z-676 0.556, **C2-hi 0.683**.
+
+| arm, seed 1 | A0 within | **A1 cross** | CI95 | 10-min cross | A2′ − A1 | A2 − A1 | A2-null − A1 | A2-full − A2 | m-curve |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Z-676 (600 BOXRR + alyx, no Across-XR) | 0.477 | **0.218** | [0.168, 0.271] | 0.356 | +0.011 [−0.021, +0.042] | −0.005 | −0.080 | −0.051 | peaked, unaligned is best (range 0.054) |
+| C2-hi (the same minus 23 BOXRR train users, plus Across-XR 0-22) | 0.581 | **0.307** | [0.263, 0.354] | **0.604** | **+0.002 [−0.012, +0.016]** | −0.003 | **−0.184** | −0.042 | flat (range 0.042) |
+
+| registered contrast (paired on the same 17 users) | measured | registered | verdict |
+| --- | --- | --- | --- |
+| **C2-hi − Z-676** | **+0.089 [+0.048, +0.131]** | +0.05 to +0.20; falsifier < +0.03 | **inside the band at the mean; the interval's lower edge sits on the band's edge; one seed.** Seeing the five applications on 23 people, at a 14% window dose and exactly fixed identity count, is worth +0.09 cross-application on unseen people. Further seeds registered as the priority pair |
+| Z-676 − A1 (zero-shot 4096) | −0.013 [−0.039, +0.013] | within ±0.03 | **holds** — identity-count flatness across a domain boundary re-measured on this corpus at 676 against 4,096 |
+| C1 − A1 (zero-shot 4096) | −0.100 [−0.147, −0.055] | not registered | carries C1's budget term (Amendment 3); C1-full pending |
+| A2′ − A1 on C2-hi | **+0.002 [−0.012, +0.016]** | the mechanism hypothesis: does exposure at scale create the rotation? | **No.** With the applications seen at scale there is nothing orthogonal to fit — while the permuted null costs 0.184, so the person-specific structure is strong and already aligned across applications |
+| A2-full − A2 on both | −0.051 / −0.042 | ≤ 0 | holds again — five checkpoints out of five |
+
+**What the pair establishes.** (1) The alignment route is closed for this head-only model
+**with a mechanism, on every instrument**: zero-shot (+0.026, 3 seeds), exposure on 23
+identities alone (+0.011), exposure at scale on 495 identities (+0.002). Schach's +0.34
+test-fitted gain is a property of their model — architecture, sensor set, or both — not of
+the task or of training exposure; the orthogonal component is real and person-specific in
+every arm (the null hurts everywhere) and never exceeds +0.03. Their section 8's future work
+does not transfer to a head-only `dyn` embedding, and that is reported as the finding it is.
+(2) **Domain exposure at fixed identity count is worth +0.09 cross-application and +0.25 on the
+10-minute sequence (0.604 against Z-676's 0.356, and against Schach's 0.308)** — for
+identifying people never seen, across applications *within a set the model was trained on*.
+That generalises across **people**, this project's central question, and it is the first
+composition lever measured to do so on this instrument. **It is not a lever crossing an
+activity boundary**: C2-hi's applications are seen (its people are not), where the Nymeria
+activity-diversity arm tested transfer to corpora the treatment never touched. The cell that
+would earn the bigger claim is P3 — leave-one-application-out on unseen users — registered
+in Amendment 4 and run next. (3) Identity count is flat again (Z-676 ≈ zero-shot 4096).
+
 
 ## Zero-shot arm, three seeds — the registered verdicts (2026-09-10 21:30)
 

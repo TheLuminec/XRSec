@@ -60,6 +60,16 @@ case "$ARM" in
     Z676)    [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
              DATA="[$BOXRR,$ALYX]"; NAME=across_xr_zero_shot_676_dyn10s; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
              VAL="$(lst z676_validation_users)" ;;
+    # P3 (Amendment 4): C2-hi's exact composition with ONE application's sessions absent from
+    # the Across-XR side, via the symlinked copy CrossApplicationXR_LOAO_<X> (build_loao_corpus.py).
+    # Evaluation (the gate referent) is users 32-48 of that copy; the harness then scores the
+    # full corpus with --normalizer-dataset CrossApplicationXR_LOAO_<X>.
+    P3-*)    HELD="${ARM#P3-}"; [ -f "$LISTS" ] || { echo "run c2_pair_lists.py for seed $SEED first" >&2; exit 2; }
+             XR="$MAIN/processed_datasets/CrossApplicationXR_LOAO_$HELD/users"; [ -d "$XR" ] || { echo "no LOAO copy for $HELD" >&2; exit 2; }
+             EXCL=""; for u in $(seq 32 48); do EXCL="${EXCL:+$EXCL,}$XR/$u"; done
+             DROP=""; for u in $(seq 23 31); do DROP="${DROP:+$DROP,}$XR/$u"; done
+             DATA="[$BOXRR,$ALYX,$XR]"; NAME="across_xr_p3_loao_${HELD}_dyn10s"; CAP="max_users={BOXRR-23_Dataset:600}"; VALFRAC=0
+             EXCL="$EXCL,$(lst c2hi_dropped_boxrr_train_users)"; VAL="$(lst z676_validation_users)" ;;
     *) echo "arm must be C1, C2, C2-lo, C2-hi or Z676" >&2; exit 2 ;;
 esac
 [ "$PATIENCE" = "0" ] && NAME="${NAME}_full"

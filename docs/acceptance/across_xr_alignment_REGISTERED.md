@@ -367,3 +367,50 @@ the verification columns - and is not read as contaminating A1; the residual on 
 bounded by how tightly the two metrics track, measured once at 4096 identities on 94 users,
 which is a different regime from nine validation users at 23 and is why the free diagnostic
 is still recorded.
+
+---
+
+# AMENDMENT 4 — 2026-09-10 23:50, before any run: P3, leave-one-application-out on unseen users
+
+C2-hi measured exposure to the *target* application set: its people are unseen, its
+applications are seen. PAPER_PLAN's P3 is the cell that crosses an activity boundary — train
+on four applications, test on the fifth, unseen users — and Schach never ran it. It goes
+ahead of the pair's seeds 2-3 (Coordinator's priority: seeds firm up a result already held,
+P3 decides whether there is one more).
+
+**Design.** For each held-out application X: C2-hi's exact composition and lists (seed 1:
+BOXRR 600 minus the same 23 training users, alyx, the identical 181 validation people,
+Across-XR 0-22 in training, 23-31 dropped, 32-48 evaluated) with **X's sessions absent from
+every Across-XR user**, via a symlinked copy `CrossApplicationXR_LOAO_<X>`
+(`build_loao_corpus.py`; 49 users × 4 sessions, every link resolving into the verified
+corpus). Five runs, one per X. The training row's own evaluation (the gate referent) is
+users 32-48 of the copy. Scoring is on the full corpus with the checkpoint's own statistics
+applied under the copy's name (`--normalizer-dataset`).
+
+**The unit is the cells involving X** — the four ordered cells with X as gallery and the four
+with X as probe, on the 17 test users — paired against the same cells of Z-676 (no exposure)
+and C2-hi (full exposure) on the same users, then pooled over the five X. The other twelve
+cells of each P3 run are a within-run control: the applications the model *did* see.
+
+**Registered.**
+- **P3(X-cells) − Z-676(X-cells), pooled over X: +0.02 to +0.07** — exposure to four
+  applications carries *part* of the +0.089 to a fifth. **The headline "exposure crosses an
+  activity boundary" requires the interval's lower bound above +0.03**; below that the claim
+  is not made whatever the mean.
+- **Falsifier: P3(X-cells) − Z-676(X-cells) ≤ 0** — exposure to other applications does not
+  carry to a new one, and the +0.089 is strictly in-set. Named outcome *below* the band:
+  (0, +0.02] — a carry too small to distinguish from the tail of the in-set gain; reported as
+  unresolved rather than as either.
+- **P3(X-cells) − C2-hi(X-cells) < 0**: the held-out application costs against full
+  exposure; if it does not (interval includes 0 or above), exposure to four is as good as
+  five and the "seen application" distinction was not doing the work.
+- **Control: P3(non-X cells) − C2-hi(non-X cells) within ±0.03** — removing one application
+  from training leaves the seen-application cells where they were. If it fails, the five
+  runs are not comparable to C2-hi and are read against Z-676 only.
+- Per held-out application the same contrasts are reported individually; the two rhythm
+  games (Beat Saber ↔ Synth Riders transfer at twice the mean) are the pair most likely to
+  carry, and the Social VR scenario the least; that ordering is a prediction, not a band.
+- Alignment on P3 embeddings: A2′ − A1 below +0.03, as on every instrument so far.
+
+Power: 8 cells × 17 users per run, five runs pooled, user bootstrap. The bands are
+narrower than the single-arm ones because the comparison is paired on cells *and* users.
