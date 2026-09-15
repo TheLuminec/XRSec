@@ -2722,6 +2722,31 @@ falling series that ran `85.2 -> 42.7 -> 36.5 -> ... -> 4.84 s/batch` and was st
 early batches carry dataset construction and statistics computation, so a running mean read early
 overstates the steady state by **4-10x here**; the honest figure is 12-35 days rather than 124.
 
+**A GATE IS EVIDENCE ABOUT THE PATH IT EXERCISES, AND A LIVE RUNNER IS NOT A SUCCEEDING JOB
+(Miami, 2026-09-15).** The full Rack 2023 run was enqueued on 2026-09-11 after the loss-trajectory
+gate passed bit-identical - and **crashed at minute 22**, the first time `validation_epoch_end`
+ever executed on that stack: `get_accuracy() got an unexpected keyword argument
+'embeddings_come_from_same_source'`. The gate had driven `training_step` in a manual loop,
+deliberately skipping Trainer callbacks, so **it verified training and never ran validation at
+all** - and "the gate passed" was read, by Miami and then by the coordinator, as "nothing blocks
+the run". The runner correctly wrote `.failed` and moved on to an empty queue, and **nobody noticed
+for four days**, because the only monitored signal was the runner's heartbeat: that answers "is the
+runner alive", not "did my job succeed". The coordinator then told the user the run was launching,
+on the strength of a commit title rather than the queue's own state. Two rules: **state which path a
+gate exercised, and extend it to every path the real job will run before spending the budget** (one
+real epoch through validation, with the logged metric present, costs an hour against a 36-hour
+seed); and **every long job needs a watcher that fires on failure, not only on completion** -
+silence from a queue is not success.
+
+**The root cause was a dependency version again, and the obvious patch would have been silently
+wrong.** `pytorch-metric-learning` 2.x renamed that keyword to `ref_includes_query` **and reordered
+the positional arguments** - 1.x takes `(query, reference, query_labels, reference_labels, ...)`,
+2.3.0 takes `(query, query_labels, reference, reference_labels, ...)`. Renaming the keyword alone
+passes reference *embeddings* in as query *labels* and returns a number without raising. **The fix is
+a pin (`1.7.3`, the last 1.x), not a source edit** - the same ruling as Python 3.8 over patching
+`collections.abc` and the pandas hoist. Measured from the failed run's one complete epoch: **21.5 min
+per epoch including validation, ~36 h per seed at `max_epochs=100`**, superseding the per-step band.
+
 **A running mean is not a rate, and warm-up is not steady state.** Quote a marginal cost measured
 over a late window, or instrument per-step wall clock, and until you have one quote a **band
 rather than a point**. The conclusion happened to survive - and note *why* it survived, because
