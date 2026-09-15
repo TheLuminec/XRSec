@@ -663,8 +663,20 @@ counted. Give the pool only where the validation draw itself is under discussion
 - **G12, our side.** Our ten-minute figures (0.357, 0.66, 0.711, 0.497) still have no CI. The
   reference side is done; ours needs the same per-user bootstrap from `[AGG]` - New Gen's harness
   already produces per-user arrays, so this is an aggregation, not a re-run.
-- **G16.** Rhythm-game cell transfer (0.459 / 0.406) is seed-1 only; recompute over the three C2-lo
-  seeds before it appears in the paper.
+- **G16 RESOLVED, and its PREMISE was wrong - mine (New Gen, 2026-09-15).** I wrote that
+  0.459 / 0.406 were C2-lo cells. They are the **zero-shot** seed-1 cells (certificate section
+  "Seed 1", per-ordered-cell list). Over three seeds, bootstrap over users:
+
+  | ordered cell | zero-shot | C2-lo |
+  | --- | --- | --- |
+  | Synth Riders -> Beat Saber | 0.475 [0.401, 0.547] (0.459/0.495/0.471) | 0.591 [0.536, 0.654] |
+  | Beat Saber -> Synth Riders | 0.432 [0.344, 0.522] (0.406/0.460/0.429) | 0.546 [0.472, 0.620] |
+
+  Seed-stable on both arms, and the rhythm pair stays the top two cells on both. Every ordered cell
+  now carries a three-seed interval in the output JSON. **Note what the corrected attribution does to
+  the reading**: the rhythm-game affinity is present *without any exposure*, so it is a property of
+  the activity pair rather than something exposure creates - which is a better result than the one I
+  mis-attributed, and it would have been stated backwards.
 - **G17.** Use "the reason is not the rank argument" (C1-full) and strike the superseded
   "the honest route still fails for the rank reason". A wording decision, not a measurement.
 

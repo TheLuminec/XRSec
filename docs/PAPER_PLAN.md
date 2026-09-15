@@ -63,7 +63,9 @@ above their reported mean, head-only and zero-shot.** Do not strengthen it.
 **The ten-minute contrast, by contrast, separates cleanly.** Their 0.3082 tops out at **0.4169**
 and our exposed arm reads 0.66-0.711 - outside their interval entirely. That is the widest
 separation anywhere in the comparison and it is now interval-against-interval rather than
-point-against-point. **Their within-application ten-minute figure is 1.0000 for all 17 users**, so
+point-against-point. **It is nevertheless the SECONDARY metric and is reported beside the registered
+single-window contrasts, never in place of them** - see the emphasis note below, which is a
+correction to my own framing rather than a caveat on the number. **Their within-application ten-minute figure is 1.0000 for all 17 users**, so
 that metric is saturated there and separates methods only across applications - the reason it is our
 secondary metric, now demonstrated on their data rather than argued.
 
@@ -330,3 +332,39 @@ minutes each plus breaks**, so a cross-application pair carries real temporal se
 to roughly an hour, and the separation is ordered identically for every participant. It is not
 a different day and cannot pay the cross-session cost. It is also not nothing, which is what
 "one sitting" alone implies.
+
+### Ten-minute figures now have intervals on BOTH sides (New Gen, 2026-09-15) - PROVISIONAL
+
+Cluster bootstrap over the same 17 users, seeds averaged inside users, computed the same way on
+both sides. Under their sequence metric with parameters translated to our grid (118 windows = 600 s,
+step one window = 5 s, asserted in the script) and **paired against their per-user ten-minute values**:
+
+| arm | 10-min, their metric | paired vs their 0.308 | verdict |
+| --- | --- | --- | --- |
+| zero-shot (3 seeds) | 0.414 [0.323, 0.509] | **+0.106 [-0.039, +0.256]** | **UNRESOLVED** |
+| C2-lo (3 seeds) | 0.663 [0.571, 0.753] | **+0.355 [+0.202, +0.499]** | **BEAT** |
+
+Under our own harness the same arms read 0.357 [0.257, 0.474] and 0.711 [0.635, 0.785]; the `raw`
+levels (0.434 and 0.497) are recorded for the audit and the headline stays on `dyn`. **The pattern
+matches the single-window pairing exactly** - unresolved zero-shot, resolved for the exposed arm -
+which is the agreement worth having, because the two metrics could have disagreed and did not.
+
+**An independent cross-check fell out of this.** New Gen's aggregation of *their* per-user
+ten-minute values returns **0.308 [0.206, 0.417]**, matching the interval computed here from the
+same JSON by a different implementation to every printed digit. Two implementations over one
+published array is a weaker check than two corpora, but it is the check that was available and it
+passed.
+
+**EMPHASIS NOTE, and it is a correction to the coordinator rather than to a number.** Having seen
+that the ten-minute contrast separates and the single-window one does not, I told New Gen it was
+"worth prioritising in the write-up over the single-window comparison". **The registration lists the
+ten-minute figure as SECONDARY**, and New Gen pushed back correctly: it is reported *beside* the
+registered single-window contrasts, never in place of them. Promoting the metric that happened to
+give the better result - after seeing which one did - is moving the line by another route, and it is
+harder to catch than moving a band because nothing numeric changes and every step looks like
+editorial judgement. This file already carries the rule in its mirror form ("a 0.001 near-miss that
+goes in favour gets the same treatment or the rule is not a rule"). **The registered primary metric
+is the primary metric in the write-up, whichever way the secondary falls.**
+
+Both rows stay **PROVISIONAL** until their calculator reproduces the JSON from the pickle; nothing
+here is a certificate and nothing is relayed to the user as settled.
