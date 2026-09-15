@@ -593,3 +593,109 @@ size measured in domain"**, never "the lever does nothing"; below −0.02 the si
 is the informative reading. Consequences: **M-zero only** — M-C2-lo (already enqueued, now
 parked) runs only if the screen fires; **no seeds on an inside-band result**. The Nymeria band
 was unfalsifiable by exactly this arithmetic; this one is calibrated before launch.
+
+---
+
+# AMENDMENT 8 — 2026-09-15, before any paired figure: their per-user distribution is published
+
+**What changed.** Schach et al. released code, data, the trained similarity model, its
+precomputed test embeddings and `accuracy_values.json` (pinned commits `565a3f39` / `92222c24` /
+`4ec4106a`, public GitLab, cloned on AVALON, hashes recorded in `schach_release_gate.json`). The
+JSON holds `precision_at_1` as a list of 17 per cell — one value per test user — and its mean of
+cell means reproduces the paper exactly (within 0.8314, cross 0.1804, ten-minute cross 0.3082).
+Claim 1 of the certificate called 0.234 "a placement, not a beat" because that distribution was
+unpublished. It is published, so a paired per-user test on the same 17 people is now possible and
+is registered here before it is computed.
+
+**Two mappings, established from the released code before anything is paired.**
+(i) *User index.* Their `Dataset._remap_labels` maps `torch.unique(labels)` (sorted ascending) to
+0..N−1; the released test folder is exactly `32.csv`..`48.csv`, each carrying one `user_id` equal to
+its filename (checked on every row); and the metric library's per-class averaging orders classes by
+`torch.unique(labels, dim=0)` (pytorch_metric_learning 2.9.0, `maybe_get_avg_of_avgs`). So list
+index i = user 32+i. Every per-class list in all 35 cells has length 17 (no class skipped).
+Known-answer reconstruction, required before any pairing: per-(label, application) window counts in
+the pickle must equal `ceil((rows − 450)/5)` from the CSV row counts (463,996 total; the per-user
+count vectors differ between users, so this pins each label to a user without the sort
+assumption), and their own calculator run on their embeddings must reproduce every JSON list.
+(ii) *Application numbering.* `data_selection_slm.py` sets `comment = game_id` from the raw CSV and
+`data_loader.py` filters on it; the dataset README names 1 Superhot VR, 2 Half-Life: Alyx, 3 Beat
+Saber, 4 Synth Riders, 5 Social VR — the same column and numbering as our `takeN`.
+
+**Their protocol, read from code (corrects a phrase in Claim 1).** The similarity model is trained on
+users 0-22 (whole recordings), validated on 23-31, and its published cross-application figure is on
+users 32-48 it never saw; enrolment is a reference set drawn from the test user's other
+application, not training. Claim 1's "training on those people's other applications" is wrong for
+the 0.180 figure and is amended on the certificate; the classification model (the 78.5%-class
+figures) is the one with within-user time splits. C1/C2 ("their protocol") were correctly built
+on users 0-22 and are unaffected.
+
+**Their metric is not ours.** Theirs: every 450-frame window at frame step 5 (15 s at 30 fps,
+stride 1/6 s) of application B is a query; the reference is every 150th such window of application
+A (one per 25 s, ~40 per user); nearest neighbour under CosineSimilarity (ProxyAnchorLoss's default
+distance); `precision_at_1` per class, k = max_bin_count. Ours: one 10 s probe against the
+renormalised mean of all application-A embeddings, rank-averaged ties. Matched N and matched users
+is not matched metric, so the comparison runs in **both directions in one harness each**, gated:
+
+- **D1 — our embeddings through their calculator (primary).** Test users 32-48, every 10 s
+  stride-5 window of application B as query; application-A windows subsampled per user to one per
+  25 s (`[::5]` of the stride-5 list, from the first window) as reference, matching their reference
+  density; `MotionAccuracyCalculator` imported verbatim from their repository with the arguments of
+  their `_compute_accuracy_task` (k="max_bin_count", `CustomKNN(CosineSimilarity())`,
+  `return_per_class=True`). Per-user quantity: mean of `precision_at_1` over the 20 ordered cross
+  cells. Gate: the same calculator on their embeddings reproduces the JSON per-class lists to 1e-6.
+  Their per-user values are taken from the JSON after that gate.
+- **D2 — their embeddings through our harness.** Gallery = renormalised mean of the L2-normalised
+  application-A embeddings (all windows), probe = every application-B window, `rank1_per_user`
+  with rank-averaged ties, the 20 cross cells; paired against our A1 per-user values re-scored by
+  the same functions in the same run. Gate: our checkpoints re-gate on CPU (tolerance 2e-3) and
+  the re-scored A1 means agree with the certificate's within 1e-3 (CPU/GPU arithmetic).
+- Seeds (three per arm) are averaged **inside each user** before the bootstrap; every interval is
+  a cluster bootstrap over the 17 users (10,000 resamples) with the Student-t interval beside it.
+- Ten-minute majority vote is **secondary**: D1 reports their `sequence_top_1_accuracy_10_mins`
+  with the sequence parameters translated to our window grid (window_size = the number of our
+  stride-5 windows in 600 s), and it is labelled approximate because the vote step differs.
+
+**Sensor and window asymmetry, stated up front.** Theirs is head rotation plus both controllers
+under body-relative velocity referencing (18 channels plus five derived distances/angles) on 15 s
+windows; ours is head-only `dyn` on 10 s windows. Both differences run in their favour. Neither is
+used as an excuse for any outcome below.
+
+**Power, computed before anything is paired.** Their per-user cross mean has sd 0.093 over the 17
+(min 0.068, max 0.371); our zero-shot per-user sd is 0.113-0.129 and C2-lo's 0.118-0.148 (mean
+template). The per-user correlation between the two models on the certificate's numbers is 0.014,
+so the paired sd is bounded near sqrt(0.127² + 0.093²) = 0.157 and the **minimum detectable
+paired difference at N = 17 is 0.081** (t(0.975, 16) = 2.12). The zero-shot mean difference in
+hand is +0.054 under our metric — **below the design's resolution**: a true +0.05 has roughly one
+chance in four of producing an interval above zero, and no number of seeds changes that (the floor
+is the user count). C2-lo's +0.195 is resolvable.
+
+**Outcomes, partitioning the line for every contrast by where the 95% interval of the paired
+mean falls:** BEAT (lower bound > 0), LOSS (upper bound < 0), UNRESOLVED (interval spans zero).
+
+| contrast | prediction | if BEAT | if LOSS | if UNRESOLVED |
+| --- | --- | --- | --- | --- |
+| ZS-D1: zero-shot − theirs, their metric | point in **−0.05 to +0.06; UNRESOLVED** — nearest-reference-window scoring forgoes the template averaging our 0.234 had | head-only zero-shot exceeds their trained similarity model on their own metric on the same 17 people — reported with the power note, since the design was not expected to be able to make it | their model wins on its own metric; Claim 1's "at or above" is withdrawn as a statement about their metric and kept only as a placement of a template rank-1 against a published NN mean | the predicted outcome: reported as "not resolved at N = 17; the design cannot see a difference of the size in hand", never as parity |
+| C2-D1: C2-lo − theirs, their metric | point in **+0.08 to +0.20; BEAT** | exposure to their corpus plus 4,096 identities beats their model under their metric on their people — the paper's supportable paired sentence | Claim 2's "+0.14 over zero-shot" stands as a within-harness fact; the beat over their model is not made | as LOSS for the paper's purposes: no paired beat is claimed |
+| D2 level: their embeddings, our template rank-1 | **0.20 to 0.32**, above their 0.180 — averaging lifts a learned cue (BOXRR k-curve) | — | — | — |
+| ZS-D2: zero-shot − theirs, our metric | **UNRESOLVED** | as ZS-D1 BEAT, on our metric | their model, template-scored, exceeds head-only zero-shot | predicted |
+| C2-D2: C2-lo − theirs, our metric | point in **+0.05 to +0.17; BEAT** | as C2-D1 | as C2-D1 LOSS | no paired beat claimed |
+
+**Per-cell reporting.** Per-user differences are also reported per cell (20 × 17) so an
+application-specific reversal is visible; no per-cell claim is registered.
+
+**What is not compared.** Their `[1,2,3,4]`-style multi-reference cells are a four-application
+gallery on a model trained on all five applications' *users 0-22* — not a held-out-application
+model — and are never placed beside P3. Their within-application cells (0.831) score every query
+window against references drawn from the same recording, including the reference windows
+themselves and their 449-frame-overlapping neighbours (`ref_includes_query=False` because the
+arrays differ), so they are not comparable to our half-split A0 and are not paired.
+
+**Safety before any load.** `pickletools` scan of every pickle for GLOBAL opcodes; the checkpoint's
+`data.pkl` references only `collections.OrderedDict`, `torch.FloatStorage` and
+`torch._utils._rebuild_tensor_v2` and loads with `weights_only=True`; `embeddings.pkl` is loaded
+through an `Unpickler` whose `find_class` admits only `numpy`, `pandas`, `collections` and
+`builtins` names, after its scan is recorded. Hashes are recorded on both sides of the transfer.
+
+**Citation.** The train-user-only alignment (section 6.2.5, 52.3% / 94.3%, "diagnostic upper
+bound") exists only in the Frontiers version (doi:10.3389/frvir.2026.1743491), not the arXiv
+preprint; alignment material cites that version.

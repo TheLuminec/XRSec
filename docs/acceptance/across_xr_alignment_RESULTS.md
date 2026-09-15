@@ -12,8 +12,12 @@ probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate
 
 1. **Head-only, zero-shot, never trained on the corpus: 0.234 [0.181, 0.292] cross-application
    at N=17 (3 seeds: 0.231 / 0.230 / 0.240)** against a published **0.180** that used head plus both
-   controllers, 15 s windows and training on those people's other applications. A placement
-   against a published mean, not a beat (their distribution is unpublished). 10-min 0.357 vs 0.308.
+   controllers and 15 s windows, from a similarity model trained on the corpus's other participants
+   (users 0-22; the 17 test people were never in its training — *corrected 2026-09-15, see Corrections*).
+   Written on 2026-09-11 as a placement against a published mean, not a beat, because their
+   per-user distribution was unpublished; **it is now published (their release, 2026-09-15) and the
+   paired per-user test is registered as Amendment 8 — its outcome supersedes this sentence.**
+   10-min 0.357 vs 0.308.
 2. **With in-domain exposure (their protocol plus 4,096 pretraining identities): 0.375 [0.321,
    0.435] (3 seeds: 0.368 / 0.378 / 0.377), +0.141 [+0.100, +0.183] over zero-shot, paired on the
    same users; ten-minute 0.711 against their 0.308.**
@@ -26,11 +30,15 @@ probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate
    was not met (0.017-0.022) and is reported as not met.** The first data-side lever in this project
    measured to cross an activity boundary; "by at least 0.03" is not claimed.
 4. **Their section 8 (train-user-only orthogonal alignment) is answered negatively with a
-   mechanism**: the train-user fit never carries (A2 − A1 ≤ 0 on all 18 checkpoints); the
+   mechanism**: the train-user fit never carries — A2 − A1 is **never resolvably above zero** on any
+   `dyn` checkpoint (zero-shot +0.016 / +0.011 / +0.006, every interval spanning zero; "≤ 0 on all
+   18" below was wrong as written, *corrected 2026-09-15*); the
    correspondences available are capped at 32 multi-application participants by the corpus, and no
    amount of pretraining raises that; and the test-fitted ceiling that motivates the idea is itself
-   run-dependent at identical configuration (+0.148 / −0.004 / +0.001 on three seeds of C2-lo;
-   present in three of five P3 runs), so it was never a target — a single-run test-fitted bound is
+   run-dependent at identical configuration (+0.148 / −0.004 / +0.001 on three seeds of C2-lo — the
+   only identical-configuration evidence; the five P3 runs hold out five different applications and
+   are five configurations, so "three of five P3 runs" supports run-dependence across configurations,
+   not at one, *corrected 2026-09-15*), so it was never a target — a single-run test-fitted bound is
    not evidence that application embeddings differ by a rotation.
 5. **Identity count is flat without exposure and not flat with it** (Z-676 − zero-shot −0.013
    [−0.039, +0.013]; C2-hi − C2-lo −0.061 [−0.099, −0.026] with the treatment's people and lists
@@ -42,11 +50,43 @@ probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate
 by sensor set and model family; 23 identities sits below this project's measured behavioural
 floor); the C2-hi alignment dip (0.8 σ at that arm's own seed spread); how often the orthogonal
 structure appears (present in one of three C2-lo runs — never a rate); the dose contrast's
-position on the −0.03 edge. P2 of PAPER_PLAN (`raw` minus `dyn`) was not run and is recorded as
-not tested. Two predictions scored in both halves: "rhythm games carry best" held, "Social VR
+position on the −0.03 edge. P2 of PAPER_PLAN (`raw` minus `dyn`) **was run in the reopened work
+(Amendment 6): +0.117 [+0.042, +0.192] zero-shot on epoch-1 models, headline kept on `dyn`** — this
+paragraph said "not run" until 2026-09-15 because the head was not updated when the body was. Two predictions scored in both halves: "rhythm games carry best" held, "Social VR
 carries least" failed. Three sentences withdrawn on evidence are kept in the body below where
 they were made. The "dose 3.0%" label in the C2-lo seed-1 section is the pre-run estimate; the
 loader-counted figure is 3.9% (reconciliation below).
+
+## Corrections, 2026-09-15 (recorded as amendments; the body sentences stay where they were made)
+
+Found by the Coordinator's outline audit against primary sources and by reading Schach et al.'s
+released code; the head above is corrected in place with a marker at each site, the body is not
+rewritten.
+
+1. **"A2 − A1 ≤ 0 on all 18 checkpoints / everywhere"** (head claim 4; body at the C2-lo seed-2
+   section, the zero-shot close-out, the P3 table and the seed-3 close-out). The zero-shot arm's own
+   per-seed values are **+0.016 / +0.011 / +0.006**, all positive. The true statement is that the
+   train-user fit is **never resolvably above zero** on any `dyn` checkpoint — every A2 − A1
+   interval spans zero (18 `dyn` checkpoints; the widest lower bound is −0.044 on P3 Synth Riders,
+   whose interval sits entirely below zero). On the `raw` arm seed 1 the interval is +0.032
+   [+0.007, +0.057] — above zero, on an encoding that carries height, and never part of the claim.
+2. **"Run-dependent at identical configuration … present in three of five P3 runs"** (head claim 4;
+   body P3 table). The five P3 runs hold out five different applications and are five
+   configurations. The identical-configuration evidence is C2-lo's three seeds alone (present in
+   one of three). The finding survives; its stated support does not.
+3. **"P2 … was not run and is recorded as not tested"** (head, unresolved paragraph). P2 ran on
+   2026-09-11 (Amendment 6): +0.117 [+0.042, +0.192] zero-shot on epoch-1 models, headline kept on
+   `dyn`. The body's P2 section was always correct; the head was stale.
+4. **"Training on those people's other applications"** (head claim 1). Their similarity model is
+   trained on users 0-22 and validated on 23-31 (`dataset-preprocessing/src/cross-application/
+   data_selection_slm.py`: the split is by user index, whole recordings); the 17 test users are
+   never in training, and their cross-application "reference" is enrolment, not training. So the
+   0.180 is a user-disjoint figure in the same regime as C1/C2, which were correctly built on users
+   0-22. The classification model is the one with within-user time splits.
+5. **Citation.** The train-user-only alignment (section 6.2.5, 52.3% / 94.3%, "diagnostic upper
+   bound", the future-work sentence claim 4 answers) exists only in the Frontiers version
+   (doi:10.3389/frvir.2026.1743491), not the arXiv preprint; every alignment sentence here cites
+   that version.
 
 ---
 
