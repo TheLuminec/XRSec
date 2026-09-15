@@ -14,7 +14,14 @@ they are dated, they have falsifiers, and they were written before any of the ru
 | 4. our algorithm | `dyn` + `identity_softmax`, head-only, **plus train-user-only orthogonal embedding alignment** - see "The algorithmic contribution" below. Unrun |
 | 5. beat SOTA | **the target is 18.0% and it is written down before we run** |
 
-## The SOTA: Schach, Rack, McMahan, Latoschik 2026 (Frontiers in VR; arXiv:2509.08539)
+## The SOTA: Schach, Rack, McMahan, Latoschik 2026 (Frontiers in VR, doi:10.3389/frvir.2026.1743491; preprint arXiv:2509.08539)
+
+> **CITATION CORRECTION, 2026-09-15.** The GOPA alignment analysis - section 6.2.5, the 52.3% / 94.3% aligned
+> figures, the "post hoc diagnostic upper bound" wording, and the future-work proposal to learn the
+> transformations on training/validation users - exists **only in the Frontiers version**. The arXiv v1
+> preprint held at `external_sota/schach2026.pdf` has none of it; this file cited it anyway, from a
+> briefing that had read the Frontiers PDF. Verified against the Frontiers text
+> (`external_sota/papers/schach2026_frontiers.pdf`). The unaligned headline numbers are identical in both.
 
 Same group as who-is-alyx and the BOXRR conversion scripts. `external_sota/schach2026.pdf`.
 
@@ -31,7 +38,7 @@ matching with majority voting over a sequence.
 
 | metric | within-application (diagonal) | **cross-application (off-diagonal)** |
 | --- | --- | --- |
-| nearest embedding accuracy (single 15 s window) | 83.1% (72.3-88.0) | **18.0%** (10.5-22.6), sd 15.1 |
+| nearest embedding accuracy (single 15 s window) | 83.1% (72.3-88.0) | **18.0%** (10.5-22.6), mean per-cell sd 15.1 (across users) |
 | accuracy on a 10-minute sequence | 100% | 30.8% (9.0-57.7) |
 | top-3 on a 10-minute sequence | 100% | 56.0% (29.1-76.4) |
 | classification model, test accuracy | 43.2% | not supported by that model |
@@ -83,7 +90,7 @@ an **orthogonal transformation only** - rotation and reflection, no scaling, no 
 and that aligning them moves cross-application accuracy **18.0% -> 52.3%** on a single window
 and **30.8% -> 94.3%** at ten minutes. They then disqualify their own result in section 9,
 because the rotations were fitted **on the test users**: "a diagnostic upper bound, not a
-deployable, generalizing solution." Their section 8 names the fix as future work in as many
+deployable, generalizing solution." Their future-work paragraph (Frontiers version only) names the fix as future work in as many
 words - learn the orthogonal transformations on training/validation users only, then apply them
 to unseen test users.
 
@@ -121,7 +128,7 @@ that it needs re-deciding rather than inheriting.
 | | registered | measured | verdict |
 | --- | --- | --- | --- |
 | **P1** head-only `dyn` cross-application rank-1 @ N=17 | band 0.18-0.35, falsifier < 0.12 | **0.234** [0.181, 0.292], 3 seeds | **HELD**, inside the band |
-| **P2** `raw` minus `dyn` positive | (no band) | **UNRUN** - the programme ran `dyn` only | not tested |
+| **P2** `raw` minus `dyn` positive | (no band) | **+0.117** [+0.042, +0.192], 3 seeds, epoch-1 selection (run 2026-09-11; this row said UNRUN until 2026-09-15) | **HELD** |
 | **P3** unseen-application cell below the seen-application cell | directional | **-0.036** [-0.054, -0.018] | **HELD** |
 
 **The five claims the programme ends on.**
@@ -133,20 +140,20 @@ that it needs re-deciding rather than inheriting.
    so no formal test is available at any margin.
 2. **With in-domain exposure: 0.375** (three seeds, range 0.010), **+0.141** over zero-shot;
    ten-minute sequence **0.711** against their 0.308.
-3. **Exposure carries to an UNSEEN application: +0.053** [+0.022, +0.083], interval excluding
+3. **Exposure carries to an UNSEEN application: +0.049** [+0.021, +0.078] (seed-averaged; this read +0.053 on seed 1 until 2026-09-15), interval excluding
    zero, falsifier excluded. The coverage control is what makes it stand - applications absent
-   from every pretraining corpus read **+0.052** against **+0.055** for those present, so the
+   from every pretraining corpus read **+0.046** against **+0.055** for those present, so the
    carry is not pretraining leaking through the hold-out, and **Synth Riders (+0.077) has no
    pretraining coverage at all**. The stricter registered threshold for the phrase "crosses an
    activity boundary" (CI lower above +0.030) read +0.022 and is **reported as not met**.
    **This is the first data-side lever this project has measured to cross an activity
    boundary** - identity count is flat across one, activity diversity was null.
-4. **Schach et al.'s section 8 is answered negatively, with a mechanism.** The honest
-   train-user-only orthogonal fit **never carries** (A2 - A1 <= 0 on 14 checkpoints); the
+4. **Schach et al.'s future-work proposal (Frontiers version) is answered negatively, with a mechanism.** The honest
+   train-user-only orthogonal fit **never carries** (A2 - A1 never resolvably above zero; zero-shot seeds read +0.016/+0.011/+0.006, every interval spanning zero - the earlier "<= 0 on 14 checkpoints" was false); the
    correspondences available for fitting are **capped at 32 by the corpus** - the number of
    people recorded in two or more applications - and no amount of pretraining raises it; and
    **the test-fitted ceiling that motivates the whole idea is itself run-dependent**, present in
-   one of three runs at one configuration and three of five at another. So it was never a
+   one of three seeds at identical configuration (C2-lo) - the five P3 runs are five *different* configurations and do not bear on run-dependence. So it was never a
    target, and a single-run diagnostic bound of that kind is not evidence that application
    embeddings differ by a rotation. **That raises the evidential bar for every claim of this
    shape, including the published +0.34 this programme set out to reproduce.**

@@ -700,7 +700,7 @@ file told a session not to argue a 0.003 near-miss that went *against* a result;
 near-miss that goes in favour gets the same treatment or the rule is not a rule**, and applying
 an interval standard only when it flatters is the shape of motivated reasoning that is hardest to
 catch because every step looks principled. There is also a stronger reason no beat is available:
-**their 0.180 is a mean with a reported across-cell sd of 15.1 and no published per-cell or
+**their 0.180 is a mean with a reported mean per-cell (across-user) sd of 15.1 and no published per-cell or
 per-user distribution**, so the comparison treats their point estimate as exact, and the two
 intervals are over different sources of variation (users against application pairs). **A formal
 significance claim against a published mean whose distribution was not published is not available
@@ -784,12 +784,12 @@ users 32-48:
    *higher*-dose arm loses by 0.061 - so correcting for dose **widens** the scale effect.
 
 **The alignment route is closed, in three sentences that survive every seed.** The honest
-train-user-only orthogonal fit **never carries** (A2 - A1 <= 0 on 14 checkpoints). The
+train-user-only orthogonal fit **never carries** (A2 - A1 never *resolvably* above zero - zero-shot seeds read +0.016/+0.011/+0.006 with every interval spanning zero; "<= 0 on 14 checkpoints" was written here and was false). The
 correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
 or more applications - and no amount of pretraining raises that; a corpus that could support the
 method would need far more multi-application participants, which is an actionable specification
 rather than a null. And **the test-fitted ceiling that motivates the idea is run-dependent**,
-present in one of three runs at one configuration and three of five at another, **so it was never
+present in one of three seeds at identical configuration (C2-lo) - the "three of five P3 runs" once cited here are five *different* configurations and do not bear on it, **so it was never
 a target** - a single-run diagnostic bound of that kind is not evidence that application
 embeddings differ by a rotation, which raises the bar for every claim of that shape including the
 published +0.34 this programme set out to reproduce.
@@ -1587,7 +1587,7 @@ download:
 | --- | --- |
 | 9 | IRB or equivalent ethics approval **in advance of use** - a precondition, not a promise |
 | 4 | no further distribution without written consent; requests referred back to Berkeley |
-| 5 | **mandatory citation of Nair et al. 2023** in any public disclosure |
+| 5 | **mandatory citation** in any public disclosure - the DUA names exactly one: Nair et al., *Unique Identification of 50,000+ Virtual Reality Users from Head & Hand Motion Data*, arXiv:2302.08927 (verified on the DUA text 2026-09-15). Not the BOXRR-23 dataset paper, arXiv:2310.00430 - cite that too, but it does not discharge clause 5 |
 | 10-11 | no deanonymization, no contacting subjects, no inferring sensitive attributes |
 | 13 | recipient indemnifies UC Berkeley |
 | 15 | Berkeley may terminate; all copies must then be destroyed, **including derived ones** |
@@ -2124,7 +2124,7 @@ its size against the registered -0.02 edge is not.
 **So the live advice above is superseded and following it would send you the wrong way.** "If a
 result lands within ~0.016 of a target, the first question is whether the margin change closes
 it" was written from the 419-identity grid and **does not hold at scale** - at 4,096 the lever
-subtracts roughly twice what it added at 419. The default stands, and now for a measured reason
+reverses sign - and only the sign is comparable, because the +0.016 was in-domain verification AUC at 419 and the -0.028 is cross-application rank-1 at 4,096 ("roughly twice" compared two metrics and is withdrawn). The default stands, and now for a measured reason
 rather than a procedural one. **A hyperparameter gain measured at one identity count is a claim
 about that count**, and this file's own explanation of *why* 0.1/15 helped at 419 predicted the
 reversal, which is what makes this a negative with a mechanism rather than a null.
