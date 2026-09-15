@@ -560,3 +560,121 @@ All rank-1 at **N=17**, test users 32-48, chance 0.0588. CIs: user bootstrap ove
 - **43.2% vs 43.5%** is an inconsistency inside Schach et al. itself (both versions); quote with a note.
 - **Still open**: ten-minute figures have no CI; their JSON's application numbering (1-5) must be mapped before any
   per-user pairing (sent to New Gen); the programme record is still unmerged.
+
+---
+
+## RESOLUTIONS, ROUND 2 (coordinator, 2026-09-15) - from primary sources on disk
+
+### G6 RESOLVED - `comment` is `game_id`, and their Readme names the applications
+
+`dataset-preprocessing/src/cross-application/data_selection_slm.py:29` writes `'comment': game_id`
+with **no reindexing**, and `dataset/Readme.md:17-21` gives the mapping outright:
+
+| `comment` / `game_id` | application | in our pretraining corpus? |
+| --- | --- | --- |
+| 1 | Superhot VR | no |
+| 2 | Half-Life: Alyx | yes (who_is_alyx) |
+| 3 | Beat Saber | yes (BOXRR-23) |
+| 4 | Synth Riders | **no** - the uncovered control |
+| 5 | Social VR Scenario | no |
+
+This agrees with the `take_id` ordering already recorded in `docs/COORDINATION.md`, so the two
+independent readings match. **The caveat that `game_id` is not play order still stands** - the
+paper's play order is Synth Riders, Superhot, Beat Saber, Alyx, Social VR (`game_id` 4,1,3,2,5) -
+but it does not affect any cross-application cell, which is unordered by construction.
+
+### G7 RESOLVED - index k of every 17-element array is user 32+k
+
+Four links, each checked rather than assumed:
+
+1. **Splits are one file per user, filename == `user_id`**: `train/` 0-22 (23 users), `valid/`
+   23-31 (9), `test/` 32-48 (17). Confirmed by reading `user_id` inside `test/32.csv` - constant
+   at 32 over 139,077 rows. *(This also confirms their 0.180 is user-disjoint: trained on 0-22,
+   validated on 23-31, tested on 32-48 - the same regime as our C1/C2 arms.)*
+2. **Label remap sorts**: `Dataset._remap_labels` builds its mapping from `torch.unique(labels)`,
+   which returns ascending values, so class k is the k-th smallest `user_id`. Independent of the
+   `glob("*")` order in which files are concatenated.
+3. **The per-class array sorts the same way**: pytorch-metric-learning's `maybe_get_avg_of_avgs`
+   calls `get_unique_labels` -> `torch.unique(labels, dim=0)` (ascending) and returns
+   `average_per_class` in that order.
+4. **Nothing was skipped**: their sequence code *does* drop a class with too few samples
+   (`"Skipping class ... not enough samples"`), which would shorten an array and silently break the
+   correspondence. It did not fire - **every one of the 44 per-user arrays is length 17 in all 35
+   cells**, checked exhaustively.
+
+**So the mapping is the identity in our numbering: array index 0 = user 32, index 16 = user 48.**
+Link 4 is the one worth keeping: the hazard here is not a wrong mapping, it is a *variable-length*
+one, and it is invisible unless counted.
+
+### G12 RESOLVED FOR THE REFERENCE SIDE - their ten-minute figure has a CI now
+
+Their JSON ships `sequence_top_1_accuracy_list_*_mins` per user, so the reference side needs no
+re-run. Per-user means over cells, cluster bootstrap over the 17 users, 10,000 resamples:
+
+| Schach et al. | single 15 s window | 10-minute sequence |
+| --- | --- | --- |
+| **cross-application** (20 off-diagonal cells) | **0.1804** [0.1396, 0.2246] | **0.3082** [0.2061, 0.4169] |
+| within-application (5 diagonal cells) | 0.8314 [0.8102, 0.8520] | **1.0000** [1.0000, 1.0000] |
+
+All four point estimates reproduce the published figures exactly. Three consequences:
+
+1. **The zero-shot placement is now clearly the right call, and quantifiably so.** Their
+   cross-application interval reaches **0.2246**, and our zero-shot 0.234 [0.181, 0.292] overlaps it
+   heavily. "Every seed sits above their reported mean" remains true and remains the only sentence
+   available; anything stronger is now refuted rather than merely unsupported.
+2. **The ten-minute contrast survives with room to spare.** Their 0.308 tops out at **0.417**, and
+   our exposed arm reads 0.66-0.711 - outside their interval entirely. This is the cleanest
+   separation anywhere in the comparison, and it is now an interval statement rather than two points.
+3. **Their within-application ten-minute figure is 1.0000 for every one of the 17 users.** The
+   metric is saturated there, which is the outline's own argument for why the ten-minute number
+   separates methods only across applications - now demonstrated on their data rather than asserted.
+
+**And their own per-user spread makes our metric contribution for us.** Cross-application per-user
+rank-1 runs **0.068 to 0.371** on a single window and **0.043 to 0.818** at ten minutes - on the
+same 17 people. A risk assessment reported as a mean conceals a person identified four-fifths of the
+time behind a population figure of 0.31. That is precisely the "report the distribution, not only
+the mean" contribution, and it can now be made **using the reference's own published numbers**,
+which is far stronger than making it only on ours.
+
+### G15 RESOLVED - and the answer is that they do not separate gallery from query
+
+The within-application protocol is `ref = embeddings[comments == q][::150]` against
+`query = embeddings[comments == q]` - the reference is a **subset of the queries**, from the same
+unbroken recording, with `ref_includes_query=False` so the kNN never excludes the identical vector.
+Full derivation and the graded overlap in `CLAUDE.md`. **Our half/half split does not match theirs
+and should not be made to**: the correct handling is not to pair A0 against their 0.831 at all.
+
+### G8 RESOLVED - both branches are merged
+
+`worktree-across-xr-alignment` (83 commits) and `miami-server` (5) are on `origin/main` as of
+2026-09-15 (PRs #9, #10). The programme record is no longer on an unmerged branch.
+
+### G5 RESOLVED - the two numbers are the pool and the list, and only one is the treatment
+
+`4,096` and `676` are **identity pools before the 25% validation draw**; `3,072` and `495` are the
+**training lists the loader actually held**. 4,096 x 0.75 = 3,072 exactly, and C2-lo's 3,095 is that
+same 3,072 plus the 23 Across-XR training users - which is why C2-lo's window arithmetic closes at
+540,107 - 20,896 = 519,211 against the zero-shot set. **Quote the trained-identity count, never the
+pool**, per this project's own rule that a matched count is a claim about whichever list you
+counted. Give the pool only where the validation draw itself is under discussion.
+
+### Still open, with what each needs
+
+- **G12, our side.** Our ten-minute figures (0.357, 0.66, 0.711, 0.497) still have no CI. The
+  reference side is done; ours needs the same per-user bootstrap from `[AGG]` - New Gen's harness
+  already produces per-user arrays, so this is an aggregation, not a re-run.
+- **G16.** Rhythm-game cell transfer (0.459 / 0.406) is seed-1 only; recompute over the three C2-lo
+  seeds before it appears in the paper.
+- **G17.** Use "the reason is not the rank argument" (C1-full) and strike the superseded
+  "the honest route still fails for the rank reason". A wording decision, not a measurement.
+
+### One environment fact the reproductions must not share
+
+**Rack et al. require `pytorch-metric-learning==1.7.3`; Schach et al. require 2.x.** Schach's
+`MotionAccuracyCalculator.get_accuracy` is declared `(query, query_labels, reference,
+reference_labels, ref_includes_query=...)` - the 2.x signature and the 2.x keyword - while Rack's
+code dies on 2.x with `unexpected keyword argument 'embeddings_come_from_same_source'` and is pinned
+to the last 1.x. Since 1.x and 2.x also **reorder the positional arguments**, a single environment
+serving both would silently pass reference embeddings as query labels and return a plausible number.
+**The two SOTA reproductions need separate virtualenvs**, and this is a correctness matter rather
+than a convenience one.
