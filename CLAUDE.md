@@ -195,6 +195,17 @@ The only part of the pipeline that decides *how* a window becomes an embedding. 
 
 - `model/feature_extractor.py` — the `FeatureExtractor` ABC, the registry (`register` / `create` / `available` / `search_space`), and `check_output_contract()`.
 - `model/extractors/` — implementations. **Every module here is auto-imported**, so a new file is picked up with no edits anywhere: define a `FeatureExtractor` subclass, decorate it `@register("name")`, and it is selectable as `extractor=name`.
+  **The flip side is that `torch_geometric` is a hard dependency of every run, not an optional
+  one** (Miami, 2026-09-09). `_import_all()` imports every non-underscore module in the
+  package at package import, so `paper_gnn_bilstm` loads unconditionally and its module-level
+  `from torch_geometric.nn import GATConv, GraphConv` runs even for a `bilstm`-only job.
+  Without it, `import feature_extractor` raises `ModuleNotFoundError: No module named
+  'torch_geometric'` and the whole test suite fails at collection - **a run that never asked
+  for a GNN dies naming a GNN library**, which is why this is written down rather than left
+  to be rediscovered. The coordinator told a new machine not to block on it because
+  `paper_gnn_bilstm` was on no live arm; that is true of the *arm* and false of the *import*,
+  and the mechanism was already documented one line above. When provisioning a machine,
+  install it whether or not the GNN is wanted.
 - `model/list_extractors.py` — prints each extractor, its tunable arguments, defaults, and declared sweep space.
 
 Three are registered: `paper_gnn_bilstm` (the published architecture, the default), `bilstm` (the same minus the GNN branches — the ablation showing what the graph layers contribute), and `random` (ignores its input and emits noise — the chance-level floor any real result must clear).
@@ -303,6 +314,28 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 - `test_on_excluded=True` → the eval set is built with the flag flipped, so train and test see disjoint users.
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
+
+**THE TWO BOOLEANS CANNOT EXPRESS "EXCLUDE FROM TRAINING WITHOUT EVALUATING ON", AND THAT GAP
+NEEDED A THIRD LIST (New Gen, 2026-09-10).** Under `test_on_excluded=true` the exclude list **is**
+the evaluation set, so there is no way to hold a group of users out of training without either
+scoring them or letting them in. Removing Across-XR 23-31 from a matched arm's validation would
+therefore have trained on them or evaluated on 26 users instead of 17 - neither of which is the
+requested experiment. `drop_users` fills exactly that hole: removed from training and from the
+validation draw, **nothing else**, recorded per run as `num_drop_users` and in `eval_split` so the
+qualification travels with the number.
+
+This is the shape the section above warns about arriving as a concrete cost rather than a
+caution: **a split expressed as one list plus two booleans has states it cannot name**, and the
+one it could not name is the one a controlled contrast needs - hold a group out of *both* sides.
+Tested on the real object with a three-user corpus whose answer is known by construction, one
+user evaluated, one dropped, one trained.
+
+**And it landed before the first row of the programme, which is the part worth imitating.** The
+change moves `code_identity` (`73ecbf9232` -> `517cdaa57b`), so New Gen parked a queued seed for
+the ten minutes it took rather than letting arm 1 run under one identity and the rest under
+another. **A numerics-free change is still an identity step, and an identity step in the middle
+of a programme is a comparison someone later has to earn** - see the margin/scale grid, which
+cost five runs to prove an invalidation had been unnecessary.
 
 ### Same-session positives (answered: costs ~1.5 points)
 
@@ -640,7 +673,189 @@ residual static cue is height** - the one this file has consistently called a bi
 That makes the corpus usable under `raw` with a height caveat and clean under `dyn`, where
 before this measurement it looked like a `dyn`-only instrument. Two caveats stay attached:
 it is still **one sitting**, so it says nothing about temporal persistence and cannot pay
-the cross-session cost; and `take_id` separates a short break, not a day.
+the cross-session cost; and **`take_id` carries no information at all** - it is a redundant
+relabelling of `game_id`, identical on all **21,203,962 rows** of all 49 files, 245 cells and
+not one with a second take. This file previously said "`take_id` separates a short break, not
+a day", which conceded a limit while implying structure that is not there. **The honest
+caveat is harder: each (participant, game) cell is a single unbroken recording, so the corpus
+holds no within-application temporal separation of any kind.** Nothing already concluded from
+it changes - the 0.527 is cross-application and needs no takes - but a word was doing
+reassurance work it had not earned, which is worse than a caveat that is merely pessimistic.
+
+**FIRST CROSS-APPLICATION RESULT: head-only and zero-shot sits at or above the published
+controller-based figure, and the alignment route their own paper named as future work does NOT
+work on a zero-shot embedding (New Gen, 2026-09-10).** Three seeds, all gated (2.0e-5 to 2.9e-4),
+one code identity, `dyn` 10 s head-only trained on BOXRR+alyx and **never trained on Across-XR**,
+scored on Schach et al.'s own test users 32-48 at N=17:
+
+| | ours | Schach et al. |
+| --- | --- | --- |
+| **cross-application rank-1, single window** | **0.234** [0.181, 0.292] | **0.180** |
+| cross-application, 10-minute sequence | 0.357 | 0.308 |
+| within-application | 0.500 (confounded, below) | 0.831 |
+
+**It is NOT reported as a beat, and the reason is the durable half.** The interval's lower edge
+is 0.181 against their 0.180, so it technically excludes - by 0.001. Twelve hours earlier this
+file told a session not to argue a 0.003 near-miss that went *against* a result; **a 0.001
+near-miss that goes in favour gets the same treatment or the rule is not a rule**, and applying
+an interval standard only when it flatters is the shape of motivated reasoning that is hardest to
+catch because every step looks principled. There is also a stronger reason no beat is available:
+**their 0.180 is a mean with a reported mean per-cell (across-user) sd of 15.1 and no published per-cell or
+per-user distribution**, so the comparison treats their point estimate as exact, and the two
+intervals are over different sources of variation (users against application pairs). **A formal
+significance claim against a published mean whose distribution was not published is not available
+at any margin.** The sentence that is available, and is unattackable: every seed sits above their
+reported mean, head-only and zero-shot.
+
+**SUPERSEDED AS TO ITS PREMISE (2026-09-15): the per-user distribution IS published, and a formal
+test is now available.** Schach et al.'s code, data and trained models are public at
+`gitlab.informatik.uni-wuerzburg.de/hci/software/research-prototypes/2025-frontiers-identification-across-xr-applications/`
+(`dataset` @ `565a3f39`, `dataset-preprocessing` @ `92222c24`, `training-and-evaluation` @
+`4ec4106a`; cloned to `external_sota/schach2026/`). Note the host: `gitlab.informatik`, not the
+auth-gated `gitlab2.informatik` that blocked this for days. `training-and-evaluation` ships the
+trained similarity model, 922 MB of precomputed embeddings, the evaluation scripts, and
+`evaluation/files/slm_model_data/accuracy_values.json` - whose `precision_at_1` is a **list of 17
+per-user values** in each of 35 cells (their calculator runs `return_per_class=True`). **The mean
+of cell means reproduces the paper exactly from the JSON alone: within-application 0.831,
+cross-application 0.180.** So "no formal test is available at any margin" rested on a fact that
+was false the moment the repository went public; the placement wording stays only until a paired
+per-user test is run.
+
+Three conditions on that test, recorded before it exists. **The list index to user id mapping is
+decided inside `pytorch_metric_learning`, not in their code** - verify it, because a paired test
+on a misaligned user order is worse than none. **Matched N and matched users is not matched
+metric**: theirs is nearest-reference-window kNN on 15 s windows at 30 fps, ours a mean-embedding
+template on 10 s windows, so one harness must score both arms and first reproduce 0.180/0.831 from
+their model. And **their `.pkl` and `.ckpt` files execute code on load** - scan with `pickletools`
+and prefer `torch.load(weights_only=True)` on any machine holding DUA data. Two traps: their JSON's
+references like `[1, 2, 3, 4]` are four-application galleries on a model trained on all five, **not**
+a held-out-application model, so never quote them beside P3; and their README names the checkpoint
+`similarity-model/max_r_precision.ckpt` while the shipped file is `slm_model/max_precision_at_1.ckpt`.
+
+**AND THE SHIPPED CHECKPOINT CANNOT BE TIED TO THE PUBLISHED NUMBERS - rest any comparison on the
+JSON and `embeddings.pkl`, not on it (verified 2026-09-15).** Three independent reasons. Their
+`slm_compute_embeddings.py` loads the model as `SimilarityLearningWithDANN`, **a class present in no
+file of the repository**, so embeddings cannot be recomputed from the checkpoint with the shipped code.
+The checkpoint itself is not operatively a DANN model (loaded `weights_only=True`: no domain or
+application classifier in the `state_dict`, `use_lambda_in_loss=False`) - the paper names DANN only as
+future work, so the class name is a codebase leftover. And **its architecture does not match the paper**:
+`rnn_hidden_size` is **320** where the Frontiers Table 2 lists the similarity model's GRU hidden size as
+**480**. Everything else (embedding 480, window 450, stride 50, d_model 320, 16 heads, one transformer
+layer, two GRU layers) agrees. What reproduces the paper exactly is the per-user JSON, and the chain that
+can be verified is data -> pickle -> JSON -> paper. **"Their code is public", "their model is public" and
+"the public model produced their numbers" are three different claims**, and only the first holds cleanly
+here - the same gap Rack et al.'s repository showed one level down.
+
+**Alignment is excluded decisively and is a finding rather than a null.** `A2' - A1` - the
+*test-fitted* diagnostic ceiling, Schach's own illegitimate route reproduced on our embedding -
+came to **+0.026** [+0.000, +0.051] against a registered +0.15 and against **their +0.34**:
+**13x smaller**. Train-user-only fitting added +0.011, its registered +0.05..+0.20 band wholly
+excluded. But the permuted-correspondence null **hurts** by -0.074 in every seed, so the
+orthogonal component is real and person-specific and merely tiny - *"there is no rotation"* is the
+wrong sentence, *"the rotation is 13x smaller than on a model trained on the applications"* is the
+right one. The unrestricted 128-d fit was worse than the subspace fit by -0.055 in 3/3 seeds,
+which is the SVD rank argument appearing in data; the subspace dimension was flat over 4-32.
+
+**The mechanism hypothesis, and it is what the matched arms decide.** Schach measured their
+orthogonal structure on a model trained on **all five applications for the same 23 people**; ours
+never saw any of them. So the rotation may be a property of *training exposure* rather than of the
+task - testable by re-running the same alignment on C1 (their protocol) and C2-hi. **If it appears
+there, alignment returns as a positive contribution on the matched arm; if it does not, the
+negative stands with a mechanism attached.** Either way it is a result, which is what makes those
+arms decisive rather than confirmatory.
+
+**A0 is confounded and "the scope cost sits within-application" is not yet earned.** 0.500 against
+their 0.831 varies the sensor set *and* domain exposure together. C1 is head-only **and** trained
+on the applications, so C1 against 0.831 is the comparison that isolates the sensor set.
+
+**PROGRAMME COMPLETE (2026-09-11): 18 gated checkpoints, one code identity, every arm registered
+before it ran.** Final numbers, all cross-application rank-1 at N=17 on Schach et al.'s own test
+users 32-48:
+
+| arm | trained identities | Across-XR exposure | A1 |
+| --- | --- | --- | --- |
+| zero-shot (3 seeds) | 3,072 | none | **0.234** |
+| Z-676 | 495 | none | 0.218 |
+| C2-hi | 495 | yes, 14.1% dose | 0.307 |
+| **C2-lo (3 seeds, range 0.010)** | 3,095 | yes, 3.87% dose | **0.375** |
+| C1 (their protocol, our model) | 23 | yes | 0.131 |
+
+**Three findings, and the second is the one nobody registered in advance.**
+
+1. **Head-only and zero-shot places at or above a controller-based published figure** - 0.234
+   against 0.180, on their split, having never seen the corpus. Reported as a placement against a
+   published mean and **not a beat**: the interval excludes 0.180 by 0.001 and their number is a
+   mean whose distribution was never published, so no formal test is available at any margin.
+2. **Exposure carries to an UNSEEN application: +0.049** [+0.021, +0.078] seed-averaged, falsifier
+   excluded on every seed. The control is what makes it stand - applications absent from every
+   pretraining corpus read **+0.046** against **+0.055** for those present, so this is not
+   pretraining leaking through the hold-out, and **Synth Riders has no pretraining coverage at
+   all**. The stricter registered threshold (CI lower above +0.030) was **not met** and is
+   reported as not met. **This is the first data-side lever this project has measured to cross an
+   activity boundary** - identity count is flat across one, activity diversity was null.
+3. **Identity count is flat without exposure and not flat with it** (+0.016 against +0.061), and
+   dose cannot explain it: halving in-domain windows costs -0.028, a 20% cut -0.009, and the
+   *higher*-dose arm loses by 0.061 - so correcting for dose **widens** the scale effect.
+
+**The alignment route is closed, in three sentences that survive every seed.** The honest
+train-user-only orthogonal fit **never carries** (A2 - A1 never *resolvably* above zero - zero-shot seeds read +0.016/+0.011/+0.006 with every interval spanning zero; "<= 0 on 14 checkpoints" was written here and was false). The
+correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
+or more applications - and no amount of pretraining raises that; a corpus that could support the
+method would need far more multi-application participants, which is an actionable specification
+rather than a null. And **the test-fitted ceiling that motivates the idea is run-dependent**,
+present in one of three seeds at identical configuration (C2-lo) - the "three of five P3 runs" once cited here are five *different* configurations and do not bear on it, **so it was never
+a target** - a single-run diagnostic bound of that kind is not evidence that application
+embeddings differ by a rotation, which raises the bar for every claim of that shape including the
+published +0.34 this programme set out to reproduce.
+
+**Two process notes worth as much as the numbers.** The final P3 seeds were run under a rule fixed
+in advance - purpose, threshold and "report whichever way it falls" all registered before launch -
+and they moved the estimate **down** by 0.004 and were reported. **A result that survived seeds
+run under a fixed rule that could have sunk it is worth more than one that was never tested that
+way.** And the composition is provable rather than asserted: the loaders' own counts close
+exactly, C2-lo 540,107 minus Across-XR 20,896 = **519,211**, the zero-shot training set to the
+window.
+
+**Recorded as unresolved and staying so:** the within-application gap (confounded between sensor
+set and architecture, not isolable without their architecture head-only); the C2-hi alignment dip,
+which is **0.8 sigma of its own arm's spread** and never needed explaining; and how often the
+orthogonal structure appears.
+
+**P2 WAS THEN RUN, AND IT IS THE STATIC-CUE AUDIT OF OUR OWN HEADLINE (2026-09-11).** Three `raw`
+seeds, zero-shot, every field identical to the `dyn` arms. **All three selected EPOCH 1 of 16** -
+patience fired immediately, the "raw overfits the source domain at once" pattern this file already
+records. Paired on the same 17 users:
+
+| | `raw` | `dyn` | delta |
+| --- | --- | --- | --- |
+| cross-application A1 | **0.351** (0.364/0.353/0.335) | 0.234 | **+0.117** [+0.042, +0.192] |
+| within-application A0 | 0.730 | 0.500 | +0.223 - larger, so the placement reading holds |
+| verification AUC on the 17 | 0.704-0.733 | | against a recorded-position lookup of 0.585-0.598 |
+
+**Epoch 1 is the finding, not a caveat on it.** A model one epoch from initialisation reaching
+0.351 says the cue is **sitting on the surface of the input** rather than being something a model
+must learn - which is worse news than a trained model reaching the same place. The verification
+figure against the lookup says it reads **more than mean position**: posture as well as height.
+
+**The privacy reading is the contribution, and it lands on Schach et al.'s own framing.** Their
+paper is explicitly a risk assessment, and their BRV encoding discards head position by
+construction - so it assesses **behavioural** risk. On this corpus **static anthropometry and
+posture, available at epoch 1 with no behaviour required, add +0.117 head-only across applications
+and reach 0.351 - within a seed spread of the 0.375 a trained, exposed behavioural model reaches.**
+That does not contradict them; it says **a behaviour-only assessment understates the risk**, which
+is a finding their framing asks for and their method cannot produce.
+
+**The headline stays on `dyn` - decided before any raw number existed** - because `dyn` is the
+like-for-like comparison against a controller-based BRV model, and a `raw` figure would beat them
+partly on a cue their encoding discards on purpose. **The audit sits beside the headline, not in a
+footnote**: this project's methodological contribution has been auditing static cues out of other
+people's numbers, and declining to run that audit on our own - or running it and burying it -
+would be indefensible.
+
+**And epoch-1 selection is ~3x less stable than a trained-out one**: observed seed range **0.029**
+against 0.010 for 120-epoch arms, measured rather than imported from a neighbouring arm. That
+import is exactly the error this file records one entry above; the warning was issued before the
+seeds ran and the measurement is what settled it.
 
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
@@ -1006,6 +1221,77 @@ detectable difference, two-sided p<0.05:
    honest answer is not to run them at all rather than to run them underpowered and
    read the noise.
 
+**Know which OUTCOME of your registered band is the strong one, before you run it (Miami,
+2026-09-09).** A band is not automatically informative in both directions. Registering
+"lateral P 0.80-0.95 within application" was expected to hold - but if it holds, **two
+hypotheses predict it equally**: placement being a per-participant constant, and head position
+drifting slowly inside a single 15-minute recording. The corpus cannot separate them, because
+`take_id` turned out to carry nothing and every cell is one unbroken take. **So the falsifier
+firing is the strong result and the band holding is the weak one** - the reverse of the
+intuition that a confirmed prediction is the better outcome. Note the asymmetry survives the
+confound: drift can only push P *up*, so a LOW P is unconfounded while a high one is not.
+
+The general form: **before running, ask what else would produce each outcome.** An outcome
+with one explanation is worth more than an outcome with two, regardless of which one you
+predicted - and if the predicted outcome is the ambiguous one, say so in the registration
+rather than in the write-up, where it will read as an excuse.
+
+**A BAND AND ITS FALSIFIER MUST PARTITION THE LINE (Miami, 2026-09-10).** The within-application
+placement arm registered "lateral P 0.80-0.95, falsifier below 0.65" and measured **0.7525,
+CI95 [0.7114, 0.7748]** - the whole interval below the band and the whole interval above the
+falsifier. **The band was excluded and the falsifier did not fire: two outcomes were registered
+and the data chose a third.** That is a registration defect, not a surprising result, and the
+fix is to register what the gap MEANS before running rather than to widen the band afterwards,
+which is the same move as moving a line after seeing the number. Registering a band and a
+falsifier that do not meet leaves an unnamed region that the run is free to land in, and it is
+one subtraction to check.
+
+**IT RECURRED THE SAME DAY, IN A DIFFERENT SESSION, AFTER BEING WRITTEN HERE - AND THE
+COORDINATOR REVIEWED THE REGISTRATION AND DID NOT CATCH IT.** The Across-XR alignment programme
+registered its kill condition as band `A2' - A1 >= +0.15` with falsifier `CI upper < +0.05`,
+leaving **[+0.05, +0.15) unnamed**; it measured +0.024 with CI upper **+0.053**, inside the gap.
+Twelve hours after the placement arm did the same thing, in a session that had read this file,
+on bands the coordinator reviewed and amended in three other respects. **A rule can be recorded,
+read by both parties, and still not fire at review** - so the mitigation is not another sentence
+here but a mechanical one: **do the subtraction and write the third outcome's meaning into the
+registration**, every time, as a line of the template rather than an act of attention.
+
+**The substance was unaffected, and that is the reading to imitate.** The registered band was
+excluded by a factor of 2.8 at the interval's upper end and sits **14x below** the value Schach
+et al. measured for the same quantity (+0.34), so the conclusion - the cross-application gap on
+a zero-shot embedding is barely an orthogonal difference - rests on where the interval fell and
+not on whether a threshold was crossed. **Do not spend a paragraph on a 0.003 near-miss; it reads
+as hedging a result that is not close.**
+
+**Verified independently before it propagated (coordinator, AVALON, same day).** Recomputed from
+the same corpus with a different implementation and a fixture asserted in both directions
+(synthetic users 10 m apart must return 1.000, and inverted 0.000): lateral **0.7574**, height
+**0.8892**, all **0.7811** - inside Miami's CI, with the **within-medians digit-exact on both
+machines** (0.1677 m lateral, 0.0089 m height). The between-medians differ slightly (0.4004
+against 0.4077) because the two sides enumerate between-pairs differently - 23,520 against
+11,760 - which is the expected place for two implementations to differ and the reason the
+agreement of the *within* medians is the informative half.
+
+**And the ambiguous outcome was weak about the MECHANISM and strong about the DECISION - those
+come apart.** The registration flagged that a high P is predicted equally by placement being a
+per-participant constant and by slow drift inside one unbroken recording, and that this corpus
+cannot separate them. It still cannot. But **both mechanisms imply the same design consequence**
+- either way it is a per-recording constant that a same-application arm carries and a
+cross-application arm does not. So the outcome-asymmetry question above has to be asked twice,
+separately: *which outcome is strong about the mechanism*, and *which is strong about the
+decision this experiment feeds*. An outcome can be uninformative about why and decisive about
+what to do next.
+
+**The consequence, and it now governs the paper's headline arm.** Within-application lateral
+placement reads **0.75** against **0.527** across applications (this file, same corpus). So a
+same-application arm is NOT placement-free while a cross-application arm largely is, and a
+`raw` comparison of the two would credit the within-application side with a rig cue the
+cross-application side never had - inflating the very collapse the paper is about. **The
+within-versus-across contrast must run under `dyn`.** Note this does not touch Schach et al.'s
+own numbers: their BR referencing fixes the HMD at its own origin and BRV then differentiates,
+so head position never reaches their model. The correction applies to our `raw` rows and to the
+field, not to the SOTA baseline we are measuring against.
+
 **Compute the design's MDD before registering a band, or the registration is theatre
 (2026-09-08).** The coordinator specified the Nymeria activity-diversity run as two seeds
 paired against an existing arm, and registered +0.005 to +0.03 with a falsifier under +0.005.
@@ -1040,7 +1326,23 @@ it and moves the wrong way: Nymeria averages **414 windows per identity** agains
 **151**, so capping at the corpus median *trims Nymeria* and raises BOXRR's share. The fix is
 composition, not sampling - hold identity count fixed and swap identities between corpora
 (BOXRR 343 + alyx 76 against BOXRR 293 + alyx 76 + Nymeria 50, both 419), which raises the
-dose from 2.9% to **14.2%** of windows. **A dose is part of a treatment's definition; a null
+dose from 2.9% to **14.2%** of windows.
+
+**AND EQUALISING A COUNT UPSTREAM OF A STOCHASTIC SPLIT DOES NOT EQUALISE IT DOWNSTREAM (New
+Gen, 2026-09-10, catching the coordinator's own fix).** Re-running this design on Across-XR, the
+instruction was "cap BOXRR at 577 against 600 so both arms hold 676 identities". That equalises
+the pool and **not the arms**: `val_user_fraction=0.25` then draws over each arm's *own* pool, so
+the two would validate on different people, train on **513 against 507**, and the BOXRR training
+sets would not be nested even though the *subsamples* are. The swap has to be applied to the
+**post-draw training list**, not to the pre-draw pool - here by making the validation list
+explicit (`val_user_fraction=0`, the pipeline's own 25% draw pinned to a file) and dropping the
+last 23 BOXRR *training* users in favour of Across-XR 0-22. Verified on the lists the loaders
+hold: 495 training identities in both arms, BOXRR training users 412 subset of 435, alyx
+identical.
+
+**The general form: a control matched before a random step is matched in expectation, not in
+fact**, and "both arms have N identities" is a claim about whichever list you actually counted.
+Count the one the loader hands the model. **A dose is part of a treatment's definition; a null
 without one is a result about the dose.**
 
 The corollary is uncomfortable and worth stating plainly: **most of the remaining ideas
@@ -1299,7 +1601,7 @@ download:
 | --- | --- |
 | 9 | IRB or equivalent ethics approval **in advance of use** - a precondition, not a promise |
 | 4 | no further distribution without written consent; requests referred back to Berkeley |
-| 5 | **mandatory citation of Nair et al. 2023** in any public disclosure |
+| 5 | **mandatory citation** in any public disclosure - the DUA names exactly one: Nair et al., *Unique Identification of 50,000+ Virtual Reality Users from Head & Hand Motion Data*, arXiv:2302.08927 (verified on the DUA text 2026-09-15). Not the BOXRR-23 dataset paper, arXiv:2310.00430 - cite that too, but it does not discharge clause 5 |
 | 10-11 | no deanonymization, no contacting subjects, no inferring sensitive attributes |
 | 13 | recipient indemnifies UC Berkeley |
 | 15 | Berkeley may terminate; all copies must then be destroyed, **including derived ones** |
@@ -1310,8 +1612,21 @@ Consequences to build around rather than remember:
   derived copies, entries are keyed per user per `sample_time`/`sample_rate`, and each
   new combination writes its own set. Destruction means all of them on every machine,
   not one named directory.
-- Clause 4 makes moving BOXRR-derived data between our three machines an open question.
-  Convert wherever the raw data lands; do not centralise then copy.
+- Clause 4 governs moving BOXRR-derived data between machines. **Resolved for the Miami
+  server (user, 2026-09-09): it is the same institution and sits in its server room, so
+  putting BOXRR-derived data there is internal use by the recipient, not further
+  distribution, and clause 4 does not bite.** The general rule still stands for anything
+  outside that boundary - convert wherever the raw data lands rather than centralising and
+  copying - and "same institution" is the test, not "a machine we have an account on".
+- **BOXRR-derived data does not go to cloud storage** (user, 2026-09-09, on a Google Drive
+  the project now has for code, results and write-ups). That is a policy decision rather
+  than an interpretation, and it is the right way round: clause 15's destruction obligation
+  is far harder to honour on Drive than on a lab machine, because trash, version history and
+  other people's synced clients are all derived copies. Code, results shards and prose are
+  fine there; datasets are not.
+- A **checkpoint trained on BOXRR is plausibly a derived copy** under clause 15, so shipping
+  weights instead of data is not automatically a way around clause 4. Inside the institution
+  that is moot; outside it, treat weights as in scope.
 - Clause 5 means the citation must travel with the data, not live in someone's memory.
 - Format is `.XROR`, one tarball per user, with a BSON metadata index that allows
   selecting users by id before downloading - so a slice of N identities is possible
@@ -1625,6 +1940,17 @@ cosine head is saved. `identity_softmax` forces `head=cosine` — scoring
 angular-margin embeddings with a learned linear layer over `|e1 - e2|` would throw
 away the structure the objective just created.
 
+**The TRAINING accuracy `identity_softmax` reports is on MARGIN-ADJUSTED logits and sits below
+chance early on - it is not a measure of fit (2026-09-10).** `train_identity_epoch` computes
+`logits = head(model.embed(windows), labels)`, and the head subtracts the margin from the true
+class before scaling, so `correct` is an argmax over `s*(cos - m)` for the right class against
+`s*cos` for every other. At the defaults that is a **10.5 logit-unit penalty** applied only to the
+answer, so the true class loses early argmaxes by construction: a C1 run on 23 identities reported
+**1.3% training accuracy against a 4.35% chance level**, which reads as a broken run and is the
+metric behaving as designed. **Do not cite it as evidence of under- or over-fitting in either
+direction** - use the training *loss* and the validation curve, which is what the same run's
+diagnosis correctly rested on.
+
 **Calibration matters here.** Cosine ranks well but says nothing about where the
 accept threshold belongs, and accuracy is read at `logit > 0`. After every epoch the
 cosine head's two scalars are refitted on *training* pairs with the extractor frozen.
@@ -1800,6 +2126,34 @@ the first question is whether the margin change closes it, not whether the idea 
 Switching the default is a single deliberate decision, made once, with a note in every
 table that straddles it - and the remaining 22 cells are the price of calling any setting
 "best".
+
+**TESTED AT SCALE AND IT REVERSES: 0.1/15 COSTS -0.028 AT 4,096 IDENTITIES (New Gen, 2026-09-11).**
+Registered as a **screen** rather than a test, with the sign-flip named in advance: the +0.016 was
+measured at **419** identities, where face-recognition defaults tuned for tens of thousands push
+too hard, and at 4,096 the default's own assumption is closer to true. Measured, paired on the
+same 17 users, cross-application rank-1: **-0.028 [-0.045, -0.012]**, whole interval below zero,
+with A0 (-0.039) and the ten-minute figure (-0.045) agreeing in sign. The direction is resolved;
+its size against the registered -0.02 edge is not.
+
+**So the live advice above is superseded and following it would send you the wrong way.** "If a
+result lands within ~0.016 of a target, the first question is whether the margin change closes
+it" was written from the 419-identity grid and **does not hold at scale** - at 4,096 the lever
+reverses sign - and only the sign is comparable, because the +0.016 was in-domain verification AUC at 419 and the -0.028 is cross-application rank-1 at 4,096 ("roughly twice" compared two metrics and is withdrawn). The default stands, and now for a measured reason
+rather than a procedural one. **A hyperparameter gain measured at one identity count is a claim
+about that count**, and this file's own explanation of *why* 0.1/15 helped at 419 predicted the
+reversal, which is what makes this a negative with a mechanism rather than a null.
+
+**And the coordinator's power estimate for that screen was 2.2x too pessimistic - worth fixing
+because it nearly stopped the run.** I registered the design as resolving about +/-0.037,
+averaging the paired-interval half-widths observed across the programme (0.031 / 0.042 / 0.041 /
+0.035). The screen came in at **+/-0.017**. The error: **every interval I averaged came from arms
+differing in TRAINING COMPOSITION**, while this one differs only in a hyperparameter - same data,
+same users, same seed - so the per-user differences are far more consistent and the bootstrap is
+correspondingly tighter. **A same-composition contrast is roughly twice as well powered as a
+different-composition one on the same 17 users**, and the two must not share a resolution
+estimate. The conclusion survived ("+0.016 could not be cleanly resolved" - at half-width 0.017
+it reads [-0.001, +0.033], marginal rather than invisible), but the calibration was wrong, and a
+too-pessimistic MDD argues against running a screen that turns out to be informative.
 
 ### Window counts per identity span 77x, and that costs ~38% of our identities
 
@@ -2088,7 +2442,15 @@ is noise by construction - which is the sensitivity you want from a gate: it pas
 should reproduce and fails what cannot. Use it for any scoring outside the training path.
 
 **"It was gated" and "there is a committed certificate that it was gated" are different
-claims, and only the second survives the session** (Trainer, 2026-09-08). A gate run inline
+claims, and only the second survives the session** (Trainer, 2026-09-08). **And a commit that
+cannot reach `origin` is not a committed certificate** (2026-09-09): Miami's harness cannot
+push to main, so its `boxrr_corpus_avalon_vs_desktopc.json` at `48ef785` exists on exactly
+one disk - durable against that session ending, useless to any other session, and therefore
+failing the property it was written for. A node that produces certificates needs a route to
+origin; where the harness forbids one, the artefact goes to a peer who can push it, and the
+commit is not cited until it is *there*. Check `git ls-tree origin/main` before treating a
+peer's commit hash as a reference.
+ A gate run inline
 that prints its gaps and moves on leaves a log line; a gate that writes
 `docs/acceptance/*_gate.json` leaves something a later session can cite to skip a re-run.
 The five checkpoints reused as an experimental control were certified by the *Nymeria*
@@ -2143,9 +2505,140 @@ generalises furthest, because it does not require the checker to be wrong.** Tha
 correct; it was pointed at an empty file.
 
 So the assertion goes on the fixture and it has to be **specific**: not "the file exists" but
-"the thing I claim to be testing is in it". `assert 'GlobalMemoryStatusEx' in body` is what
+"the thing I claim to be testing is in it". **The same rule aimed at a COMPARISON rather
+than a fixture** (Miami, 2026-09-09): before diffing two manifests, assert that a known key
+resolves on *both* sides after normalisation and that both hold the expected number of
+entries. A stated path convention is still a claim about the other machine's output, and if
+it is wrong the diff reports *everything* missing and *everything* extra - 17,874 of each -
+which reads as catastrophe and is a prefix bug. Two lines convert that into an immediate stop
+with sample keys printed. Both this project's false alarms of that shape (a coverage scan
+reporting five absent certificates that all existed, a verifier reporting 146 missing and 146
+extra on a corpus whose totals matched) would have been caught by it.
+ `assert 'GlobalMemoryStatusEx' in body` is what
 turned a silent pass into a caught error, and it is one line. A fixture check that only tests
 for existence fails in exactly the same way as the guard it is protecting.
+
+**AND A FIXTURE MUST REPRODUCE THE CONDITIONS THAT TRIGGER THE BEHAVIOUR, NOT MERELY EXERCISE
+THE CODE PATH (Miami, 2026-09-10).** Chasing a failing test in Rack et al.'s velocity encoding,
+Miami formed the right mechanism - `velocities.values[invalid_frames, :] = np.nan` writes
+through `.values`, which is a *view* on a single-block frame and a *copy* on a multi-block one,
+so on a multi-block frame the take-boundary NaN is silently discarded - **tested it, and the
+test refuted the correct hypothesis**, because the fixture was a float DataFrame where the write
+lands. Only a fixture matching their integer dtype path, which upcasts and splits the manager
+into three blocks, reproduces it. **A float frame exercises `.values` assignment perfectly well
+and cannot see the bug.** So "assert on the fixture" needs its second half: the fixture has to
+recreate the *conditions*, and **a hypothesis refuted by a fixture that cannot trigger the
+behaviour has not been refuted.**
+
+Verified independently here, and it extends in two directions. **There are two such sites, not
+one** - line 175 in `compute_velocities_simple` (positions) and line 214 in
+`compute_velocities_quats` (rotations), both called from
+`compute_velocities_for_position_and_rotations` - and only the first is covered by their test
+suite, so **the untested site is the quaternion one**. And the fragility has a hard version
+boundary: on pandas 2.x a single-block float frame lands the write and a multi-block frame
+discards it silently, while on **pandas 3.x Copy-on-Write makes `.values` read-only and the same
+line raises `ValueError: assignment destination is read-only`**. So their code is correct on
+pandas 2 with float data, silently wrong on multi-block, and **inoperable on pandas 3** - which
+sharpens "runnable only on a narrow, unsupported stack" from a claim about Python 3.8 into one
+about pandas as well.
+
+**The general form is a guard whose correctness depends on an invariant nothing asserts.**
+Take-boundary invalidation is correct only while the frame stays single-block, which depends on
+input dtype and on pandas' block consolidation - neither checked, neither stated. One line at
+each site fixes it - but **not** an assert on the block count, which is the wrong discriminator
+(see the amendment below): use `np.shares_memory(df.values, df.iloc[:, 0].values)`, or write
+through `.iloc` rather than `.values`.
+**This is the failure-open pattern again** - a guard that stops guarding and says nothing - and
+it is worth looking for wherever this repo writes through `.values`.
+
+**AND THE SAME PROPERTY HAS A SECOND FACE: MULTI-BLOCK `.values` COPIES ON READ, WHICH MADE THE
+PUBLISHED CONFIGURATION UNRUNNABLE (Miami, 2026-09-10).** `WindowMaker.to_windows` does
+`unwindowed_data.values` to slice one 500-frame window, and `BaseDataset` holds an 18-column
+frame assigned **column by column**, so `.values` is a full copy of the entire training set on
+**every `__getitem__`** - cost O(dataset size) per item. Their `SimilarityDatamodule` sets
+`length_before_new_iter=1_000_000` at `batch_size: 400`, so one epoch is **2,500 batches**, and
+Miami measured **27-43 s per batch with the GPU at 0-5%**: ~30 h per epoch, and at their
+`min_epochs=100` that is **72 to 124 days**. The published configuration cannot be run to
+completion as shipped, and nothing about that is visible without profiling - the code is
+correct, the GPU is idle, and the job simply never ends.
+
+Reproduced here on a frame built the same way, before ruling on the fix:
+
+| | |
+| --- | --- |
+| before `_scale_data` | 18 blocks |
+| **after `_scale_data`** | **18 blocks** - pandas arithmetic PRESERVES the split |
+| `.values` shares memory with block 0 | **False** |
+| per-access cost | **5.142 ms** against **0.0004 ms** for the ndarray, values identical |
+
+**So one pandas property produced two unrelated-looking failures in one codebase: a silently
+discarded write and an O(n) copy on every read.** Neither is visible by reading, both need
+measurement, and the second masquerades as a hardware complaint.
+
+**Two things that change how such a fix should be written up.** `.copy()` **collapses the
+18-block frame to a single block**, after which `.values` is a view - so eager consolidation
+makes the shipped code fast with no edit at all, which raises the question the timing arithmetic
+cannot answer on its own: *how did the authors ever run 100 epochs?* If an older pandas
+consolidated here, this is a **version regression rather than a defect in their code**, and the
+honest note is "we restored the single-block property their environment provided". Establish
+which before writing the deviation; it changes the sentence. And **scope the edit to the
+narrowest assignment that already exists** - here `window_dataset.py:23`, not
+`base_dataset.py:221`, because the latter would break `bin_maker.py`'s `self.frames.rolling(...)`,
+and a fix that silently breaks a sibling class is a larger deviation than the one being
+requested.
+
+**Gate an equivalence claim on the OPTIMISATION, not on a sample of the inputs.** Six
+bit-identical items is evidence about the input; the quantity that must be unchanged is the
+training. Run N steps both ways from one seed and compare the loss sequence - it is minutes, and
+it converts "we checked six windows" into "the model saw the same data and took the same steps".
+
+**A note on the fixture rule, which missed here for the third time in a day and should not be
+read as carelessness.** The refuting fixture was a uniform float32 frame - single-block, hence a
+view, hence `.values` looked free. **The triggering condition cannot be constructed without
+already knowing the mechanism**, which is what makes this class hard rather than what makes it a
+lapse. The behaviour that produced all three diagnoses was going back to the fixture instead of
+dropping a refuted hypothesis.
+
+**AMENDMENT (Miami, 2026-09-10, measured on both versions): BOTH of today's `.values` findings
+are ONE pandas 1.x -> 2.x regression, and neither is a defect in Rack et al.'s code.** The
+coordinator's hunch that `.copy()` consolidating implied a version story was right, and testing
+it settles both:
+
+| | blocks after `_scale_data` | `.values` is a view | per access |
+| --- | --- | --- | --- |
+| **pandas 1.5.3** (their era) | 18 | **True** | **0.015 ms** |
+| pandas 2.0.3 | 18 | False | 7.873 ms |
+
+**525x, on the same frame.** And the velocity bug goes the same way: under 1.5.3 the upcast frame
+consolidates to one block, the take-boundary NaN write **lands**, and their failing test
+**passes**. So the correct sentences are that **we restored the single-array access property
+their environment provided**, not that we fixed their bug; and that their test is a correct test
+passing correctly in its own environment, not - as recorded here this morning - "a latent
+fragility" doing "useful work by accident". Both of those readings were wrong and are withdrawn.
+It also answers what the timing arithmetic could not: they ran 100 epochs because
+`__getitem__` cost them 0.015 ms.
+
+**AND BLOCK COUNT IS NOT THE DISCRIMINATOR - the rule this file circulated for a day was
+version-scoped without saying so.** Both versions report **18 blocks**; only view-versus-copy
+differs, because pandas 1.x consolidated on access and 2.x does not. So "multi-block means copy"
+holds only for pandas 2+, and an `assert len(df._mgr.blocks) == 1` would pass or fail for reasons
+unrelated to the property being protected. **The version-independent check is
+`np.shares_memory(df.values, df.iloc[:, 0].values)`, or timing a single access.** Confirmed here
+on pandas 3.0.1: blocks stay 18 across a `.values` access, no consolidation, `shares_memory`
+False. The 1.5.3 half is Miami's measurement on the 3.8 environment and was not reproducible on
+this interpreter - stated so rather than folded in.
+
+**The general lesson is not about pandas.** A behaviour that is a *property of the dependency
+version* was diagnosed twice as a property of the code, in opposite directions, by two sessions,
+in one day. **Before attributing a defect to code you did not write, price the version you are
+running it on** - especially where the authors pinned nothing, because then the environment is a
+free variable and the code is the only thing that looks fixed.
+
+**A TEST-SUITE COUNT IS A CLAIM ABOUT THE INVOCATION AS MUCH AS ABOUT THE CODE (Miami, same
+day).** Their suite reads **12 failed / 8 passed** from the repo root and **3 failed / 17
+passed** from `tests/`; nine of the twelve are `FileNotFoundError` on relative fixture paths.
+"12 failed" was one message away from being reported as a finding about their repository.
+Record the invocation beside the count.
 
 **The fixture rule caught a real error the next day, on the coordinator's own work
 (2026-09-09).** The Across-XR geometry statistic was computed as
@@ -2174,11 +2667,107 @@ The pattern in both: **a guard whose failure mode is to pass is worse than no gu
 it also removes the caution that would otherwise apply. Verify a guard in both directions -
 that it passes when it should and *blocks when it should* - or it is decoration.
 
+**AND ONE OF OURS HAD NEVER RUN AT ALL - `assert_evaluation_users_are_unseen` was vacuous from
+its first day (New Gen, 2026-09-10; blast radius established from code and git history, nothing
+re-run).** The guard reads user directories off the *sample index*:
+
+```
+index = getattr(inner, "sample_index", None)
+return {... for d in getattr(index, "user_dirs", []) or []}      # dataset.py:960
+...
+if not train_users or not test_users:
+    return 0                      # "nothing recorded; nothing to check"   dataset.py:982-983
+```
+
+but **`user_dirs` is set on `SampleDataset`, and `SampleIndex` never had it** - `SampleIndex`
+copies a curated eight attributes off the dataset (`sample_time`, `sample_rate`, `seq_len`,
+`num_users`, `num_channels`, `channels`, `dataset_names`, `user_dataset_ids`) and `user_dirs`
+is not among them. `git log -S'self.user_dirs' -- model/dataset.py` returns exactly the commit
+that introduced the guard and the commit that fixed it. So on every real call the `getattr`
+default fired, both sets were empty, and the function took its early return - **and that branch
+is commented "nothing recorded; nothing to check", so the code documents its own failure path as
+benign.** Verified on the real object both ways after the fix: two fully overlapping users now
+raise, disjoint users still return 0. **And shown not to block valid work, which is the
+other half of switching on a guard that has never run**: on a real `sweep.folds` build (alyx,
+fold 0 of 5, same corpus both sides - the shape most likely to trip on path form) it returned 0
+while *seeing* 46 train and 15 test directories, and on a real cross-corpus build (BOXRR+alyx ->
+Across-XR) it returned 0 at train 3072 / val 1024 / test 17. Symlinks were in the path on that
+node and the resolved-path comparison produced no spurious overlap. **A guard that has never run
+has also never been shown not to halt legitimate work**, and the failure mode of enabling one is
+the mirror of the failure it was fixed for.
+
+**The `or []` and the early return make "clean" and "never looked" indistinguishable.** That is
+the general defect, and it is worse than a guard that throws: a guard reporting zero overlap is
+read as evidence, so it does not merely fail to help, it manufactures confidence.
+
+**Its test passed because the fixture had a property the subject lacks.** The seven tests build
+`SimpleNamespace(sample_index=SimpleNamespace(user_dirs=[...]))` - the only place that attribute
+has ever existed on a sample index. Note this is the *mirror* of the pandas fixture miss the same
+day: there the fixture **lacked** a triggering property the real object has; here it **has** a
+property the real object lacks. One rule covers both - **the fixture and the subject must agree
+on the property under test** - and neither direction is caught by "the tests pass".
+
+**What it costs, stated precisely, because the difference matters.** Every training row written
+since 2026-09-03 that used `test_dirs` (all cross-corpus transfer rows, the Nymeria arms, LODO,
+window length) or `test_on_excluded=true` (every `sweep.folds` fold) had this guard in its path
+and got 0 without a comparison. **On those rows "evaluation users were unseen" rests on the
+configuration - different corpora in `data_dirs` and `test_dirs`, or disjoint exclude lists from
+`build_folds` - and on nothing else. No row has been found where that configuration is wrong.
+The claim is UNVERIFIED, not false**, and the honest statement is that we had one line of defence
+where we believed we had two. `mode=test`, `score_nymeria.py` and every `docs/acceptance` harness
+never called it.
+
+**And the timing is worth noticing rather than being lucky about twice.** The case this guard
+exists for - train and test drawn from the *same* corpus, separated only by user list - had never
+once occurred in this project until the Across-XR matched arm (train users 0-22, test 32-48).
+The fix landed in the identity step immediately before that arm's first job. A guard that is
+vacuous costs nothing until the day the configuration it protects is first used.
+
 **A mid-training number is not a result, however much it looks like one.** The orphaned arm A
 seed 1 read test AUC **0.6188 at epoch 36** against a baseline of 0.6156 - which reads as
 "+0.003, the registered band is landing" and is nothing of the sort: it is one seed, not
 validation-selected, a third of the way through a budget whose control selected epochs 116-118.
 Quote `selected_test_auc` from a completed row or quote nothing.
+
+**AND THE SAME TRAP CAUGHT A TIMING NUMBER THAT DROVE A DECISION (Miami, 2026-09-10).** The
+"124 days" that justified editing Rack et al.'s source was read off **tqdm, whose displayed rate
+is a CUMULATIVE average, not an instantaneous one** - taken at batches 3-8 of a monotonically
+falling series that ran `85.2 -> 42.7 -> 36.5 -> ... -> 4.84 s/batch` and was still falling. The
+early batches carry dataset construction and statistics computation, so a running mean read early
+overstates the steady state by **4-10x here**; the honest figure is 12-35 days rather than 124.
+
+**A GATE IS EVIDENCE ABOUT THE PATH IT EXERCISES, AND A LIVE RUNNER IS NOT A SUCCEEDING JOB
+(Miami, 2026-09-15).** The full Rack 2023 run was enqueued on 2026-09-11 after the loss-trajectory
+gate passed bit-identical - and **crashed at minute 22**, the first time `validation_epoch_end`
+ever executed on that stack: `get_accuracy() got an unexpected keyword argument
+'embeddings_come_from_same_source'`. The gate had driven `training_step` in a manual loop,
+deliberately skipping Trainer callbacks, so **it verified training and never ran validation at
+all** - and "the gate passed" was read, by Miami and then by the coordinator, as "nothing blocks
+the run". The runner correctly wrote `.failed` and moved on to an empty queue, and **nobody noticed
+for four days**, because the only monitored signal was the runner's heartbeat: that answers "is the
+runner alive", not "did my job succeed". The coordinator then told the user the run was launching,
+on the strength of a commit title rather than the queue's own state. Two rules: **state which path a
+gate exercised, and extend it to every path the real job will run before spending the budget** (one
+real epoch through validation, with the logged metric present, costs an hour against a 36-hour
+seed); and **every long job needs a watcher that fires on failure, not only on completion** -
+silence from a queue is not success.
+
+**The root cause was a dependency version again, and the obvious patch would have been silently
+wrong.** `pytorch-metric-learning` 2.x renamed that keyword to `ref_includes_query` **and reordered
+the positional arguments** - 1.x takes `(query, reference, query_labels, reference_labels, ...)`,
+2.3.0 takes `(query, query_labels, reference, reference_labels, ...)`. Renaming the keyword alone
+passes reference *embeddings* in as query *labels* and returns a number without raising. **The fix is
+a pin (`1.7.3`, the last 1.x), not a source edit** - the same ruling as Python 3.8 over patching
+`collections.abc` and the pandas hoist. Measured from the failed run's one complete epoch: **21.5 min
+per epoch including validation, ~36 h per seed at `max_epochs=100`**, superseding the per-step band.
+
+**A running mean is not a rate, and warm-up is not steady state.** Quote a marginal cost measured
+over a late window, or instrument per-step wall clock, and until you have one quote a **band
+rather than a point**. The conclusion happened to survive - and note *why* it survived, because
+that is the transferable part: it did not rest on the magnitude at all once the pandas regression
+was measured (their code ran at 0.015 ms/item, so the slow path is an artefact of our dependency
+version rather than their protocol). **An argument that depends on a number you read off a
+progress bar is worth re-deriving from one you measured.**
 
 The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
 reported five sweeps with no certificate when all five had one, because its regex assumed
@@ -2330,7 +2919,38 @@ more informative rather than less; and this is one corpus and one activity.
 
 **A free diagnostic fell out of it.** *Which* monotone map reproduces an improvement tells you
 the shape of that improvement - uniform, proportional, or rank-only - and it costs nothing
-wherever two checkpoints are scored on one population. Worth reaching for on any axis where
+wherever two checkpoints are scored on one population.
+
+**A REFRAME IS NOT A SUBSTITUTE FOR A REPLICATION, AND SEED VARIANCE DOES NOT TRANSFER BETWEEN
+ARMS (coordinator's own error, 2026-09-11).** The Across-XR alignment programme produced a
+test-fitted ceiling `A2' - A1` of **+0.089 / +0.002 / +0.148** on three single-seed arms. Asked
+whether the middle value was an anomaly, I did two things and both were wrong. I argued it was
+**not noise** - "thirty sigma" - from a seed variance of 0.003 **measured on a different arm**,
+having written "if that transfers" and then reasoned as though it did. And I explicitly said
+**not** to spend a seed on it, offering instead a tidier description: that the aligned *ceiling*
+was monotone in scale while only the *gain* was not, and that the dip was "already at its
+ceiling" rather than anomalous.
+
+A replication of one point settled it: the same configuration, a second seed, gave **-0.004
+against +0.148 - a range of 0.152, thirty times the variance I had asserted.** At this arm's own
+observed spread the dip is **0.8 sigma**, so it never needed explaining at all, and the monotone
+ceiling rested on one seed per point. Both sentences are withdrawn.
+
+**Two rules, and the second is the one I would put on a wall.** Seed variance is a property of an
+arm, not of a pipeline - **a spread measured on one configuration bounds nothing on another**, and
+a conditional ("if that transfers") does not license the conclusion that follows it. And **a
+reframe that makes single-seed points describable is not evidence about them**: it costs nothing,
+which is exactly why it is tempting in place of the replication that costs eighty minutes - and it
+does not make a fragile claim sturdier, it makes it *more persuasive*, which is worse. **When the
+choice is between an elegant account of n=1 and a second run, take the run.**
+
+**What survived the replication is worth more than what it killed.** The headline replicated
+(0.368 / 0.378, range 0.010). The train-user-only fit never carries on any instrument or seed
+(9 checkpoints). And the *new* finding is sharper than the one withdrawn: **the test-fitted
+ceiling is run-dependent at identical configuration**, so a single-run diagnostic bound of this
+kind is not evidence of an orthogonal relationship between application embeddings - which raises
+the evidential bar for every claim of that shape, including the published +0.34 this programme
+set out to reproduce. Worth reaching for on any axis where
 "who did it help?" matters and only the mean is in hand.
 
 **The 0.785 trap dissolved structurally rather than being avoided.** The registered warning
@@ -2581,6 +3201,319 @@ maps the pre-fix tree to `4d243b05d0` - that is the pair to use when relating ol
 new. The change touches no numerics: `code_identity()` is called only by the logger and by
 `sweep.py`'s resume key.
 
+**Confirmed on real hardware, in both directions (2026-09-09).** Every identity this project
+had recorded came from a Windows checkout, and `4d243b05d0` was *reconstructed from stored
+blobs* rather than observed - so the fix had never actually been tested off Windows. The
+Miami node is a genuine Linux tree, `git ls-files --eol model/` all `w/lf`:
+
+| machine | working tree | `code_identity()` |
+| --- | --- | --- |
+| Miami (`feng-MS-7B51`) | 29 files LF | **`8db420df4c`** |
+| DESKTOP-C | 28 CRLF + 1 LF (the *mixed* tree) | **`8db420df4c`** |
+
+and the harder half: **that reading is not vacuous.** On an all-LF tree the normalisation is
+a no-op, so "it matches" is equally consistent with "the fix works" and "the fix was never
+exercised". Miami built the CRLF twin - 29 files converted, `assert b'
+' in body` before
+hashing - and ran both algorithms over both trees: the **old** digest reads `8db420df4c` on
+LF against `3c18c64173` on CRLF, the **new** one reads `8db420df4c` on both, with
+`assert old_lf != old_crlf` so it cannot pass vacuously. Two real machines whose trees differ
+in line endings - one of them the mixed tree that produced `72b8053ec2` under the old
+algorithm - now agree, and rows from either are comparable by observation rather than by
+argument.
+
+**But the digest does not cover the code that MAKES the corpus (Miami, 2026-09-09).**
+`_CODE_ROOT = REPO_ROOT / "model"`, and `prepare_boxrr.py`, `prepare_nymeria.py`,
+`prepare_across_xr.py` and `prepare_who_is_alyx.py` all sit at the repo root - **outside the
+identity**. So two machines can hold materially different `processed_datasets/` - an `xror`
+version bump, a pandas float path, a converter fix - while every row from both reports the
+same `code_identity`, and nothing in the log can tell them apart. **`code_identity` certifies
+the model code and says nothing about the data**, which is this project's recurring bug
+wearing a new hat: a stand-in that looks like the thing being checked.
+
+Two consequences. **Copy an already-gated corpus rather than reconverting it** whenever the
+choice exists - it keeps rows comparable by construction. And the gap is worth closing
+properly: **record a corpus digest per run** - the sorted processed-file list with sizes, or
+a content hash - so a corpus difference is visible in the row instead of being invisible by
+design. Until that exists, a cross-machine comparison assumes the corpora match and cannot
+check it.
+
+**The digest does not cover the DEPENDENCIES either, and nothing else records them
+(2026-09-09).** `code_identity` hashes `model/*.py`; `results_log.py` imports `platform`
+solely to name the shard file; and **across all 341 rows of DESKTOP-C's shard and all 82
+entries of `FIELDS`, the number of keys naming a Python version, a torch version, a CUDA
+version, a device or a host is ZERO**. (Quote it that way rather than as a key count: rows
+carry 50-75 keys depending on the run type, modal 69, because the JSONL schema varies by
+design - so "a row has N keys" is not a fact about the format.) So two machines can produce numerically different
+rows with the same `code_identity` and nothing in the record distinguishing them - which is
+not hypothetical, because this file already documents CPU and GPU scoring differing by up to
+**7e-4 AUC** and requires same-device acceptance for numerics-touching changes, *while the
+row does not say which device was used.* The divergence is live as of today:
+
+| | Python | torch | device |
+| --- | --- | --- | --- |
+| DESKTOP-C | 3.12.10 | 2.10.0+cu130 | RTX 5060 Ti |
+| Miami (primary from today) | 3.13 (3.14 is a hard blocker, below) | rebuilding | RTX 4060 Ti |
+
+**A DEVICE NAME DOES NOT SAY WHICH CODE PATH RAN ON IT (Miami, 2026-09-10).** On the Miami box
+`torch.cuda.get_arch_list()` reads `[sm_37, 50, 60, 70, 75, 80, 86, 90]` while the device is
+capability **(8, 9)** - so **sm_89 is not natively compiled into that torch build** and its
+kernels reach the GPU through CUDA's compatibility path. They run and return finite results,
+verified by an actual matmul and a 3x450 cuDNN GRU rather than inferred from
+`is_available()` being True. But two machines can both record `device = "RTX 4060 Ti"` and
+`torch = 2.0.1+cu118` with one running native kernels and the other JIT-compiling from PTX, and
+**this file already prices cuDNN's BiLSTM at up to 7e-4 AUC between devices.** So the env block
+below is insufficient as specified: record **`torch.cuda.get_arch_list()` and the device
+capability tuple** alongside the device name, because it is the *pair* that says whether the
+arithmetic took a native or a compatibility path. Cheap to add now, impossible to reconstruct
+from a row later - the same argument that put the block there in the first place.
+
+**Proposed, not done:** append `python_version`, `torch_version`, `cuda_version` and `device`
+to the row. It is additive, which the JSONL design explicitly supports - old lines are
+untouched and the combined view backfills blanks - but it touches `model/*.py` and so moves
+`code_identity`, which makes it a merge-window decision rather than a quick fix. Do it before
+the first cross-machine comparison, not after.
+
+**THE CROSS-MACHINE GATE PASSED, AND THE NUMPY EXPECTATION REGISTERED BELOW WAS WRONG
+(2026-09-09).** Two machines, deliberately different on every axis, on the agreed spec -
+BOXRR, first 200 users in `sorted()` order, 10 s/20 Hz/stride 5, `raw`, seed 67, 64
+pairs/user, metrics on CPU:
+
+| | DESKTOP-C | Miami |
+| --- | --- | --- |
+| stack | py 3.12.10, numpy **2.4.2**, torch 2.10.0, RTX 5060 Ti | py 3.13.15, numpy **2.5.3**, torch 2.14.0, RTX 4060 Ti |
+| users / windows / pairs | 200 / 30,630 / 12,800 | 200 / 30,630 / 12,800 |
+| own manifest sha256 | `4b45ea68c92ddd70...` | `4b45ea68c92ddd70...` |
+| `position_lookup_auc` | 0.7798685424804688 | 0.7798685424804688 |
+| `amplitude_auc` | 0.5664354736328125 | 0.5664354736328125 |
+
+**Both AUCs are bit-identical - |delta| exactly 0.0, not merely inside the 1e-12 band** - and
+the counts match. So the two gaps this gate exists for are closed for these machines: the
+corpora agree in content and not merely in size, and two different stacks compute the same
+training-free arithmetic. That is the measurement that replaces the `explicitly_not_shown`
+content caveat in `boxrr_corpus_avalon_vs_desktopc.json`.
+
+**And the registered expectation failed in the useful direction.** Both sides predicted, in
+writing beforehand, that numpy 2.4.2 against 2.5.3 would draw *different pairs* from the same
+seed - `Generator` streams carry no stability guarantee - and that a manifest-hash mismatch
+would therefore not be a finding. **The hashes are identical.** So the hazard is real as a
+licence (numpy still guarantees nothing) but did not materialise across these two minors for
+the calls `generate_pair_manifest` makes. Keep the caution and drop the expectation: **do not
+assume a numpy bump has moved the draw, and do not assume it has not - hash the manifest.**
+
+**A verification that happens to be true is not a verification (Miami, 2026-09-09).** When
+the gate refused, the substance was closable by hand - both own-manifests equalled the shared
+one, so the pairs provably matched. That hand-closure was *correct here and would have looked
+identical if it were wrong*: had the emitter's draw differed from the file it emitted, the
+same chain of reasoning would have produced the same confident sentence. **The mechanism
+refused and a human argument overrode it, and the argument was right by luck.** Re-run the
+tool in the mode that demonstrates the claim instead. This is the same family as the
+fixture rule one level up: there, a check passed on nothing; here, a check was bypassed by
+reasoning that happened to hold.
+
+**And scope what the pass closes, because it will be over-quoted.** The gate closes two
+things and no more: the corpora agree in **content** (identical arithmetic over 30,630
+windows drawn from those files is a content measurement, which the size manifest explicitly
+was not), and **these two stacks** compute the same **training-free** arithmetic. It says
+nothing about the model path, where cuDNN's BiLSTM is documented at up to 7e-4 between
+devices, and it does not make the missing env annotation harmless in general - it makes one
+pair of stacks measured rather than assumed, on one class of quantity. **"The stacks agree"
+is not what was shown.**
+
+**One protocol gap found by the gate refusing.** The emitting side ran with
+`--emit-manifest` only, so its report records `scored_manifest_sha256: "own"` and the guard
+correctly declined to compare - a side that scores "own" cannot be shown to have scored the
+*shared* pairs, even when it did. **The emitter must also pass `--use-manifest` pointing at
+its own emitted file.** The substance was verifiable by hand here only because the hash chain
+closes (both own-manifests equal the shared one), which is luck rather than design.
+
+**NUMPY'S VERSION CHANGES WHICH PAIRS ARE DRAWN, and the machines already differ (Miami,
+2026-09-09).** NumPy freezes the stream of legacy `RandomState`, but **`Generator` method
+streams are explicitly not guaranteed stable across feature releases** - and
+`generate_pair_manifest` seeds a `default_rng` and then calls `rng.choice` five times per
+user plus `rng.permutation`. So two machines on different numpy minor versions draw
+**different pairs from the same seed**. Measured: **DESKTOP-C numpy 2.4.2, Miami numpy
+2.5.3.**
+
+This is worse than the other environment gaps rather than another instance of them. Those
+threaten numerics at 1e-7; this changes the *inputs*. This file already measures what a
+different pair draw is worth - the `transfer` against `transfer_rescored` arbitration put it
+at **1e-3 to 3e-3 AUC**, larger than the 7e-4 CPU/GPU gap - so a numpy minor bump between two
+machines can move a figure by more than the device does, invisibly, under one
+`code_identity`. **`numpy` belongs in the env annotation, ahead of `torch`**, and any
+cross-machine comparison of a manifest-derived figure is suspect until the versions are
+either matched or the manifest is exchanged.
+
+**So exchange the MANIFEST, not just its hash.** A hash tells you the streams diverged and
+then stops - and stopping there is the failure, because the layer we actually care about
+(does this stack compute the same arithmetic?) never gets tested. Ship the manifest's
+`x1_indices`, `x2_indices` and `labels` as an input and both machines score **the same
+pairs**, which isolates the environment layer even when numpy differs. It is ~300 KB as
+int32 and compresses; it is committable, and once committed the gate is reproducible by a
+third machine that has neither version.
+
+**Force CPU explicitly, and not with `CUDA_VISIBLE_DEVICES`.** The lookups run through
+`torch` (`static_position_lookup`, `amplitude_lookup` take tensors), so device is a real
+variable for them rather than a formality - and on DESKTOP-C `CUDA_VISIBLE_DEVICES=""`
+leaves `torch.cuda.is_available()` **True with zero devices**, so the usual mechanism does
+not do what it appears to. Set the device in config.
+
+**The training-free baselines are a free cross-machine gate, and they cover BOTH open gaps at
+once.** `position_lookup_auc` and `amplitude_auc` need no model, no GPU and no training: given
+the same sample index and the same pair manifest they are deterministic, so two machines must
+agree to floating-point precision. A disagreement can only come from the corpus content or
+the environment - which are exactly the two things nothing currently checks. The size manifest
+explicitly did **not** establish content equality, and the row records no stack, so one
+training-free run on an agreed user list and seed tests both in minutes, against ~2 h a side
+for `sha256` over 42.8 GB that would test only the first. **Run it before any cross-machine
+result is compared**, and prefer it to any check that compares bytes, because what matters is
+not whether the disks agree but whether the arithmetic does.
+
+**Two preconditions neither party stated, and both were checked before the gate ran**
+(Miami): that the measurement is **deterministic on one machine** - run twice locally, same
+counts, same hash, same AUCs - because if it is not, a cross-machine comparison measures
+nothing; and that the **transport is faithful** - scoring your own pairs back through the
+exchanged file reproduces the AUC exactly, so the format is not quietly changing the number
+it exists to carry. **A comparison across machines assumes a stability within one that
+nobody had tested.**
+
+**Hash a transferred artefact, and reconcile even when the difference is harmless.** The
+gate reached origin by paste, and the two copies differed: **one extra blank line**, with
+`ast.dump` identical on both parses, so semantically nothing. Reconciled to the committed
+copy anyway, because *"it is only whitespace"* is exactly the argument that lets two
+implementations drift apart one harmless line at a time - once a file is committed it is the
+definition and every other copy is a copy. Note the asymmetry that makes the hash worth
+running (Miami): **a mangled paste breaks loudly, but a paste that drops a blank line or a
+comment does not** - and the silent case is the one a hash catches and reading does not.
+
+**And the hash does not check the RECEIVER, it checks the CHANNEL - in both directions**
+(Miami, 2026-09-09). When the gate script's hash was published, the question being asked was
+whether the receiver's transcription had corrupted the sender's file. The direction that
+actually bit, within the hour and on the next artefact, was the opposite: **the sender's
+paste did not match the sender's own disk.** A clause had been shortened while transcribing a
+file into a message, by the file's own author, who did not notice. Neither party was careless
+- being careful is precisely the condition under which a transcription differs and nobody
+suspects it. So hash before sending as well as after receiving, and treat "my copy is the
+one I described" as a claim rather than a premise.
+
+**Establish the layers in order, and never build a shared artefact on an unverified input.**
+A manifest emitted from a corpus that has not passed its own file-by-file check would carry a
+layer-1 fault into the exchange, where it surfaces as a layer-3 disagreement - **the wrong
+answer arriving convincingly**, with the environment blamed for a corpus problem. That
+generalises past this gate: a fault in an early layer does not announce itself as one, it
+presents as a finding in a later layer that was working correctly.
+
+And the gate must be **one implementation, not two**. Two independently written comparators
+can disagree for reasons that have nothing to do with the machines being compared, which is
+the failure the gate exists to rule out - so the script is exchanged along with the manifest,
+and both sides run the same code. A shared manifest also indexes into the *local* index, so
+out-of-range indices must be reported as a named layer-1 corpus failure rather than dying
+with an `IndexError` - that is the case where the two user lists differ, and it should read
+as a finding rather than a crash.
+
+**A PUBLISHED PAPER CAN HAVE PUBLISHED TRAINING CODE AND UNPUBLISHED EVALUATION CODE, and the
+second is where the numbers live (Miami, 2026-09-10).** Rack et al.'s public repo trains
+faithfully - its shipped config equals the paper's Table IV cell for cell - and **cannot compute
+any figure the paper reports.** Verified by grep on both machines rather than inferred: zero
+hits for `def test_step`, `def test_epoch_end`, `trainer.test` and `.test(` anywhere in `src/`
+or `run.py`; the string "test" appears **zero times** in `src/train.py`; use-time is hardcoded
+`sequence_lengths_minutes=[5, 10, 15]` as a constructor argument rather than a config key; and
+enrolment is the single fixed condition `session_1_embeddings[::150]`. So the code evaluates
+**9 validation subjects at one enrolment and three use-times**, while the paper's figures are
+**27 test subjects over an enrolment sweep including a 1-minute use-time**. Figure 3 was
+produced by something that is not in the repository. **"Their code is public" and "their
+numbers are reachable from their code" are different claims**, and the gap between them is
+invisible until someone greps for a test path.
+
+**The consequence inverts, and this is the useful half.** Writing our own evaluation harness is
+a cost for *reproduction* - "we reproduced their published number" stops being available - and
+a **benefit for comparison**, which is what the paper actually claims. This file already carries
+the rule: *the gate must be one implementation, not two, because two independently written
+comparators can disagree for reasons that have nothing to do with the thing being compared.* A
+SOTA table where their model is scored by their harness and ours by ours has exactly that
+defect. **One harness scoring both arms removes the largest confound in any published
+comparison**, so the missing code costs a claim we can afford to lose and buys one we need.
+
+**Gate the new plumbing against THEIR code, not against your reading of their paper.** The
+harness must first reproduce `sequence_top_1_accuracy_5_mins` on the validation split under
+their hardcoded `[::150]` enrolment, as their own module computes it. That is the same rule as
+"an out-of-path harness should reproduce something from the column it will be compared against"
+- it gives new plumbing a referent in running code rather than in prose.
+
+**AMEND A REGISTRATION FOR A FACT ABOUT THE INSTRUMENT, NEVER FOR A MEASUREMENT.** Two of three
+registered gate cells turned out to be uncomputable by the code under test. Amending there is
+legitimate; amending because a number came back wrong is moving the line. **The test is whether
+the fact could have been known without running the experiment** - here it is a grep, so it
+could. Discipline that makes the difference auditable rather than asserted: the amendment is
+recorded *as* an amendment with its reason, and **the original registration stays in the file
+rather than being edited away**. A registration whose history is not visible is not a
+registration.
+
+**And a published Dockerfile is not a reproducible environment.** Theirs pins Python 3.8 and
+CUDA 11.4 and then installs **unpinned** requirements, while the config passes `gpus: 1` and
+`auto_scale_batch_size`, both removed in PL 2.0 - so it does not build a working environment
+today. Reproducing on pins the authors never gave reproduces their protocol and not their
+environment, which is a deviation to record rather than a detail to absorb. Worth turning on
+ourselves before we ship anything: this repo's own pins should be read with the same eye.
+
+
+Miami's first row supplies the encouraging-but-insufficient version: alyx
+`position_lookup_auc` **0.6006** against this file's ~0.593 for the alyx xyz lookup. It
+reported that as a consistency signal and explicitly not a reproduction - different held-out
+users, different manifest, 10 s against 5 s windows, different machine - which is the right
+call and the reason the real gate is worth running. **Do not let a near-miss on different
+inputs stand in for a match on identical ones.**
+
+**And whatever lands must say what a MISSING env block means** (Miami). The change moves
+`code_identity`, so there will be a sharp line with un-annotated rows before it and annotated
+rows after - and the rows that most need the annotation are the ones already written. State
+in the file that an absent env block means *"written before env annotation existed"*, never
+*"unknown stack"*, or a later reader treats the blank as a measurement. Cheap to write now,
+impossible to reconstruct later - and this project has already been bitten by a blank read as
+a value (`epochs` and `early_stopping_patience` reading `None` on the older transfer rows,
+which had to be recovered arithmetically from `best_epoch` and `epochs_run`).
+
+**The sharpest form of it is Miami's**: this is not a gap in coverage, it is **a rule with no
+referent**. The same-device requirement is not a note, it is the acceptance standard for any
+numerics-touching change - and the record it governs cannot say which device ran, so every
+acceptance that ever cited it was resting on someone remembering.
+
+**Python 3.14 is a hard blocker for the pipeline, and a green test suite did not reveal it.**
+Hydra 1.3.6 - the newest release, so there is nothing to upgrade to - passes
+`LazyCompletionHelp()` to `add_argument`, and 3.14's argparse added a `_check_help` that does
+`'%' not in help_string` on an object with no `__contains__`: `ValueError: badly formed help
+string`. Every entry point goes through `@hydra.main`, so train, sweep, test and curve all
+die. **475 tests passed on that machine while nothing could run**, because the suite never
+invokes Hydra's argument parser - it surfaced only when a real training smoke test was
+attempted. **A green suite adjacent to the thing you care about is not evidence about the
+thing you care about**, and "the tests pass" was reported as "the node is operational". Use a
+3.13 interpreter. Miami rejected monkeypatching the installed Hydra for the right reason: a
+patched dependency on one machine against an unpatched one elsewhere is another invisible
+cross-machine difference, of exactly the kind the paragraph above is about.
+
+**Design the digest over the CSV payload only** (Miami): exclude `PROVENANCE.md` and
+`CITATION.txt`, because those legitimately differ per machine - a provenance file records
+where and when the conversion ran. Include them and **every machine reports a different
+corpus on day one and the digest becomes noise**, which is how a guard gets switched off.
+
+**Measured instance, 2026-09-09.** Data could not confirm DESKTOP-C's BOXRR state from AVALON
+and raised the possibility it was still at 2,020 users - which would have meant the
+4096-identity arm silently trained on ~2,096 while recording 4,096, making 9.14's saturation
+result a comparison of a corpus with itself. **False alarm, and worth the message**: both
+machines hold 4,020 users and 17,874 files. But the byte totals differed by **191**, and the
+whole delta is `PROVENANCE.md` (AVALON 4,832, DESKTOP-C 4,641) with `CITATION.txt` identical
+and the **CSV payload matching to the byte at 42,828,346,579 across 17,872 files**.
+
+**Miami then refused its own answer, and was right to.** A total-against-total comparison
+cannot exclude two files differing in compensating directions, and says nothing about content
+at equal size - the exact objection it had raised to Data an hour earlier, applied against a
+result that had come out the way both of us wanted. So the per-file manifest is committed at
+`docs/acceptance/boxrr_manifest_desktop-c.txt.gz` (17,874 lines, sha256
+`ebee5cd9...d8a1c5f6` uncompressed, paths relative to the corpus root, sorted by path) to be
+diffed entry-by-entry against AVALON's. **"The totals agree" and "all 17,874 files agree
+individually" are different claims, and this project has a documented habit of the second
+sentence outliving the first.**
+
 **The rule this replaces was mine and was wrong.** I inferred from "no commit hashes to
 `100bd18472`" that it came from a dirty tree, and wrote "a digest that names no commit names
 a dirty tree". It was a clean checkout - of the same commit, on a machine with different
@@ -2633,7 +3566,11 @@ The 95 pre-existing runs under `runs/` are not in this file; they can be backfil
 
 - `model/validate.py` is dead: it imports `plot_training_history` from `train` (it lives in `utils`), calls `train()` with a dict shape that predates the current config, and assumes the old `datasets/*/processed_data/` layout.
 
-Current baseline: **256 passing, ~10s**.
+Current baseline: **491 passing** on the `worktree-across-xr-alignment` branch (Miami,
+2026-09-10; 475 before the identity steps `73ecbf9232` / `517cdaa57b` added the guard, tier,
+`validation_users`, `drop_users`, environment and alignment-fixture tests). The suite has
+grown rather than broken; the previous "256 passing, ~10s" was stale. All three machines
+reporting the same count is a cheap corroboration that the checkouts are the same code.
 
 ## GPU throughput
 

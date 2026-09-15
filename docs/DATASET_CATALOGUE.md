@@ -151,9 +151,13 @@ timestamp,head_pos_x,head_pos_y,head_pos_z,head_rot_w,head_rot_x,head_rot_y,head
 right_hand_...,left_hand_...,take_id,user_id,game_id
 ```
 
-~109MB per user, so ~5.4GB for all 49. `take_id` separates takes by a **short break within
-one sitting**, not by days - so this contributes cross-*application* pairs, not evidence
-about temporal persistence.
+~109MB per user, so ~5.4GB for all 49. **`take_id` is a redundant relabelling of `game_id`**
+and carries nothing - verified exhaustively 2026-09-09, identical on all 21,203,962 rows,
+245 (participant, game) cells and not one with a second take. An earlier version of this
+entry said it "separates takes by a short break within one sitting", which implied a
+structure the corpus does not have. **Each (participant, game) cell is one unbroken
+recording**, so this contributes cross-*application* pairs and **no within-application
+temporal separation whatever** - not a short one, none.
 
 **Their train/valid/test split is deterministic and now known exactly.** From
 `data_selection_slm.py` in their preprocessing repo - no seed, no shuffle, purely numeric

@@ -1,0 +1,11 @@
+{
+ "half_minus_c2lo_A1": {
+  "mean": -0.027619439856349706,
+  "lo": -0.062098393768512006,
+  "hi": 0.008898599891228827
+ },
+ "half_A1": 0.3469103671994015,
+ "c2lo_A1_3seeds": 0.3745298070557513,
+ "sequence_10min_delta": -0.12401960784313737,
+ "verdict": "interval extends below -0.03: dose may bind - read C2-hi/C2-lo as scale minus a dose cost"
+}
