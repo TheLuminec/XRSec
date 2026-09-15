@@ -51,14 +51,15 @@ def main() -> int:
         corpus = axa.Corpus(ck, device, model)
         print(f"  embedded {len(corpus.embeddings)} windows ({corpus.encoding}, {corpus.sample_time}s, "
               f"stride {corpus.stride}) in {time.time() - t0:.0f}s", flush=True)
-        assert corpus.encoding == "dyn" and corpus.sample_time == 10 and int(corpus.stride) == 5
+        assert corpus.sample_time == 10 and int(corpus.stride) == 5, (corpus.sample_time, corpus.stride)
+        assert corpus.encoding in ("dyn", "raw"), corpus.encoding
         user_id = corpus.user_ids[corpus.window_user]
         app = np.array([GAME_ID[a] for a in corpus.window_app], dtype=np.int64)
         path = out_dir / f"ours_{args.arm}_seed{int(ck.get('seed', k))}.npz"
         np.savez_compressed(path, embeddings=corpus.embeddings.astype(np.float32), user_id=user_id,
                             app=app, start=corpus.window_start.astype(np.float32),
                             checkpoint=np.array(g["checkpoint"]), run_id=np.array(g["run_id"]),
-                            seed=np.array(int(ck.get("seed", k))))
+                            seed=np.array(int(ck.get("seed", k))), encoding=np.array(corpus.encoding))
         print(f"  wrote {path}", flush=True)
     (out_dir / f"ours_{args.arm}_gate_cpu.json").write_text(json.dumps(gates, indent=1), encoding="utf-8")
     return 0

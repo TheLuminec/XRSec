@@ -148,11 +148,13 @@ def main() -> int:
     their_p1 = np.zeros((len(CROSS), 17)); their_s10 = np.zeros((len(CROSS), 17))
     for ci, (a, b) in enumerate(CROSS):
         cell = next(c for c in published if c["ref_comment"] == a and c["query_comment"] == b)
+        # A skipped class would shorten a list silently and shift every index after it.
+        assert len(cell["accuracies"]["precision_at_1"]) == 17 and len(cell["accuracies"]["sequence_top_1_accuracy_list_10_mins"]) == 17, (a, b)
         their_p1[ci] = cell["accuracies"]["precision_at_1"]
         their_s10[ci] = cell["accuracies"]["sequence_top_1_accuracy_list_10_mins"]
     theirs_d1 = their_p1.mean(axis=0)
     out["theirs_D1"] = {"per_user": theirs_d1.tolist(), "level": interval(theirs_d1, rng),
-                        "seq10_per_user": their_s10.mean(axis=0).tolist(), "seq10_mean": float(their_s10.mean())}
+                        "seq10_per_user": their_s10.mean(axis=0).tolist(), "seq10_level": interval(their_s10.mean(axis=0), rng)}
     print(f"theirs, their metric: {theirs_d1.mean():.4f}; 10-min {their_s10.mean():.4f}", flush=True)
 
     # Our embeddings: D1 through their calculator, D2 through our harness.
@@ -170,9 +172,12 @@ def main() -> int:
         if p.exists():
             cert[name] = json.load(open(p))["seeds"][0]["arms"]["A1"]
     arms = {}
-    for arm in ("zero_shot", "c2lo"):
+    REGISTERED = ("zero_shot", "c2lo")          # Amendment 8; raw arms report levels only (Amendment 6: headline stays on dyn)
+    found = sorted({f.name[len("ours_"):f.name.rindex("_seed")] for f in pathlib.Path(args.ours_dir).glob("ours_*_seed*.npz")})
+    assert set(REGISTERED) <= set(found), found
+    for arm in REGISTERED + tuple(a for a in found if a not in REGISTERED):
         files = sorted(pathlib.Path(args.ours_dir).glob(f"ours_{arm}_seed*.npz"))
-        assert len(files) == 3, files
+        assert len(files) == (3 if arm in REGISTERED else len(files)), files
         d1_runs, d2_runs, seeds = [], [], []
         for f in files:
             npz = np.load(f)
@@ -181,7 +186,7 @@ def main() -> int:
             d1 = ours_by_their_calculator(npz, calc_ours)
             uid, app, start = npz["user_id"], npz["app"], npz["start"]
             d2 = template_rank1(npz["embeddings"], uid, app, start.astype(float), TEST_USERS)
-            cname = f"{'' if arm == 'zero_shot' else 'c2lo_'}seed{seed}"
+            cname = f"seed{seed}" if arm == "zero_shot" else f"{arm}_seed{seed}"
             check = None
             if cname in cert:
                 check = {"certificate_A1": cert[cname]["mean"], "rescored_A1": float(d2["p1"].mean()),
@@ -199,21 +204,36 @@ def main() -> int:
         d1_user = np.mean([r["p1"].mean(axis=0) for r in d1_runs], axis=0)       # seeds averaged inside users
         d2_user = np.mean([r["p1"].mean(axis=0) for r in d2_runs], axis=0)
         d1_cell = np.mean([r["p1"] for r in d1_runs], axis=0)                     # 20 x 17
+        d2_cell = np.mean([r["p1"] for r in d2_runs], axis=0)
+        d1_seq_user = np.mean([np.nanmean(r["seq10"], axis=0) for r in d1_runs], axis=0)
+        d2_seq_user = np.mean([r["seq10"].mean(axis=0) for r in d2_runs], axis=0)
+        arms[arm]["seeds_scored"] = seeds
         arms[arm]["D1"] = {"per_user": d1_user.tolist(), "level": interval(d1_user, rng),
                            "per_seed_mean": [float(r["p1"].mean()) for r in d1_runs],
-                           "seq10_mean": float(np.nanmean([np.nanmean(r["seq10"]) for r in d1_runs])),
+                           "seq10_per_seed_mean": [float(np.nanmean(r["seq10"])) for r in d1_runs],
+                           "seq10_level": interval(d1_seq_user, rng),
                            "per_cell_mean": d1_cell.mean(axis=1).tolist()}
         arms[arm]["D2"] = {"per_user": d2_user.tolist(), "level": interval(d2_user, rng),
                            "per_seed_mean": [float(r["p1"].mean()) for r in d2_runs],
-                           "seq10_mean": float(np.mean([r["seq10"].mean() for r in d2_runs]))}
+                           "seq10_per_seed_mean": [float(r["seq10"].mean()) for r in d2_runs],
+                           "seq10_level": interval(d2_seq_user, rng),
+                           # per ordered cell over the seeds scored, bootstrapped over users (G16)
+                           "per_cell": {f"{APP_NAME[a]}->{APP_NAME[b]}": interval(d2_cell[ci], rng) for ci, (a, b) in enumerate(CROSS)}}
+        print(f"{arm}: our metric A1 {d2_user.mean():.4f} {arms[arm]['D2']['level']['ci95_boot']}, 10-min {d2_seq_user.mean():.4f} "
+              f"{arms[arm]['D2']['seq10_level']['ci95_boot']}; their metric {d1_user.mean():.4f}, 10-min {d1_seq_user.mean():.4f} "
+              f"{arms[arm]['D1']['seq10_level']['ci95_boot']}", flush=True)
+        if arm not in REGISTERED:
+            continue
         diff = d1_user - theirs_d1
         cell_diff = d1_cell - their_p1
+        seq_diff = d1_seq_user - their_s10.mean(axis=0)
         arms[arm]["vs_theirs_D1"] = {"paired": interval(diff, rng), "outcome": outcome(interval(diff, rng)),
                                      "per_user_diff": diff.tolist(), "won_users": int((diff > 0).sum()),
-                                     "per_cell": {f"{a}->{b}": interval(cell_diff[ci], rng) for ci, (a, b) in enumerate(CROSS)},
-                                     "seq10_diff_mean": float(np.nanmean([np.nanmean(r["seq10"]) for r in d1_runs]) - their_s10.mean())}
-        print(f"{arm}: D1 level {arms[arm]['D1']['level']['mean']:.4f}, vs theirs {diff.mean():+.4f} "
-              f"boot {arms[arm]['vs_theirs_D1']['paired']['ci95_boot']} -> {arms[arm]['vs_theirs_D1']['outcome']}", flush=True)
+                                     "per_cell": {f"{APP_NAME[a]}->{APP_NAME[b]}": interval(cell_diff[ci], rng) for ci, (a, b) in enumerate(CROSS)},
+                                     "seq10_paired": interval(seq_diff, rng), "seq10_outcome": outcome(interval(seq_diff, rng))}
+        print(f"{arm}: vs theirs (their metric) {diff.mean():+.4f} boot {arms[arm]['vs_theirs_D1']['paired']['ci95_boot']} "
+              f"-> {arms[arm]['vs_theirs_D1']['outcome']}; 10-min {seq_diff.mean():+.4f} "
+              f"{arms[arm]['vs_theirs_D1']['seq10_paired']['ci95_boot']} -> {arms[arm]['vs_theirs_D1']['seq10_outcome']}", flush=True)
     out["ours"] = arms
     if args.ours_only:
         pathlib.Path(args.out).write_text(json.dumps(out, indent=1, default=float), encoding="utf-8")
@@ -235,11 +255,14 @@ def main() -> int:
                         "per_cell_mean": d2t["p1"].mean(axis=1).tolist(), "seq10_mean": float(d2t["seq10"].mean()),
                         "p1_per_cell_user": d2t["p1"].tolist()}
     print(f"theirs, our metric: {theirs_d2.mean():.4f}; 10-min {d2t['seq10'].mean():.4f} ({time.time() - t0:.0f}s)", flush=True)
-    for arm in ("zero_shot", "c2lo"):
+    out["theirs_D2"]["seq10_level"] = interval(d2t["seq10"].mean(axis=0), rng)
+    for arm in REGISTERED:
         diff = np.array(arms[arm]["D2"]["per_user"]) - theirs_d2
         iv = interval(diff, rng)
+        seq_diff = np.mean([np.array(v["D2_seq10_per_cell_user"]).mean(axis=0) for k, v in arms[arm].items() if k.startswith("seed")], axis=0) - d2t["seq10"].mean(axis=0)
         arms[arm]["vs_theirs_D2"] = {"paired": iv, "outcome": outcome(iv), "per_user_diff": diff.tolist(),
-                                     "won_users": int((diff > 0).sum())}
+                                     "won_users": int((diff > 0).sum()),
+                                     "seq10_paired": interval(seq_diff, rng), "seq10_outcome": outcome(interval(seq_diff, rng))}
         print(f"{arm}: D2 level {arms[arm]['D2']['level']['mean']:.4f}, vs theirs {diff.mean():+.4f} "
               f"boot {iv['ci95_boot']} -> {outcome(iv)}", flush=True)
     pathlib.Path(args.out).write_text(json.dumps(out, indent=1, default=float), encoding="utf-8")
