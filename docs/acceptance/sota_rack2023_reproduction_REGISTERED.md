@@ -628,3 +628,75 @@ best-by-metric, so the run yields a usable checkpoint whatever epoch it reaches.
 ships `max_epochs: 500` with early stopping commented out; 500 would be ~6.1 days on a shared
 card. **If the monitored metric is still climbing at epoch 100 the budget gets extended and the
 extension is recorded here.** `NUM_WORKERS` left at their default 6.
+
+---
+
+# AMENDMENT 6 — 2026-09-15: the 09-11 run FAILED at minute 22, and sat unnoticed for four days
+
+## What happened
+
+The `max_epochs=100` run enqueued on 2026-09-11 at 17:34 **completed epoch 0 of training** —
+4,233 batches (2,500 train + ~1,733 validation) in 21:32 at 3.28 it/s, loss falling to 16.3 —
+then crashed the first time `validation_epoch_end` executed:
+
+```
+similarity_module.py:107
+  self.evaluator.get_accuracy(query_embeddings, reference_embeddings, query_y, reference_y,
+                              embeddings_come_from_same_source=False)
+TypeError: get_accuracy() got an unexpected keyword argument 'embeddings_come_from_same_source'
+```
+
+The queue runner did its job: `.failed` marker, rc=1, marked done to avoid a retry loop. **The
+card then sat idle for four days because nothing was watching the job.**
+
+## Two failures of mine, named separately because they have different fixes
+
+**1. Monitoring.** A ~36-hour job was enqueued with no watcher on its outcome. The runner's
+liveness signal answers *is the runner alive* — it was — and not *did the job succeed*. "The run
+is enqueued" was reported as though it meant "the run is handled". **Fix:** every long job gets a
+watcher that fires on `.failed` as well as on completion. Silence is not success; that coverage
+rule was applied to other sessions' monitors throughout this project and not to this queue.
+
+**2. Gate coverage.** Amendment 5's loss-trajectory gate drove `training_step` in a manual loop,
+chosen to avoid Trainer callbacks that monitor validation metrics a short run never produces.
+**It therefore never executed `validation_epoch_end`**, and the first time their validation code
+ran on this stack was minute 22 of the real run. "The gate passed" was allowed to stand for the
+whole pipeline when it was evidence about the training path only — the same shape as "475 tests
+green" on 2026-09-09. **A gate is evidence about the path it exercises.** Fix: no multi-seed
+launch until one full epoch has executed `validation_epoch_end` and logged
+`sequence_top_1_accuracy_5_mins/validation/mean`.
+
+## Root cause: another dependency-version change — and the obvious patch is silently WRONG
+
+pytorch-metric-learning changed `AccuracyCalculator.get_accuracy` between 1.x and 2.x. Pinned
+here: **2.3.0**. Their code targets **1.x**. Both the keyword **and the positional order** changed:
+
+```
+their call (pml 1.x):  get_accuracy(query, reference,    query_labels, reference_labels, embeddings_come_from_same_source)
+pml 2.3.0:             get_accuracy(query, query_labels, reference,    reference_labels, ref_includes_query)
+```
+
+**Renaming the keyword to `ref_includes_query` would not raise and would compute garbage** —
+`reference_embeddings` would be bound to `query_labels`. So the source-edit route here is not
+merely a deviation; it would be a wrong answer presented as a result.
+
+This is the pandas lesson from Amendment 3 one library over: **price the version before editing
+code you did not write.** The fix is a version pin, consistent with choosing Python 3.8 over
+patching `collections.abc` and with the fidelity reasoning behind the `window_dataset.py:23`
+hoist. Candidate: **`pytorch-metric-learning==1.7.3`** (last 1.x), under verification — its
+`get_accuracy` must take their positional order, and their `MotionAccuracyCalculator` overrides
+(`_get_accuracy`, `requires_knn`) must still fit its internals. Resolution recorded below when
+verified.
+
+## The one good measurement the failed run produced
+
+A **complete epoch including validation: 21.5 minutes**, measured end to end rather than
+extrapolated per step. That supersedes the per-step band for budgeting:
+
+| max_epochs | per seed | three seeds |
+|---|---|---|
+| 100 | ~36 h | ~4.5 days |
+| 500 (their shipped value) | ~7.5 days | ~22 days |
+
+Direct and complete, but still **one** epoch, so quoted as ~21.5 min rather than as a band until
+more epochs exist.
