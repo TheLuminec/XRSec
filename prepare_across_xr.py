@@ -42,6 +42,20 @@ split; see docs/LITERATURE_BRIEFING.md's "source X"), not to add training
 identities. Convert it into its own directory, never pool it into a
 training run, and see the PROVENANCE note this script writes for why.
 
+AMENDED 2026-09-10, and the exception is narrow.  "Never pool it into a
+training run" stands and is what protects the instrument: Across-XR must
+never be silently absorbed into the pooled corpus.  But the paper needs a
+like-for-like arm against Schach et al., who trained on this dataset's
+own first 23 users -- so a SEPARATELY REGISTERED arm training on users
+0-22 and validating on 23-31 is permitted.  The line that does not move:
+users 32-48 are never trained on, never validated on, never used to fit
+an alignment and never used to choose an epoch, and the zero-shot arm
+(Across-XR absent from training entirely) stays zero-shot.  The two arms
+are never averaged and no figure is quoted without naming its arm.
+Recorded here rather than kept as an approval in a message, because a
+rule contradicted by practice and left unamended is how the next reader
+inherits a contradiction.
+
 Two conversion traps, both contradicted by what the paper text and the
 README said, and both settled only by reading a real file's header --
 worth remembering the next time a paper's prose is trusted over the data:

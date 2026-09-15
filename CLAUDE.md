@@ -315,6 +315,28 @@ There is no user-facing "split" abstraction; splits are expressed by a list of u
 
 The default config trains on 43 users and evaluates on 5 held-out ones. **`test_dirs` pointing at a different dataset is incompatible with `test_on_excluded=True`**: the exclude paths belong to the training dataset, nothing matches, the loader silently reports "Loaded 0 samples from 0 users", and evaluation dies with a bare `ZeroDivisionError`. Set `test_on_excluded=false` for cross-dataset evaluation.
 
+**THE TWO BOOLEANS CANNOT EXPRESS "EXCLUDE FROM TRAINING WITHOUT EVALUATING ON", AND THAT GAP
+NEEDED A THIRD LIST (New Gen, 2026-09-10).** Under `test_on_excluded=true` the exclude list **is**
+the evaluation set, so there is no way to hold a group of users out of training without either
+scoring them or letting them in. Removing Across-XR 23-31 from a matched arm's validation would
+therefore have trained on them or evaluated on 26 users instead of 17 - neither of which is the
+requested experiment. `drop_users` fills exactly that hole: removed from training and from the
+validation draw, **nothing else**, recorded per run as `num_drop_users` and in `eval_split` so the
+qualification travels with the number.
+
+This is the shape the section above warns about arriving as a concrete cost rather than a
+caution: **a split expressed as one list plus two booleans has states it cannot name**, and the
+one it could not name is the one a controlled contrast needs - hold a group out of *both* sides.
+Tested on the real object with a three-user corpus whose answer is known by construction, one
+user evaluated, one dropped, one trained.
+
+**And it landed before the first row of the programme, which is the part worth imitating.** The
+change moves `code_identity` (`73ecbf9232` -> `517cdaa57b`), so New Gen parked a queued seed for
+the ten minutes it took rather than letting arm 1 run under one identity and the rest under
+another. **A numerics-free change is still an identity step, and an identity step in the middle
+of a programme is a comparison someone later has to earn** - see the margin/scale grid, which
+cost five runs to prove an invalidation had been unnecessary.
+
 ### Same-session positives (answered: costs ~1.5 points)
 
 A positive pair is two windows from the same user — and usually, therefore, from the **same recording session**, which shares headset mounting, seating position and the content being viewed. A model can score well by matching the session rather than the person, and because held-out positives are *also* same-session, that shortcut never appears as a train/test gap. This has the same shape as the cross-dataset shortcut, which cost 11 points once fixed.
@@ -659,6 +681,181 @@ caveat is harder: each (participant, game) cell is a single unbroken recording, 
 holds no within-application temporal separation of any kind.** Nothing already concluded from
 it changes - the 0.527 is cross-application and needs no takes - but a word was doing
 reassurance work it had not earned, which is worse than a caveat that is merely pessimistic.
+
+**FIRST CROSS-APPLICATION RESULT: head-only and zero-shot sits at or above the published
+controller-based figure, and the alignment route their own paper named as future work does NOT
+work on a zero-shot embedding (New Gen, 2026-09-10).** Three seeds, all gated (2.0e-5 to 2.9e-4),
+one code identity, `dyn` 10 s head-only trained on BOXRR+alyx and **never trained on Across-XR**,
+scored on Schach et al.'s own test users 32-48 at N=17:
+
+| | ours | Schach et al. |
+| --- | --- | --- |
+| **cross-application rank-1, single window** | **0.234** [0.181, 0.292] | **0.180** |
+| cross-application, 10-minute sequence | 0.357 | 0.308 |
+| within-application | 0.500 (confounded, below) | 0.831 |
+
+**It is NOT reported as a beat, and the reason is the durable half.** The interval's lower edge
+is 0.181 against their 0.180, so it technically excludes - by 0.001. Twelve hours earlier this
+file told a session not to argue a 0.003 near-miss that went *against* a result; **a 0.001
+near-miss that goes in favour gets the same treatment or the rule is not a rule**, and applying
+an interval standard only when it flatters is the shape of motivated reasoning that is hardest to
+catch because every step looks principled. There is also a stronger reason no beat is available:
+**their 0.180 is a mean with a reported mean per-cell (across-user) sd of 15.1 and no published per-cell or
+per-user distribution**, so the comparison treats their point estimate as exact, and the two
+intervals are over different sources of variation (users against application pairs). **A formal
+significance claim against a published mean whose distribution was not published is not available
+at any margin.** The sentence that is available, and is unattackable: every seed sits above their
+reported mean, head-only and zero-shot.
+
+**SUPERSEDED AS TO ITS PREMISE (2026-09-15): the per-user distribution IS published, and a formal
+test is now available.** Schach et al.'s code, data and trained models are public at
+`gitlab.informatik.uni-wuerzburg.de/hci/software/research-prototypes/2025-frontiers-identification-across-xr-applications/`
+(`dataset` @ `565a3f39`, `dataset-preprocessing` @ `92222c24`, `training-and-evaluation` @
+`4ec4106a`; cloned to `external_sota/schach2026/`). Note the host: `gitlab.informatik`, not the
+auth-gated `gitlab2.informatik` that blocked this for days. `training-and-evaluation` ships the
+trained similarity model, 922 MB of precomputed embeddings, the evaluation scripts, and
+`evaluation/files/slm_model_data/accuracy_values.json` - whose `precision_at_1` is a **list of 17
+per-user values** in each of 35 cells (their calculator runs `return_per_class=True`). **The mean
+of cell means reproduces the paper exactly from the JSON alone: within-application 0.831,
+cross-application 0.180.** So "no formal test is available at any margin" rested on a fact that
+was false the moment the repository went public; the placement wording stays only until a paired
+per-user test is run.
+
+Three conditions on that test, recorded before it exists. **The list index to user id mapping is
+decided inside `pytorch_metric_learning`, not in their code** - verify it, because a paired test
+on a misaligned user order is worse than none. **Matched N and matched users is not matched
+metric**: theirs is nearest-reference-window kNN on 15 s windows at 30 fps, ours a mean-embedding
+template on 10 s windows, so one harness must score both arms and first reproduce 0.180/0.831 from
+their model. And **their `.pkl` and `.ckpt` files execute code on load** - scan with `pickletools`
+and prefer `torch.load(weights_only=True)` on any machine holding DUA data. Two traps: their JSON's
+references like `[1, 2, 3, 4]` are four-application galleries on a model trained on all five, **not**
+a held-out-application model, so never quote them beside P3; and their README names the checkpoint
+`similarity-model/max_r_precision.ckpt` while the shipped file is `slm_model/max_precision_at_1.ckpt`.
+
+**AND THE SHIPPED CHECKPOINT CANNOT BE TIED TO THE PUBLISHED NUMBERS - rest any comparison on the
+JSON and `embeddings.pkl`, not on it (verified 2026-09-15).** Three independent reasons. Their
+`slm_compute_embeddings.py` loads the model as `SimilarityLearningWithDANN`, **a class present in no
+file of the repository**, so embeddings cannot be recomputed from the checkpoint with the shipped code.
+The checkpoint itself is not operatively a DANN model (loaded `weights_only=True`: no domain or
+application classifier in the `state_dict`, `use_lambda_in_loss=False`) - the paper names DANN only as
+future work, so the class name is a codebase leftover. And **its architecture does not match the paper**:
+`rnn_hidden_size` is **320** where the Frontiers Table 2 lists the similarity model's GRU hidden size as
+**480**. Everything else (embedding 480, window 450, stride 50, d_model 320, 16 heads, one transformer
+layer, two GRU layers) agrees. What reproduces the paper exactly is the per-user JSON, and the chain that
+can be verified is data -> pickle -> JSON -> paper. **"Their code is public", "their model is public" and
+"the public model produced their numbers" are three different claims**, and only the first holds cleanly
+here - the same gap Rack et al.'s repository showed one level down.
+
+**Alignment is excluded decisively and is a finding rather than a null.** `A2' - A1` - the
+*test-fitted* diagnostic ceiling, Schach's own illegitimate route reproduced on our embedding -
+came to **+0.026** [+0.000, +0.051] against a registered +0.15 and against **their +0.34**:
+**13x smaller**. Train-user-only fitting added +0.011, its registered +0.05..+0.20 band wholly
+excluded. But the permuted-correspondence null **hurts** by -0.074 in every seed, so the
+orthogonal component is real and person-specific and merely tiny - *"there is no rotation"* is the
+wrong sentence, *"the rotation is 13x smaller than on a model trained on the applications"* is the
+right one. The unrestricted 128-d fit was worse than the subspace fit by -0.055 in 3/3 seeds,
+which is the SVD rank argument appearing in data; the subspace dimension was flat over 4-32.
+
+**The mechanism hypothesis, and it is what the matched arms decide.** Schach measured their
+orthogonal structure on a model trained on **all five applications for the same 23 people**; ours
+never saw any of them. So the rotation may be a property of *training exposure* rather than of the
+task - testable by re-running the same alignment on C1 (their protocol) and C2-hi. **If it appears
+there, alignment returns as a positive contribution on the matched arm; if it does not, the
+negative stands with a mechanism attached.** Either way it is a result, which is what makes those
+arms decisive rather than confirmatory.
+
+**A0 is confounded and "the scope cost sits within-application" is not yet earned.** 0.500 against
+their 0.831 varies the sensor set *and* domain exposure together. C1 is head-only **and** trained
+on the applications, so C1 against 0.831 is the comparison that isolates the sensor set.
+
+**PROGRAMME COMPLETE (2026-09-11): 18 gated checkpoints, one code identity, every arm registered
+before it ran.** Final numbers, all cross-application rank-1 at N=17 on Schach et al.'s own test
+users 32-48:
+
+| arm | trained identities | Across-XR exposure | A1 |
+| --- | --- | --- | --- |
+| zero-shot (3 seeds) | 3,072 | none | **0.234** |
+| Z-676 | 495 | none | 0.218 |
+| C2-hi | 495 | yes, 14.1% dose | 0.307 |
+| **C2-lo (3 seeds, range 0.010)** | 3,095 | yes, 3.87% dose | **0.375** |
+| C1 (their protocol, our model) | 23 | yes | 0.131 |
+
+**Three findings, and the second is the one nobody registered in advance.**
+
+1. **Head-only and zero-shot places at or above a controller-based published figure** - 0.234
+   against 0.180, on their split, having never seen the corpus. Reported as a placement against a
+   published mean and **not a beat**: the interval excludes 0.180 by 0.001 and their number is a
+   mean whose distribution was never published, so no formal test is available at any margin.
+2. **Exposure carries to an UNSEEN application: +0.049** [+0.021, +0.078] seed-averaged, falsifier
+   excluded on every seed. The control is what makes it stand - applications absent from every
+   pretraining corpus read **+0.046** against **+0.055** for those present, so this is not
+   pretraining leaking through the hold-out, and **Synth Riders has no pretraining coverage at
+   all**. The stricter registered threshold (CI lower above +0.030) was **not met** and is
+   reported as not met. **This is the first data-side lever this project has measured to cross an
+   activity boundary** - identity count is flat across one, activity diversity was null.
+3. **Identity count is flat without exposure and not flat with it** (+0.016 against +0.061), and
+   dose cannot explain it: halving in-domain windows costs -0.028, a 20% cut -0.009, and the
+   *higher*-dose arm loses by 0.061 - so correcting for dose **widens** the scale effect.
+
+**The alignment route is closed, in three sentences that survive every seed.** The honest
+train-user-only orthogonal fit **never carries** (A2 - A1 never *resolvably* above zero - zero-shot seeds read +0.016/+0.011/+0.006 with every interval spanning zero; "<= 0 on 14 checkpoints" was written here and was false). The
+correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
+or more applications - and no amount of pretraining raises that; a corpus that could support the
+method would need far more multi-application participants, which is an actionable specification
+rather than a null. And **the test-fitted ceiling that motivates the idea is run-dependent**,
+present in one of three seeds at identical configuration (C2-lo) - the "three of five P3 runs" once cited here are five *different* configurations and do not bear on it, **so it was never
+a target** - a single-run diagnostic bound of that kind is not evidence that application
+embeddings differ by a rotation, which raises the bar for every claim of that shape including the
+published +0.34 this programme set out to reproduce.
+
+**Two process notes worth as much as the numbers.** The final P3 seeds were run under a rule fixed
+in advance - purpose, threshold and "report whichever way it falls" all registered before launch -
+and they moved the estimate **down** by 0.004 and were reported. **A result that survived seeds
+run under a fixed rule that could have sunk it is worth more than one that was never tested that
+way.** And the composition is provable rather than asserted: the loaders' own counts close
+exactly, C2-lo 540,107 minus Across-XR 20,896 = **519,211**, the zero-shot training set to the
+window.
+
+**Recorded as unresolved and staying so:** the within-application gap (confounded between sensor
+set and architecture, not isolable without their architecture head-only); the C2-hi alignment dip,
+which is **0.8 sigma of its own arm's spread** and never needed explaining; and how often the
+orthogonal structure appears.
+
+**P2 WAS THEN RUN, AND IT IS THE STATIC-CUE AUDIT OF OUR OWN HEADLINE (2026-09-11).** Three `raw`
+seeds, zero-shot, every field identical to the `dyn` arms. **All three selected EPOCH 1 of 16** -
+patience fired immediately, the "raw overfits the source domain at once" pattern this file already
+records. Paired on the same 17 users:
+
+| | `raw` | `dyn` | delta |
+| --- | --- | --- | --- |
+| cross-application A1 | **0.351** (0.364/0.353/0.335) | 0.234 | **+0.117** [+0.042, +0.192] |
+| within-application A0 | 0.730 | 0.500 | +0.223 - larger, so the placement reading holds |
+| verification AUC on the 17 | 0.704-0.733 | | against a recorded-position lookup of 0.585-0.598 |
+
+**Epoch 1 is the finding, not a caveat on it.** A model one epoch from initialisation reaching
+0.351 says the cue is **sitting on the surface of the input** rather than being something a model
+must learn - which is worse news than a trained model reaching the same place. The verification
+figure against the lookup says it reads **more than mean position**: posture as well as height.
+
+**The privacy reading is the contribution, and it lands on Schach et al.'s own framing.** Their
+paper is explicitly a risk assessment, and their BRV encoding discards head position by
+construction - so it assesses **behavioural** risk. On this corpus **static anthropometry and
+posture, available at epoch 1 with no behaviour required, add +0.117 head-only across applications
+and reach 0.351 - within a seed spread of the 0.375 a trained, exposed behavioural model reaches.**
+That does not contradict them; it says **a behaviour-only assessment understates the risk**, which
+is a finding their framing asks for and their method cannot produce.
+
+**The headline stays on `dyn` - decided before any raw number existed** - because `dyn` is the
+like-for-like comparison against a controller-based BRV model, and a `raw` figure would beat them
+partly on a cue their encoding discards on purpose. **The audit sits beside the headline, not in a
+footnote**: this project's methodological contribution has been auditing static cues out of other
+people's numbers, and declining to run that audit on our own - or running it and burying it -
+would be indefensible.
+
+**And epoch-1 selection is ~3x less stable than a trained-out one**: observed seed range **0.029**
+against 0.010 for 120-epoch arms, measured rather than imported from a neighbouring arm. That
+import is exactly the error this file records one entry above; the warning was issued before the
+seeds ran and the measurement is what settled it.
 
 **Conversion facts, verified on the files rather than the Readme, which is wrong again.**
 Header order is `head_rot_w` **first**; position is in **centimetres** (`head_pos_y`
@@ -1049,6 +1246,23 @@ which is the same move as moving a line after seeing the number. Registering a b
 falsifier that do not meet leaves an unnamed region that the run is free to land in, and it is
 one subtraction to check.
 
+**IT RECURRED THE SAME DAY, IN A DIFFERENT SESSION, AFTER BEING WRITTEN HERE - AND THE
+COORDINATOR REVIEWED THE REGISTRATION AND DID NOT CATCH IT.** The Across-XR alignment programme
+registered its kill condition as band `A2' - A1 >= +0.15` with falsifier `CI upper < +0.05`,
+leaving **[+0.05, +0.15) unnamed**; it measured +0.024 with CI upper **+0.053**, inside the gap.
+Twelve hours after the placement arm did the same thing, in a session that had read this file,
+on bands the coordinator reviewed and amended in three other respects. **A rule can be recorded,
+read by both parties, and still not fire at review** - so the mitigation is not another sentence
+here but a mechanical one: **do the subtraction and write the third outcome's meaning into the
+registration**, every time, as a line of the template rather than an act of attention.
+
+**The substance was unaffected, and that is the reading to imitate.** The registered band was
+excluded by a factor of 2.8 at the interval's upper end and sits **14x below** the value Schach
+et al. measured for the same quantity (+0.34), so the conclusion - the cross-application gap on
+a zero-shot embedding is barely an orthogonal difference - rests on where the interval fell and
+not on whether a threshold was crossed. **Do not spend a paragraph on a 0.003 near-miss; it reads
+as hedging a result that is not close.**
+
 **Verified independently before it propagated (coordinator, AVALON, same day).** Recomputed from
 the same corpus with a different implementation and a fixture asserted in both directions
 (synthetic users 10 m apart must return 1.000, and inverted 0.000): lateral **0.7574**, height
@@ -1112,7 +1326,23 @@ it and moves the wrong way: Nymeria averages **414 windows per identity** agains
 **151**, so capping at the corpus median *trims Nymeria* and raises BOXRR's share. The fix is
 composition, not sampling - hold identity count fixed and swap identities between corpora
 (BOXRR 343 + alyx 76 against BOXRR 293 + alyx 76 + Nymeria 50, both 419), which raises the
-dose from 2.9% to **14.2%** of windows. **A dose is part of a treatment's definition; a null
+dose from 2.9% to **14.2%** of windows.
+
+**AND EQUALISING A COUNT UPSTREAM OF A STOCHASTIC SPLIT DOES NOT EQUALISE IT DOWNSTREAM (New
+Gen, 2026-09-10, catching the coordinator's own fix).** Re-running this design on Across-XR, the
+instruction was "cap BOXRR at 577 against 600 so both arms hold 676 identities". That equalises
+the pool and **not the arms**: `val_user_fraction=0.25` then draws over each arm's *own* pool, so
+the two would validate on different people, train on **513 against 507**, and the BOXRR training
+sets would not be nested even though the *subsamples* are. The swap has to be applied to the
+**post-draw training list**, not to the pre-draw pool - here by making the validation list
+explicit (`val_user_fraction=0`, the pipeline's own 25% draw pinned to a file) and dropping the
+last 23 BOXRR *training* users in favour of Across-XR 0-22. Verified on the lists the loaders
+hold: 495 training identities in both arms, BOXRR training users 412 subset of 435, alyx
+identical.
+
+**The general form: a control matched before a random step is matched in expectation, not in
+fact**, and "both arms have N identities" is a claim about whichever list you actually counted.
+Count the one the loader hands the model. **A dose is part of a treatment's definition; a null
 without one is a result about the dose.**
 
 The corollary is uncomfortable and worth stating plainly: **most of the remaining ideas
@@ -1371,7 +1601,7 @@ download:
 | --- | --- |
 | 9 | IRB or equivalent ethics approval **in advance of use** - a precondition, not a promise |
 | 4 | no further distribution without written consent; requests referred back to Berkeley |
-| 5 | **mandatory citation of Nair et al. 2023** in any public disclosure |
+| 5 | **mandatory citation** in any public disclosure - the DUA names exactly one: Nair et al., *Unique Identification of 50,000+ Virtual Reality Users from Head & Hand Motion Data*, arXiv:2302.08927 (verified on the DUA text 2026-09-15). Not the BOXRR-23 dataset paper, arXiv:2310.00430 - cite that too, but it does not discharge clause 5 |
 | 10-11 | no deanonymization, no contacting subjects, no inferring sensitive attributes |
 | 13 | recipient indemnifies UC Berkeley |
 | 15 | Berkeley may terminate; all copies must then be destroyed, **including derived ones** |
@@ -1710,6 +1940,17 @@ cosine head is saved. `identity_softmax` forces `head=cosine` — scoring
 angular-margin embeddings with a learned linear layer over `|e1 - e2|` would throw
 away the structure the objective just created.
 
+**The TRAINING accuracy `identity_softmax` reports is on MARGIN-ADJUSTED logits and sits below
+chance early on - it is not a measure of fit (2026-09-10).** `train_identity_epoch` computes
+`logits = head(model.embed(windows), labels)`, and the head subtracts the margin from the true
+class before scaling, so `correct` is an argmax over `s*(cos - m)` for the right class against
+`s*cos` for every other. At the defaults that is a **10.5 logit-unit penalty** applied only to the
+answer, so the true class loses early argmaxes by construction: a C1 run on 23 identities reported
+**1.3% training accuracy against a 4.35% chance level**, which reads as a broken run and is the
+metric behaving as designed. **Do not cite it as evidence of under- or over-fitting in either
+direction** - use the training *loss* and the validation curve, which is what the same run's
+diagnosis correctly rested on.
+
 **Calibration matters here.** Cosine ranks well but says nothing about where the
 accept threshold belongs, and accuracy is read at `logit > 0`. After every epoch the
 cosine head's two scalars are refitted on *training* pairs with the extractor frozen.
@@ -1885,6 +2126,34 @@ the first question is whether the margin change closes it, not whether the idea 
 Switching the default is a single deliberate decision, made once, with a note in every
 table that straddles it - and the remaining 22 cells are the price of calling any setting
 "best".
+
+**TESTED AT SCALE AND IT REVERSES: 0.1/15 COSTS -0.028 AT 4,096 IDENTITIES (New Gen, 2026-09-11).**
+Registered as a **screen** rather than a test, with the sign-flip named in advance: the +0.016 was
+measured at **419** identities, where face-recognition defaults tuned for tens of thousands push
+too hard, and at 4,096 the default's own assumption is closer to true. Measured, paired on the
+same 17 users, cross-application rank-1: **-0.028 [-0.045, -0.012]**, whole interval below zero,
+with A0 (-0.039) and the ten-minute figure (-0.045) agreeing in sign. The direction is resolved;
+its size against the registered -0.02 edge is not.
+
+**So the live advice above is superseded and following it would send you the wrong way.** "If a
+result lands within ~0.016 of a target, the first question is whether the margin change closes
+it" was written from the 419-identity grid and **does not hold at scale** - at 4,096 the lever
+reverses sign - and only the sign is comparable, because the +0.016 was in-domain verification AUC at 419 and the -0.028 is cross-application rank-1 at 4,096 ("roughly twice" compared two metrics and is withdrawn). The default stands, and now for a measured reason
+rather than a procedural one. **A hyperparameter gain measured at one identity count is a claim
+about that count**, and this file's own explanation of *why* 0.1/15 helped at 419 predicted the
+reversal, which is what makes this a negative with a mechanism rather than a null.
+
+**And the coordinator's power estimate for that screen was 2.2x too pessimistic - worth fixing
+because it nearly stopped the run.** I registered the design as resolving about +/-0.037,
+averaging the paired-interval half-widths observed across the programme (0.031 / 0.042 / 0.041 /
+0.035). The screen came in at **+/-0.017**. The error: **every interval I averaged came from arms
+differing in TRAINING COMPOSITION**, while this one differs only in a hyperparameter - same data,
+same users, same seed - so the per-user differences are far more consistent and the bootstrap is
+correspondingly tighter. **A same-composition contrast is roughly twice as well powered as a
+different-composition one on the same 17 users**, and the two must not share a resolution
+estimate. The conclusion survived ("+0.016 could not be cleanly resolved" - at half-width 0.017
+it reads [-0.001, +0.033], marginal rather than invisible), but the calibration was wrong, and a
+too-pessimistic MDD argues against running a screen that turns out to be informative.
 
 ### Window counts per identity span 77x, and that costs ~38% of our identities
 
@@ -2276,9 +2545,94 @@ about pandas as well.
 **The general form is a guard whose correctness depends on an invariant nothing asserts.**
 Take-boundary invalidation is correct only while the frame stays single-block, which depends on
 input dtype and on pandas' block consolidation - neither checked, neither stated. One line at
-each site fixes it: assert the block count, or write through `.iloc` rather than `.values`.
+each site fixes it - but **not** an assert on the block count, which is the wrong discriminator
+(see the amendment below): use `np.shares_memory(df.values, df.iloc[:, 0].values)`, or write
+through `.iloc` rather than `.values`.
 **This is the failure-open pattern again** - a guard that stops guarding and says nothing - and
 it is worth looking for wherever this repo writes through `.values`.
+
+**AND THE SAME PROPERTY HAS A SECOND FACE: MULTI-BLOCK `.values` COPIES ON READ, WHICH MADE THE
+PUBLISHED CONFIGURATION UNRUNNABLE (Miami, 2026-09-10).** `WindowMaker.to_windows` does
+`unwindowed_data.values` to slice one 500-frame window, and `BaseDataset` holds an 18-column
+frame assigned **column by column**, so `.values` is a full copy of the entire training set on
+**every `__getitem__`** - cost O(dataset size) per item. Their `SimilarityDatamodule` sets
+`length_before_new_iter=1_000_000` at `batch_size: 400`, so one epoch is **2,500 batches**, and
+Miami measured **27-43 s per batch with the GPU at 0-5%**: ~30 h per epoch, and at their
+`min_epochs=100` that is **72 to 124 days**. The published configuration cannot be run to
+completion as shipped, and nothing about that is visible without profiling - the code is
+correct, the GPU is idle, and the job simply never ends.
+
+Reproduced here on a frame built the same way, before ruling on the fix:
+
+| | |
+| --- | --- |
+| before `_scale_data` | 18 blocks |
+| **after `_scale_data`** | **18 blocks** - pandas arithmetic PRESERVES the split |
+| `.values` shares memory with block 0 | **False** |
+| per-access cost | **5.142 ms** against **0.0004 ms** for the ndarray, values identical |
+
+**So one pandas property produced two unrelated-looking failures in one codebase: a silently
+discarded write and an O(n) copy on every read.** Neither is visible by reading, both need
+measurement, and the second masquerades as a hardware complaint.
+
+**Two things that change how such a fix should be written up.** `.copy()` **collapses the
+18-block frame to a single block**, after which `.values` is a view - so eager consolidation
+makes the shipped code fast with no edit at all, which raises the question the timing arithmetic
+cannot answer on its own: *how did the authors ever run 100 epochs?* If an older pandas
+consolidated here, this is a **version regression rather than a defect in their code**, and the
+honest note is "we restored the single-block property their environment provided". Establish
+which before writing the deviation; it changes the sentence. And **scope the edit to the
+narrowest assignment that already exists** - here `window_dataset.py:23`, not
+`base_dataset.py:221`, because the latter would break `bin_maker.py`'s `self.frames.rolling(...)`,
+and a fix that silently breaks a sibling class is a larger deviation than the one being
+requested.
+
+**Gate an equivalence claim on the OPTIMISATION, not on a sample of the inputs.** Six
+bit-identical items is evidence about the input; the quantity that must be unchanged is the
+training. Run N steps both ways from one seed and compare the loss sequence - it is minutes, and
+it converts "we checked six windows" into "the model saw the same data and took the same steps".
+
+**A note on the fixture rule, which missed here for the third time in a day and should not be
+read as carelessness.** The refuting fixture was a uniform float32 frame - single-block, hence a
+view, hence `.values` looked free. **The triggering condition cannot be constructed without
+already knowing the mechanism**, which is what makes this class hard rather than what makes it a
+lapse. The behaviour that produced all three diagnoses was going back to the fixture instead of
+dropping a refuted hypothesis.
+
+**AMENDMENT (Miami, 2026-09-10, measured on both versions): BOTH of today's `.values` findings
+are ONE pandas 1.x -> 2.x regression, and neither is a defect in Rack et al.'s code.** The
+coordinator's hunch that `.copy()` consolidating implied a version story was right, and testing
+it settles both:
+
+| | blocks after `_scale_data` | `.values` is a view | per access |
+| --- | --- | --- | --- |
+| **pandas 1.5.3** (their era) | 18 | **True** | **0.015 ms** |
+| pandas 2.0.3 | 18 | False | 7.873 ms |
+
+**525x, on the same frame.** And the velocity bug goes the same way: under 1.5.3 the upcast frame
+consolidates to one block, the take-boundary NaN write **lands**, and their failing test
+**passes**. So the correct sentences are that **we restored the single-array access property
+their environment provided**, not that we fixed their bug; and that their test is a correct test
+passing correctly in its own environment, not - as recorded here this morning - "a latent
+fragility" doing "useful work by accident". Both of those readings were wrong and are withdrawn.
+It also answers what the timing arithmetic could not: they ran 100 epochs because
+`__getitem__` cost them 0.015 ms.
+
+**AND BLOCK COUNT IS NOT THE DISCRIMINATOR - the rule this file circulated for a day was
+version-scoped without saying so.** Both versions report **18 blocks**; only view-versus-copy
+differs, because pandas 1.x consolidated on access and 2.x does not. So "multi-block means copy"
+holds only for pandas 2+, and an `assert len(df._mgr.blocks) == 1` would pass or fail for reasons
+unrelated to the property being protected. **The version-independent check is
+`np.shares_memory(df.values, df.iloc[:, 0].values)`, or timing a single access.** Confirmed here
+on pandas 3.0.1: blocks stay 18 across a `.values` access, no consolidation, `shares_memory`
+False. The 1.5.3 half is Miami's measurement on the 3.8 environment and was not reproducible on
+this interpreter - stated so rather than folded in.
+
+**The general lesson is not about pandas.** A behaviour that is a *property of the dependency
+version* was diagnosed twice as a property of the code, in opposite directions, by two sessions,
+in one day. **Before attributing a defect to code you did not write, price the version you are
+running it on** - especially where the authors pinned nothing, because then the environment is a
+free variable and the code is the only thing that looks fixed.
 
 **A TEST-SUITE COUNT IS A CLAIM ABOUT THE INVOCATION AS MUCH AS ABOUT THE CODE (Miami, same
 day).** Their suite reads **12 failed / 8 passed** from the repo root and **3 failed / 17
@@ -2313,11 +2667,107 @@ The pattern in both: **a guard whose failure mode is to pass is worse than no gu
 it also removes the caution that would otherwise apply. Verify a guard in both directions -
 that it passes when it should and *blocks when it should* - or it is decoration.
 
+**AND ONE OF OURS HAD NEVER RUN AT ALL - `assert_evaluation_users_are_unseen` was vacuous from
+its first day (New Gen, 2026-09-10; blast radius established from code and git history, nothing
+re-run).** The guard reads user directories off the *sample index*:
+
+```
+index = getattr(inner, "sample_index", None)
+return {... for d in getattr(index, "user_dirs", []) or []}      # dataset.py:960
+...
+if not train_users or not test_users:
+    return 0                      # "nothing recorded; nothing to check"   dataset.py:982-983
+```
+
+but **`user_dirs` is set on `SampleDataset`, and `SampleIndex` never had it** - `SampleIndex`
+copies a curated eight attributes off the dataset (`sample_time`, `sample_rate`, `seq_len`,
+`num_users`, `num_channels`, `channels`, `dataset_names`, `user_dataset_ids`) and `user_dirs`
+is not among them. `git log -S'self.user_dirs' -- model/dataset.py` returns exactly the commit
+that introduced the guard and the commit that fixed it. So on every real call the `getattr`
+default fired, both sets were empty, and the function took its early return - **and that branch
+is commented "nothing recorded; nothing to check", so the code documents its own failure path as
+benign.** Verified on the real object both ways after the fix: two fully overlapping users now
+raise, disjoint users still return 0. **And shown not to block valid work, which is the
+other half of switching on a guard that has never run**: on a real `sweep.folds` build (alyx,
+fold 0 of 5, same corpus both sides - the shape most likely to trip on path form) it returned 0
+while *seeing* 46 train and 15 test directories, and on a real cross-corpus build (BOXRR+alyx ->
+Across-XR) it returned 0 at train 3072 / val 1024 / test 17. Symlinks were in the path on that
+node and the resolved-path comparison produced no spurious overlap. **A guard that has never run
+has also never been shown not to halt legitimate work**, and the failure mode of enabling one is
+the mirror of the failure it was fixed for.
+
+**The `or []` and the early return make "clean" and "never looked" indistinguishable.** That is
+the general defect, and it is worse than a guard that throws: a guard reporting zero overlap is
+read as evidence, so it does not merely fail to help, it manufactures confidence.
+
+**Its test passed because the fixture had a property the subject lacks.** The seven tests build
+`SimpleNamespace(sample_index=SimpleNamespace(user_dirs=[...]))` - the only place that attribute
+has ever existed on a sample index. Note this is the *mirror* of the pandas fixture miss the same
+day: there the fixture **lacked** a triggering property the real object has; here it **has** a
+property the real object lacks. One rule covers both - **the fixture and the subject must agree
+on the property under test** - and neither direction is caught by "the tests pass".
+
+**What it costs, stated precisely, because the difference matters.** Every training row written
+since 2026-09-03 that used `test_dirs` (all cross-corpus transfer rows, the Nymeria arms, LODO,
+window length) or `test_on_excluded=true` (every `sweep.folds` fold) had this guard in its path
+and got 0 without a comparison. **On those rows "evaluation users were unseen" rests on the
+configuration - different corpora in `data_dirs` and `test_dirs`, or disjoint exclude lists from
+`build_folds` - and on nothing else. No row has been found where that configuration is wrong.
+The claim is UNVERIFIED, not false**, and the honest statement is that we had one line of defence
+where we believed we had two. `mode=test`, `score_nymeria.py` and every `docs/acceptance` harness
+never called it.
+
+**And the timing is worth noticing rather than being lucky about twice.** The case this guard
+exists for - train and test drawn from the *same* corpus, separated only by user list - had never
+once occurred in this project until the Across-XR matched arm (train users 0-22, test 32-48).
+The fix landed in the identity step immediately before that arm's first job. A guard that is
+vacuous costs nothing until the day the configuration it protects is first used.
+
 **A mid-training number is not a result, however much it looks like one.** The orphaned arm A
 seed 1 read test AUC **0.6188 at epoch 36** against a baseline of 0.6156 - which reads as
 "+0.003, the registered band is landing" and is nothing of the sort: it is one seed, not
 validation-selected, a third of the way through a budget whose control selected epochs 116-118.
 Quote `selected_test_auc` from a completed row or quote nothing.
+
+**AND THE SAME TRAP CAUGHT A TIMING NUMBER THAT DROVE A DECISION (Miami, 2026-09-10).** The
+"124 days" that justified editing Rack et al.'s source was read off **tqdm, whose displayed rate
+is a CUMULATIVE average, not an instantaneous one** - taken at batches 3-8 of a monotonically
+falling series that ran `85.2 -> 42.7 -> 36.5 -> ... -> 4.84 s/batch` and was still falling. The
+early batches carry dataset construction and statistics computation, so a running mean read early
+overstates the steady state by **4-10x here**; the honest figure is 12-35 days rather than 124.
+
+**A GATE IS EVIDENCE ABOUT THE PATH IT EXERCISES, AND A LIVE RUNNER IS NOT A SUCCEEDING JOB
+(Miami, 2026-09-15).** The full Rack 2023 run was enqueued on 2026-09-11 after the loss-trajectory
+gate passed bit-identical - and **crashed at minute 22**, the first time `validation_epoch_end`
+ever executed on that stack: `get_accuracy() got an unexpected keyword argument
+'embeddings_come_from_same_source'`. The gate had driven `training_step` in a manual loop,
+deliberately skipping Trainer callbacks, so **it verified training and never ran validation at
+all** - and "the gate passed" was read, by Miami and then by the coordinator, as "nothing blocks
+the run". The runner correctly wrote `.failed` and moved on to an empty queue, and **nobody noticed
+for four days**, because the only monitored signal was the runner's heartbeat: that answers "is the
+runner alive", not "did my job succeed". The coordinator then told the user the run was launching,
+on the strength of a commit title rather than the queue's own state. Two rules: **state which path a
+gate exercised, and extend it to every path the real job will run before spending the budget** (one
+real epoch through validation, with the logged metric present, costs an hour against a 36-hour
+seed); and **every long job needs a watcher that fires on failure, not only on completion** -
+silence from a queue is not success.
+
+**The root cause was a dependency version again, and the obvious patch would have been silently
+wrong.** `pytorch-metric-learning` 2.x renamed that keyword to `ref_includes_query` **and reordered
+the positional arguments** - 1.x takes `(query, reference, query_labels, reference_labels, ...)`,
+2.3.0 takes `(query, query_labels, reference, reference_labels, ...)`. Renaming the keyword alone
+passes reference *embeddings* in as query *labels* and returns a number without raising. **The fix is
+a pin (`1.7.3`, the last 1.x), not a source edit** - the same ruling as Python 3.8 over patching
+`collections.abc` and the pandas hoist. Measured from the failed run's one complete epoch: **21.5 min
+per epoch including validation, ~36 h per seed at `max_epochs=100`**, superseding the per-step band.
+
+**A running mean is not a rate, and warm-up is not steady state.** Quote a marginal cost measured
+over a late window, or instrument per-step wall clock, and until you have one quote a **band
+rather than a point**. The conclusion happened to survive - and note *why* it survived, because
+that is the transferable part: it did not rest on the magnitude at all once the pandas regression
+was measured (their code ran at 0.015 ms/item, so the slow path is an artefact of our dependency
+version rather than their protocol). **An argument that depends on a number you read off a
+progress bar is worth re-deriving from one you measured.**
 
 The same trap catches a *check*, and did: a coverage scan of `docs/acceptance/*gate*.json`
 reported five sweeps with no certificate when all five had one, because its regex assumed
@@ -2469,7 +2919,38 @@ more informative rather than less; and this is one corpus and one activity.
 
 **A free diagnostic fell out of it.** *Which* monotone map reproduces an improvement tells you
 the shape of that improvement - uniform, proportional, or rank-only - and it costs nothing
-wherever two checkpoints are scored on one population. Worth reaching for on any axis where
+wherever two checkpoints are scored on one population.
+
+**A REFRAME IS NOT A SUBSTITUTE FOR A REPLICATION, AND SEED VARIANCE DOES NOT TRANSFER BETWEEN
+ARMS (coordinator's own error, 2026-09-11).** The Across-XR alignment programme produced a
+test-fitted ceiling `A2' - A1` of **+0.089 / +0.002 / +0.148** on three single-seed arms. Asked
+whether the middle value was an anomaly, I did two things and both were wrong. I argued it was
+**not noise** - "thirty sigma" - from a seed variance of 0.003 **measured on a different arm**,
+having written "if that transfers" and then reasoned as though it did. And I explicitly said
+**not** to spend a seed on it, offering instead a tidier description: that the aligned *ceiling*
+was monotone in scale while only the *gain* was not, and that the dip was "already at its
+ceiling" rather than anomalous.
+
+A replication of one point settled it: the same configuration, a second seed, gave **-0.004
+against +0.148 - a range of 0.152, thirty times the variance I had asserted.** At this arm's own
+observed spread the dip is **0.8 sigma**, so it never needed explaining at all, and the monotone
+ceiling rested on one seed per point. Both sentences are withdrawn.
+
+**Two rules, and the second is the one I would put on a wall.** Seed variance is a property of an
+arm, not of a pipeline - **a spread measured on one configuration bounds nothing on another**, and
+a conditional ("if that transfers") does not license the conclusion that follows it. And **a
+reframe that makes single-seed points describable is not evidence about them**: it costs nothing,
+which is exactly why it is tempting in place of the replication that costs eighty minutes - and it
+does not make a fragile claim sturdier, it makes it *more persuasive*, which is worse. **When the
+choice is between an elegant account of n=1 and a second run, take the run.**
+
+**What survived the replication is worth more than what it killed.** The headline replicated
+(0.368 / 0.378, range 0.010). The train-user-only fit never carries on any instrument or seed
+(9 checkpoints). And the *new* finding is sharper than the one withdrawn: **the test-fitted
+ceiling is run-dependent at identical configuration**, so a single-run diagnostic bound of this
+kind is not evidence of an orthogonal relationship between application embeddings - which raises
+the evidential bar for every claim of that shape, including the published +0.34 this programme
+set out to reproduce. Worth reaching for on any axis where
 "who did it help?" matters and only the mean is in hand.
 
 **The 0.785 trap dissolved structurally rather than being avoided.** The registered warning
