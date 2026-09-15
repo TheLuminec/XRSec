@@ -1,0 +1,701 @@
+# Across-XR: train-user-only orthogonal embedding alignment — REGISTERED BEFORE RUNNING
+
+**Written 2026-09-10 on the Miami server (host `feng-MS-7B51`, session b47df677), before any
+checkpoint had been scored on Across-XR anywhere in this project, and before the converted
+corpus had finished arriving on this machine.** Registered per the project rule that a
+prediction written after the number is an excuse, and per `docs/PAPER_PLAN.md`, whose
+predictions P1-P3 this file inherits without change and extends.
+
+## What is being measured, and against what
+
+Schach, Rack, McMahan, Latoschik 2026 (arXiv:2509.08539), their test users **32-48** (the
+`split` column of our converted corpus reproduces their 23/9/17 partition digit-exactly),
+**N = 17, chance 1/17 = 0.0588**:
+
+| their figure | value |
+| --- | --- |
+| within-application rank-1, single 15 s window | **0.831** (0.723-0.880) |
+| cross-application rank-1, single 15 s window, 20 ordered off-diagonal pairs | **0.180** (0.105-0.226), sd 0.151 |
+| cross-application, 10-minute sequence, majority vote | 0.308 (0.090-0.577) |
+| cross-application, single window, **after orthogonal alignment fitted on the TEST users** | **0.523** — their section 6.2.5, disqualified by their section 9 as "a diagnostic upper bound, not a deployable, generalizing solution" |
+| the same at 10 minutes | 0.943 |
+
+Their model is head **plus both controllers**, BRV encoding, Transformer-into-GRU, 480-d,
+trained on users 0-22 across all five applications. Ours is **head only**, `dyn` encoding,
+`bilstm`, 128-d, `identity_softmax`, trained on **BOXRR-23 + who_is_alyx and never on
+Across-XR**. Two of the five applications (Beat Saber, Half-Life: Alyx) are our training
+*activities* on different people and different rigs; Superhot VR, Synth Riders and Social VR
+are activities the model has never seen. So every cross-application cell here is
+*unseen users*, and the cells not involving Beat Saber or Alyx are *unseen users of an unseen
+activity* — the cell their design never tests (PAPER_PLAN). The two claims are kept
+separate throughout.
+
+## The instrument
+
+A `dyn` 10 s / 20 Hz / stride 5 `bilstm` `identity_softmax` checkpoint trained on
+BOXRR-23 (all users) + who_is_alyx (76), `epochs=120`, `early_stopping_patience=15`,
+`val_user_fraction=0.25`, `normalize=per_dataset`, `eval_normalize=target_fit`,
+`within_dataset_negatives=true`, `cross_session_positives=true`, margin 0.35 / scale 30,
+batch 1024, lr 0.001, `samples_per_user=512`, embedding 128 — the 9.14 configuration, read
+field by field off the recorded row `661054c98a12`. **Three seeds** (1, 2, 3): the
+bootstrap below carries the user-sampling uncertainty and not the seed variance, and the
+project's own arithmetic puts the n=2→3 step at 3.6x on the paired multiplier.
+
+**Trained on this node** (the DESKTOP-C 9.14 checkpoints are on DESKTOP-C only and that
+session is offline; the Coordinator ruled to train here), with
+`test_dirs = CrossApplicationXR_Dataset`, `exclude_users = users 32-48`,
+`test_on_excluded=true` — so the training row's own `selected_test_auc` is cross-application
+verification AUC on exactly the 17 test users, through the pipeline's loader, and is the
+gate referent for everything below. The seven seated corpora are pulled from AVALON so the
+same checkpoints can be rescored on them (`mode=rescore`) and set beside 9.14's per-corpus
+transfer figures; that comparison is by value, not digit-exact, because the evaluation
+population there differs from the recorded rows. Every training row quotes
+`position_lookup_auc` (height survives across applications at P=0.754; lateral placement
+does not, 0.527) and `amplitude_auc` beside the model.
+
+## Protocol, fixed before the data is looked at
+
+- **Windows**: 10 s at 20 Hz, stride 5 s, `encoding=dyn`, the checkpoint's own normaliser
+  (target-fit on Across-XR as an unseen corpus, exactly as `evaluate()` does it). Each
+  (user, application) cell is one continuous recording of ~14-17 minutes, so ~170-200
+  windows per cell.
+- **Embedding**: the extractor's output, L2-normalised; similarity is cosine, which is
+  the checkpoint's own head.
+- **Gallery template** for user *u* in application *A*: the mean of the normalised
+  embeddings of all of *u*'s enrolment windows in *A*, renormalised. **Probe**: a single
+  window. rank-1 = the fraction of probes whose own user's template is the nearest of the
+  17. Ties are rank-averaged, as everywhere in this repo.
+- **Cross-application cell (A→B)**: enrolment = all windows of *A*; probes = all windows
+  of *B*. 20 ordered off-diagonal cells; the headline is their unweighted mean, quoted
+  beside the per-cell table.
+- **Within-application cell (A→A)**: enrolment = the first half of the recording by start
+  time, probes = the second half. This is the same-session regime; it is also theirs (one
+  recording per cell), so the comparison is like for like, and it is why `dyn` is mandatory
+  — within-application lateral placement reads P=0.7525 on this corpus
+  (`across_xr_within_application.json`) and a `raw` within-vs-across contrast would credit
+  the within side with a rig cue.
+- **Evidence mismatch, stated rather than hidden**: their probe is one 15 s window; ours is
+  one 10 s window. Their enrolment is "reference embeddings" from the application; ours is
+  every window of it. Neither is adjusted to match the other.
+- **Per-user accuracy** is computed for every cell (each user's own probes), and every
+  headline carries a **cluster bootstrap over the 17 users** (10,000 resamples of the
+  per-user accuracy vector, gallery held fixed) for its CI and for every paired difference.
+  Bands below are read against the interval, not against p < 0.05.
+
+## The alignment
+
+For an ordered pair (A→B): let C_A and C_B be the n_fit × d matrices of per-user
+centroids (mean of normalised embeddings per user, per application) over the **fitting
+users**. Orthogonal Procrustes: R = U Vᵀ from the SVD of C_Bᵀ C_A, the orthogonal matrix
+(rotation or reflection — Schach found both) minimising ‖C_B R − C_A‖_F. It is applied
+**unchanged** to the test users' probe embeddings from B before scoring them against the
+test users' gallery templates from A. Nothing about the test users enters the fit in the
+result arm; the fit set is the design variable that distinguishes the arms.
+
+**The unrestricted fit is ill-posed here, and the restriction is part of A2's definition,
+not a follow-up (Coordinator, 2026-09-10).** With n_fit = 32 correspondences in d = 128 the
+cross-covariance C_Bᵀ C_A has rank at most 32, so 96 of its singular values are zero and the
+corresponding columns of U and V are an arbitrary orthonormal completion: R is determined
+by the data on the span of the fitting centroids and is an **arbitrary isometry on the
+96-dimensional complement**, which it then applies to the test users' embeddings. Two runs
+could differ for reasons unconnected to the data. So the alignment is fitted on a
+**subspace**: the top-m principal components of the fitting users' window embeddings
+(both applications pooled), m ≤ 32; Procrustes is solved on the projected centroids
+(m × m), and R is the identity on the complement. The unrestricted fit is reported as a
+*variant* beside it, never as the headline. The fixture test pins the rank argument: two
+different orthonormal completions of the unrestricted fit must give different scores for
+points off the fitting span, and identical scores on it.
+
+**m is chosen on the validation split, never on the test users.** For each m ∈ {4, 8, 16,
+24, 32}: fit on train users 0-22, score cross-application rank-1 on validation users
+23-31 (N = 9, quoted with that N), take the m with the highest 20-cell mean; then refit
+with that m on all of 0-31 and apply once to 32-48. The full m-curve on the validation
+split is recorded on the certificate so the choice is auditable. The same m serves the
+test-fitted ceiling A2′, so the two differ only in whose centroids the fit saw.
+
+## Arms — all on the same embeddings, therefore paired by construction
+
+| arm | fit set | what it is |
+| --- | --- | --- |
+| **A0** | — | within-application, no alignment |
+| **A1** | — | cross-application, no alignment — PAPER_PLAN's P1 |
+| **A2′** | test users 32-48, subspace m as selected above | Schach's own illegitimate route, on our embedding: the **diagnostic ceiling** |
+| **A2** | users 0-31 (32 people, all five applications), subspace m selected on 23-31 | **the result** |
+| **A2-null** | users 0-31 with the user correspondence **permuted** (B-centroid rows shuffled), same m | the guard, in the direction that matters |
+| **A2-full** | users 0-31, unrestricted 128-d Procrustes | the ill-posed variant, reported beside A2 and never as the headline |
+| raw counterpart of A0/A1 | — | P2: `raw` minus `dyn` on the same cells, the anthropometric share |
+
+## Predictions, registered
+
+- **A0**: Beat Saber and Alyx (our training activities) above Superhot, Synth Riders and
+  Social VR. No band on the level — head-only against 0.831 with controllers is a scope
+  cost we report, not predict.
+- **A1**: inherits P1 — **0.18 to 0.35, falsifier below 0.12**. Below 0.12 says head-only
+  `dyn` cannot approach controller-based cross-application identification and that is
+  reported as the cost of our scope. Unseen-activity cells (pairs among Superhot / Synth /
+  Social) below seen-activity cells — P3's direction, measured on our instrument.
+- **A2′ − A1 ≥ +0.15** on the 20-cell mean. **FALSIFIER FOR THE WHOLE PROGRAMME: A2′ − A1
+  < +0.05** (bootstrap CI upper bound below +0.05): our embedding's cross-application gap is
+  not an orthogonal difference, alignment cannot be the paper's contribution on this
+  instrument, and that is reported as the finding. Schach measured +0.34 on theirs.
+- **A2 − A1 in +0.05 to +0.20**, with **A1 < A2 < A2′**. **FALSIFIERS**: A2 − A1 < +0.05
+  (train-only fitting does not carry — an honest negative, reported as prominently as a
+  positive); **A2 exceeding A2′ beyond the bootstrap CI on the paired per-user difference
+  is evidence of LEAKAGE, not success** — A2′ dominates in expectation, not on every cell
+  and not within noise, so a small excess is a draw and only an excess the interval
+  excludes raises the alarm (the certificate says so and no number from that run is quoted
+  until the leak is found); **A2 > 0.523** is flagged under PAPER_PLAN's rule even though
+  the ceiling that binds *our* embedding is A2′.
+- **A2-null ≤ A1 + 0.03.** A permuted-correspondence fit that helps would mean the
+  "alignment" is doing something other than aligning people — a guard verified in the
+  direction whose failure mode is to pass.
+- **A2-full ≤ A2** in expectation (the arbitrary complement can only add noise); if
+  A2-full reads above A2 beyond the interval, the subspace choice is costing signal and
+  the m-curve on the validation split is re-read before anything else is concluded.
+- **Seed variance**: the three seeds' 20-cell means for A2 − A1 within 0.05 of each other;
+  wider than that and the headline is the seed spread, not the mean.
+- **Secondary, 10-minute sequences**: majority vote over the probe windows of a 600 s span
+  of B. At ~15 minutes per cell that is one sequence per (user, cell): 17 decisions per cell,
+  coarse by construction, reported with that caveat beside 0.308 / 0.943.
+
+## Power, computed before anything runs
+
+At N=17 over 17 test users the effective sample is users, not windows: binomial sd on a
+rank-1 near 0.18 is sqrt(0.18·0.82/17) = **0.093** per cell. The 20 off-diagonal cells share
+the same 17 users and are not 20 independent samples. Every difference above is therefore a
+*paired* difference on the same embeddings, bootstrapped over users, over two seeds. The
++0.05 falsifiers sit at about half a single-cell sd; they are resolvable only because they
+are paired, and the certificate reports the achieved interval rather than asserting they
+were.
+
+## Gates, both required before any figure is quoted
+
+1. **Checkpoint gate.** The harness re-scores each checkpoint on its own recorded
+   evaluation users through the pipeline's own loader and `evaluate()`, and must reproduce
+   the recorded `selected_test_auc` within 1e-4 on the device that wrote the row (1e-3
+   across devices, per CLAUDE.md's measured cuDNN band). Certificate:
+   `docs/acceptance/across_xr_alignment_gate.json`.
+2. **Fixture gate.** The alignment and scoring code is run first on synthetic embeddings
+   with a known answer: 49 users in 128-d, application B = application A rotated by a random
+   orthogonal Q plus noise. On that fixture A1 must sit near chance, A2′ and A2 near 1.0,
+   A2-null near chance; and on a fixture where B = A + noise (no rotation) A2 must not fall
+   below A1 by more than the noise. The tests assert on the fixture's content, not only on
+   the result (`assert` that Q is orthogonal and that the fixture's unaligned rank-1 really
+   is near chance) — a test whose subject failed to load reports the subject's success.
+
+## Deviations to record on the certificate rather than here
+
+Which checkpoint (relayed or trained here), device, seeds actually run, and the exact
+window count per cell. If the instrument changes from what "The instrument" specifies, that
+is an amendment appended below this line with a date, and the original text stays.
+
+## The matched arm — approved by the Coordinator 2026-09-10 as a SEPARATELY LABELLED arm
+
+The converter's docstring and PROVENANCE say never to pool Across-XR into training; that
+rule protects the zero-shot claim from the corpus being *silently* absorbed, and the
+Coordinator is amending both to record the rule and this exception. The ruling:
+
+| | |
+| --- | --- |
+| **zero-shot arm** (everything above) | Across-XR never in training. The strong claim. Unchanged. |
+| **matched arm** | training may use Across-XR users **0-22 only**, epoch selection on **23-31 only**. The like-for-like comparison to Schach, who trained on exactly those 23 users. |
+| **absolute** | users **32-48** are never trained on, never validated on, never used to fit an alignment, never used to choose an epoch or an m. |
+| **never pooled** | the two arms are never averaged, and no figure is quoted without naming its arm. |
+
+Two matched configurations, registered now so their predictions precede their rows:
+
+- **C1 — their protocol, our model**: Across-XR 0-22 alone in training (23 identities, all
+  five applications, `cross_session_positives=true` so positives are cross-application by
+  construction), validation on 23-31, 10 s `dyn`. Prediction: **cross-application rank-1
+  at N=17 in 0.10 to 0.25** — 23 identities is where this project measured the behavioural
+  signal at chance (48 identities, pooled corpus), so a low figure is expected and is the
+  identity-count story, not a failure of the encoding. Falsifier: below chance + 0.03.
+- **C2 — pretrained plus matched**: BOXRR + alyx + Across-XR 0-22 in training, validation
+  on 23-31 (explicit) for the Across-XR share and the usual 25% draw for the rest.
+  Prediction: **C2 − A1 (zero-shot) in +0.05 to +0.20** on the same 20 cells; 23 people
+  seen in all five applications is the only training signal in this project that spans an
+  activity boundary within one person. Falsifier: C2 − A1 < +0.03, which would say that
+  seeing the applications does not help even with the users held out — the same shape as
+  the Nymeria activity-diversity null, and worth knowing.
+- **Alignment on the matched arms**: A2 is re-run on C2's embeddings (fit on 0-31, apply
+  to 32-48). Prediction: the alignment gain shrinks as the model has already seen the
+  applications, A2(C2) − C2 < A2 − A1.
+
+Explicit validation users require a small change to the training path (a
+`validation_users` list beside `val_user_fraction`); it is a `model/*.py` edit on this
+node's own checkout, committed before any matched row is written, and its identity is
+recorded on those rows.
+
+---
+
+# AMENDMENT 1 — 2026-09-10, before any matched row: C2's dose is 3.0%, so C2 becomes a pair
+
+**Amended for a fact about the instrument, known before any number exists.** The original
+text above is left intact. Measured by the Coordinator on the real files: Across-XR users
+0-22 hold 9,963,704 rows = 30.4 h = **~21,900 windows** at 10 s / stride 5, against 707,017
+BOXRR+alyx windows at 4096 identities - **3.0% of C2's training windows**, the same dose at
+which the Nymeria activity-diversity null was uninterpretable (2.9%). `identity_softmax`
+samples windows uniformly, so 23 identities of 3,095 is not the quantity that matters. A
+null on C2 as registered cannot distinguish "seeing the applications does not carry" from
+"the objective barely saw them", and only the first licenses the conclusion. **A dose is
+part of a treatment's definition; a null without one is a result about the dose.**
+
+The fix is composition, not sampling: `balance_identities=cap` would trim Across-XR (≈950
+windows per identity against BOXRR's ≈150) and lower the dose further - the identical
+wrong-direction fix the Nymeria arm found. And cutting BOXRR is measured to cost nothing on
+the axis C2 reports: transfer is flat in identity count across a domain boundary (419 →
+2096 moved pooled transfer by 0.001, 2096 → 4096 by 0.000).
+
+**C2 is therefore two arms, and each has its own zero-shot control at the same identity
+count, so the only variable inside a pair is whether Across-XR 0-22 was trained on:**
+
+| arm | training | Across-XR dose | control |
+| --- | --- | --- | --- |
+| **C2-lo** | BOXRR (all 4020) + alyx + Across-XR 0-22 | **3.0%** | the zero-shot arm above (4096 ids) |
+| **C2-hi** | Z-676's users and Z-676's validation list, minus the **last 23 BOXRR training users** of the seeded permutation, plus Across-XR 0-22 (train); Across-XR 23-31 **dropped** (`drop_users`: neither trained on, validated on, nor evaluated) | **14.1%** measured (20,896 of 147,921 training windows, seed 1) | **Z-676**: BOXRR seeded subsample of 600 + alyx 76, no Across-XR, validation = the pipeline's own 25% draw made explicit and shared with C2-hi |
+
+**Exact by construction, not by argument (Coordinator's swap, made exact 2026-09-10).** A
+cap of 577 against 600 equalises identities only before the validation draw: the 25% draw
+runs over each arm's own pool, so the arms would validate on different people and train on
+513 against 507 identities, with BOXRR training sets not nested. So both arms take the same
+explicit validation list (`val_user_fraction=0`) and C2-hi drops 23 BOXRR *training* users.
+Verified on the lists the loaders hold (`docs/acceptance/c2_pair_lists.py`, seed 1,
+`c2_pair_users_seed1.json`): Z-676 train **495** / val **181** / test 17; C2-hi train **495** /
+val **181** (the identical people) / test 17; BOXRR training users 435 against 412, a strict
+subset; alyx training users identical; C2-hi's Across-XR training ids exactly 0-22, and
+23-31 nowhere in it. The only difference inside the pair is which 23 identities did which
+activity - the Nymeria arm-B design. The lists are regenerated per seed and committed.
+
+**Why 23-31 are dropped rather than validated on (Coordinator, 2026-09-10).** With 23-31 in
+C2-hi's validation the arms would validate on 181 against 190, and C2-hi would choose its
+epoch with nine target-corpus users in the signal - under 5%, but pointing at the arm we
+hope wins, the shape this project has already paid for once. Under `test_on_excluded=true`
+the exclude list *is* the evaluation set, so removing them needed a third list:
+`drop_users`, added as a second numerics-free identity step (`73ecbf9232 → 517cdaa57b`; see the
+certificate) before the first row, so every row still carries one identity. C1 keeps
+23-31 as validation: it is Schach's protocol and is not improved into something else.
+
+Registered:
+
+- **C2-hi − Z-676 in +0.05 to +0.20** on the 20 cross-application cells at N=17 (the band
+  the original C2 carried, now attached to the arm that can test it). Falsifier: **< +0.03**,
+  which at a 14% dose does say that seeing the five applications on 23 people does not
+  carry to unseen people.
+- **C2-lo − A1**: registered as a dose statement, not a treatment test. Above +0.05 is
+  informative (a 3% dose already carries); a null is a result about 3% and is reported as
+  exactly that.
+- **Z-676 − A1 within ±0.03**: the identity-count flatness measured elsewhere in this file,
+  re-measured here at 676 against 4096 on Across-XR. If it fails, the C2-hi comparison is
+  read against Z-676 only and the pooled-vs-capped difference is reported separately.
+- **C2-hi − C2-lo**: the dose effect itself; predicted positive. If C2-hi ≤ C2-lo the dose
+  argument was wrong and both arms are read against their own controls without it.
+- The alignment (A2) is re-run on C2-hi's embeddings; prediction unchanged from the
+  original text (gain shrinks once the applications were seen).
+
+Order on the card, after the three zero-shot seeds: C1 (seed 1), Z-676 (seed 1), C2-hi
+(seed 1), C2-lo (seed 1); further seeds as the card allows, C2-hi and Z-676 first because
+that is the pair that resolves the question. C1 is untouched by this amendment - 23 users
+alone is a 100% dose and is Schach's protocol exactly.
+
+The counts in `unseen_users_guard_both_directions.md` (3095 / 1033) are consistent with
+`validation_users` being honoured but one user away from it being ignored; the membership
+lists (0-22 / 23-31 / 32-48) are what that certificate rests on.
+
+---
+
+# AMENDMENT 2 — 2026-09-10, after seed 1: a registration defect, recorded, not re-registered
+
+The A2′ − A1 registration named two outcomes — a band at ≥ +0.15 and a programme falsifier
+at "CI upper bound < +0.05" — and left **[+0.05, +0.15) unnamed**. Seed 1's interval,
+[−0.006, +0.053], put its upper end in the unnamed region. That is the same defect the
+within-application placement registration had twelve hours earlier (two outcomes named, the
+data choosing a third), reviewed by the Coordinator on the same day without the subtraction
+that would have caught it: a rule can be in CLAUDE.md, read by both parties, and still not
+fire at review.
+
+**The verdict does not depend on the gap.** A registered band is settled by where the
+interval falls: the whole interval sits below +0.15 by 2.8× at its upper end and 14× below
+Schach's test-fitted +0.34, so the band is excluded decisively, and whether the upper bound
+is 0.047 or 0.053 changes nothing. Nothing in the bands above is changed by this amendment;
+it exists so the next reader sees the defect beside the number rather than a paragraph
+arguing a near-miss.
+
+---
+
+# AMENDMENT 3 — 2026-09-10 22:30, after C1 seed 1: C1-full, a budget-matched C1
+
+C1 seed 1 (row `984f4a622b4f`) selected epoch 15 on nine validation users with the
+validation curve still rising, training loss still falling steeply and training accuracy at
+1.3%, then stopped on patience at epoch 30. The zero-shot arm it is compared with ran the
+full 120-epoch cap and was still improving there. The two arms therefore differ in budget as
+well as in identity count and exposure, and this file's own rule says patience on an
+uncharacterised axis cuts short whichever arm converges slower.
+
+**C1-full**: identical to C1 (Across-XR 0-22 alone in training, validation 23-31, evaluation
+32-48, 10 s `dyn`) with `early_stopping_patience=0` and the same 120-epoch cap as the
+zero-shot arm. Registered before it runs: **C1-full − C1 in [0, +0.08]** on A1 (a
+budget-only difference; if it exceeds +0.08 the nine-user selection was doing real harm and
+every nine-user-selected figure in the programme carries that note); A1 of C1-full still
+below the zero-shot 0.234 (falsifier: at or above it, which would mean exposure on 23 people
+matches 4,096 identities of other activities once trained out); the alignment verdict on C1
+unchanged (A2′ − A1 < +0.05). C1's own figures stay on the certificate as the
+patience-selected run they are.
+
+**Addendum to Amendment 3, before C1-full runs (Coordinator, 2026-09-10 22:45).** Three
+corrections. (i) The band `[0, +0.08]` left **C1-full − C1 < 0 unnamed** — the third unnamed
+region today; it is a live outcome (23 identities for 120 epochs with no patience can
+overfit) and is registered as *"the 23-identity arm is capacity-limited rather than
+budget-limited, and the zero-shot comparison stands as measured"*. (ii) C1-full does not
+remove what broke C1 — the nine-user selection signal — it keeps it over a four-fold longer
+budget, so part of any gain is selection inflation (this file prices a max over ~20
+evaluations at about +0.02). The pipeline writes only the validation-selected checkpoint, so
+the final-epoch weights will not exist and rank-1 at the final epoch cannot be scored
+without a code change that would move the identity mid-programme; the diagnostic is taken
+from the row as it is already recorded — `selected_test_acc` against `final_test_acc` on
+the verification metric — and stated as a verification-metric figure, not a rank-1 one.
+(iii) The "training accuracy 1.3%" line is struck as evidence: AM-softmax subtracts the
+margin from the true class before the argmax, so training accuracy sits below chance early in
+every `identity_softmax` run; the under-training diagnosis rests on the validation curve
+still rising and the training loss still falling steeply, which are sufficient.
+
+**Narrowing of (ii), same evening (Coordinator).** The epoch is chosen on validation
+*verification* accuracy and A1 is rank-1 identification; CLAUDE.md's 2026-09-06 measurement
+puts selection inflation on a metric that did not choose the epoch at +0.004 (the wrong sign
+for optimism) and says not to carry the +0.02 onto such a figure. So the
+`selected_test_acc` / `final_test_acc` diagnostic measures the inflation where it exists -
+the verification columns - and is not read as contaminating A1; the residual on rank-1 is
+bounded by how tightly the two metrics track, measured once at 4096 identities on 94 users,
+which is a different regime from nine validation users at 23 and is why the free diagnostic
+is still recorded.
+
+---
+
+# AMENDMENT 4 — 2026-09-10 23:50, before any run: P3, leave-one-application-out on unseen users
+
+C2-hi measured exposure to the *target* application set: its people are unseen, its
+applications are seen. PAPER_PLAN's P3 is the cell that crosses an activity boundary — train
+on four applications, test on the fifth, unseen users — and Schach never ran it. It goes
+ahead of the pair's seeds 2-3 (Coordinator's priority: seeds firm up a result already held,
+P3 decides whether there is one more).
+
+**Design.** For each held-out application X: C2-hi's exact composition and lists (seed 1:
+BOXRR 600 minus the same 23 training users, alyx, the identical 181 validation people,
+Across-XR 0-22 in training, 23-31 dropped, 32-48 evaluated) with **X's sessions absent from
+every Across-XR user**, via a symlinked copy `CrossApplicationXR_LOAO_<X>`
+(`build_loao_corpus.py`; 49 users × 4 sessions, every link resolving into the verified
+corpus). Five runs, one per X. The training row's own evaluation (the gate referent) is
+users 32-48 of the copy. Scoring is on the full corpus with the checkpoint's own statistics
+applied under the copy's name (`--normalizer-dataset`).
+
+**The unit is the cells involving X** — the four ordered cells with X as gallery and the four
+with X as probe, on the 17 test users — paired against the same cells of Z-676 (no exposure)
+and C2-hi (full exposure) on the same users, then pooled over the five X. The other twelve
+cells of each P3 run are a within-run control: the applications the model *did* see.
+
+**Registered.**
+- **P3(X-cells) − Z-676(X-cells), pooled over X: +0.02 to +0.07** — exposure to four
+  applications carries *part* of the +0.089 to a fifth. **The headline "exposure crosses an
+  activity boundary" requires the interval's lower bound above +0.03**; below that the claim
+  is not made whatever the mean.
+- **Falsifier: P3(X-cells) − Z-676(X-cells) ≤ 0** — exposure to other applications does not
+  carry to a new one, and the +0.089 is strictly in-set. Named outcome *below* the band:
+  (0, +0.02] — a carry too small to distinguish from the tail of the in-set gain; reported as
+  unresolved rather than as either.
+- **P3(X-cells) − C2-hi(X-cells) < 0**: the held-out application costs against full
+  exposure; if it does not (interval includes 0 or above), exposure to four is as good as
+  five and the "seen application" distinction was not doing the work.
+- **Control: P3(non-X cells) − C2-hi(non-X cells) within ±0.03** — removing one application
+  from training leaves the seen-application cells where they were. If it fails, the five
+  runs are not comparable to C2-hi and are read against Z-676 only.
+- Per held-out application the same contrasts are reported individually; the two rhythm
+  games (Beat Saber ↔ Synth Riders transfer at twice the mean) are the pair most likely to
+  carry, and the Social VR scenario the least; that ordering is a prediction, not a band.
+- Alignment on P3 embeddings: A2′ − A1 below +0.03, as on every instrument so far.
+
+Power: 8 cells × 17 users per run, five runs pooled, user bootstrap. The bands are
+narrower than the single-arm ones because the comparison is paired on cells *and* users.
+
+**Addendum to Amendment 4, before any P3 run (Coordinator, 2026-09-11 00:05).**
+(i) **Removing an application changes the dose**: C2-hi 20,896 of 147,921 windows (14.1%,
+five applications); P3 ≈ 16,717 of 143,742 (≈11.6%, four) — 20% less Across-XR data. So
+**P3 − Z-676 is clean** (Z-676 has 0%; the dose *is* the treatment and 11.6% is what the
+band is about), **P3 − C2-hi is dose-confounded** (exposure to X *and* 20% less in-domain
+data; a negative there has two sufficient explanations and it stays a direction, not a
+measurement), and the non-X control **P3(non-X) − C2-hi(non-X)** is a free measurement of
+what 20% less in-domain data is worth at fixed exposure — expected to lean slightly negative
+for that reason; a fired control is read as a dose reading, and only a large one degrades the
+runs to Z-676-only comparison. The actual dose per run is recorded from the loader.
+(ii) **No seed replication**: five runs, one per held-out application, pooled over
+applications — the unit is the application, and seed variance is *imported* from the
+zero-shot arm's observed seed agreement (~0.01), which is an assumption written down as one.
+If the pooled interval lands near the +0.03 headline threshold, a second seed on one X is
+the cheapest way to stop it resting on an import.
+(iii) **The per-application ordering is the mechanism claim** and is protected: rhythm games
+(Beat Saber, Synth Riders — stationary, task-structured) carrying best and Social VR (no
+predefined task) least would say exposure transfers along task structure rather than along
+corpus identity. The per-X breakdown is reported whatever the pooled interval does.
+
+---
+
+# AMENDMENT 5 — 2026-09-11 01:30, before any run: dose separated from scale by window count
+
+C2-hi − C2-lo (−0.061 [−0.099, −0.026]) falsified the dose direction, but with the treatment
+corpus fixed at 23 identities `dose = axr_windows / (axr_windows + base_windows)`, so raising
+the base mechanically lowers the dose: the two arms differ on one variable read two ways, and
+a 1,500-identity point would land on the same confounded line (withdrawn). What separates
+them is to **vary the Across-XR window count at fixed identity count**: at C2-lo's 3,095
+identities, the same 23 people and the same lists, with **the first half of every Across-XR
+session only** (a real-file copy `CrossApplicationXR_HALF`, each session CSV truncated to its
+first half by row; users 32-48's sessions truncated too, so the training row's own
+evaluation is on half-sessions and is the gate referent; scoring is on the full corpus with
+the checkpoint's statistics under the copy's name). Dose ≈ 1.5% against 3.0%; scale and
+people fixed.
+
+Registered: **C2-lo-half − C2-lo (A1, same users) within ±0.03** — dose is not the binding
+variable in this range, and the falsification of the dose direction is explained rather than
+merely observed. Named outcomes: below −0.03, dose does bind (and the C2-hi/C2-lo pair is
+read as scale *minus* a dose cost); above +0.03, less in-domain data helps, which would be
+read as a regularisation effect and flagged for a seed before anything is concluded.
+A2′ − A1 expected to stay near C2-lo's +0.148 (scale and exposure unchanged).
+
+**Addendum to Amendment 5, before it runs (Coordinator, 2026-09-11 02:00).** The half arm
+answers a second question at no extra cost: **its A2′ (aligned ceiling)**. C2-lo's ceiling is
+0.516 at 4,096 identities and 3.0% dose; if the half arm's A2′ tracks 0.516 (within ±0.03),
+the ceiling is a property of pretraining scale; if it falls by more than 0.03, the ceiling
+needs the dose too. Registered beside the dose-versus-scale band above; one run, two answers.
+
+**Second addendum to Amendment 4, registered with three of five P3 runs landed and two
+(Synth Riders, Social VR) still on the card (2026-09-11 05:30).** Two of the five held-out
+applications are **activities the pretraining already covers on other people and rigs**:
+Beat Saber (BOXRR-23) and Half-Life: Alyx (who_is_alyx). Holding them out of the Across-XR
+side of training removes the *corpus*, not the *activity*, so only **Superhot VR, Synth Riders
+and Social VR are unseen activities in P3**. The pooled verdict over five is reported as
+registered, and beside it the split the reading actually needs: P3 − Z-676 on the X-cells for
+the covered pair {Beat Saber, Alyx} against the uncovered triple {Superhot, Synth Riders,
+Social VR}. So far: Superhot +0.034, Alyx +0.026, Beat Saber +0.084 (full carry: P3 − C2-hi
+= −0.001 there). Prediction for the two outstanding, registered now: Synth Riders carries
+(rhythm game; Beat Saber is in its training set on this run) at ≥ +0.04 on its cells, Social
+VR carries least, below +0.03. "Exposure crosses an activity boundary" is claimed only if the
+uncovered triple's pooled interval has its lower bound above +0.03; the covered pair is
+reported as "corpus exposure at a pretraining-covered activity".
+
+**Third addendum to Amendment 4 — the two re-seeds, registered before they run (Coordinator,
+2026-09-11 07:00).** Purpose: **to measure whether the per-application P3 estimates are
+seed-stable**, which the pooled interval assumes and does not test — not to move an estimate.
+The +0.030 headline threshold does not move. Both results are reported whichever way they
+fall, and this can make things worse: if the re-seeds disagree with seed 1 the pooled interval
+widens and the headline recedes. No third seed whatever the second says. The two: **Synth
+Riders** and **Social VR**, seed 2 — both ends of the uncovered triple, so the stability
+assumption is tested where the pooled interval's shape is most sensitive; they are also the
+extremes, where regression toward the mean is largest, so an inward move is expected and is
+not read as instability. The C2-hi lists for seed 2 (`c2_pair_users_seed2.json`) apply.
+
+Recorded as measurements rather than controls: the non-X dose control −0.009 [−0.025,
++0.008] is a null — 20% less in-domain data cost nothing on seen cells, the free dose reading
+the second addendum predicted, supporting the C2-hi / C2-lo reading that dose is not binding
+in this range; and A2′ present on three of five P3 runs at identical configuration, added to
+C2-lo's one of two, confirms run-dependence across two arms and seven runs.
+
+---
+
+# AMENDMENT 6 — 2026-09-11 13:00, before any run: P2, the `raw` counterpart of the two headline arms
+
+Opened on the user's instruction to keep improving the unseen-task score after the alignment
+programme closed. PAPER_PLAN's P2 — `raw` minus `dyn` on the same cells, "the anthropometric
+contribution to cross-application identification" — was registered there and never run; every
+arm above is `dyn`. This corpus's own measurement says head height survives across
+applications (P(within < between) = 0.754 on per-game mean position) while lateral placement
+does not (0.527) — but within a single application placement is a per-participant constant
+(0.7525), so a `raw` within-application figure carries a rig cue and is reported with that
+caveat, never as a biometric claim.
+
+**Arms**, identical to their `dyn` counterparts in every field but `encoding=raw` (launchers
+take `ENCODING=raw`; the experiment name carries the encoding so the families are never
+pooled): **R-zero** (zero-shot, seeds 1-3) and **R-C2-lo** (their protocol plus 4,096
+pretraining identities, seed 1, then seeds 2-3 if the first lands inside its band). Scored by
+the same harness (the checkpoint's own encoding is read from `eval_split`; the alignment arms
+are computed but not read for `raw`). Every `raw` row quotes `position_lookup_auc` beside the
+model, as the standing rule requires.
+
+**Registered.**
+- **R-zero A1 − dyn zero-shot A1 (paired on the 17 users, three seeds each): +0.00 to +0.06.**
+  Height is a real cross-application cue and the model can read it in `raw`; the learned
+  component was measured elsewhere to be smaller under `raw` across corpora, so the sum is
+  small and positive. Falsifier: **below −0.03** — the cross-corpus frame problem (BOXRR's and
+  Across-XR's coordinate references differ, which per-channel standardisation cannot undo)
+  costs more than height returns, and `dyn` stays the encoding for this task.
+- **R-C2-lo A1 − dyn C2-lo A1: +0.00 to +0.06**, same reasoning with the frame problem removed
+  by exposure; falsifier below −0.03.
+- **A0 under `raw` above A0 under `dyn` by more than the A1 difference** — the within-application
+  placement cue (P=0.7525) inflating the within cell and not the cross cell. If A0's gain is
+  *not* larger than A1's, placement is not what `raw` is reading here and the height reading
+  strengthens. Reported either way; A0 under `raw` is never quoted as a biometric figure.
+- **position_lookup_auc on the 17** already reads 0.585-0.598 on every row (the mean-position
+  lookup on recorded positions is the same whatever the encoding); a `raw` model that does not
+  beat its own row's lookup on verification has learned nothing height did not already give.
+- **10-minute sequence**: expected to move with A1, not more.
+
+Power as before: per-cell sd 0.093 at 17 users; paired over users and seeds; the +0.03
+falsifier sits at a third of a single-cell sd and is resolvable only paired. GPU order is
+negotiated with Miami Server (Rack has priority if it is on the card); nothing runs until the
+card is confirmed free.
+
+**Addendum to Amendment 6, before any raw number exists (Coordinator, 2026-09-11 13:30).**
+(i) **Hard constraint: the headline comparison to Schach stays on `dyn` whatever `raw` scores.**
+Their 18 features are HMD rotation plus both controllers under BR referencing, so head
+position never reaches their model by construction; `dyn` removes it too, which is what makes
+0.234-against-0.180 like for like on behaviour. A `raw` figure would beat them partly on a cue
+their encoding discards on purpose; if R-zero reads 0.29 that is a measurement of what height
+adds, not a better headline. Decided now, not after the number. (ii) **Two caveats, not one.**
+Within-application `raw` carries placement (P=0.7525, a rig artefact) and is not a biometric
+figure; cross-application `raw` carries height (P=0.754) while lateral placement is at chance
+(0.527), so a cross-application `raw` gain is a biometric — **anthropometric, not behavioural** —
+and P2 positive would be the anthropometric contribution to cross-task identification measured
+on the one corpus where placement cannot contaminate it. (iii) **P2 measures a confound, not an
+improvement.** If it comes back positive the score went up and the fraction of it that is
+behaviour went down; both are reported in one sentence.
+
+---
+
+# AMENDMENT 7 — 2026-09-11 13:30, before any run: the one measured, unspent lever
+
+`identity_margin=0.1, identity_scale=15` against the 0.35 / 30 default: **+0.016 AUC, t(4)=4.31,
+won 5/5 folds** in the 2026-09-04 grid (in-domain verification, 419 identities, 8 corpora),
+never applied because the default was kept so 300+ rows stayed comparable; CLAUDE.md records
+that every 0.35/30 run is knowingly ~0.016 below what the configuration can do. It is the only
+lever on the board with a measured positive that has never been spent, it changes no encoding
+(behaviour only, so it bears on the honest score), and it costs one configuration change.
+
+**Arms**: **M-zero** (zero-shot `dyn`, margin 0.1 / scale 15, seed 1; seeds 2-3 if seed 1 lands
+inside its band) and **M-C2-lo** (their protocol plus 4,096 identities, `dyn`, 0.1 / 15, seed 1;
+likewise). Every other field identical to the 0.35/30 arms; the experiment name carries the
+margin so the families are never pooled; scored by the same gated harness.
+
+**Registered as an open question, not an expected gain**: the +0.016 was in-domain verification
+AUC at 419 identities and may not transfer to cross-application rank-1 at 4,096. Bands: M-zero
+A1 − zero-shot A1 (paired on the 17) in **−0.02 to +0.04**; M-C2-lo A1 − C2-lo A1 in **−0.02 to
++0.04**. Named outcomes: **above +0.04** — the lever transfers and the honest score moves by more
+than the in-domain measurement; **below −0.02** — a margin tuned at 419 identities is wrong at
+4,096, where the default's "tens of thousands of identities" assumption is closer to true, and
+the default stands. The P3 threshold registered and missed by 0.008 is **not** re-run under this
+configuration; a missed threshold is not chased. Runs go behind the raw arms; Miami Server has
+been told before the card was touched.
+
+**Addendum to Amendment 7, before it runs (Coordinator, 2026-09-11 14:00): this is a SCREEN,
+not a test.** The paired-difference intervals actually observed on these 17 users are 0.061 to
+0.083 wide (half-widths 0.031-0.042, mean 0.037), so the design resolves about ±0.037; the
+in-domain gain being chased is +0.016, 0.43× that. Seeds do not fix it — the bootstrap is over
+users, seed averaging shrinks only the seed component, and the user component has a floor at
+N = 17. Registered outcomes therefore: a shift of about +0.05 or more **shows** (the screen
+fires); an inside-band result reads **"not resolved; the design cannot see an effect of the
+size measured in domain"**, never "the lever does nothing"; below −0.02 the sign-flip mechanism
+(a margin tuned at 419 identities against a default whose assumption is closer to true at 4,096)
+is the informative reading. Consequences: **M-zero only** — M-C2-lo (already enqueued, now
+parked) runs only if the screen fires; **no seeds on an inside-band result**. The Nymeria band
+was unfalsifiable by exactly this arithmetic; this one is calibrated before launch.
+
+---
+
+# AMENDMENT 8 — 2026-09-15, before any paired figure: their per-user distribution is published
+
+**What changed.** Schach et al. released code, data, the trained similarity model, its
+precomputed test embeddings and `accuracy_values.json` (pinned commits `565a3f39` / `92222c24` /
+`4ec4106a`, public GitLab, cloned on AVALON, hashes recorded in `schach_release_gate.json`). The
+JSON holds `precision_at_1` as a list of 17 per cell — one value per test user — and its mean of
+cell means reproduces the paper exactly (within 0.8314, cross 0.1804, ten-minute cross 0.3082).
+Claim 1 of the certificate called 0.234 "a placement, not a beat" because that distribution was
+unpublished. It is published, so a paired per-user test on the same 17 people is now possible and
+is registered here before it is computed.
+
+**Two mappings, established from the released code before anything is paired.**
+(i) *User index.* Their `Dataset._remap_labels` maps `torch.unique(labels)` (sorted ascending) to
+0..N−1; the released test folder is exactly `32.csv`..`48.csv`, each carrying one `user_id` equal to
+its filename (checked on every row); and the metric library's per-class averaging orders classes by
+`torch.unique(labels, dim=0)` (pytorch_metric_learning 2.9.0, `maybe_get_avg_of_avgs`). So list
+index i = user 32+i. Every per-class list in all 35 cells has length 17 (no class skipped).
+Known-answer reconstruction, required before any pairing: per-(label, application) window counts in
+the pickle must equal `ceil((rows − 450)/5)` from the CSV row counts (463,996 total; the per-user
+count vectors differ between users, so this pins each label to a user without the sort
+assumption), and their own calculator run on their embeddings must reproduce every JSON list.
+(ii) *Application numbering.* `data_selection_slm.py` sets `comment = game_id` from the raw CSV and
+`data_loader.py` filters on it; the dataset README names 1 Superhot VR, 2 Half-Life: Alyx, 3 Beat
+Saber, 4 Synth Riders, 5 Social VR — the same column and numbering as our `takeN`.
+
+**Their protocol, read from code (corrects a phrase in Claim 1).** The similarity model is trained on
+users 0-22 (whole recordings), validated on 23-31, and its published cross-application figure is on
+users 32-48 it never saw; enrolment is a reference set drawn from the test user's other
+application, not training. Claim 1's "training on those people's other applications" is wrong for
+the 0.180 figure and is amended on the certificate; the classification model (the 78.5%-class
+figures) is the one with within-user time splits. C1/C2 ("their protocol") were correctly built
+on users 0-22 and are unaffected.
+
+**Their metric is not ours.** Theirs: every 450-frame window at frame step 5 (15 s at 30 fps,
+stride 1/6 s) of application B is a query; the reference is every 150th such window of application
+A (one per 25 s, ~40 per user); nearest neighbour under CosineSimilarity (ProxyAnchorLoss's default
+distance); `precision_at_1` per class, k = max_bin_count. Ours: one 10 s probe against the
+renormalised mean of all application-A embeddings, rank-averaged ties. Matched N and matched users
+is not matched metric, so the comparison runs in **both directions in one harness each**, gated:
+
+- **D1 — our embeddings through their calculator (primary).** Test users 32-48, every 10 s
+  stride-5 window of application B as query; application-A windows subsampled per user to one per
+  25 s (`[::5]` of the stride-5 list, from the first window) as reference, matching their reference
+  density; `MotionAccuracyCalculator` imported verbatim from their repository with the arguments of
+  their `_compute_accuracy_task` (k="max_bin_count", `CustomKNN(CosineSimilarity())`,
+  `return_per_class=True`). Per-user quantity: mean of `precision_at_1` over the 20 ordered cross
+  cells. Gate: the same calculator on their embeddings reproduces the JSON per-class lists to 1e-6.
+  Their per-user values are taken from the JSON after that gate.
+- **D2 — their embeddings through our harness.** Gallery = renormalised mean of the L2-normalised
+  application-A embeddings (all windows), probe = every application-B window, `rank1_per_user`
+  with rank-averaged ties, the 20 cross cells; paired against our A1 per-user values re-scored by
+  the same functions in the same run. Gate: our checkpoints re-gate on CPU (tolerance 2e-3) and
+  the re-scored A1 means agree with the certificate's within 1e-3 (CPU/GPU arithmetic).
+- Seeds (three per arm) are averaged **inside each user** before the bootstrap; every interval is
+  a cluster bootstrap over the 17 users (10,000 resamples) with the Student-t interval beside it.
+- Ten-minute majority vote is **secondary**: D1 reports their `sequence_top_1_accuracy_10_mins`
+  with the sequence parameters translated to our window grid (window_size = the number of our
+  stride-5 windows in 600 s), and it is labelled approximate because the vote step differs.
+
+**Sensor and window asymmetry, stated up front.** Theirs is head rotation plus both controllers
+under body-relative velocity referencing (18 channels plus five derived distances/angles) on 15 s
+windows; ours is head-only `dyn` on 10 s windows. Both differences run in their favour. Neither is
+used as an excuse for any outcome below.
+
+**Power, computed before anything is paired.** Their per-user cross mean has sd 0.093 over the 17
+(min 0.068, max 0.371); our zero-shot per-user sd is 0.113-0.129 and C2-lo's 0.118-0.148 (mean
+template). The per-user correlation between the two models on the certificate's numbers is 0.014,
+so the paired sd is bounded near sqrt(0.127² + 0.093²) = 0.157 and the **minimum detectable
+paired difference at N = 17 is 0.081** (t(0.975, 16) = 2.12). The zero-shot mean difference in
+hand is +0.054 under our metric — **below the design's resolution**: a true +0.05 has roughly one
+chance in four of producing an interval above zero, and no number of seeds changes that (the floor
+is the user count). C2-lo's +0.195 is resolvable.
+
+**Outcomes, partitioning the line for every contrast by where the 95% interval of the paired
+mean falls:** BEAT (lower bound > 0), LOSS (upper bound < 0), UNRESOLVED (interval spans zero).
+
+| contrast | prediction | if BEAT | if LOSS | if UNRESOLVED |
+| --- | --- | --- | --- | --- |
+| ZS-D1: zero-shot − theirs, their metric | point in **−0.05 to +0.06; UNRESOLVED** — nearest-reference-window scoring forgoes the template averaging our 0.234 had | head-only zero-shot exceeds their trained similarity model on their own metric on the same 17 people — reported with the power note, since the design was not expected to be able to make it | their model wins on its own metric; Claim 1's "at or above" is withdrawn as a statement about their metric and kept only as a placement of a template rank-1 against a published NN mean | the predicted outcome: reported as "not resolved at N = 17; the design cannot see a difference of the size in hand", never as parity |
+| C2-D1: C2-lo − theirs, their metric | point in **+0.08 to +0.20; BEAT** | exposure to their corpus plus 4,096 identities beats their model under their metric on their people — the paper's supportable paired sentence | Claim 2's "+0.14 over zero-shot" stands as a within-harness fact; the beat over their model is not made | as LOSS for the paper's purposes: no paired beat is claimed |
+| D2 level: their embeddings, our template rank-1 | **0.20 to 0.32**, above their 0.180 — averaging lifts a learned cue (BOXRR k-curve) | — | — | — |
+| ZS-D2: zero-shot − theirs, our metric | **UNRESOLVED** | as ZS-D1 BEAT, on our metric | their model, template-scored, exceeds head-only zero-shot | predicted |
+| C2-D2: C2-lo − theirs, our metric | point in **+0.05 to +0.17; BEAT** | as C2-D1 | as C2-D1 LOSS | no paired beat claimed |
+
+**Per-cell reporting.** Per-user differences are also reported per cell (20 × 17) so an
+application-specific reversal is visible; no per-cell claim is registered.
+
+**What is not compared.** Their `[1,2,3,4]`-style multi-reference cells are a four-application
+gallery on a model trained on all five applications' *users 0-22* — not a held-out-application
+model — and are never placed beside P3. Their within-application cells (0.831) score every query
+window against references drawn from the same recording, including the reference windows
+themselves and their 449-frame-overlapping neighbours (`ref_includes_query=False` because the
+arrays differ), so they are not comparable to our half-split A0 and are not paired.
+
+**Safety before any load.** `pickletools` scan of every pickle for GLOBAL opcodes; the checkpoint's
+`data.pkl` references only `collections.OrderedDict`, `torch.FloatStorage` and
+`torch._utils._rebuild_tensor_v2` and loads with `weights_only=True`; `embeddings.pkl` is loaded
+through an `Unpickler` whose `find_class` admits only `numpy`, `pandas`, `collections` and
+`builtins` names, after its scan is recorded. Hashes are recorded on both sides of the transfer.
+
+**Citation.** The train-user-only alignment (section 6.2.5, 52.3% / 94.3%, "diagnostic upper
+bound") exists only in the Frontiers version (doi:10.3389/frvir.2026.1743491), not the arXiv
+preprint; alignment material cites that version.

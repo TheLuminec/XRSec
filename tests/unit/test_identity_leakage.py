@@ -69,3 +69,39 @@ def test_wrapped_datasets_are_unwrapped():
     wrapped = types.SimpleNamespace(dataset=inner)
     with pytest.raises(ValueError):
         assert_evaluation_users_are_unseen(wrapped, inner)
+
+
+# ---------------------------------------------------------------------------------------
+# On the REAL object, in both directions. Until 2026-09-10 every test above exercised a
+# SimpleNamespace that carried `user_dirs`; SampleIndex did not, so on a real
+# SiameseDataset the guard read an empty set and returned 0 for fully overlapping users.
+# A test whose subject is a stand-in reports the stand-in's success.
+# ---------------------------------------------------------------------------------------
+
+FIXTURES = str(Path(__file__).resolve().parents[1] / "fixtures" / "users")
+
+
+def _real(monkeypatch, **kw):
+    monkeypatch.setenv("XRSEC_SAMPLE_CACHE", "0")
+    from dataset import SiameseDataset
+    return SiameseDataset(FIXTURES, samples_per_user=8, sample_time=1, sample_rate=10, seed=1, **kw)
+
+
+def test_real_sample_index_records_its_user_dirs(monkeypatch):
+    ds = _real(monkeypatch)
+    assert len(ds.sample_index.user_dirs) == ds.num_users == 2          # assert on the fixture
+    assert all(Path(u).is_dir() for u in ds.sample_index.user_dirs)
+
+
+def test_guard_fires_on_a_real_overlapping_dataset(monkeypatch):
+    train, test = _real(monkeypatch), _real(monkeypatch)
+    with pytest.raises(ValueError, match="also trained on"):
+        assert_evaluation_users_are_unseen(train, test)
+
+
+def test_guard_passes_on_real_disjoint_datasets(monkeypatch):
+    user_one = str(Path(FIXTURES) / "1")
+    train = _real(monkeypatch, exclude_users=[user_one])                 # user 2
+    test = _real(monkeypatch, exclude_users=[user_one], swap_data=True)  # user 1
+    assert train.num_users == 1 and test.num_users == 1
+    assert assert_evaluation_users_are_unseen(train, test) == 0
