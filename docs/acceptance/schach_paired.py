@@ -160,6 +160,10 @@ def main() -> int:
     # (30 windows of 1/6 s = 5 s for them); 1/20 s * 20 = 1 of our stride-5 windows = the same 5 s.
     # window_size = round((600*20 - 200)/100) = 118 windows = exactly 600 s of probe stream.
     calc_ours = make_calculator(release, OUR_FPS, OUR_WINDOW, OUR_STEP, seq_step_seconds=1.0 / OUR_FPS)
+    # The translation asserted, not assumed (their formulas, our grid): 118 windows = 600 s, step 1 window.
+    assert int(np.round(((10 * 60 * OUR_FPS) - OUR_WINDOW) / OUR_STEP)) == 118
+    assert int(np.round((1.0 / OUR_FPS) * OUR_FPS)) == 1
+    assert int(np.round(((10 * 60 * THEIR_FPS) - THEIR_WINDOW) / THEIR_STEP)) == 3510 and int(np.round(1 * THEIR_FPS)) == 30
     cert = {}
     for name in ("seed1", "seed2", "seed3", "c2lo_seed1", "c2lo_seed2", "c2lo_seed3"):
         p = HERE / f"across_xr_alignment_{name}.json"
