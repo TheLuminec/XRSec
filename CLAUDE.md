@@ -3001,8 +3001,9 @@ does not make a fragile claim sturdier, it makes it *more persuasive*, which is 
 choice is between an elegant account of n=1 and a second run, take the run.**
 
 **What survived the replication is worth more than what it killed.** The headline replicated
-(0.368 / 0.378, range 0.010). The train-user-only fit never carries on any instrument or seed
-(9 checkpoints). And the *new* finding is sharper than the one withdrawn: **the test-fitted
+(0.368 / 0.378, range 0.010). The train-user-only fit never carries on any `dyn` instrument or seed
+(9 checkpoints; the later `raw` arm is the exception and is scoped where the claim is stated in
+full, above). And the *new* finding is sharper than the one withdrawn: **the test-fitted
 ceiling is run-dependent at identical configuration**, so a single-run diagnostic bound of this
 kind is not evidence of an orthogonal relationship between application embeddings - which raises
 the evidential bar for every claim of that shape, including the published +0.34 this programme
