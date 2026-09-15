@@ -707,6 +707,31 @@ significance claim against a published mean whose distribution was not published
 at any margin.** The sentence that is available, and is unattackable: every seed sits above their
 reported mean, head-only and zero-shot.
 
+**SUPERSEDED AS TO ITS PREMISE (2026-09-15): the per-user distribution IS published, and a formal
+test is now available.** Schach et al.'s code, data and trained models are public at
+`gitlab.informatik.uni-wuerzburg.de/hci/software/research-prototypes/2025-frontiers-identification-across-xr-applications/`
+(`dataset` @ `565a3f39`, `dataset-preprocessing` @ `92222c24`, `training-and-evaluation` @
+`4ec4106a`; cloned to `external_sota/schach2026/`). Note the host: `gitlab.informatik`, not the
+auth-gated `gitlab2.informatik` that blocked this for days. `training-and-evaluation` ships the
+trained similarity model, 922 MB of precomputed embeddings, the evaluation scripts, and
+`evaluation/files/slm_model_data/accuracy_values.json` - whose `precision_at_1` is a **list of 17
+per-user values** in each of 35 cells (their calculator runs `return_per_class=True`). **The mean
+of cell means reproduces the paper exactly from the JSON alone: within-application 0.831,
+cross-application 0.180.** So "no formal test is available at any margin" rested on a fact that
+was false the moment the repository went public; the placement wording stays only until a paired
+per-user test is run.
+
+Three conditions on that test, recorded before it exists. **The list index to user id mapping is
+decided inside `pytorch_metric_learning`, not in their code** - verify it, because a paired test
+on a misaligned user order is worse than none. **Matched N and matched users is not matched
+metric**: theirs is nearest-reference-window kNN on 15 s windows at 30 fps, ours a mean-embedding
+template on 10 s windows, so one harness must score both arms and first reproduce 0.180/0.831 from
+their model. And **their `.pkl` and `.ckpt` files execute code on load** - scan with `pickletools`
+and prefer `torch.load(weights_only=True)` on any machine holding DUA data. Two traps: their JSON's
+references like `[1, 2, 3, 4]` are four-application galleries on a model trained on all five, **not**
+a held-out-application model, so never quote them beside P3; and their README names the checkpoint
+`similarity-model/max_r_precision.ckpt` while the shipped file is `slm_model/max_precision_at_1.ckpt`.
+
 **Alignment is excluded decisively and is a finding rather than a null.** `A2' - A1` - the
 *test-fitted* diagnostic ceiling, Schach's own illegitimate route reproduced on our embedding -
 came to **+0.026** [+0.000, +0.051] against a registered +0.15 and against **their +0.34**:
