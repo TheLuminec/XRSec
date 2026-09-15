@@ -732,6 +732,20 @@ references like `[1, 2, 3, 4]` are four-application galleries on a model trained
 a held-out-application model, so never quote them beside P3; and their README names the checkpoint
 `similarity-model/max_r_precision.ckpt` while the shipped file is `slm_model/max_precision_at_1.ckpt`.
 
+**AND THE SHIPPED CHECKPOINT CANNOT BE TIED TO THE PUBLISHED NUMBERS - rest any comparison on the
+JSON and `embeddings.pkl`, not on it (verified 2026-09-15).** Three independent reasons. Their
+`slm_compute_embeddings.py` loads the model as `SimilarityLearningWithDANN`, **a class present in no
+file of the repository**, so embeddings cannot be recomputed from the checkpoint with the shipped code.
+The checkpoint itself is not operatively a DANN model (loaded `weights_only=True`: no domain or
+application classifier in the `state_dict`, `use_lambda_in_loss=False`) - the paper names DANN only as
+future work, so the class name is a codebase leftover. And **its architecture does not match the paper**:
+`rnn_hidden_size` is **320** where the Frontiers Table 2 lists the similarity model's GRU hidden size as
+**480**. Everything else (embedding 480, window 450, stride 50, d_model 320, 16 heads, one transformer
+layer, two GRU layers) agrees. What reproduces the paper exactly is the per-user JSON, and the chain that
+can be verified is data -> pickle -> JSON -> paper. **"Their code is public", "their model is public" and
+"the public model produced their numbers" are three different claims**, and only the first holds cleanly
+here - the same gap Rack et al.'s repository showed one level down.
+
 **Alignment is excluded decisively and is a finding rather than a null.** `A2' - A1` - the
 *test-fitted* diagnostic ceiling, Schach's own illegitimate route reproduced on our embedding -
 came to **+0.026** [+0.000, +0.051] against a registered +0.15 and against **their +0.34**:
