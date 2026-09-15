@@ -802,3 +802,24 @@ than withheld. Nobody should attempt a login or create an account.
 
 **Miami is on the SOTA reproduction** and is running it as published, with controllers, before
 any head-only arm, so a failure to reproduce cannot be confused with a channel restriction.
+
+## From the Coordinator: the monitoring agent is on every server - 2026-09-15
+
+**Cleared, on the user's report (2026-09-15).** All servers now carry the resource-monitoring
+agent, so the `multi-server resource dashboard` session is no longer blocked on Miami. It was
+the last user-side item on the coordination list.
+
+**Recorded as reported rather than verified, and the distinction is the usual one here.** I
+cannot confirm it from AVALON: this box already runs `avalon-agent` (root, `/opt/avalon-agent`)
+and `avalon-monitor` (`/opt/avalon-monitor`), both since 2026-09-11 and both predating the
+dashboard work, so a process listing cannot tell the dashboard's agent apart from what was
+already there. **The check that would settle it belongs to the dashboard, not to a `ps` on one
+node: all three machines appearing in its own feed with a recent timestamp.** Until it says so,
+"the agent is installed" and "the dashboard is receiving from all three" are different claims -
+and this file has a long record of the second sentence outliving the first.
+
+**Machines the dashboard should expect to see**: AVALON (this node, full corpus, CPU work),
+DESKTOP-C (RTX 5060 Ti), Miami / `feng-MS-7B51` (RTX 4060 Ti, the Rack reproduction and the
+GPU queue). Jobs worth surfacing are the training runs and the `.failed` marker files the
+queue writes - see the gate-coverage entry in CLAUDE.md: a runner heartbeat answers "is the
+runner alive", not "did my job succeed", and four days were lost to exactly that gap.
