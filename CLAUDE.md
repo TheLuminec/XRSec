@@ -732,6 +732,54 @@ references like `[1, 2, 3, 4]` are four-application galleries on a model trained
 a held-out-application model, so never quote them beside P3; and their README names the checkpoint
 `similarity-model/max_r_precision.ckpt` while the shipped file is `slm_model/max_precision_at_1.ckpt`.
 
+**THEIR WITHIN-APPLICATION 0.831 CONTAINS SELF-MATCHES, THEIR CROSS-APPLICATION 0.180 DOES NOT -
+and that split is the whole of what this finding means (New Gen 2026-09-11, verified here in their
+code 2026-09-15).** Read off the two scripts rather than inferred:
+
+| fact | source |
+| --- | --- |
+| embeddings are computed at **stride 5 frames**, overriding the checkpoint's 50 | `evaluation/slm_compute_embeddings.py:15`, `model.hparams.frame_step_size = 5` |
+| window is **450 frames at 30 fps** = 15 s | checkpoint hparams; `query_fps=30`; corpus is `...-30_fps-...` |
+| the reference set is **`embeddings[comments == ref_comment][::150]`** with `number = 150` | `evaluation/slm_compute_accuracies.py:48-53` |
+| the query set is **`embeddings[comments == query_comment]`** - the same array on the diagonal | same file, 55-57 |
+| array order is contiguous window order, so `[::150]` is evenly spaced | `test_dataloader` is `shuffle=False` (`datamodule.py:92`) |
+| `ref_includes_query` defaults to **False**, and the equality guard only runs when it is True | `src/log_metrics/accuracy_calculator.py:68-100` |
+
+So on a diagonal cell the reference is a strict subset of the queries and the kNN is never told,
+and the arithmetic is worse than "every 150th window matches itself". References sit **750 frames
+(25 s) apart** while a window is **450 frames**, so a query overlaps a reference whenever
+`|index difference| <= 89` - a span of **179 indices repeating every 150**. The spans therefore
+*overlap each other*, and **every query window in a diagonal cell shares frames with some reference
+window** (excepting only the <=89 windows at a recording block's edge). Graded: **0.67%** are the
+identical vector at distance 0, **59%** share at least half their frames, **12.7%** share at least
+90%.
+
+**What it does and does not touch, computed from their own JSON rather than argued:**
+
+| cell | construction | mean `precision_at_1` | self-match |
+| --- | --- | --- | --- |
+| diagonal, ref app == query app (5 cells) | `[comments == q][::150]` | **0.8314** - *the published within-application figure* | **yes** |
+| off-diagonal, ref app != query app (20 cells) | `[comments == r][::150]`, r != q | **0.1804** - *the published cross-application figure* | **no** |
+| four-app pooled reference (5 cells) | `[comments != q][::150]` | 0.2171 | no |
+| all-five reference (5 cells) | `embeddings[::150]` | 0.8019 | **yes** - includes the query's own app |
+
+**The comparison our paper rests on is unaffected.** Every number we place against Schach et al. -
+zero-shot 0.234, C2-lo 0.375, D1's 0.206 and 0.299 - is placed against **0.180**, which is
+cross-application by construction and carries no self-match. Endorse New Gen's call: **0.831 is not
+comparable to our half-split A0 and must not be paired with it**, and the reason to state in the
+paper is structural, not an accusation - a within-application cell in their design cannot avoid it,
+because gallery and probe are the same unbroken recording and the corpus holds no second take
+(`take_id` carries nothing, this file, Across-XR). The honest sentence is that **their within- and
+cross-application figures are not on the same footing as each other**, so the 0.831 -> 0.180 drop
+they report overstates the cross-application collapse by whatever the self-match is worth.
+
+**And it is the same hazard this file already guards against**, which is why it was recognisable:
+`generate_pair_manifest` refuses to pair two windows of one session whose starts are closer than
+`sample_time`, recorded under `window_stride` as *"close to a self-match: trivially easy, and
+invisible"*. We wrote that guard for our own overlapping windows and then read a published number
+built without one. **A hazard you have already priced in your own pipeline is the first thing to
+check in someone else's** - and checking it cost two `sed` calls on scripts already on disk.
+
 **AND THE SHIPPED CHECKPOINT CANNOT BE TIED TO THE PUBLISHED NUMBERS - rest any comparison on the
 JSON and `embeddings.pkl`, not on it (verified 2026-09-15).** Three independent reasons. Their
 `slm_compute_embeddings.py` loads the model as `SimilarityLearningWithDANN`, **a class present in no
@@ -798,7 +846,15 @@ users 32-48:
    *higher*-dose arm loses by 0.061 - so correcting for dose **widens** the scale effect.
 
 **The alignment route is closed, in three sentences that survive every seed.** The honest
-train-user-only orthogonal fit **never carries** (A2 - A1 never *resolvably* above zero - zero-shot seeds read +0.016/+0.011/+0.006 with every interval spanning zero; "<= 0 on 14 checkpoints" was written here and was false). The
+train-user-only orthogonal fit **never carries on `dyn`** (A2 - A1 never *resolvably* above zero
+there - zero-shot seeds read +0.016/+0.011/+0.006 with every interval spanning zero; "<= 0 on 14
+checkpoints" was written here and was false). **The scope qualifier is load-bearing and was missing
+from the first correction, which was mine**: on the `raw` arm seed 1 reads **+0.032 [+0.007, +0.057]**,
+whole interval above zero, so on `raw` the fit *does* resolvably carry on at least one seed. That is
+consistent with the encoding rather than a counter-example - `raw` embeddings retain a static frame
+that an orthogonal map can genuinely rotate - but "never carries" without the encoding named is
+false as written, and the headline arm is `dyn`. **A correction inherits the scope of the claim it
+corrects, and is wrong in a new way if it widens it.** The
 correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
 or more applications - and no amount of pretraining raises that; a corpus that could support the
 method would need far more multi-application participants, which is an actionable specification

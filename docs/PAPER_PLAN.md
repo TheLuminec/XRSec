@@ -43,6 +43,24 @@ matching with majority voting over a sequence.
 | top-3 on a 10-minute sequence | 100% | 56.0% (29.1-76.4) |
 | classification model, test accuracy | 43.2% | not supported by that model |
 
+**The diagonal column contains self-matches; the off-diagonal column does not.** Verified in their
+code (`slm_compute_accuracies.py:48-57`, `slm_compute_embeddings.py:15`): embeddings are computed at
+stride **5 frames**, and a cell's reference set is `embeddings[comments == ref][::150]` - so on the
+diagonal the reference is a strict subset of the queries, drawn from the same unbroken recording,
+with `ref_includes_query=False` so the kNN never excludes the identical vector. References sit 750
+frames apart against a 450-frame window, so **every diagonal query window shares frames with some
+reference window**; 0.67% are the identical vector, 59% share at least half their frames. Their
+all-five-reference cell (0.802) is affected the same way because `embeddings[::150]` spans the
+query's own application.
+
+**Consequence for this paper, and it is narrow:** every number we place against them goes against
+**18.0%**, which is cross-application by construction and clean, so **the comparison is unaffected**.
+What we must not do is pair our within-application A0 against their 83.1% - and what we should say,
+once, without accusation, is that their within- and cross-application figures are **not on the same
+footing as each other**, so the 83.1 -> 18.0 drop overstates the collapse by whatever the self-match
+is worth. It is structural in their design rather than an error: gallery and probe are the same
+recording, and the corpus holds no second take per (user, application) cell.
+
 **The story of their paper, in one line: within an application motion identification is
 close to solved, and across applications it collapses to roughly three times chance.** Their
 abstract says so outright - "their ability to identify users across different XR applications
@@ -149,7 +167,12 @@ that it needs re-deciding rather than inheriting.
    **This is the first data-side lever this project has measured to cross an activity
    boundary** - identity count is flat across one, activity diversity was null.
 4. **Schach et al.'s future-work proposal (Frontiers version) is answered negatively, with a mechanism.** The honest
-   train-user-only orthogonal fit **never carries** (A2 - A1 never resolvably above zero; zero-shot seeds read +0.016/+0.011/+0.006, every interval spanning zero - the earlier "<= 0 on 14 checkpoints" was false); the
+   train-user-only orthogonal fit **never carries on `dyn`**, the headline encoding (A2 - A1 never
+   resolvably above zero there; zero-shot seeds read +0.016/+0.011/+0.006, every interval spanning
+   zero - the earlier "<= 0 on 14 checkpoints" was false, and the correction that replaced it
+   omitted the encoding scope). **On `raw`, seed 1 reads +0.032 [+0.007, +0.057], resolvably above
+   zero**, which the write-up must state rather than absorb: a static frame is exactly what an
+   orthogonal map can rotate, so the negative is a `dyn` result and is reported as one. The
    correspondences available for fitting are **capped at 32 by the corpus** - the number of
    people recorded in two or more applications - and no amount of pretraining raises it; and
    **the test-fitted ceiling that motivates the whole idea is itself run-dependent**, present in
