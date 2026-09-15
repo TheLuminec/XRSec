@@ -295,3 +295,408 @@ than design.
 missing module by name, whose name is gallery/probe statistics for the DML paper, is
 independent evidence for the missing-evaluation finding rather than an inference from the
 absence of `test_step`.
+
+---
+
+# AMENDMENT 2 — 2026-09-10: the published configuration is INFEASIBLE as shipped
+
+**A measurement about the instrument, not a result.** No gate number exists and none is
+affected; this records why one cannot yet be produced. Original registration and Amendment 1
+left intact above.
+
+## The arithmetic
+
+`SimilarityDatamodule` builds `MPerClassSampler(..., length_before_new_iter=1_000_000)` and
+`MPerClassSampler.__len__` returns exactly that, so at `batch_size: 400` **one epoch is 2,500
+train batches**. Measured on this node (RTX 4060 Ti, Python 3.8.20, torch 2.0.1+cu118):
+
+| | |
+|---|---|
+| observed | **27–43 s per batch**, GPU at **0–5%** |
+| per epoch, train only | **17–30 hours** |
+| `min_epochs: 100` | **72–124 days** |
+| `max_epochs: 500` | **360–619 days** |
+
+The GPU is idle. This is not a hardware limitation.
+
+## Root cause: multi-block `.values` on every `__getitem__`
+
+`WindowMaker.to_windows` (`window_maker.py:58-59`):
+
+```python
+if type(unwindowed_data) != np.ndarray:
+    unwindowed_data: np.ndarray = unwindowed_data.values
+```
+
+`BaseDataset` stores `self.frames` as a **DataFrame with 18 blocks — one per column**,
+because `_prepare_data` assigns columns individually. **`.values` on a multi-block frame is a
+full copy**, so every `__getitem__` copies the entire training set to cut one 500-frame
+window. Cost is O(dataset size) per item, measured:
+
+| subjects | rows | per `__getitem__` | per batch of 400 |
+|---|---|---|---|
+| 2 | 169,557 | 5.99 ms | 2.4 s |
+| 27 (training split) | ~13x larger | ~62 ms (implied) | **~25 s — matches the observed 27–43 s** |
+
+**This is the SAME pandas property as the velocity bug recorded above, with the opposite
+symptom.** Multi-block `.values` **silently discards a WRITE** (`helpers.py:175/214`, the
+take-boundary NaN, which their own test catches) and **silently COPIES on READ** (here). One
+line of pandas semantics, two failure modes, neither visible without measuring.
+
+## The proposed fix, verified bit-identical rather than argued
+
+`to_windows` already branches on DataFrame-vs-ndarray — the branch above exists precisely to
+accept either. So the change is **which of the two types their own function already supports
+gets stored in `self.frames`**. No logic of theirs is altered.
+
+Verified, shipped vs hoisted, same dataset and indices:
+
+```
+items 0, 1, 7, 123, 1000, 5000: identical=True on data AND targets, float64 both sides
+ALL ITEMS BIT-IDENTICAL: True
+per item  5.99 ms -> 0.022 ms   =  270x on 2 subjects (larger on 27: the copy scales, the slice does not)
+```
+
+**Status: NOT APPLIED. With the Coordinator**, because editing their source turns "we ran
+their code" into "we ran our fork" and that is not a call to make unilaterally. Options put to
+them: (1) apply and record as a deviation with this verification attached; (2) run unpatched at
+reduced scope and state the budget differs from theirs; (3) declare the arm not reproducible on
+available hardware. Recommendation is (1), precisely because equivalence is measured.
+
+## Two further instrument facts found en route
+
+- **`callbacks=null` does not work on Hydra 1.3** — `ValueError: Config group override must be
+  a string or a list. Got NoneType`. Their `configs/config.yaml` comment says "set this to null
+  if you don't want to use callbacks". Another instance of their documentation not matching the
+  dependency versions their code requires.
+- **A starved validation split breaks the checkpoint callbacks.** With `limit_val_batches=2`
+  the `[::150]` gallery subsample can yield zero reference embeddings, so
+  `_compute_and_log_validation_metrics` skips logging and every `ModelCheckpoint` monitor
+  raises `MisconfigurationException`. Their code is correct; a too-aggressive smoke restriction
+  is not.
+
+## Memory, for anyone running this
+
+Their dataset is fully resident and the DataLoader **forks it per worker**: ~7.5 GB per
+process, so `NUM_WORKERS=2` reached ~22 GB RSS and `Committed_AS` 36 GB. Our own CLAUDE.md
+carries the same warning for `num_workers`. Note also that the harness's low-memory guard reads
+`MemFree`, which sat at 1.3–1.9 GB while `MemAvailable` was 34–42 GB and swap was untouched —
+it killed five watcher processes today and never a real job. **Read `Committed_AS` and
+`MemAvailable`, not `MemFree`.**
+
+## And the fixture lesson, for the third time in one day
+
+My first measurement of the `.values` hypothesis **refuted it** — the conversion looked free.
+The fixture was a uniform float32 frame, hence single-block, hence a view. The real frame is 18
+blocks. Identical to the morning's velocity investigation, on the same day, after the rule was
+written down. Going back to the fixture rather than abandoning the hypothesis is the only
+reason this diagnosis exists; the rule is evidently not yet a reflex.
+
+---
+
+# AMENDMENT 3 — 2026-09-10: it is a pandas REGRESSION, not a defect in their code
+
+**Amends Amendment 2 and the instrument notes. An instrument fact — the dependency version —
+discovered without running the experiment, which is the case the amendment rule licenses.
+Nothing above is edited away.**
+
+## The measurement
+
+Same frame construction as theirs (per-column assignment, then `_scale_data`'s
+`(X - means) / stds`), measured on this node:
+
+| pandas | blocks after `_scale_data` | `.values` is a view | per access |
+|---|---|---|---|
+| **1.5.3** | 18 | **True** | **0.015 ms** |
+| 2.0.3 | 18 | False | 7.873 ms |
+
+**525x, on an identical frame.** pandas 1.x consolidated on access; 2.x does not. Their
+unpinned `requirements.txt` would have installed 1.5.x in 2023, so **their code was never slow
+in their own environment** — which also answers the question Amendment 2 raised and could not
+settle: they ran 100 epochs because `__getitem__` cost 0.015 ms.
+
+The honest framing is therefore **"we restored the single-array access property their
+environment provided"**, NOT "we fixed their bug".
+
+## WITHDRAWN: two readings recorded above are wrong
+
+The instrument notes called the velocity failure **"a latent fragility rather than a current
+bug"** in their code, and their failing test **"doing useful work by accident"**. Both are
+withdrawn. Same mechanism, measured:
+
+| pandas | blocks | boundary-NaN write lands | their test |
+|---|---|---|---|
+| **1.5.3** | 1 | **True** | **PASSES** |
+| 2.0.3 | 3 | False | FAILS |
+
+Under 1.x the int64→float upcast consolidated to **one** block and the write landed. **It is a
+correct test, passing correctly in its own environment, broken by a pandas 2 behaviour
+change.** The earlier readings were wrong in the direction that made someone else's code look
+worse than it is, which is the direction that deserves the loudest correction.
+
+**So both of today's `.values` findings are ONE pandas 1.x→2.x change with two opposite
+symptoms** — silently discarding a write, and silently copying on read. One regression, not two
+defects.
+
+## The discriminator in the notes above is ALSO wrong
+
+Those notes recommend asserting `len(df._mgr.blocks) == 1` before a `.values` write. **Both
+pandas versions report 18 blocks**; only view-vs-copy differs. That assert would pass or fail
+for reasons unrelated to the property it protects. Use instead:
+
+```python
+np.shares_memory(df.values, df.iloc[:, 0].values)   # False => .values is copying
+```
+
+or time a single access. (The block-count advice originated with the Coordinator and was
+relayed by this node to XRSec New Gen; corrected to both.)
+
+## The lesson, which is bigger than pandas
+
+**A behaviour that is a property of the DEPENDENCY VERSION was diagnosed twice as a property
+of the code, in opposite directions, by two sessions, in one day.** Before attributing a defect
+to code you did not write, price the version you are running it on — **especially where the
+authors pinned nothing, because then the environment is the free variable and the code is the
+only thing that looks fixed.**
+
+## PERFORMANCE DEVIATION — kept separate from the environment deviations
+
+The environment pins above change the stack and their effect is bounded by *argument*. This one
+is *measured* not to change the output. Different kinds of claim; they do not belong in one
+list.
+
+| | |
+|---|---|
+| what | `window_dataset.py:23` — `self._scale_data(self.frames)` → `self._scale_data(self.frames).values` |
+| why | restores the view semantics pandas 1.5.3 gave their code; without it, 124 days at `min_epochs=100` with the GPU idle |
+| their code changed | **none.** `WindowMaker.to_windows` (`window_maker.py:58`) already branches on DataFrame-vs-ndarray and accepts either |
+| scope | **WindowDataset only.** `base_dataset.py:221` was rejected — `bin_maker.py:38` calls `self.frames.rolling(...)`, so that edit would silently break `BinDataset`. **BinDataset remains bit-identical to shipped** |
+| verified (input) | six items across the index, `identical=True` on data and targets, float64 both sides |
+| verified (optimisation) | loss-trajectory gate — **PENDING**, recorded here when run |
+| method | `assert s.count(old) == 1` before writing; shipped copy retained for diffing |
+
+**The input check is evidence about what the model sees; the loss-trajectory check is evidence
+about the steps it takes.** The claim rests on the second, so no reproduction figure is quotable
+until that gate is recorded here.
+
+---
+
+# AMENDMENT 4 — 2026-09-10: the deviation's justification is FIDELITY, and my timing was wrong
+
+## First, the correction: the slowdown was overstated 4–10x
+
+Amendment 2 reported "27–43 s per batch, 29.7 h per epoch, **124 days** at `min_epochs=100`".
+**tqdm reports a CUMULATIVE average, not an instantaneous rate**, and that figure was read at
+values 3–8 of a monotonically falling series:
+
+```
+85.2 -> 42.7 -> 36.5 -> 27.5 -> 26.9 -> 22.5 -> 22.8 -> 20.0 -> 20.6 -> 18.6
+     -> 19.2 -> 17.7 -> 18.3 -> 17.0 -> 17.5 -> ... -> 4.84 / 3.89
+```
+
+Still falling at the last reading, so the marginal cost is *below* it. The honest figure is a
+**band, not a point**: ~4–12 s/batch wall clock, i.e. **12–35 days** at `min_epochs=100`.
+
+| s/batch | h/epoch | days at 100 epochs |
+|---|---|---|
+| 4 | 2.8 | 11.6 |
+| 12 | 8.3 | 34.7 |
+
+The one clean number is the direct per-item measurement, which is unaffected: 5.99 ms/item on
+2 subjects, ~62 ms implied on 27, so ~25 s/batch of CPU *work* — split across 2 workers and
+pipelined with the GPU, which is why wall clock is lower.
+
+**This is the `mid-training number` trap from this project's own rules, applied to a
+throughput figure instead of an accuracy figure, by the person who wrote the rule, the same
+day.** A progress bar's running average is a cumulative statistic; quoting it early is
+quoting a transient. The fix in the instrument: the loss-trajectory gate now records
+**per-step marginal wall clock** with `torch.cuda.synchronize()` before each reading, so the
+epoch budget comes from direct measurement rather than a progress bar, and one instrument
+yields both the equivalence evidence and the timing.
+
+## Second, and more important: the justification is FIDELITY, not speed
+
+The deviation was approved on a feasibility argument and **that is now the weaker half.**
+12–35 days of GPU-idle wall clock on a shared card is still not runnable, but it is a
+judgement call rather than an obvious one; 124 days made it look obvious and it was not.
+
+**What carries the deviation is fidelity, and that argument did not exist when it was
+approved** (Coordinator, and it is the better one):
+
+> Their code ran at **0.015 ms/item under pandas 1.5.3**. The slow path is an artefact of
+> **our dependency version**, not of their protocol. Reproducing on it would faithfully
+> reproduce pandas 2.0.3 and **unfaithfully reproduce Rack et al.** The hoist restores the
+> behaviour their environment provided, which makes it **the more faithful choice at any
+> wall-clock figure** — 124 days, 12 days, or twenty minutes.
+
+That is schedule-independent, so it is what the deviation note leads with, and the timing is
+**context rather than justification**. The source comment at `window_dataset.py:23` has been
+rewritten to the same ordering and carries the corrected band plus an explicit note that the
+earlier 124-day figure was an overstatement.
+
+**The general form, which is the transferable part:** the conclusion survived a 4–10x error in
+its headline number *because it stopped depending on that number*. An argument that rests on a
+magnitude is hostage to the magnitude being right; one that rests on a mechanism is not. When a
+decision has two justifications, find out which one is load-bearing **before** the weaker one is
+falsified rather than after.
+
+## Status of the equivalence evidence
+
+| check | status |
+|---|---|
+| output bit-identical on sampled windows (6 items) | **done** — evidence about the INPUT |
+| loss trajectory, 20 steps, same seed, both source states | **enqueued**, runs after another session's seed 1 |
+| per-step marginal wall clock, both source states | **enqueued**, same job |
+
+No reproduction figure is quotable until the trajectory gate is recorded here. The gate asserts
+state A really produced a DataFrame and state B an ndarray, so it cannot silently compare a
+source state against itself.
+
+---
+
+# AMENDMENT 5 — 2026-09-11: the gate PASSES, and my own gate's statistic was wrong
+
+## Equivalence: PASS, bit-identical
+
+20 training steps, seed 42, both source states, via Hydra's own composition:
+
+```
+step   0   shipped 43.026791   patched 43.026791
+step   1   shipped 42.028809   patched 42.028809
+step   2   shipped 37.931763   patched 37.931763
+step   3   shipped 38.269428   patched 38.269428   ... all 20 identical
+LOSS SEQUENCES BIT-IDENTICAL: True    max|delta| = 0.0
+```
+
+The state assertions held — `shipped: frames=DataFrame blocks=18 values_is_view=False`,
+`patched: frames=ndarray` — so the comparison was between two genuinely different source
+states and not, as a bug in the first attempt would have had it, a state against itself.
+
+**The deviation provably does not change the optimisation.** That discharges the condition
+set above: a reproduction figure is now quotable.
+
+## Timing: a THIRD correction, and this time my own instrument misled me
+
+| statistic | shipped | patched | ratio |
+|---|---|---|---|
+| median per step (excl. first) | 0.436 s | 0.424 s | **1.03x** |
+| **mean per step (excl. first)** | **11.33 s** | **0.42 s** | **26.8x** |
+| steps over 5 s, out of 20 | **76.2, 69.3, 71.0, 68.2** | none | |
+
+**The shipped path's cost is concentrated in periodic stalls, not spread across steps.** Six
+workers prefetch; when the queue drains they all re-copy the whole frame at once, so ~4 steps
+in 20 cost ~70 s each while the other 16 cost 0.436 s. **The median is blind to exactly the
+events that constitute the cost.**
+
+I wrote `median_step_seconds_excl_first` deliberately, to strip the warm-up transient that had
+misled me earlier in the day — and it stripped the signal instead. **A robust statistic chosen
+to remove a transient removed the thing being measured.** For a cost concentrated in rare large
+events the mean, or simply total elapsed time, is the estimator that sets epoch duration;
+robustness is the wrong property to want here.
+
+**Corrected budget, from the mean:**
+
+| | s/step | h/epoch | 100 epochs |
+|---|---|---|---|
+| shipped | 11.33 | 7.87 | **32.8 days** |
+| patched | 0.42 | 0.29 | **1.2 days** |
+
+## Where that leaves three successive claims about one number
+
+| claim | value at 100 epochs | verdict |
+|---|---|---|
+| Amendment 2 — tqdm cumulative average read at batches 3–8 | 124 days | **wrong, ~4x over** |
+| Amendment 4 — corrected band from direct per-item measurement | 12–35 days | **brackets the truth** |
+| this amendment — mean of measured marginal steps | **32.8 days** | load-bearing |
+
+So the original figure was wrong, the corrected *band* was right, and my gate's median then
+said the patch was worth 3% when it is worth 26.8x. **Two errors in opposite directions on the
+same quantity, from two different statistics of the same underlying data.**
+
+**And this is why the Coordinator's reframing mattered.** The deviation's justification was
+moved off feasibility and onto fidelity — their code ran at 0.015 ms/item under pandas 1.5.3,
+so the slow path is our dependency version rather than their protocol — *before* the feasibility
+figure moved twice more. An argument resting on a magnitude would have had to be re-made three
+times; the fidelity argument never moved. **Find out which justification is load-bearing before
+the weaker one is falsified, not after.**
+
+## The real run
+
+Enqueued at `max_epochs=100` — their own `min_epochs`, so a published floor rather than a number
+of mine — which is ~29 h at the measured 0.42 s/step. Their `ModelCheckpoint` callbacks save
+best-by-metric, so the run yields a usable checkpoint whatever epoch it reaches. Their config
+ships `max_epochs: 500` with early stopping commented out; 500 would be ~6.1 days on a shared
+card. **If the monitored metric is still climbing at epoch 100 the budget gets extended and the
+extension is recorded here.** `NUM_WORKERS` left at their default 6.
+
+---
+
+# AMENDMENT 6 — 2026-09-15: the 09-11 run FAILED at minute 22, and sat unnoticed for four days
+
+## What happened
+
+The `max_epochs=100` run enqueued on 2026-09-11 at 17:34 **completed epoch 0 of training** —
+4,233 batches (2,500 train + ~1,733 validation) in 21:32 at 3.28 it/s, loss falling to 16.3 —
+then crashed the first time `validation_epoch_end` executed:
+
+```
+similarity_module.py:107
+  self.evaluator.get_accuracy(query_embeddings, reference_embeddings, query_y, reference_y,
+                              embeddings_come_from_same_source=False)
+TypeError: get_accuracy() got an unexpected keyword argument 'embeddings_come_from_same_source'
+```
+
+The queue runner did its job: `.failed` marker, rc=1, marked done to avoid a retry loop. **The
+card then sat idle for four days because nothing was watching the job.**
+
+## Two failures of mine, named separately because they have different fixes
+
+**1. Monitoring.** A ~36-hour job was enqueued with no watcher on its outcome. The runner's
+liveness signal answers *is the runner alive* — it was — and not *did the job succeed*. "The run
+is enqueued" was reported as though it meant "the run is handled". **Fix:** every long job gets a
+watcher that fires on `.failed` as well as on completion. Silence is not success; that coverage
+rule was applied to other sessions' monitors throughout this project and not to this queue.
+
+**2. Gate coverage.** Amendment 5's loss-trajectory gate drove `training_step` in a manual loop,
+chosen to avoid Trainer callbacks that monitor validation metrics a short run never produces.
+**It therefore never executed `validation_epoch_end`**, and the first time their validation code
+ran on this stack was minute 22 of the real run. "The gate passed" was allowed to stand for the
+whole pipeline when it was evidence about the training path only — the same shape as "475 tests
+green" on 2026-09-09. **A gate is evidence about the path it exercises.** Fix: no multi-seed
+launch until one full epoch has executed `validation_epoch_end` and logged
+`sequence_top_1_accuracy_5_mins/validation/mean`.
+
+## Root cause: another dependency-version change — and the obvious patch is silently WRONG
+
+pytorch-metric-learning changed `AccuracyCalculator.get_accuracy` between 1.x and 2.x. Pinned
+here: **2.3.0**. Their code targets **1.x**. Both the keyword **and the positional order** changed:
+
+```
+their call (pml 1.x):  get_accuracy(query, reference,    query_labels, reference_labels, embeddings_come_from_same_source)
+pml 2.3.0:             get_accuracy(query, query_labels, reference,    reference_labels, ref_includes_query)
+```
+
+**Renaming the keyword to `ref_includes_query` would not raise and would compute garbage** —
+`reference_embeddings` would be bound to `query_labels`. So the source-edit route here is not
+merely a deviation; it would be a wrong answer presented as a result.
+
+This is the pandas lesson from Amendment 3 one library over: **price the version before editing
+code you did not write.** The fix is a version pin, consistent with choosing Python 3.8 over
+patching `collections.abc` and with the fidelity reasoning behind the `window_dataset.py:23`
+hoist. Candidate: **`pytorch-metric-learning==1.7.3`** (last 1.x), under verification — its
+`get_accuracy` must take their positional order, and their `MotionAccuracyCalculator` overrides
+(`_get_accuracy`, `requires_knn`) must still fit its internals. Resolution recorded below when
+verified.
+
+## The one good measurement the failed run produced
+
+A **complete epoch including validation: 21.5 minutes**, measured end to end rather than
+extrapolated per step. That supersedes the per-step band for budgeting:
+
+| max_epochs | per seed | three seeds |
+|---|---|---|
+| 100 | ~36 h | ~4.5 days |
+| 500 (their shipped value) | ~7.5 days | ~22 days |
+
+Direct and complete, but still **one** epoch, so quoted as ~21.5 min rather than as a band until
+more epochs exist.
