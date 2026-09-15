@@ -43,6 +43,37 @@ matching with majority voting over a sequence.
 | top-3 on a 10-minute sequence | 100% | 56.0% (29.1-76.4) |
 | classification model, test accuracy | 43.2% | not supported by that model |
 
+The parenthesised ranges above are **across-cell** (the spread over application pairs, as their
+paper reports it). **The comparison we need is across USERS, and it is now computable** - their JSON
+ships `precision_at_1` and `sequence_top_1_accuracy_list_*` as 17 per-user values in every one of the
+35 cells. Per-user means over cells, cluster bootstrap over the 17 users, 10,000 resamples
+(2026-09-15; all four point estimates reproduce the published figures exactly):
+
+| Schach et al., **per-user 95% CI** | single 15 s window | 10-minute sequence |
+| --- | --- | --- |
+| **cross-application** (20 off-diagonal cells) | **0.1804** [0.1396, **0.2246**] | **0.3082** [0.2061, **0.4169**] |
+| within-application (5 diagonal cells) | 0.8314 [0.8102, 0.8520] | 1.0000 [1.0000, 1.0000] |
+
+**This settles the zero-shot claim against us, and that is the correct outcome.** Their
+single-window interval reaches **0.2246**; our zero-shot 0.234 [0.181, 0.292] overlaps it heavily.
+So "no beat is available" is no longer a caution about an unpublished distribution - it is a
+measured overlap. The only sentence that survives is the one already registered: **every seed sits
+above their reported mean, head-only and zero-shot.** Do not strengthen it.
+
+**The ten-minute contrast, by contrast, separates cleanly.** Their 0.3082 tops out at **0.4169**
+and our exposed arm reads 0.66-0.711 - outside their interval entirely. That is the widest
+separation anywhere in the comparison and it is now interval-against-interval rather than
+point-against-point. **Their within-application ten-minute figure is 1.0000 for all 17 users**, so
+that metric is saturated there and separates methods only across applications - the reason it is our
+secondary metric, now demonstrated on their data rather than argued.
+
+**And their own per-user spread makes our metric contribution for us.** On the same 17 people,
+cross-application per-user rank-1 runs **0.068 to 0.371** on a single window and **0.043 to 0.818**
+at ten minutes. A risk assessment reported as a mean conceals a person identified four-fifths of the
+time behind a population figure of 0.31. **Make the distribution argument on the reference's own
+published numbers first, then on ours** - it is far stronger than making it only on ours, and it
+costs nothing because the arrays are in their release.
+
 **The diagonal column contains self-matches; the off-diagonal column does not.** Verified in their
 code (`slm_compute_accuracies.py:48-57`, `slm_compute_embeddings.py:15`): embeddings are computed at
 stride **5 frames**, and a cell's reference set is `embeddings[comments == ref][::150]` - so on the
