@@ -9,7 +9,7 @@ they are dated, they have falsifiers, and they were written before any of the ru
 | step | status |
 | --- | --- |
 | 1. public dataset | **DONE** - Across-XR, 49 users x 5 applications, CC BY-NC-SA 4.0, converted and on three machines |
-| 2. SOTA work: run their code, understand the story | **paper obtained and read; their two models' code obtained; their own wrapper repo is auth-gated** (see Blocked) |
+| 2. SOTA work: run their code, understand the story | **DONE** - paper read (Frontiers version), all three of their repos cloned from `gitlab.informatik` (not the auth-gated `gitlab2`), and **their released model's own evaluation code re-run to reproduce their published numbers bit-exact** (35 cells, max abs diff 0.0) |
 | 3. evaluation metric | **defined below**, matched to theirs, with one addition of our own |
 | 4. our algorithm | **`dyn` + `identity_softmax`, head-only, 10 s windows, with exposure to the corpus's *other* participants.** The orthogonal-alignment component was registered, run and **closed negative** - it never resolvably carries on `dyn`, and the corpus caps the correspondences at 32. Reported as a finding, not dropped |
 | 5. beat SOTA | **DONE for the exposed arm, on their people, under their metric** - C2-lo +0.119 [+0.050, +0.192] against their 0.180, gate bit-exact. Zero-shot is **UNRESOLVED** and is reported as such |
@@ -259,12 +259,15 @@ noise floor - and it is one line of arithmetic to avoid.
 
 ## Blocked on the user - nothing here can be routed around
 
-1. **The Across-XR evaluation code is auth-gated.** `gitlab2.informatik.uni-wuerzburg.de`
-   returns "404 Project Not Found" to an unauthenticated API call. The paper says the code
-   will be published "upon publication" and the arXiv version is a preprint, so it is
-   plausibly not released yet rather than withheld. I did not attempt to log in or create an
-   account. Either the user asks the authors for it, or we proceed on their two models'
-   public code, which we already have.
+1. ~~**The Across-XR evaluation code is auth-gated.**~~ **RESOLVED 2026-09-15, and the blocker
+   was a hostname.** The code, data and trained models are public at
+   `gitlab.informatik.uni-wuerzburg.de/hci/software/research-prototypes/2025-frontiers-identification-across-xr-applications/`
+   - `gitlab.informatik`, **not** the `gitlab2.informatik` that returned 404 unauthenticated and
+   blocked this for days. Cloned to `external_sota/schach2026/` (`dataset` @ `565a3f39`,
+   `dataset-preprocessing` @ `92222c24`, `training-and-evaluation` @ `4ec4106a`). Nobody logged
+   in or created an account. **The lesson is worth more than the unblocking**: "the resource is
+   gated" was an inference from one hostname, carried for days as a fact, and the check that
+   settled it was trying the other host.
 2. **Miami's GitHub deploy key** - still outstanding from 2026-09-09, still the only reason
    Miami's certificates need a human relay.
 
@@ -425,7 +428,9 @@ band holding or failing.
 **What is still NOT compared:** their 0.831 is never paired with our A0 (self-match, see above);
 their 0.180 is clean and is what everything above is paired against.
 
-## Per-user distribution: the figure, and an UNREGISTERED observation that may be the better paper
+## Per-user distribution: the figure, and an UNREGISTERED observation
+*(Headed "…that may be the better paper" when written. After the two checks below it is a better
+**hypothesis**, not a better paper - see the verdict at the end of this section.)*
 
 `docs/acceptance/schach_per_user.{svg,png,csv}` from `schach_per_user_figure.py`, every value read
 from `schach_paired.json` and nothing recomputed. Two panels (their nearest-reference metric; our
@@ -462,12 +467,19 @@ remaining three move together and **this corpus cannot separate them.** The supp
 orders"*; naming the sensor set as the cause is a hypothesis, and it is the interesting one, but it
 is not what was measured.
 
-**Why it may be the better paper.** CLAUDE.md already holds that every rank-1 here is a population
+**Why it would matter if it held.** CLAUDE.md already holds that every rank-1 here is a population
 mean over a 24x-wider-than-Gaussian per-user distribution, and that the exposed and protected
 individuals are the substance of a biometric claim. This adds the sharper half: **if who is exposed
 depends on the system rather than on the person, then a risk assessment cannot say "these people are
-at risk" at all - only "this system exposes these people".** That is a stronger privacy finding than
-the beat, and it lands on Schach et al.'s own framing as a risk assessment.
+at risk" at all - only "this system exposes these people".**
+
+**The difference in KIND is what makes it attractive, and it is worth naming precisely.** The beat is
+a ranking claim - *we built a better instrument* - and a reviewer can accept it entirely and still say
+"and next year someone beats you". It expires. This would be a claim about **what the field's central
+number means**, which does not expire when a better model arrives. Two practical consequences follow
+if it holds: **a per-person risk audit under one system does not transfer to another**, so measuring
+yourself safe under one model is no evidence of safety; and **a defence that protects the top-k most
+identifiable users has no stable target**, because the list changes with the system.
 
 **Status: EXPLORATORY. Not registered, not paired, not claimed.** It is a figure caption and a
 hypothesis. Before it is more, it needs registering in advance and a second corpus - and the
@@ -514,3 +526,75 @@ interval; that is the error, not the estimate.
 **What survives, precisely:** a defence that protects the top-k most identifiable users has no stable
 target across systems, and a per-person risk audit under one system does not transfer to another.
 Both are ordering claims. The coverage claim is withdrawn.
+
+**VERDICT on this section (coordinator, 2026-09-15).** After the ensemble check failed and the
+Fisher interval came back +/-0.5 wide, the honest ranking is: **the beat is the paper; this is a
+figure plus a clearly-labelled observation with the n=17 caveat attached.** It is a better
+*hypothesis*, not a better paper. If it replicates on a second corpus under a registration written
+in advance, that is the follow-up, and it is the bigger one. Two sub-arguments survive (ordering:
+no stable audit, no stable defence target) and one is withdrawn (coverage/ensembling).
+
+---
+
+## IS THIS ENOUGH FOR A PAPER? Assessment for the user's first paper - 2026-09-15
+
+Asked directly by the user. Recorded because a judgement made once and left in chat is a judgement
+nobody can check later, and because the answer shapes what gets written next.
+
+**Short answer: yes, and without much hedging.** The result set is complete and coherent. The
+binding constraint on strengthening it further - a second fully crossed cross-application corpus -
+**does not exist**, so waiting is waiting indefinitely.
+
+### What this work has that the field's norm does not
+
+The typical XR biometrics paper is one dataset, 15-100 users, an architecture, and a table of
+benchmark numbers. This has that plus four things that are rare:
+
+1. **A beat on the SOTA's own data, own people, own metric, using their released model** - not a
+   reimplementation. The gate reproduces their published per-user arrays at **max abs diff 0.0**
+   across 35 cells. Most "we beat X" claims rest on a reimplementation and are arguable; this is not.
+2. **The win carries a stated handicap**: head-only against head **plus both controllers**, 10 s
+   against 15 s. A win under a handicap is a stronger claim than a straight win.
+3. **Registered predictions with falsifiers, and negatives reported as prominently as positives.**
+   Zero-shot is UNRESOLVED and says so. The alignment route - **their own published future work** -
+   was tested and closed with a mechanism and an actionable corpus specification (32 correspondences).
+   A registered mechanism (template averaging) failed and is recorded as a failure.
+4. **The static-cue audit was turned on our own headline.** P2: a model **one epoch from
+   initialisation** reaches 0.351 cross-application on `raw`. This is the second-strongest
+   contribution after the beat and arguably the most interesting - it says a behaviour-only risk
+   assessment **understates** the risk, which lands on Schach et al.'s framing rather than
+   contradicting it, and their method cannot produce it.
+
+### The three attacks a reviewer will make, and whether they land
+
+| attack | lands? | the answer |
+| --- | --- | --- |
+| *"You beat them by training on their corpus."* | **No - but only if made unmissable** | C2-lo trains on participants **0-22** and tests on **32-48**. **That is exactly their protocol** - their model trained on 0-22 too. Matched, not advantaged. Put the split table early and explicitly; this is the attack that matters most |
+| *"17 test users."* | **Yes, and there is no fix** - it is the corpus | Mitigate: intervals everywhere, per-user distribution figure, and per-cell results (**11 of 20 cells resolvably, losing none**) as 20 quasi-replications inside one corpus |
+| *"One dataset."* | **Partially** | Across-XR is the **only** fully crossed cross-application corpus in existence, and we verified BOXRR-23 has **zero** users in two applications. That is a finding about the field's data, not an excuse |
+
+### What is genuinely missing, and must be stated as limitation rather than found by a reviewer
+
+- **No temporal persistence.** Every (participant, application) cell is one unbroken recording;
+  `take_id` carries nothing. Cross-application pairs carry up to ~an hour of separation within one
+  sitting, and **nothing about a different day**. Say so first.
+- **The architecture is not novel** - BiLSTM + AM-Softmax. **Do not frame this as a modelling
+  paper**; it is not one, and claiming otherwise invites exactly the wrong review.
+
+### Recommendation
+
+**Write it now**, framed as a **rigorous re-assessment of cross-application XR biometric risk** -
+not as "our model is better". The contribution set is coherent under that framing: the beat under a
+sensor handicap; the static-cue audit showing behaviour-only assessments understate risk; their
+proposed fix closed with a mechanism; and the per-user distribution as a metric argument.
+
+**Two cautions.**
+
+- **Handle the self-match observation carefully.** This is a small field and Schach et al. are
+  plausible reviewers. Frame it **structurally** - their design cannot avoid it, the corpus has no
+  second take per cell - **never as an error**, and state in the same breath that their
+  cross-application number is unaffected and is what we compare against.
+- **Venue is the advisor's call, not the coordinator's.** The natural targets are where the SOTA
+  published, or a privacy venue if the risk-assessment framing leads. **One thing this file cannot
+  assess is how much novelty the user's specific programme expects of a first paper** - that is a
+  question for the advisor, asked with this result set in front of them.
