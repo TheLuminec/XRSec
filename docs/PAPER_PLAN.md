@@ -474,3 +474,43 @@ hypothesis. Before it is more, it needs registering in advance and a second corp
 second corpus is the part that does not exist yet, since Across-XR is the only fully crossed
 cross-application corpus we hold. **Do not let it into the abstract on the strength of one corpus
 and a post-hoc correlation**, which is precisely the shape this file has been burned by before.
+
+### The ensemble corollary FAILED, and "uncorrelated" was too strong (coordinator, 2026-09-15)
+
+Two corrections to the entry above, both against my own enthusiasm and both found by checking before
+propagating rather than after.
+
+**The attacker-ensemble argument does not hold on this data and is struck.** I expected that because
+the two systems rank people differently, running both would expose far more people than either alone
+- the "the real risk is worse than either paper reports" reading. Users at or above a per-user
+rank-1 threshold, their model against C2-lo against either:
+
+| threshold | theirs | C2-lo | either | best single | union gain |
+| --- | --- | --- | --- | --- | --- |
+| 0.20 | 6 | 14 | 15 | 14 | **+1** |
+| 0.25 | 4 | 10 | 11 | 10 | +1 |
+| 0.30 | 3 | 6 | 7 | 6 | +1 |
+| 0.35 | 1 | 4 | 4 | 4 | **+0** |
+
+**C2-lo nearly dominates their model outright** - only **2 of 17** users are caught better by theirs -
+so the union buys at most one person and nothing at the high thresholds. The disagreement is in the
+*ordering*, not in coverage. **Ordering-based arguments survive; coverage-based ones do not**, and
+the distinction is worth keeping because they sound alike.
+
+**"Unrelated orders" was too strong for n=17.** Fisher intervals on the Spearman:
+
+| | rho | 95% CI |
+| --- | --- | --- |
+| theirs vs C2-lo | -0.010 | **[-0.49, +0.47]** |
+| theirs vs zero-shot | -0.037 | [-0.51, +0.45] |
+| *control*: our two arms | +0.767 | [+0.45, +0.91] |
+
+At 17 users the interval is about +/-0.5 wide. It **excludes** the 0.77-0.94 the internal controls
+show - the systems genuinely do not agree the way our own arms agree with each other - and it
+**cannot exclude a moderate correlation**. The supportable phrase is **"not strongly correlated"**,
+never "unrelated" or "uncorrelated". I wrote the stronger version into a message before computing the
+interval; that is the error, not the estimate.
+
+**What survives, precisely:** a defence that protects the top-k most identifiable users has no stable
+target across systems, and a per-person risk audit under one system does not transfer to another.
+Both are ordering claims. The coverage claim is withdrawn.
