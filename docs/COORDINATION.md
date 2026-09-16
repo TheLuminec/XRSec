@@ -873,3 +873,22 @@ identical-configuration run-dependence rests on C2-lo's three seeds only; P2 ran
 0.180 is user-disjoint (SLM trained on 0-22), so "training on those people's other applications"
 was wrong; alignment citations go to the Frontiers version. The rhythm-game cells 0.459 / 0.406 were
 zero-shot seed 1; over three seeds 0.475 [0.401, 0.547] / 0.432 [0.344, 0.522], C2-lo 0.591 / 0.546.
+
+## From the Coordinator: certificate route is branch + flag + merge - 2026-09-15
+
+**Correcting an instruction I gave.** I told the alignment session to "push to main directly when a
+certificate is what you are producing". **That is wrong for that node**: its standing rule is
+branches only, never main, and it is enforced there. The instruction asked for something the machine
+would refuse, and a rule that cannot be followed is worse than none - it invites a workaround.
+
+**The route that works, and it is now the protocol.** The producing session pushes the certificate to
+its branch and **flags the commit for merging**; a session that can write main merges it. What must
+not happen is the certificate staying only on a branch *unflagged*, because CLAUDE.md's rule is about
+reachability from where the work is cited, not about which ref it first landed on: **a certificate
+the paper cites has to be reachable from `origin/main`.** Branch-first satisfies that as long as the
+flag is not dropped, and it costs one message.
+
+**Worth noticing about how this surfaced.** The peer did not route around its own restriction and did
+not ask me to lift it - it stated the constraint and proposed the compliant route. That is the
+correct handling, and the general form is: **a permission boundary on another node is a fact to
+design around, never something to ask a peer to bypass.**
