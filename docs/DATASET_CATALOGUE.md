@@ -32,6 +32,46 @@ access routes.
 | 360_em | 13 | 15 median | position-only, 0 windows at `channels=full` | VR |
 | **total** | **2,452** (2,439 with windows) | | **~5 activity types** | |
 
+**The on-disk directory names are not the short names used above, and two of them do not
+even start with the corpus's short name.** Recorded here because it has now cost a session
+time: XRSec New Gen, pulling the seven seated corpora from AVALON on 2026-09-10, missed
+PanoSaliency entirely when matching directories by corpus name. `data_dirs`,
+`max_users={dir:N}` and every rsync filter take the **directory** name.
+
+| short name used in CLAUDE.md and here | directory under `processed_datasets/` |
+| --- | --- |
+| PanoSaliency | `360-degree_Saliency_Dataset_(PanoSaliency)` |
+| VR_User_Behavior | `VR_User_Behavior_Dataset_(Spherical_Video_Streaming)` |
+| Head_and_Gaze | `Head_and_Gaze_Behavior_Dataset` |
+| ViewGauss | `ViewGauss_Head-Movement_Dataset` |
+| EyeNavGS | `EyeNavGS_6-DoF_Navigation_Dataset` |
+| NJIT / NJIT_6DOF | `NJIT_6DOF_VR_Navigation_Dataset` |
+| Panonut360 | `Panonut360_Dataset` |
+| 360_em | `360_em_dataset` |
+| who_is_alyx | `who_is_alyx` |
+| BOXRR-23 | `BOXRR-23_Dataset` |
+| Nymeria | `Nymeria_Dataset` |
+| Across-XR | `CrossApplicationXR_Dataset` |
+
+The two parenthesised names are the ones that **must be quoted inside a Hydra list**, which
+CLAUDE.md already warns about without naming which they are.
+
+Two counting traps in the same layout, both measured on AVALON 2026-09-10:
+
+- `BOXRR-23_Dataset/users/`, `Nymeria_Dataset/users/` and
+  `CrossApplicationXR_Dataset/users/` each hold a `CITATION.txt` **inside** `users/`, so
+  `ls users/ | wc -l` overcounts by one on all three - Across-XR reads 50 on a 49-user
+  corpus. Count directories, not entries.
+- Five root-level sidecars are CSVs the loader never reads: `tasks.csv` in ViewGauss,
+  VR_User_Behavior, PanoSaliency and EyeNavGS, and `users.csv` in VR_User_Behavior. A
+  cross-machine manifest diff that hits one of those is not a payload difference.
+
+Per-file manifests for cross-machine verification live in
+`docs/acceptance/` (`boxrr_manifest_desktop-c.txt.gz`,
+`across_xr_manifest_desktop-c.txt`, `seated7_plus_acrossxr_manifest_avalon.txt.gz`) and
+`manifests_for_miami/`. Diff them **entry by entry**, not by total - see CLAUDE.md on why
+"the totals agree" is a different claim from "all files agree individually".
+
 ### B. Open access, retrievable now, not yet fetched
 
 | dataset | identities | sessions each | activity | device |
@@ -750,3 +790,105 @@ https://cuhksz-inml.github.io/full_scene_volumetric_video_dataset/
 
 **[D20] Seated Body Leaning Pose.** A. Mavridou et al., 2025.
 https://doi.org/10.6084/m9.figshare.22134695.v1 · arXiv:2303.11466
+
+## Questset (Padova, 2024) - the second cross-application corpus, and it exists
+
+`researchdata.cab.unipd.it/1239/` (DOI `10.25430/researchdata.cab.unipd.it.00001179`), **CC BY 4.0**,
+3 GB zip, API and schema at `github.com/signetlabdei/questset`. Dataset paper: Baldoni et al.,
+*Questset: A VR Dataset for Network and QoE Studies*, MMSys '24, doi:10.1145/3625468.3652187.
+**Assessed from metadata and the authors' own schema on 2026-09-16; nothing fetched.**
+
+**Why it matters more than any other lead on this list:** `docs/PAPER_PLAN.md` records that the one
+thing that would strengthen the paper - a **second cross-application corpus** - "does not exist".
+**That was wrong, and this is it.**
+
+| | |
+| --- | --- |
+| users | **60 complete** (70 recruited, 10 withdrew to cybersickness) |
+| applications | **four genuinely different titles**, two per user by group: group 1 **Beat Saber + Cooking Simulator**, group 2 **Medal of Honor: Above and Beyond + Forklift Simulator** |
+| head channels | `HeadPosX/Y/Z` + `HeadOrientationW/X/Y/Z` - **exactly our seven, quaternion scalar-FIRST** (W before X) |
+| controllers | present (`LeftTouch*`, `RightTouch*`) - irrelevant to us by scope, neither benefit nor cost |
+| sessions | **one per game, one sitting** - see the correction below |
+| duration | at least 10 min per game, 40+ h total |
+| position frame | **"relative to initial position"** - see the consequence below |
+
+**TWO CORRECTIONS TO MY OWN FIRST READING, both the same error.** I read the collection window
+(2023-06-16 to 2024-01-17) as **"multiple sessions across different days" per user**. It is the
+period over which *all 70 users* were recorded. Each user has **one sitting, two games, one session
+each**, and the `Order` field exists only because game order was counterbalanced. And the repo's
+"2 games: slow and fast versions" reads as two speeds of one title; the identification paper names
+**four distinct commercial titles**, with the "slow/fast" labels describing pace, not variants.
+**So Questset does NOT fix the temporal-persistence gap** - Across-XR's limitation survives intact,
+and any claim that this corpus adds cross-day evidence would be false. Both errors are the same
+shape this file warns about throughout: **structure inferred from a summary line rather than read
+off the schema.**
+
+**The position frame is a real difference and it cuts in our favour.** Positions are recorded
+**relative to each session's initial position**, so absolute placement *and* absolute head height
+are gone by construction. Consequences: our **P2 `raw` static-cue audit cannot be reproduced here**
+(there is no absolute height to find, so a null would be about the recording, not about anthropometry
+- state this rather than run it and report a null); and **our `dyn` headline is unaffected**, because
+`dyn` removes the same cues itself. Questset is therefore a corpus where the static cue was removed
+by the *recorders*, which makes any behavioural claim on it unusually clean.
+
+### The existing identification paper is NOT a competitor, and the reason is the protocol
+
+Baldoni et al., *Movement- and Traffic-based User Identification in Commercial VR Applications:
+Threats and Opportunities*, **arXiv:2501.16326**, identifies users on this corpus from movement and
+from network traffic. Read the protocol before treating it as a baseline:
+
+- **Test users are SEEN during training.** They split *within* each participant by time - "the first
+  8 minutes as the training set and the following 2 minutes as the test set". That is a closed-set
+  classifier over the same people it was trained on.
+- Head **plus both controllers**.
+- Within-game: **>95%** on Beat Saber and Forklift Simulator, **~80%** on Medal of Honor and Cooking
+  Simulator. Cross-game: **"no learning model obtained an accuracy higher than 0.3"** at N=30.
+
+**State the difference fairly, because both protocols are legitimate and they answer different
+questions.** Theirs measures whether a provider can recognise a *known, enrolled* user returning -
+a real threat model. Ours measures generalisation to people **never seen during training**, which is
+what a deployment faces when the population is not the training set. This file already prices that
+gap on our own history: our lineage's seen-user number was **0.836** against **0.62-0.67** for the
+identical configuration leave-users-out. **Do not write that their number is inflated; write that it
+is a different quantity**, and note that our own project's seen-user figure was ~0.2 higher than its
+unseen-user one on the same code.
+
+**Their cross-game result is the interesting one for us.** Under a protocol that is *more* favourable
+than ours in two ways at once - users seen in training, and head plus both controllers - their
+cross-application accuracy still sits **below 0.30 at N=30**. That is an independent, external
+corroboration of the collapse our paper is about, from a group with no stake in our framing.
+
+### What it is worth to the paper, and what it is not
+
+**Worth (in order):**
+
+1. **A second corpus for the headline contrast** - gallery on game A, probe on game B, unseen users.
+   Our zero-shot checkpoint can be scored on it having never seen any of it, which is the cleanest
+   external validation available to us.
+2. **A larger gallery.** 60 users (30 per group) against Across-XR's 17. Every interval in the paper
+   is N=17-limited; reporting the same contrast at N=30 and matched at N=17 answers the reviewer
+   attack we already expect.
+3. **It makes the per-user rank-disagreement hypothesis TESTABLE** - the thing `PAPER_PLAN.md` says
+   needs "a second corpus, and the second corpus does not exist". Register the prediction in advance
+   this time. **And it admits a cleaner test than the original observation**: two *head-only* systems
+   differing only in architecture and encoding separate that pair of factors from the sensor set,
+   which the Across-XR observation confounded. Within scope, and it is the contrast that was missing.
+4. **A coverage control for free.** **Beat Saber is in our pretraining corpus** (BOXRR-23); Cooking
+   Simulator, Medal of Honor and Forklift Simulator are in nothing we hold. Same covered/uncovered
+   structure that made P3's Synth Riders result stand.
+5. **A second published reference point**, external and independent, for the cross-application
+   collapse.
+
+**NOT worth, and these must not be claimed:**
+
+- **It does not fix temporal persistence.** One sitting, two games. The limitation stands.
+- **It is not fully crossed.** Each user plays 2 of 4 titles and the groups are disjoint, so it is
+  two 2-application corpora of ~30 users, not a 4-application crossed design. **Across-XR remains the
+  only fully crossed corpus**, and that sentence in `PAPER_PLAN.md` stays true as written.
+- **Two ordered cross-application cells per user**, against Across-XR's twenty. Far fewer
+  quasi-replications inside the corpus.
+- **No `raw` static-cue audit** - the recorders removed the cue.
+
+**Cost:** 3 GB, CC BY 4.0, direct download, **no agreement to sign, no account, no request**. The
+cheapest acquisition ever assessed in this file, and the only one that addresses a constraint the
+paper actually names. **Not fetched** - acquisition is the user's decision, per the standing rule.
