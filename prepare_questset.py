@@ -46,9 +46,18 @@ to a peer before it was checked:
     NOT validate the order -- the norm is invariant to permutation, so a
     wrong order still reads 1.0000.  The check that does validate it is this
     project's own invariant: rotate the device's local +Y into world and it
-    must land on world up.  Measured over all 60 people: (-0.005, +0.968,
-    -0.033), i.e. 0.968 on the up axis, matching the ~0.95 every other
-    dataset reads.  That also confirms the frame is Y-up, so no axis remap.
+    must land on world up.  Corpus-wide over all 120 sessions: **+0.934** on
+    the up axis, matching the ~0.95 every other dataset reads, which also
+    confirms the frame is Y-up so no axis remap is needed.
+    NOTE the figure first recorded here was +0.968 and was WRONG: it came
+    from one session per identity (sorted(files)[0], which is beat_saber for
+    group 1 and forklift_simulator for group 2 -- two of the three
+    highest-scoring titles) under a 40k-row cap.  Miami caught it on the
+    files it received.  The invariant is TITLE-DEPENDENT and spans 0.12 --
+    beat_saber 0.984, medal_of_honor 0.950, forklift_simulator 0.938,
+    cooking_simulator 0.866 -- so quote the per-title figure, never a pooled
+    one.  Cooking Simulator is low because it is a game of looking down and
+    reaching, not because anything is wrong with it.
 
 Native rate is ~60Hz (median 59.96 across the 120 sessions; a few run to
 116Hz), `time` is seconds from ~0, and units are metres -- no conversion on

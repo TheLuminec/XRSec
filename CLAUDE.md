@@ -1739,6 +1739,42 @@ of thing. Check which corpus a file came from before deciding what may be done w
    two 2-application corpora of ~30 users. **Across-XR remains the only fully crossed corpus**, and
    Questset gives 2 ordered cross-application cells per user against Across-XR's 20.
 
+**THE UP-AXIS GATE FIGURE WAS MINE AND WAS WRONG: 0.934, NOT 0.968 (Miami caught it, 2026-09-16).**
+I reported the invariant as **+0.968 "over all 60 people"**; Miami, running it on the files it had
+received, got **+0.934**. Their framing is what made it cheap to settle: **all 123 files hash-match,
+so the data is identical and a differing statistic can only be a differing computation.** It was mine,
+reproduced here:
+
+| title | up-component | group |
+| --- | --- | --- |
+| beat_saber | **0.984** | 1 |
+| cooking_simulator | **0.866** | 1 |
+| forklift_simulator | 0.938 | 2 |
+| medal_of_honor | 0.950 | 2 |
+| **all 120 sessions** | **0.934** | Miami's figure, reproduced exactly |
+| first session per identity only | 0.961 | what I actually computed |
+
+My script took `sorted(files)[0]` - **one session per identity** - and alphabetical order happens to
+pick `beat_saber` for group 1 and `forklift_simulator` for group 2, two of the three highest-scoring
+titles; a 40k-row cap accounts for the remaining gap. **"Over all 60 people" was true of the people
+and false of the data.** This file already carries the rule it breaks - *check a property on the files
+the run actually used, and say which subset you sampled.* The conclusion survives (0.934 clears the
+>0.9 criterion, Y-up stands, no remap) but the number was quoted as a gate and was not one.
+
+**The title-dependence is the durable half.** The invariant spans **0.12** across the four titles, and
+Cooking Simulator's 0.866 is not a defect: it is a game of looking down and reaching, so the headset
+genuinely sits pitched forward. **Quote the per-title figure, never the pooled one**, and expect any
+orientation-derived feature to behave differently across these titles.
+
+**FIVE SESSIONS RUN AT ~112-116 Hz AGAINST A 59.93 +-0.28 Hz CORPUS, ALL IN GROUP 1.** Miami flagged
+four across two identities; it is **five across three** - `g1o1u07` (both sessions), `g1o2u14` (both),
+`g1o2u07` (cooking only). Excluding them the corpus is 59.93 +-0.28, so these are a separate
+population rather than a tail. Two consequences. **`g1o2u07` holds a 59.9 Hz session and a 114.0 Hz
+session**, so for that one identity a cross-application arm draws gallery and probe at different
+native rates - the only case where resampling acts *within* a person. And **all five sit in group 1**,
+which is one whole side of the A2 group-1-versus-group-2 contrast; note it in that arm rather than
+meeting it in the residuals.
+
 **AND THE STATIC CUE SPLITS ON POSTURE, WHICH IS A FINDING RATHER THAN A CORPUS NOTE (registered
 before running, falsifier fired, 2026-09-16).** Registered: Across-XR read P(within<between) of 0.545
 all / 0.527 lateral / **0.754 height** across its five applications, and this project concluded from
