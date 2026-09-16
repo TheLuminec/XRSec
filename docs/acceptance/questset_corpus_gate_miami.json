@@ -1,0 +1,47 @@
+{
+  "what": "Questset corpus gate, run on the files RECEIVED at the Miami server",
+  "date": "2026-09-16",
+  "licence": "CC BY 4.0 - no clause 4, no clause 15, no cloud prohibition. CITATION.txt travels in the archive. BOXRR DUA machinery does NOT attach, and this corpus's freedom must not leak onto BOXRR-derived files.",
+  "transfer": {
+    "route": "rsync over SSH from AVALON ~/xfer/ (their HTTP server is SimpleHTTP/0.6, which does not implement Range, so curl -C - could not resume a partial download)",
+    "archive_sha256": "7c7e6c5e7985b05cfced208d0a5a9559ce4832ab45d25a1da3f03f0f4f35d7a2",
+    "archive_sha256_verified": true,
+    "manifest_sha256": "749331c23e5d2da6c7175b96021acc9e2e82bd76f7c395318e6473001a811677",
+    "manifest_sha256_verified": true,
+    "throughput_note": "rsync ran at 117 kB/s against HTTP's 114 kB/s - the LINK was the constraint, not the server. Switching transport bought resumability, not speed; my initial reasoning that it would be faster was wrong."
+  },
+  "per_file_verification": {
+    "manifest_entries": 123, "sha256_verified": 123,
+    "failed": 0, "missing": 0, "extra_on_disk": 0,
+    "method": "per-file sha256, not totals - the 191-byte BOXRR PROVENANCE delta is why"
+  },
+  "corpus_gate": {
+    "identities": 60, "session_files": 120,
+    "identities_per_group_order": {"g1o1": 15, "g1o2": 15, "g2o1": 15, "g2o2": 15},
+    "identities_per_title": {"beat_saber": 30, "cooking_simulator": 30, "forklift_simulator": 30, "medal_of_honor": 30},
+    "mean_abs_q": 1.000000, "min_abs_q": 1.000000, "max_abs_q": 1.000000,
+    "native_rate_hz": {"mean": 62.2, "min": 57.0, "max": 116.0},
+    "mean_head_height_m": 1.454, "head_height_range_m": [0.976, 1.745],
+    "verdict": "PASS"
+  },
+  "two_discrepancies_reported_rather_than_smoothed": {
+    "up_axis": {
+      "mine": 0.934, "theirs": 0.968,
+      "not_an_averaging_artefact": "per-file mean of means and frame-pooled mean BOTH give 0.934",
+      "per_title": {"beat_saber": 0.984, "cooking_simulator": 0.866, "forklift_simulator": 0.938, "medal_of_honor": 0.950},
+      "reading": "cooking_simulator drags the pooled figure down; 0.866 is plausible physics for a game of looking down and reaching, not an error. Both figures clear the >0.9 criterion. BECAUSE ALL 123 FILES HASH-MATCH THEIRS, a differing statistic can only be a differing COMPUTATION, not differing data - the cross-machine gate logic applied to a corpus statistic. Worth one line from them on how theirs was computed.",
+      "caveat_for_arms": "the up-axis invariant is title-dependent here, so a per-title figure is the meaningful one and a pooled figure hides a 0.12 spread"
+    },
+    "rate_outliers": {
+      "sessions_above_80hz": 4,
+      "which": ["g1o1u07/cooking_simulator 112.0 Hz", "g1o2u07/cooking_simulator 114.0 Hz", "g1o2u14/beat_saber 113.9 Hz", "g1o2u14/cooking_simulator 114.7 Hz"],
+      "reading": "two group-1 identities recorded at roughly double rate. Not a gate failure - the mean is 62.2 Hz and the criterion is a sane native rate - but it matters for resampling: a fixed target rate treats these four sessions differently from the other 116, and they are concentrated in two identities rather than spread."
+    }
+  },
+  "corpus_facts_adopted_from_their_conversion": {
+    "positions_are_ABSOLUTE": "their earlier message said positions were relative to each session's initial position and that the static-cue audit would be misleading; they retracted it after checking a file. Head Y sits at real height (mean 1.454 m here), so the raw static-cue audit IS applicable and every raw Questset figure carries the usual placement caveat.",
+    "identity_key": "(group, order, user) as g<G>o<O>u<UU> - the source User column runs 0..14 inside EVERY (group,order) block, so keying on it alone silently merges four people into one and yields a 15-identity corpus with four sessions each",
+    "one_sitting_per_user": "no temporal separation, no cross-session cost payable, nothing sayable about persistence",
+    "quaternion_order": "scalar-first in source; |q| is permutation-invariant and CANNOT validate ordering, so the device-local-+Y-into-world invariant is the check that can"
+  }
+}
