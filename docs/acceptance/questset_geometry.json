@@ -1,0 +1,111 @@
+{
+  "registered": [
+    "Registered BEFORE running (2026-09-16, coordinator, AVALON):",
+    "",
+    "  Across-XR measured P(within < between) of 0.545 all / 0.527 lateral /",
+    "  0.754 height across its five applications, and this project concluded that",
+    "  \"the games move people differently, so a 15-minute mean position records",
+    "  where the game makes you stand\" while HEIGHT survived as the legitimate",
+    "  biometric cue.",
+    "",
+    "  PREDICTION for Questset: lateral at chance again (0.45-0.60), and height",
+    "  ABOVE 0.65, i.e. the same split.",
+    "  FALSIFIER: height below 0.60, which would say head height is not a",
+    "  person-constant across these two applications either, and would remove the",
+    "  one static cue this project has consistently called a biometric.",
+    "",
+    "  The outcomes partition: below 0.60 falsifier / 0.60-0.65 unnamed-but-named-",
+    "  here as \"weakened, report as such\" / above 0.65 band holds.",
+    "",
+    "  Why the falsifier is the informative outcome here: the tail already visible",
+    "  in conversion is that one participant reads 1.655 m in Medal of Honor and",
+    "  1.156 m in Forklift Simulator. If that is systematic (a driving-seat game",
+    "  against a standing shooter) then posture is application-bound and a",
+    "  height-based static cue cannot cross this application boundary.",
+    "",
+    "Gate: a synthetic fixture whose answer is known by construction must return",
+    "1.000, and its inversion 0.000, before any real number is printed. This"
+  ],
+  "groups": {
+    "1": {
+      "games": [
+        "beat_saber",
+        "cooking_simulator"
+      ],
+      "n_people": 30,
+      "axes": {
+        "all": {
+          "label": "all",
+          "P": 0.5373563218390804,
+          "within_median": 0.6196709559559852,
+          "between_median": 0.6977374443990102,
+          "n_within": 30,
+          "n_between": 870
+        },
+        "lateral (x,z)": {
+          "label": "lateral (x,z)",
+          "P": 0.5256704980842912,
+          "within_median": 0.6177231982767206,
+          "between_median": 0.6759199086907363,
+          "n_within": 30,
+          "n_between": 870
+        },
+        "height (y)": {
+          "label": "height (y)",
+          "P": 0.7176628352490422,
+          "within_median": 0.05136011292266096,
+          "between_median": 0.09654167116015466,
+          "n_within": 30,
+          "n_between": 870
+        }
+      },
+      "height_change_m": {
+        "median": 0.05136011292266096,
+        "min": 0.00200955050488405,
+        "max": 0.09426921150836653,
+        "n_over_0_20m": 0,
+        "n": 30
+      }
+    },
+    "2": {
+      "games": [
+        "medal_of_honor",
+        "forklift_simulator"
+      ],
+      "n_people": 30,
+      "axes": {
+        "all": {
+          "label": "all",
+          "P": 0.5515325670498085,
+          "within_median": 0.870741433920005,
+          "between_median": 0.959094544212046,
+          "n_within": 30,
+          "n_between": 870
+        },
+        "lateral (x,z)": {
+          "label": "lateral (x,z)",
+          "P": 0.5488888888888889,
+          "within_median": 0.7478982237646432,
+          "between_median": 0.8595305645240037,
+          "n_within": 30,
+          "n_between": 870
+        },
+        "height (y)": {
+          "label": "height (y)",
+          "P": 0.49256704980842914,
+          "within_median": 0.4378840639721633,
+          "between_median": 0.43713262407547965,
+          "n_within": 30,
+          "n_between": 870
+        }
+      },
+      "height_change_m": {
+        "median": 0.4378840639721633,
+        "min": 0.34928248881042934,
+        "max": 0.5711605330887822,
+        "n_over_0_20m": 30,
+        "n": 30
+      }
+    }
+  }
+}

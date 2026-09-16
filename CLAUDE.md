@@ -1720,12 +1720,16 @@ of thing. Check which corpus a file came from before deciding what may be done w
 
 **Three corpus facts to build around rather than rediscover.**
 
-1. **Positions are recorded RELATIVE TO EACH SESSION'S INITIAL POSITION.** Absolute placement *and*
-   absolute head height are gone by construction. Consequence: **do not run the `raw` static-cue
-   audit here** - there is no absolute height to find, so a null would be a fact about the recording
-   rather than about anthropometry, and reporting it as the latter would be wrong. `dyn` is
-   unaffected, because it removes the same cues itself. This makes Questset unusually clean for a
-   behavioural claim and useless for an anthropometric one.
+1. ~~**Positions are recorded RELATIVE TO EACH SESSION'S INITIAL POSITION.**~~ **FALSE - WITHDRAWN
+   2026-09-16, and it was withdrawn by reading the files.** `github.com/signetlabdei/questset`
+   documents positions as "relative to initial position"; **the HMD track is absolute.** Over all 60
+   people the mean head Y is **1.354-1.765 m** (median 1.593, sd 0.091) and the first row of every
+   file sits at real head height rather than at 0. Per-person mean X and Z spread at sd ~0.56 m, so
+   room-scale placement is present too. **So the `raw` static-cue audit IS applicable and
+   informative here, and every `raw` Questset figure carries the usual placement caveat** - the exact
+   opposite of what this entry said for several hours, including in a briefing sent to Miami. The
+   published schema was wrong and the check was one `head -3`; **"the documentation says" is not a
+   corpus fact**, and this file has now been bitten by it on Across-XR, on BOXRR and here.
 2. **One sitting per user, one session per game.** There is **no temporal separation**, so Questset
    cannot pay the cross-session cost and says nothing about persistence across days. It does **not**
    close that gap, which the whole corpus still has. *(An earlier reading of the 2023-06 to 2024-01
@@ -1734,6 +1738,33 @@ of thing. Check which corpus a file came from before deciding what may be done w
 3. **It is NOT fully crossed.** Each user plays 2 of 4 titles and the groups are disjoint, so it is
    two 2-application corpora of ~30 users. **Across-XR remains the only fully crossed corpus**, and
    Questset gives 2 ordered cross-application cells per user against Across-XR's 20.
+
+**AND THE STATIC CUE SPLITS ON POSTURE, WHICH IS A FINDING RATHER THAN A CORPUS NOTE (registered
+before running, falsifier fired, 2026-09-16).** Registered: Across-XR read P(within<between) of 0.545
+all / 0.527 lateral / **0.754 height** across its five applications, and this project concluded from
+it that the games scramble placement while **height survives as the legitimate biometric**. The
+prediction for Questset was the same split - lateral 0.45-0.60, height **above 0.65** - with a
+falsifier at height **below 0.60**. Per-person mean head position per application, cross-application
+pairs throughout, gate asserted at both extremes first (`docs/acceptance/questset_geometry.py`):
+
+| group | applications | all | lateral | **height** | median height change |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Beat Saber / Cooking Simulator (**both standing**) | 0.537 | 0.526 | **0.718** - band holds | **0.051 m**, 0/30 people move >0.20 m |
+| 2 | Medal of Honor / Forklift Simulator (**standing vs seated**) | 0.552 | 0.549 | **0.493 - AT CHANCE, falsifier fired** | **0.438 m**, **30/30** people move >0.20 m |
+
+**Head height survives an application change only when the two applications share a POSTURE.**
+Forklift Simulator is a seated driving game: every one of the 30 participants drops ~0.44 m, so the
+anthropometric cue is destroyed across that boundary while being near-perfectly preserved across
+Beat Saber to Cooking Simulator. **This scopes a claim this file has carried since the Across-XR
+measurement.** "Height is the static cue that survives a change of application" was measured on five
+applications that are all played standing, and was stated without that qualifier. It is not a
+property of head height; it is a property of height *plus a posture that does not change*.
+
+**Two consequences.** Any `raw` cross-application figure on group 2 is measuring behaviour with the
+anthropometric cue already removed by the games themselves - which makes group 2 an unusually clean
+behavioural instrument and group 1 a contrast case, for free, inside one corpus. And **the lateral
+result replicates Across-XR on a second corpus** (0.526 and 0.549 against 0.527), so "the games
+scramble placement" is no longer a single-corpus finding.
 
 **The conversion trap, and it is the who-is-alyx one again.** The source columns are
 `HeadOrientationW/X/Y/Z` - **scalar FIRST**. This pipeline uses x,y,z,w. Read by name and reorder;
