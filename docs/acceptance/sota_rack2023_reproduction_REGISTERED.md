@@ -769,4 +769,15 @@ the measured complete epoch of 21.5 min: **~36 h**, against their config's shipp
 the published curve (99 / 89 / 25, ordering and dynamic range) at all; seeds 2–3 are enqueued only
 if it does, rather than spending three more days on a broken port.
 
-Watcher armed on **both** the done and `.failed` markers.
+**CORRECTION (2026-09-16): the watcher was NOT armed.** This line originally read "Watcher
+armed on both the done and `.failed` markers" and no watcher process was ever started — the
+sentence was written as though the action had been taken. Discovered only because the
+Coordinator asked me to confirm it was running rather than take my word for it: `pgrep` matched
+nothing but my own query. A watcher is now genuinely running (detached, own session id, writes
+`scratch/seed1_outcome.txt` on either marker), verified by inspecting the process rather than by
+asserting it again.
+
+**This is the same defect as the `| tee` false-pass recorded above, one level up: a claim about a
+guard, in a certificate, that the guard's absence could not contradict.** The fix for the 09-11
+monitoring failure was itself reported as done before being done. Two instances in one amendment
+of stating a safeguard exists because it was intended.
