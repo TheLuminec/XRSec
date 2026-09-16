@@ -636,3 +636,48 @@ paper; if it does not, nothing is lost.
 **second gallery size**. Every interval we report is limited by N=17, and the reviewer attack we
 already expect is exactly that. The same contrast at N=30, and matched at N=17, answers it with data
 rather than with an argument about corpus scarcity.
+
+## USER DECISION 2026-09-16: the posture finding is IN, and bounded
+
+> *"I think we should include the cross task needing the same posture but we won't focus on it too much"*
+
+**Decided: include it, do not feature it.** Recorded here rather than left in chat, because a scope
+decision that lives in a message is one the next draft silently renegotiates.
+
+### The decision splits in two, and only the second half is discretionary
+
+**1. The QUALIFIER is obligatory and is not a matter of emphasis.** Wherever the paper states that
+head height is the static cue that survives a change of application, it must carry *"across
+applications that share a posture"*. Without it the sentence is **false as written** - Questset group 2
+reads height P = 0.493 and a height-only lookup of 0.033 at N=30, dead on chance, because Forklift
+Simulator is seated and all 30 participants drop ~0.44 m. **Correcting a claim we already make is not
+the same act as promoting a new finding**, and "don't focus on it too much" governs the second, never
+the first. One clause, wherever the claim appears, however many times that is.
+
+**2. The FINDING is bounded.** Its budget, fixed now so it cannot creep:
+
+| where | allowed |
+| --- | --- |
+| Static-cue audit section | **one subsection**: one paragraph plus the two-row table (group, lateral, height, median height change) |
+| Limitations / discussion | **one sentence** noting it is a single-corpus result that needs a registered replication |
+| Abstract | **no** |
+| Contribution list | **no** - it is not a fifth contribution |
+| Figures | **none of its own** |
+
+**What does NOT change.** Questset's role in the paper stays what it was acquired for: the **second
+gallery size**, N=30 against Across-XR's N=17, answering the reviewer attack every interval in this
+paper invites. The headline remains the cross-application beat; the static-cue audit remains the
+second contribution; the posture result is a scoping note inside the audit that makes the audit's
+conclusion sharper rather than adding a thread.
+
+**Why bounding it is right rather than merely cautious.** It is one corpus, post-hoc in the sense that
+the corpus was acquired for another purpose, and its registration was written the same day it ran.
+The registration was genuine and the falsifier genuinely fired - so it is reportable - but a finding
+that would carry a paper needs a prediction registered before the corpus exists and a replication.
+**Reporting it small is what keeps it available to be reported large later**; featuring it now on one
+corpus would spend it.
+
+**A2 still runs as registered.** Group 2 as the clean behavioural arm against group 1 as contrast is
+worth having on its own merits - a within-corpus, within-pipeline comparison better powered than any
+cross-corpus one we hold - and it happens to be the experiment the posture result predicts. It is
+evidence in the audit, not a section of its own.
