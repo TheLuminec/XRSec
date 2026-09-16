@@ -823,3 +823,53 @@ DESKTOP-C (RTX 5060 Ti), Miami / `feng-MS-7B51` (RTX 4060 Ti, the Rack reproduct
 GPU queue). Jobs worth surfacing are the training runs and the `.failed` marker files the
 queue writes - see the gate-coverage entry in CLAUDE.md: a runner heartbeat answers "is the
 runner alive", not "did my job succeed", and four days were lost to exactly that gap.
+## From XRSec New Gen (alignment session): paired on Schach's 17 people, gated bit-exact - 2026-09-15
+
+Schach et al.'s release (code, data, similarity model, precomputed test embeddings,
+`accuracy_values.json` with 17 per-user values per cell) was pulled from AVALON's pinned clone
+(hashes equal both sides), scanned, loaded through a whitelisting unpickler, and tied to their data
+and their paper before anything was paired. Full record: `docs/acceptance/across_xr_alignment_RESULTS.md`
+(claim 6 and the Amendment 8 section), registration in `_REGISTERED.md` Amendment 8, artefacts
+`schach_release_gate.json` and `schach_paired.json`, scripts `schach_release_gate.py`,
+`schach_embed_ours.py`, `schach_paired.py` (the last two run in separate venvs: their calculator
+needs pytorch-metric-learning 2.x, whose `get_accuracy` positional order differs from 1.x).
+
+**Mappings, from code, then reconstructed.** List index i = user 32+i (`_remap_labels` is
+`torch.unique` + enumerate; test folder is 32.csv..48.csv, one user each; the metric library orders
+classes by `torch.unique`) - and reconstructed: the pickle's 463,996 embeddings match the released
+CSVs' `len(range(0, rows-450, 5))` per (user, application) in all 85 cells with distinct per-user
+count vectors. Their `comment` 1-5 = raw `game_id` = our `takeN`. Their calculator, verbatim, on their
+embeddings reproduces every per-class list in all 35 cells with max abs difference 0.0.
+
+**Their metric is not ours**: single 15 s window, nearest reference window under CosineSimilarity,
+references every 150th window (one per 25 s). So both directions were run: D1 = our embeddings
+through their calculator (reference density matched, one per 25 s); D2 = their embeddings through
+our template harness. Paired per user over the 20 cross cells, seeds averaged inside users, cluster
+bootstrap over 17 (10,000), t-interval beside it. MDD at N=17 is 0.081.
+
+| contrast | registered | measured | outcome |
+| --- | --- | --- | --- |
+| zero-shot - theirs, their metric | UNRESOLVED | +0.025 [-0.031, +0.080] (0.206 vs 0.180) | as registered |
+| C2-lo - theirs, their metric | BEAT, +0.08..+0.20 | **+0.119 [+0.050, +0.192]** (0.299 vs 0.180; 15/17 users) | **BEAT** |
+| zero-shot - theirs, our metric | UNRESOLVED | +0.035 [-0.050, +0.122] (0.234 vs 0.199) | as registered |
+| C2-lo - theirs, our metric | BEAT, +0.05..+0.17 | **+0.176 [+0.092, +0.260]** (0.375 vs 0.199; 16/17) | **BEAT** (point 0.006 past the band edge, not argued) |
+| their model, our metric (level) | 0.20-0.32 | 0.199 [0.146, 0.258] | missed by 0.001; the "averaging lifts a learned cue" mechanism did not hold for their embedding (+0.019) |
+
+Ten-minute (registered secondary, reported beside): C2-lo +0.355 [+0.202, +0.499] BEAT under their
+sequence metric, +0.423 [+0.293, +0.546] under our vote; zero-shot unresolved under both. Our
+ten-minute levels now carry intervals computed as theirs were: zero-shot 0.357 [0.257, 0.474], C2-lo
+0.711 [0.635, 0.785], C2-lo raw 0.497 [0.397, 0.603] (levels only).
+
+**The sentence.** Claim 1's zero-shot "at or above their mean" is a placement; paired on their people
+it is unresolved and 17 users cannot resolve a +0.05. What is resolved under both metrics: exposure
+to their corpus's other participants plus 4,096 identities beats their released model on their
+people, head-only against head plus controllers, 10 s against 15 s. Their within-application 0.831
+self-matches (same recording as gallery and probe; Coordinator b8afa9b) and is never paired with A0;
+their 0.180 is clean.
+
+**Corrections recorded on the certificate (dated block, body left in place):** A2-A1 "never
+resolvably above zero" is a `dyn` claim (raw seed 1 reads +0.032 [+0.007, +0.057]);
+identical-configuration run-dependence rests on C2-lo's three seeds only; P2 ran (+0.117); their
+0.180 is user-disjoint (SLM trained on 0-22), so "training on those people's other applications"
+was wrong; alignment citations go to the Frontiers version. The rhythm-game cells 0.459 / 0.406 were
+zero-shot seed 1; over three seeds 0.475 [0.401, 0.547] / 0.432 [0.344, 0.522], C2-lo 0.591 / 0.546.

@@ -15,8 +15,9 @@ probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate
    controllers and 15 s windows, from a similarity model trained on the corpus's other participants
    (users 0-22; the 17 test people were never in its training — *corrected 2026-09-15, see Corrections*).
    Written on 2026-09-11 as a placement against a published mean, not a beat, because their
-   per-user distribution was unpublished; **it is now published (their release, 2026-09-15) and the
-   paired per-user test is registered as Amendment 8 — its outcome supersedes this sentence.**
+   per-user distribution was unpublished; **it is now published (their release, 2026-09-15), the paired
+   per-user test is registered as Amendment 8, and its outcome (claim 6) supersedes this sentence:
+   zero-shot against their model on their own metric and their own people is UNRESOLVED at N = 17.**
    10-min 0.357 vs 0.308.
 2. **With in-domain exposure (their protocol plus 4,096 pretraining identities): 0.375 [0.321,
    0.435] (3 seeds: 0.368 / 0.378 / 0.377), +0.141 [+0.100, +0.183] over zero-shot, paired on the
@@ -45,6 +46,17 @@ probe, user-bootstrap CI over the 17. Aggregates: `across_xr_alignment_aggregate
    fixed and the pair's composition closed arithmetically on loader counts); **dose is a small,
    roughly linear effect** (halving −0.028 [−0.062, +0.009]; a 20% cut −0.009 [−0.025, +0.008])
    that works in C2-hi's favour and therefore widens, not narrows, the scale effect.
+6. **Paired on Schach et al.'s own 17 test people, under their own metric (their released calculator,
+   verbatim) and under ours — added 2026-09-15 from their release, Amendment 8.** With exposure (C2-lo,
+   three seeds) head-only beats their head-plus-controllers similarity model: **+0.119 [+0.050, +0.192]**
+   single-window under their nearest-reference metric (0.299 against 0.180, 15 of 17 users) and **+0.176
+   [+0.092, +0.260]** under our template metric (0.375 against 0.199, 16 of 17); ten-minute **+0.355
+   [+0.202, +0.499]** under theirs (0.663 against 0.308). **Zero-shot is unresolved under both metrics**
+   (+0.025 [−0.031, +0.080] under theirs, 0.206 against 0.180; +0.035 [−0.050, +0.122] under ours) — as
+   registered, and as the design's resolution (MDD 0.081 at N = 17) said it would be. Their released
+   per-class lists reproduce bit-exactly from their embeddings with their calculator (35 cells, max
+   difference 0.0), and their 463,996 embeddings match the released CSVs' window counts per user and
+   application, so index i is user 32 + i by reconstruction, not by assumption.
 
 **Recorded as unresolved, and left so:** A0 within-application against their 0.831 (confounded
 by sensor set and model family; 23 identities sits below this project's measured behavioural
@@ -87,6 +99,85 @@ rewritten.
    bound", the future-work sentence claim 4 answers) exists only in the Frontiers version
    (doi:10.3389/frvir.2026.1743491), not the arXiv preprint; every alignment sentence here cites
    that version.
+
+
+## Amendment 8 — paired on their 17 people, one harness per direction (2026-09-15 20:45)
+
+**What became available.** Schach et al. released code, data, the similarity model, its precomputed
+test embeddings and `accuracy_values.json` holding `precision_at_1` and the ten-minute sequence
+accuracy as 17 per-user values per cell (commits `565a3f39` / `92222c24` / `4ec4106a`; hashes in
+`schach_release_gate.json`). Everything below rests on the JSON and the embeddings, never on the
+shipped checkpoint, which the Coordinator found cannot be tied to the paper (GRU hidden size 320
+against Table 2's 480, and the class its embedding script imports is not in the repository).
+
+**Gates, all passed before any pairing** (`schach_release_gate.py`, `schach_release_gate.json`):
+
+| gate | result |
+| --- | --- |
+| pickle safety | `pickletools` scan lists 11 globals, all `numpy` / `pandas` / `builtins`; loaded through a whitelisting Unpickler; hashes equal on AVALON and here (pickle `42a668ac…`, JSON `c61cfeb0…`) |
+| index reconstruction | 463,996 embeddings; per-(label, application) counts equal `len(range(0, rows − 450, 5))` from the released test CSVs for every one of the 85 cells, and the 17 per-user count vectors are distinct — **label i = user 32 + i, pinned without the sort assumption** |
+| calculator reproduction | their `MotionAccuracyCalculator` (verbatim, `k="max_bin_count"`, `CustomKNN(CosineSimilarity)`, `[::150]` reference subsampling) on their embeddings reproduces **every per-class `precision_at_1` and ten-minute list in all 35 cells with max abs difference 0.0**; within 0.8314, cross 0.1804, ten-minute cross 0.3082 = the paper |
+| our checkpoints on CPU | six `dyn` and four `raw` checkpoints re-gated through the pipeline's loader (gaps 5.3e-8 to 2.9e-4); the CPU re-score reproduces every certificate per-user rank-1 to 0.0 |
+| every per-user list | length 17 asserted in every cell before pairing (a skipped class would have shifted every later index silently) |
+
+**Two directions, registered.** D1: our embeddings through their calculator (query = every 10 s
+stride-5 window of application B; reference = application-A windows one per 25 s, 663-709 per
+cell against their 652-699). D2: their embeddings through our template harness. Per-user mean over
+the 20 ordered cross cells, seeds averaged inside users, cluster bootstrap over the 17 (10,000)
+with the t-interval beside it. Outcomes by where the bootstrap interval falls (BEAT / LOSS /
+UNRESOLVED). `schach_paired.json` holds every per-cell per-user array.
+
+| contrast | registered | measured (bootstrap; t) | outcome |
+| --- | --- | --- | --- |
+| ZS-D1: zero-shot − theirs, their metric | UNRESOLVED, point −0.05..+0.06 | **+0.025 [−0.031, +0.080]**; t [−0.036, +0.087]; 10/17 users | **UNRESOLVED — as registered** |
+| C2-D1: C2-lo − theirs, their metric | BEAT, point +0.08..+0.20 | **+0.119 [+0.050, +0.192]**; t [+0.040, +0.198]; 15/17 users | **BEAT — as registered, inside the band** |
+| D2 level: their model, our metric | 0.20 to 0.32 | **0.199 [0.146, 0.258]** | band missed by 0.001 — an edge, not argued; the *mechanism* registered with it (averaging lifts a learned cue) did **not** hold for their embedding: template averaging is worth +0.019 to their model, +0.028 to zero-shot and +0.076 to C2-lo |
+| ZS-D2: zero-shot − theirs, our metric | UNRESOLVED | **+0.035 [−0.050, +0.122]**; 10/17 | **UNRESOLVED — as registered** |
+| C2-D2: C2-lo − theirs, our metric | BEAT, point +0.05..+0.17 | **+0.176 [+0.092, +0.260]**; t [+0.083, +0.268]; 16/17 | **BEAT — as registered**; point 0.006 past the band's upper edge (an edge, not argued) |
+
+**Ten-minute majority vote (registered as secondary; reported beside, never in place of, the
+single-window contrasts).** Their per-user ten-minute values aggregate to 0.308 [0.208, 0.420]
+(the Coordinator's independent implementation: [0.2061, 0.4169]). Under their sequence metric with
+the parameters translated to our grid (118 windows = 600 s, step one window = 5 s, asserted):
+zero-shot 0.414 [0.323, 0.509], C2-lo 0.663 [0.571, 0.753]; paired, zero-shot **+0.106 [−0.039,
++0.256] UNRESOLVED**, C2-lo **+0.355 [+0.202, +0.499] BEAT**. Under our vote: zero-shot 0.357
+[0.257, 0.474], C2-lo 0.711 [0.635, 0.785], their model 0.288 [0.191, 0.394]; paired C2-lo
+**+0.423 [+0.293, +0.546] BEAT**, zero-shot +0.069 [−0.091, +0.240] UNRESOLVED. The two metrics
+could have disagreed on either contrast and did not.
+
+**Levels, for the record** (single window at N = 17, then ten-minute; bootstrap over users):
+
+| arm | their metric | our metric |
+| --- | --- | --- |
+| their similarity model (head + controllers, 15 s) | 0.180 [0.140, 0.225]; 0.308 [0.208, 0.420] | 0.199 [0.146, 0.258]; 0.288 [0.191, 0.394] |
+| zero-shot `dyn` (3 seeds) | 0.206 [0.174, 0.240] (0.202 / 0.207 / 0.210); 0.414 | **0.234 [0.182, 0.291]**; **0.357 [0.257, 0.474]** |
+| C2-lo `dyn` (3 seeds) | 0.299 [0.249, 0.354] (0.298 / 0.298 / 0.302); 0.663 | **0.375 [0.321, 0.433]**; **0.711 [0.635, 0.785]** |
+| zero-shot `raw` (3 seeds; levels only, Amendment 6) | 0.368 [0.323, 0.413]; 0.453 | 0.351 [0.292, 0.412]; 0.434 [0.356, 0.517] |
+| C2-lo `raw` (seed 1; levels only) | 0.397 [0.350, 0.447]; 0.487 | 0.404 [0.326, 0.487]; 0.497 [0.397, 0.603] |
+
+**Per cell** (20 ordered cells, their metric, three seeds averaged, bootstrap over users): C2-lo
+beats their model resolvably in 11 cells and loses none; zero-shot beats it in 3 (synth_riders→
+beat_saber, beat_saber→synth_riders, social_vr→beat_saber) and loses none. Per ordered cell over the
+three seeds under our metric, the rhythm pair reads zero-shot 0.475 [0.401, 0.547] / 0.432 [0.344,
+0.522] and C2-lo 0.591 [0.536, 0.654] / 0.546 [0.472, 0.620] — the 0.459 / 0.406 in the seed-1
+section below were zero-shot seed-1 values, and the affinity is present with no exposure at all.
+
+**What the sentence is now.** Claim 1's "at or above their published mean" was a placement against
+a mean whose distribution was unpublished. Paired on the same 17 people it is **unresolved** —
+their single-window interval reaches 0.225 and ours starts at 0.182, and a true +0.05 sits below
+what 17 users can resolve. What is resolved, under their metric and ours, is that **exposure to
+their corpus's other participants plus 4,096 pretraining identities beats their released model on
+their people**, single-window and ten-minute, head-only against head plus both controllers and
+10 s against 15 s. Neither asymmetry is used to qualify the unresolved contrast.
+
+**Not compared, with mechanism.** Their within-application 0.831 scores every query window
+against references drawn from the same unbroken recording (`ref_includes_query=False` because the
+arrays differ), so every 150th query matches itself and 59% of queries share at least half their
+frames with a reference (Coordinator, `b8afa9b`); their off-diagonal 0.180 has no such term. So
+their within- and cross-application figures are not on the same footing as each other, the
+0.831→0.180 drop overstates the collapse by whatever the self-match is worth, and 0.831 is never
+placed beside our half-split A0. Their four- and five-application reference cells (0.217 / 0.802)
+are a model trained on all five applications' users 0-22 and are never placed beside P3.
 
 ---
 
