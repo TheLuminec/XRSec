@@ -424,3 +424,53 @@ band holding or failing.
 
 **What is still NOT compared:** their 0.831 is never paired with our A0 (self-match, see above);
 their 0.180 is clean and is what everything above is paired against.
+
+## Per-user distribution: the figure, and an UNREGISTERED observation that may be the better paper
+
+`docs/acceptance/schach_per_user.{svg,png,csv}` from `schach_per_user_figure.py`, every value read
+from `schach_paired.json` and nothing recomputed. Two panels (their nearest-reference metric; our
+template metric), one row per test user 32-48 in the same order on both sides, three dots per row,
+population means dashed, chance at 1/17.
+
+**The observation: their model and ours rank the same 17 people in UNRELATED orders.** Verified here
+independently from the certificate's per-user arrays, with a permutation test the original did not
+run:
+
+| | Spearman | permutation p |
+| --- | --- | --- |
+| their model vs our **zero-shot**, their metric | **-0.037** | 0.89 |
+| their model vs our **C2-lo**, their metric | **-0.010** | 0.97 |
+| *control*: our zero-shot, D1 vs D2 (two metrics) | **+0.939** | 0.000 |
+| *control*: our C2-lo, D1 vs D2 | **+0.926** | 0.000 |
+| *control*: our two arms vs each other (D1) | **+0.767** | 0.001 |
+
+**The confound that would have killed it is excluded.** A near-zero correlation is uninformative if
+either side is flat; neither is. Per-user spread is sd **0.090** (theirs), **0.069** (zero-shot),
+**0.110** (C2-lo), over ranges 0.068-0.371, 0.105-0.363 and 0.148-0.528. So the near-zero reading is
+a real disagreement about *who*, not an absence of variation - and the self-consistency controls rule
+out noise in the per-user values themselves. **User 32 is their worst (0.068, barely above chance)
+and among our best (0.295 zero-shot, 0.487 C2-lo); user 35 is their third best and near our floor.**
+
+**One qualification the original framing did not carry, and it matters for what may be claimed.**
+"The head-plus-controllers model and the head-only model find different people easy" attributes this
+to the **sensor set**, but their model and ours differ in sensor set **and** architecture
+(transformer+GRU vs BiLSTM) **and** encoding (BRV vs `dyn`) **and** training data, all at once. The
++0.767 between our two arms says training exposure alone does not scramble the order - same
+architecture, same encoding, same sensors, different exposure - so exposure is largely excluded. The
+remaining three move together and **this corpus cannot separate them.** The supportable sentence is
+*"two systems that differ in sensor set, architecture and encoding rank the same people in unrelated
+orders"*; naming the sensor set as the cause is a hypothesis, and it is the interesting one, but it
+is not what was measured.
+
+**Why it may be the better paper.** CLAUDE.md already holds that every rank-1 here is a population
+mean over a 24x-wider-than-Gaussian per-user distribution, and that the exposed and protected
+individuals are the substance of a biometric claim. This adds the sharper half: **if who is exposed
+depends on the system rather than on the person, then a risk assessment cannot say "these people are
+at risk" at all - only "this system exposes these people".** That is a stronger privacy finding than
+the beat, and it lands on Schach et al.'s own framing as a risk assessment.
+
+**Status: EXPLORATORY. Not registered, not paired, not claimed.** It is a figure caption and a
+hypothesis. Before it is more, it needs registering in advance and a second corpus - and the
+second corpus is the part that does not exist yet, since Across-XR is the only fully crossed
+cross-application corpus we hold. **Do not let it into the abstract on the strength of one corpus
+and a post-hoc correlation**, which is precisely the shape this file has been burned by before.
