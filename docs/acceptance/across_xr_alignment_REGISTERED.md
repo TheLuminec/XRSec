@@ -699,3 +699,19 @@ through an `Unpickler` whose `find_class` admits only `numpy`, `pandas`, `collec
 **Citation.** The train-user-only alignment (section 6.2.5, 52.3% / 94.3%, "diagnostic upper
 bound") exists only in the Frontiers version (doi:10.3389/frvir.2026.1743491), not the arXiv
 preprint; alignment material cites that version.
+
+---
+
+# NOTE — 2026-09-16, a qualifier on a fact stated in the protocol section and Amendment 6, not a new arm
+
+The protocol section ("height survives across applications at P=0.754") and Amendment 6 with its
+addendum ("cross-application `raw` carries height (P=0.754) ... a biometric, anthropometric not
+behavioural") state the height fact without a posture qualifier. All five Across-XR applications
+are played standing. Questset (Padova, 60 users, four titles; converted and gated 2026-09-16) reads
+height P(within < between) 0.718 across two standing titles and **0.493 across a standing/seated
+pair** (median height change 0.438 m; height-only lookup at chance, N = 30). The fact therefore reads
+**"head height survives across applications that share a posture"** everywhere it is stated. The
+registered bands, falsifiers and outcomes of Amendment 6 are unaffected: P2 was run under `dyn` as
+the headline and `raw` as the audit on a corpus where every application shares a posture, and that
+is now said rather than assumed. The original text above is left as registered. Recorded as
+correction 6 on the certificate; user decision `e8c077b`.

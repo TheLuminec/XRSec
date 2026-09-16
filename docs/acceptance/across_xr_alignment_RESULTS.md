@@ -99,6 +99,16 @@ rewritten.
    bound", the future-work sentence claim 4 answers) exists only in the Frontiers version
    (doi:10.3389/frvir.2026.1743491), not the arXiv preprint; every alignment sentence here cites
    that version.
+6. **Posture qualifier on the height claim (user decision, 2026-09-16, `e8c077b`).** Every sentence
+   here that says head height survives across applications rests on Across-XR, whose five
+   applications are all played standing, and the qualifier was never stated. Questset (60 users,
+   four titles, Padova) measured height P(within < between) at 0.718 across two standing titles
+   and **0.493 - chance - across a standing/seated pair**, median height change 0.438 m, with the
+   height-only lookup at chance there. So the claim reads **"head height survives across
+   applications that share a posture"** wherever it appears (the P2 section below, the registered
+   caveats in Amendment 6, and the registration's protocol section). Without the qualifier the
+   sentence is false as written. Nothing in the Schach comparison changes: their BRV encoding never
+   sees head position.
 
 
 ## Amendment 8 — paired on their 17 people, one harness per direction (2026-09-15 20:45)
@@ -716,7 +726,8 @@ pattern this project recorded for cross-corpus raw transfer. A model one epoch f
 initialisation reaches **0.364 [0.294, 0.435]** cross-application at N=17 on their test users.
 Had it taken 120 epochs the model could be said to have found something; at epoch 1 the cue is
 sitting on the surface of the input — **height and posture are immediately available and are
-nearly all of what raw scores.**
+nearly all of what raw scores.** (*Across applications that share a posture - all five here are
+played standing; correction 6, 2026-09-16.*)
 
 | controlled pair (same corpus, same everything but the encoding), paired on the 17 | raw | dyn (3 seeds) | raw − dyn |
 | --- | --- | --- | --- |
@@ -731,7 +742,8 @@ striking and fair to state and is not a controlled comparison; the controlled nu
 +0.130 above.
 
 **The two caveats, both registered before the number:** cross-application raw carries height
-(P=0.754; lateral placement is at chance across applications, 0.527) — a biometric,
+(P=0.754; lateral placement is at chance across applications, 0.527 — *across applications that
+share a posture, correction 6*) — a biometric,
 *anthropometric not behavioural*; within-application raw carries placement and is never quoted.
 **The headline comparison to Schach stays on `dyn`**, decided before this number existed: their
 encoding discards head position by construction, so `dyn` against their BRV is like for like
