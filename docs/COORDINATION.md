@@ -892,3 +892,34 @@ flag is not dropped, and it costs one message.
 not ask me to lift it - it stated the constraint and proposed the compliant route. That is the
 correct handling, and the general form is: **a permission boundary on another node is a fact to
 design around, never something to ask a peer to bypass.**
+
+## From the Coordinator: Questset acquired, converted and propagated - 2026-09-16
+
+**On the user's explicit instruction** (download, preprocess, propagate to Miami, queue tests behind
+current work). Corpus at `processed_datasets/Questset/`: **60 identities, 120 sessions, 30 people per
+title, ~60 Hz, |q| = 1.0000, 687 MB.** Converter `prepare_questset.py`, certificates under
+`docs/acceptance/questset_*`.
+
+**LICENCE - read this before handling the files.** Questset is **CC BY 4.0**. None of the BOXRR-23
+DUA machinery attaches: no clause 4 distribution limit, no clause 15 destruction obligation, no
+cloud-storage prohibition. `CITATION.txt` travels with the corpus. **The converse matters equally**:
+this corpus's freedom must not leak onto BOXRR-derived files. Check which corpus a file came from.
+
+**Transfer**: AVALON served on `http://100.123.17.92:8765/` (the 2026-09-09 route - AVALON serves,
+Miami pulls; Taildrop cannot cross the tag boundary). Archive sha256
+`7c7e6c5e...4f35d7a2`, per-file manifest `questset_manifest_avalon.txt.gz` sha256 `749331c2...1a811677`,
+123 lines. **Verify per file, not by totals** - the BOXRR 191-byte delta is why. Server stops on
+Miami's confirmation.
+
+**Two traps recorded so nobody rediscovers them.** The identity key is **(group, order, user)**; the
+source's own `User` column runs 0..14 inside every (group, order) block, so keying on it alone merges
+**four** people into one identity. And the published schema at `signetlabdei/questset` says positions
+are "relative to initial position" - **they are absolute**, and I propagated that error to Miami
+before checking a file. Corrected at `94c2c77`.
+
+**Arms registered before the corpus reached Miami's disk**, nothing starting until Rack seed 1
+finishes (~2026-09-17 11:00) and its watcher reports: A1 zero-shot cross-application at matched N=17
+**and N=30** (band 0.15-0.40, falsifier below 0.10, outcomes partitioned); A2 group 2 as the clean
+behavioural arm against group 1 as contrast (`raw` minus `dyn` smaller on group 2); A3 the
+covered/uncovered control (Beat Saber is in our BOXRR pretraining, the other three titles are in
+nothing we hold).

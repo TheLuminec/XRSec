@@ -1,0 +1,138 @@
+{
+  "registered": [
+    "REGISTERED BEFORE RUNNING (2026-09-16, coordinator, AVALON), and it follows",
+    "directly from the posture result in questset_geometry.py:",
+    "",
+    "  Group 1 (Beat Saber / Cooking Simulator, both standing) preserves head",
+    "  height across the application change: P(within<between) 0.718, median",
+    "  per-person height change 0.051 m. Group 2 (Medal of Honor / Forklift",
+    "  Simulator, standing vs seated) destroys it: 0.493, median change 0.438 m,",
+    "  30/30 people moving more than 0.20 m.",
+    "",
+    "  PREDICTION. The y-only (height) lookup separates the two groups sharply:",
+    "    group 1 y-only rank-1 at N=30 is ABOVE 0.15 (chance = 1/30 = 0.033),",
+    "    group 2 y-only rank-1 at N=30 is AT OR NEAR CHANCE, below 0.10.",
+    "  FALSIFIER for the whole reading: group 2's y-only lookup lands above 0.15,",
+    "  which would mean the seated/standing shift does NOT destroy the height cue",
+    "  and that the geometry statistic was not measuring what it appears to.",
+    "",
+    "  Outcomes partition on group 2's y-only figure:",
+    "    below 0.10  -> prediction holds, height is posture-bound",
+    "    0.10-0.15   -> weakened, reported as \"reduced but not destroyed\"",
+    "    above 0.15  -> falsifier, the geometry reading is wrong and must be withdrawn",
+    "",
+    "  Note which outcome is the strong one: the FALSIFIER is, because a low",
+    "  group-2 figure is also consistent with \"the lookup is simply weak at N=30\".",
+    "  The contrast against group 1 on the same axis and the same code is what",
+    "  makes a low figure mean something, which is why both groups are run.",
+    "",
+    "Protocol, matched to this project's existing static table where possible:",
+    "gallery = per-user mean position over game A's windows; probe = individual"
+  ],
+  "window_s": 10.0,
+  "seed": 67,
+  "groups": {
+    "1": {
+      "games": [
+        "beat_saber",
+        "cooking_simulator"
+      ],
+      "n_users": 30,
+      "axes": {
+        "xyz": {
+          "17": {
+            "mean": 0.10763390417046409,
+            "a_to_b": 0.10296663140686604,
+            "b_to_a": 0.11230117693406215,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.07304322082606628,
+            "a_to_b": 0.07130965593784684,
+            "b_to_a": 0.07477678571428571,
+            "chance": 0.03333333333333333
+          }
+        },
+        "y only": {
+          "17": {
+            "mean": 0.15292635613243985,
+            "a_to_b": 0.19504945549005895,
+            "b_to_a": 0.11080325677482075,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.09228554334469637,
+            "a_to_b": 0.12486126526082131,
+            "b_to_a": 0.05970982142857143,
+            "chance": 0.03333333333333333
+          }
+        },
+        "xz only": {
+          "17": {
+            "mean": 0.054317357556721374,
+            "a_to_b": 0.050579738626314236,
+            "b_to_a": 0.05805497648712852,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.033955791927620105,
+            "a_to_b": 0.030244173140954494,
+            "b_to_a": 0.03766741071428571,
+            "chance": 0.03333333333333333
+          }
+        }
+      }
+    },
+    "2": {
+      "games": [
+        "medal_of_honor",
+        "forklift_simulator"
+      ],
+      "n_users": 30,
+      "axes": {
+        "xyz": {
+          "17": {
+            "mean": 0.0712137500462319,
+            "a_to_b": 0.06478191461970235,
+            "b_to_a": 0.07764558547276143,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.03300352040279337,
+            "a_to_b": 0.031005505650536076,
+            "b_to_a": 0.03500153515505066,
+            "chance": 0.03333333333333333
+          }
+        },
+        "y only": {
+          "17": {
+            "mean": 0.05885108070532692,
+            "a_to_b": 0.0657383336336259,
+            "b_to_a": 0.05196382777702794,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.03310343226149469,
+            "a_to_b": 0.03796001159084324,
+            "b_to_a": 0.028246852932146148,
+            "chance": 0.03333333333333333
+          }
+        },
+        "xz only": {
+          "17": {
+            "mean": 0.07437224468459588,
+            "a_to_b": 0.07603246901956792,
+            "b_to_a": 0.07271202034962386,
+            "chance": 0.058823529411764705
+          },
+          "30": {
+            "mean": 0.046307100227786585,
+            "a_to_b": 0.058533758330918575,
+            "b_to_a": 0.03408044212465459,
+            "chance": 0.03333333333333333
+          }
+        }
+      }
+    }
+  }
+}

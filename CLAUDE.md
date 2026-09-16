@@ -1760,6 +1760,35 @@ measurement.** "Height is the static cue that survives a change of application" 
 applications that are all played standing, and was stated without that qualifier. It is not a
 property of head height; it is a property of height *plus a posture that does not change*.
 
+**AND THE TRAINING-FREE LOOKUP CONFIRMS IT, WHICH MAKES QUESTSET A CORPUS WHERE THE STATIC BASELINE
+IS AT CHANCE.** Registered before running (band, falsifier and the partition, in
+`docs/acceptance/questset_static_lookup.py`): group 1's y-only lookup above 0.15 at N=30, group 2's
+at or near chance below 0.10, with the **falsifier being the informative outcome** because a low
+group-2 figure alone is also consistent with "the lookup is just weak here" - the contrast on the
+same axis and the same code is what gives it meaning. Mean-position lookup, 10 s windows, gallery =
+per-user mean over game A, probe = individual game B windows, both directions, per-axis standardised:
+
+| group | axis | N=17 (chance 0.059) | N=30 (chance 0.033) |
+| --- | --- | --- | --- |
+| 1 (both standing) | **y only** | **0.153** | **0.092** |
+| 1 | xyz | 0.108 | 0.073 |
+| 1 | xz only | 0.054 | 0.034 - chance |
+| 2 (standing/seated) | **y only** | **0.059 - chance** | **0.033 - chance** |
+| 2 | xyz | 0.071 | 0.033 - chance |
+| 2 | xz only | 0.074 | 0.046 |
+
+**Prediction held.** Height is the only static cue that does anything here, it does it only in group 1
+(2.6-2.8x chance), and in group 2 it is *exactly* chance to three decimals. Lateral is at chance in
+both, replicating Across-XR's 0.527 a second way - on this corpus placement carries nothing across an
+application boundary.
+
+**The consequence is worth more than the confirmation.** The largest training-free static figure
+anywhere in Questset is **0.153 at N=17**, against the 0.6-0.8 that placement carries *within* a
+sitting on the seated corpora. So **on Questset a cross-application model figure is behavioural by
+measurement rather than by assumption** - the thing `dyn` exists to guarantee, available here on
+`raw` as well. Group 2 is the strongest form of that (every static axis at chance) and group 1 the
+contrast case, inside one corpus and on one pipeline.
+
 **Two consequences.** Any `raw` cross-application figure on group 2 is measuring behaviour with the
 anthropometric cue already removed by the games themselves - which makes group 2 an unusually clean
 behavioural instrument and group 1 a contrast case, for free, inside one corpus. And **the lateral
