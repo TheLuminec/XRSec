@@ -2848,6 +2848,34 @@ falling series that ran `85.2 -> 42.7 -> 36.5 -> ... -> 4.84 s/batch` and was st
 early batches carry dataset construction and statistics computation, so a running mean read early
 overstates the steady state by **4-10x here**; the honest figure is 12-35 days rather than 124.
 
+**AND THE WATCHER THAT FIX PRESCRIBED WAS NEVER STARTED - THE CERTIFICATE SAYING SO WAS THE ONLY
+THING THAT EXISTED (Miami, 2026-09-16, self-reported under a direct question).** Amendment 7 ends
+"Watcher armed on both the done and `.failed` markers". **The sentence was written and the command
+was never run**; `pgrep` matched nothing but the query itself. So the fix for the four-day silent
+failure was, for five days, **a claim in a certificate with no process behind it** - and seed 1 of a
+36-hour run was live underneath it.
+
+**This is the completed form of a defect this file has been circling for a week.** A check can report
+a failure that is not real, a success it has not earned, or a success about nothing. This is the
+fourth: **a guard whose existence is asserted in the artefact that is supposed to prove it, where the
+guard's absence cannot contradict the claim.** Nothing in the certificate could ever have been
+falsified by the watcher not running, because the certificate *was* the evidence. The same amendment
+carries a second instance - a `| tee` pipeline whose exit status masked the crash it was meant to
+surface - so one document contained two guards that could not fail visibly.
+
+**What caught it was asking, and asking specifically.** The coordinator's queue-state message listed
+it as question 3 - *"is the `.failed` watcher actually running?"* - rather than accepting the
+amendment. **A peer's certificate is a claim like any other**, and this file's rule that "it was
+gated" and "there is a committed certificate that it was gated" are different claims now needs its
+third term: **and "there is a certificate" is not "the thing the certificate describes is running".**
+For anything that must be *live* rather than merely done, the artefact is a process, not a file -
+verify by inspecting the process, and record the pid.
+
+**Do not read this as a lapse of care.** Miami reported it against itself, unprompted beyond the
+question, and corrected it at origin as a correction rather than an edit. The failure mode is
+structural: **a durable artefact is the right answer for a completed check and the wrong answer for a
+running one**, and the project adopted the artefact rule without noticing the distinction.
+
 **A GATE IS EVIDENCE ABOUT THE PATH IT EXERCISES, AND A LIVE RUNNER IS NOT A SUCCEEDING JOB
 (Miami, 2026-09-15).** The full Rack 2023 run was enqueued on 2026-09-11 after the loss-trajectory
 gate passed bit-identical - and **crashed at minute 22**, the first time `validation_epoch_end`
