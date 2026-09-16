@@ -483,8 +483,8 @@ identifiable users has no stable target**, because the list changes with the sys
 
 **Status: EXPLORATORY. Not registered, not paired, not claimed.** It is a figure caption and a
 hypothesis. Before it is more, it needs registering in advance and a second corpus - and the
-second corpus is the part that does not exist yet, since Across-XR is the only fully crossed
-cross-application corpus we hold. **Do not let it into the abstract on the strength of one corpus
+second corpus **now exists and is being acquired** - see the correction below. *(Written when
+Across-XR was believed to be the only cross-application corpus available; Questset supersedes that.)* **Do not let it into the abstract on the strength of one corpus
 and a post-hoc correlation**, which is precisely the shape this file has been burned by before.
 
 ### The ensemble corollary FAILED, and "uncorrelated" was too strong (coordinator, 2026-09-15)
@@ -543,7 +543,8 @@ nobody can check later, and because the answer shapes what gets written next.
 
 **Short answer: yes, and without much hedging.** The result set is complete and coherent. The
 binding constraint on strengthening it further - a second fully crossed cross-application corpus -
-**does not exist**, so waiting is waiting indefinitely.
+**did not exist at the time of writing**. **That changed on 2026-09-16** - see the correction
+immediately below - but the recommendation to write now is unchanged, and the reason is given there.
 
 ### What this work has that the field's norm does not
 
@@ -598,3 +599,40 @@ proposed fix closed with a mechanism; and the per-user distribution as a metric 
   published, or a privacy venue if the risk-assessment framing leads. **One thing this file cannot
   assess is how much novelty the user's specific programme expects of a first paper** - that is a
   question for the advisor, asked with this result set in front of them.
+
+
+## CORRECTION 2026-09-16: a second cross-application corpus exists, and it is being acquired
+
+**Twice above, this file says the second corpus needed to firm up the per-user finding "does not
+exist". That is now false.** The user found **Questset** (Padova, MMSys '24, CC BY 4.0, 3 GB,
+60 complete users, four commercial titles two per user). Full assessment in
+`docs/DATASET_CATALOGUE.md`; downloaded and converted on AVALON 2026-09-16 under the user's explicit
+instruction, and propagated to Miami for cross-application arms queued **behind** its current work.
+
+**The error is mine and it is the familiar one.** "No second corpus exists" was an inference from
+*our own catalogue's coverage*, stated as a fact about the world. The catalogue had searched for
+AR-glasses corpora and for identity count; it had never searched for *two applications per user under
+a permissive licence*, which is the property this paper actually needs. **A negative search result is
+scoped to the query that was run**, and this one was quoted well outside its scope - including to the
+user, in an assessment of whether the work was publishable.
+
+**What changes, and what does not.**
+
+| claim | status |
+| --- | --- |
+| "a second cross-application corpus does not exist" | **WITHDRAWN** |
+| "Across-XR is the only **fully crossed** cross-application corpus" | **STANDS** - Questset gives each user 2 of 4 titles in disjoint groups, so it is two 2-application corpora of ~30 users, not a crossed design |
+| "no temporal persistence anywhere in our corpora" | **STANDS** - Questset is one sitting per user, one session per game |
+| the recommendation to **write the paper now** | **STANDS** |
+
+**Why the recommendation is unchanged.** Questset makes the per-user rank-disagreement hypothesis
+*testable*, which is exactly what it needed - but a hypothesis that needs registering in advance and
+then testing is follow-up work, not a reason to hold a finished result set. **The right move is to
+write the paper on Across-XR and register the Questset prediction before the arms run**, so the
+replication is a real test rather than a search. If it lands before submission it strengthens the
+paper; if it does not, nothing is lost.
+
+**One genuine gain for the paper as it stands**, independent of the hypothesis: Questset supplies a
+**second gallery size**. Every interval we report is limited by N=17, and the reviewer attack we
+already expect is exactly that. The same contrast at N=30, and matched at N=17, answers it with data
+rather than with an argument about corpus scarcity.
