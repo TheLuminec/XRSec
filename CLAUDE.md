@@ -1701,6 +1701,62 @@ Getting any *other* new dataset to that layout is still the weakest link:
 - That directory does not exist on `main` and neither does any parser — the eight working parsers were removed in commit `6421567` ("Data seperation") and survive only in git history (`git show normalization:datasets/<name>/parser.py`; the `normalization` branch is an ancestor of `main`, not pending work).
 - `formatter.py`'s output path (`datasets/<name>/processed_data/users/`) does not match where the model reads from (`processed_datasets/<name>/users/`), so onboarding a dataset ends with a manual move.
 
+### Questset: the second cross-application corpus, and it is CC BY 4.0 rather than a DUA corpus
+
+Acquired 2026-09-16 on the user's explicit instruction. Padova, MMSys '24
+(doi:10.1145/3625468.3652187); data at `researchdata.cab.unipd.it/1239/`, schema and API at
+`github.com/signetlabdei/questset`. **60 complete users** of 70 recruited (10 withdrew to
+cybersickness), **four commercial titles, two per user by group**: group 1 Beat Saber + Cooking
+Simulator, group 2 Medal of Honor: Above and Beyond + Forklift Simulator. Full assessment in
+`docs/DATASET_CATALOGUE.md`.
+
+**THE LICENCE IS THE FIRST THING TO GET RIGHT, IN BOTH DIRECTIONS.** Questset is **CC BY 4.0**.
+None of the BOXRR-23 DUA machinery attaches to it: no clause 4 distribution limit, no clause 15
+destruction obligation reaching `.cache/samples/`, no cloud-storage prohibition, no ethics
+precondition. **Attribution is the entire requirement**, and `CITATION.txt` travels with the
+converted corpus. The converse matters just as much: **applying Questset's freedom to BOXRR-derived
+data would breach a signed agreement**, so the two corpora must not be reasoned about as one class
+of thing. Check which corpus a file came from before deciding what may be done with it.
+
+**Three corpus facts to build around rather than rediscover.**
+
+1. **Positions are recorded RELATIVE TO EACH SESSION'S INITIAL POSITION.** Absolute placement *and*
+   absolute head height are gone by construction. Consequence: **do not run the `raw` static-cue
+   audit here** - there is no absolute height to find, so a null would be a fact about the recording
+   rather than about anthropometry, and reporting it as the latter would be wrong. `dyn` is
+   unaffected, because it removes the same cues itself. This makes Questset unusually clean for a
+   behavioural claim and useless for an anthropometric one.
+2. **One sitting per user, one session per game.** There is **no temporal separation**, so Questset
+   cannot pay the cross-session cost and says nothing about persistence across days. It does **not**
+   close that gap, which the whole corpus still has. *(An earlier reading of the 2023-06 to 2024-01
+   collection window as "sessions across different days" was wrong - that is the period over which
+   all 70 users were recorded, not a per-user structure. Read the schema, not the summary line.)*
+3. **It is NOT fully crossed.** Each user plays 2 of 4 titles and the groups are disjoint, so it is
+   two 2-application corpora of ~30 users. **Across-XR remains the only fully crossed corpus**, and
+   Questset gives 2 ordered cross-application cells per user against Across-XR's 20.
+
+**The conversion trap, and it is the who-is-alyx one again.** The source columns are
+`HeadOrientationW/X/Y/Z` - **scalar FIRST**. This pipeline uses x,y,z,w. Read by name and reorder;
+never by position. `prepare_questset.py` checks mean |q| after reordering, because a silent
+reordering produces a plausible-looking rotation rather than an error.
+
+**What it is for.** A second corpus for the cross-application contrast, and - the reason it was
+acquired - **a second gallery size**. Every interval in the paper is limited by Across-XR's 17 test
+users; Questset supplies ~30 per group, so the same contrast can be reported at matched N=17 and at
+N=30. **Beat Saber is in our BOXRR pretraining and the other three titles are in nothing we hold**,
+so it carries a covered/uncovered control for free - the structure that made P3's Synth Riders
+result stand.
+
+**The existing identification paper on this corpus is not a competitor, and the difference is the
+protocol.** Baldoni et al., arXiv:2501.16326, report >95% within-game on Beat Saber and Forklift and
+<0.30 cross-game at N=30 - with **test users SEEN during training** (first 8 minutes train, next 2
+test, within participant) and head **plus both controllers**. That is a different quantity from ours,
+not an inflated one: it measures recognising a known enrolled user, where we measure generalisation
+to people never seen. This file already prices the gap on our own history - our lineage's seen-user
+number was 0.836 against 0.62-0.67 leave-users-out on identical code. **Their cross-game figure is
+useful to us precisely because their protocol is more favourable than ours in two ways at once and
+the collapse still happens** - independent corroboration from a group with no stake in our framing.
+
 ### Data condition (audited)
 
 | dataset | users | native Hz | notes |
