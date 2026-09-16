@@ -11,8 +11,8 @@ they are dated, they have falsifiers, and they were written before any of the ru
 | 1. public dataset | **DONE** - Across-XR, 49 users x 5 applications, CC BY-NC-SA 4.0, converted and on three machines |
 | 2. SOTA work: run their code, understand the story | **paper obtained and read; their two models' code obtained; their own wrapper repo is auth-gated** (see Blocked) |
 | 3. evaluation metric | **defined below**, matched to theirs, with one addition of our own |
-| 4. our algorithm | `dyn` + `identity_softmax`, head-only, **plus train-user-only orthogonal embedding alignment** - see "The algorithmic contribution" below. Unrun |
-| 5. beat SOTA | **the target is 18.0% and it is written down before we run** |
+| 4. our algorithm | **`dyn` + `identity_softmax`, head-only, 10 s windows, with exposure to the corpus's *other* participants.** The orthogonal-alignment component was registered, run and **closed negative** - it never resolvably carries on `dyn`, and the corpus caps the correspondences at 32. Reported as a finding, not dropped |
+| 5. beat SOTA | **DONE for the exposed arm, on their people, under their metric** - C2-lo +0.119 [+0.050, +0.192] against their 0.180, gate bit-exact. Zero-shot is **UNRESOLVED** and is reported as such |
 
 ## The SOTA: Schach, Rack, McMahan, Latoschik 2026 (Frontiers in VR, doi:10.3389/frvir.2026.1743491; preprint arXiv:2509.08539)
 
@@ -368,3 +368,59 @@ is the primary metric in the write-up, whichever way the secondary falls.**
 
 Both rows stay **PROVISIONAL** until their calculator reproduces the JSON from the pickle; nothing
 here is a certificate and nothing is relayed to the user as settled.
+
+## SETTLED (2026-09-15): the paired comparison, no longer provisional
+
+The calculator gate **passed bit-exact** and supersedes every "provisional" label above.
+Certificates on `origin/main`: `docs/acceptance/schach_release_gate.json`, `schach_paired.json`.
+
+**What the gate established, in the order the chain runs.** Their `embeddings.pkl` hashes equal on
+two machines (`42a668ac...`); `pickletools` lists 11 globals, all numpy/pandas/builtins, loaded
+through a whitelisting `Unpickler`; the pickle's **463,996** embeddings equal
+`len(range(0, rows-450, 5))` summed over the released test CSVs in all **85** (user, application)
+cells; and their `MotionAccuracyCalculator`, run verbatim on their embeddings, reproduces **every**
+per-class `precision_at_1` and ten-minute list in all 35 cells at **max absolute difference 0.0**.
+
+**Verified independently here (coordinator, from the CSVs alone, different implementation):** 85
+cells, **463,996** windows, and **17 distinct per-user count vectors**. The last is the load-bearing
+one - it is what makes `label i = user 32+i` a *reconstruction* rather than an assumption, because
+each user's five-application window-count fingerprint is unique.
+
+**Results, paired per user on their 17 test users, bootstrap over users.** D1 = our embeddings
+through their metric; D2 = their embeddings through ours.
+
+| contrast | registered | measured | outcome |
+| --- | --- | --- | --- |
+| zero-shot - theirs, **their** metric | UNRESOLVED | +0.025 [-0.031, +0.080] (0.206 vs 0.180), 10/17 users | **UNRESOLVED** |
+| **C2-lo - theirs, their metric** | BEAT +0.08..0.20 | **+0.119 [+0.050, +0.192]** (0.299 vs 0.180), 15/17 | **BEAT** |
+| zero-shot - theirs, **our** metric | UNRESOLVED | +0.035 [-0.050, +0.122] (0.234 vs 0.199), 10/17 | **UNRESOLVED** |
+| **C2-lo - theirs, our metric** | BEAT +0.05..0.17 | **+0.176 [+0.092, +0.260]** (0.375 vs 0.199), 16/17 | **BEAT** |
+
+Ten-minute, secondary and reported beside: C2-lo **+0.355 [+0.202, +0.499]** (their sequence metric)
+and **+0.423 [+0.293, +0.546]** (our vote), BEAT under both; zero-shot unresolved under both. Per
+cell, C2-lo beats resolvably in **11 of 20** ordered cells and **loses none**; zero-shot beats in 3
+and loses none.
+
+**THE SENTENCE THE PAPER CAN CARRY.** *Zero-shot against their model on their own people is
+unresolved under both metrics, and 17 users cannot resolve a +0.05. Exposure to the corpus's other
+participants, plus 4,096 identities, beats their released similarity model on their people, under
+their metric and ours, single-window and ten-minute - head-only against head plus both controllers,
+and 10 s against 15 s.* **Neither asymmetry qualifies the unresolved contrast**: they are stated
+where we win, not borrowed as an excuse where we do not.
+
+**A REGISTERED MECHANISM FAILED and is recorded as a failure, not folded into the beat.** New Gen
+registered that template averaging would lift their embedding into 0.20-0.32 under our metric, from
+the BOXRR k-curve argument. It lifts their model by **+0.019 only** (0.180 -> 0.199), against +0.028
+for our zero-shot and +0.076 for C2-lo, so the level band is missed at its lower edge by **0.001**.
+Two readings, and the second is the useful one: the miss is an edge and is **not argued** - the same
+treatment this file gave the 0.001 near-miss that went in our favour - and **the averaging gain is
+model-specific**, costing their nearest-reference embedding almost nothing while buying ours
+0.03-0.08. That is a mechanism worth a sentence in the paper, and it was found by registering a
+prediction that then failed.
+
+**Two edges, both declared rather than argued.** Their model under our metric lands 0.001 below the
+registered band; C2-lo under our metric lands 0.006 past its upper edge. Neither is claimed as the
+band holding or failing.
+
+**What is still NOT compared:** their 0.831 is never paired with our A0 (self-match, see above);
+their 0.180 is clean and is what everything above is paired against.
