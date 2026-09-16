@@ -2860,6 +2860,29 @@ fixture whose answer is known by construction** - here, synthetic users separate
 which must return 1.000 and did, with an `assert` on it. One inverted comparison would have
 put a backwards conclusion about the newest corpus into this file on its first day.
 
+**SECOND INSTANCE, ON A CORPUS COUNT, AND IT ADDS THE OTHER HALF OF THE RULE (Miami, 2026-09-16).**
+Miami reported four high-rate Questset sessions across two identities; it is **five across three**.
+The cause was a **truncated view** - `tail -18` cut the 116 Hz row off the table it was counting from
+- and it is their third count read off truncated output. **But the contradiction was already in their
+own message**: the same report printed a gate line reading `native rate max 116.0` beside an outlier
+list containing no 116 Hz row. A summary and its own detail disagreed on screen and neither was read
+against the other.
+
+So the rule has two halves and only the first was written down. **Read a summary against the detail
+printed beside it** - that is what caught the inverted P above, by medians that contradicted the
+statistic over them. And **compute a count independently of the rows you are displaying**, because a
+view is a claim about the data like any other: `head`, `tail` and a `LIMIT` all silently change the
+answer to "how many are there?", and the count that matters is never the one you can see. Cheap
+enough to be free; both these instances cost nothing to catch and were missed anyway.
+
+**The refinement that came out of it is worth more than the count.** Five sessions at ~112-116 Hz sit
+against a corpus otherwise at **59.93 +-0.28 Hz**, which makes them a *separate population* rather
+than a tail - the distinction that turns them from noise into something registrable. And one of the
+three, `g1o2u07`, holds a **59.9 Hz session and a 114.0 Hz session**, so for that single identity a
+cross-application arm draws gallery and probe at different native rates: **the only identity in the
+corpus whose own pair is not internally comparable**, and the only place resampling acts *within* a
+person rather than between them.
+
 **Two guards that would have failed open, on Windows specifically.** Both were written to
 protect the same chain and both were verified only after being challenged:
 
