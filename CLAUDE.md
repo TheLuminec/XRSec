@@ -1796,6 +1796,28 @@ measurement.** "Height is the static cue that survives a change of application" 
 applications that are all played standing, and was stated without that qualifier. It is not a
 property of head height; it is a property of height *plus a posture that does not change*.
 
+**"All five Across-XR applications are played standing" was an inference when first written here, and
+is now a measurement (2026-09-16).** It had already travelled - into a registration note and a
+certificate correction - before anyone checked it, so it was checked before merging those. Per-game
+mean head height over all 49 users:
+
+| application | mean head y | min | max |
+| --- | --- | --- | --- |
+| superhot_vr | 1.533 | 1.344 | 1.700 |
+| half_life_alyx | 1.556 | **1.214** | 1.709 |
+| beat_saber | 1.583 | 1.421 | 1.736 |
+| social_vr | 1.594 | 1.451 | 1.752 |
+| synth_riders | 1.606 | 1.447 | 1.756 |
+
+Every application sits at **standing** height, against a seated reference of ~1.15 m (Questset
+Forklift). Per-person span across all five: **median 0.068 m** - independently reproducing the
+0.068 m this file already recorded from the geometry pass. **So the claim holds of the applications.
+It is not quite true of every person**: **2 of 49** shift by more than 0.20 m (max 0.363 m), and one
+participant sits at 1.214 m in Half-Life: Alyx, which supports seated play and has a crouch. Against
+Questset group 2's **30 of 30**, the contrast is stark and the reading stands - but the precise
+sentence is *"played standing by the population, with two individual exceptions"*, and a claim about
+applications should not be read as a claim about every participant in them.
+
 **AND THE TRAINING-FREE LOOKUP CONFIRMS IT, WHICH MAKES QUESTSET A CORPUS WHERE THE STATIC BASELINE
 IS AT CHANCE.** Registered before running (band, falsifier and the partition, in
 `docs/acceptance/questset_static_lookup.py`): group 1's y-only lookup above 0.15 at N=30, group 2's
