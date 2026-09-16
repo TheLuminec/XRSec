@@ -45,18 +45,30 @@ def sha256(path: pathlib.Path) -> str:
 
 
 def scan_globals(data: bytes) -> dict[str, int]:
+    """Every global the pickle names (first occurrences; later uses are memo gets). STACK_GLOBAL
+    takes module and name from the stack, which may be memo GETs of earlier strings, so the
+    string pushes and the memo are followed rather than the last two literal strings."""
     globs: collections.Counter = collections.Counter()
-    last: list[str] = []
+    pushed: list[str] = []          # string-valued pushes, in order
+    memo: dict[int, str] = {}
+    n_memo = 0
     for op, arg, _ in pickletools.genops(io.BytesIO(data)):
-        if op.name in ("SHORT_BINUNICODE", "BINUNICODE", "UNICODE", "STRING", "SHORT_BINSTRING", "BINSTRING"):
-            last.append(arg)
-            last = last[-2:]
+        if op.name in ("SHORT_BINUNICODE", "BINUNICODE", "BINUNICODE8", "UNICODE", "STRING", "SHORT_BINSTRING", "BINSTRING"):
+            pushed.append(arg)
+        elif op.name == "MEMOIZE":
+            memo[n_memo] = pushed[-1] if pushed else "?"
+            n_memo += 1
+        elif op.name in ("BINPUT", "LONG_BINPUT", "PUT"):
+            memo[int(arg)] = pushed[-1] if pushed else "?"
+        elif op.name in ("BINGET", "LONG_BINGET", "GET"):
+            pushed.append(memo.get(int(arg), "?"))
         elif op.name == "STACK_GLOBAL":
-            globs[" ".join(last)] += 1
+            globs[" ".join(pushed[-2:])] += 1
         elif op.name == "GLOBAL":
             globs[arg] += 1
         elif op.name in ("INST", "OBJ"):
             globs[f"{op.name} {arg}"] += 1
+        pushed = pushed[-64:]
     return dict(globs)
 
 

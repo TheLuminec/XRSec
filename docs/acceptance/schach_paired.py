@@ -259,7 +259,7 @@ def main() -> int:
     for arm in REGISTERED:
         diff = np.array(arms[arm]["D2"]["per_user"]) - theirs_d2
         iv = interval(diff, rng)
-        seq_diff = np.mean([np.array(v["D2_seq10_per_cell_user"]).mean(axis=0) for k, v in arms[arm].items() if k.startswith("seed")], axis=0) - d2t["seq10"].mean(axis=0)
+        seq_diff = np.mean([np.array(v["D2_seq10_per_cell_user"]).mean(axis=0) for k, v in arms[arm].items() if k.startswith("seed") and isinstance(v, dict)], axis=0) - d2t["seq10"].mean(axis=0)
         arms[arm]["vs_theirs_D2"] = {"paired": iv, "outcome": outcome(iv), "per_user_diff": diff.tolist(),
                                      "won_users": int((diff > 0).sum()),
                                      "seq10_paired": interval(seq_diff, rng), "seq10_outcome": outcome(interval(seq_diff, rng))}
