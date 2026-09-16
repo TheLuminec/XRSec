@@ -700,3 +700,73 @@ extrapolated per step. That supersedes the per-step band for budgeting:
 
 Direct and complete, but still **one** epoch, so quoted as ~21.5 min rather than as a band until
 more epochs exist.
+
+---
+
+# AMENDMENT 7 — 2026-09-15: pml pinned, extended gate GREEN, seed 1 launched
+
+## The pin, verified against their call rather than assumed
+
+`pytorch-metric-learning==1.7.3` (last 1.x). Its signature is their call, positionally:
+
+```
+pml 1.7.3:   get_accuracy(self, query, reference,    query_labels, reference_labels, embeddings_come_from_same_source, ...)
+their call:               get_accuracy(query_emb,    reference_emb, query_y,      reference_y, embeddings_come_from_same_source=False)
+pml 2.3.0:   get_accuracy(self, query, query_labels, reference,    reference_labels, ref_includes_query, ...)
+```
+
+`_get_accuracy(self, function_dict, **kwargs)` is unchanged between the versions, so their
+`MotionAccuracyCalculator` overrides still fit. `ArcFaceLoss` is present and takes
+`margin`/`scale` with `**kwargs`, absorbing the `num_classes`/`embedding_size`/`weight_reg_weight`
+their config passes.
+
+**Then the exact crashed call was executed** under the pin, with the synthetic set sized past
+13,500 samples per class so the 15-minute sequence metric is genuinely reached rather than
+skipped: 25 metrics returned, `sequence_top_1_accuracy_5_mins` present and in range. That fixture
+reads 1.0 because its clusters are well separated — it proves the path executes, **not** that the
+metric is correct on real data.
+
+## Extended gate: GREEN, on evidence that cannot be faked by a log
+
+One real epoch, full validation, `validation_epoch_end` executed:
+
+| | |
+|---|---|
+| `sequence_top_1_accuracy_5_mins/validation/mean` | **0.15564862451000122** |
+| `loss_train` | 16.880623 |
+| epoch / global_step | 0 / **2500** |
+| checkpoints written | **9 — one per monitored metric** |
+
+**The proof is the artefact, not the log.** `checkpoints/epoch_000_sequence_top_1_accuracy_5_mins.ckpt`
+can only exist if that metric was logged — a `ModelCheckpoint` monitoring an absent metric raises
+`MisconfigurationException`, which is precisely how an earlier smoke attempt failed. Grepping the
+log found nothing because wandb truncates its summary to "+93 more"; the file is stronger evidence
+than the text.
+
+**0.1556 against chance 1/9 = 0.111** at epoch 0 on the 9 validation subjects is a sane starting
+point: not 1.0, which would suggest leakage, and not 0, which would suggest broken plumbing.
+`global_step 2500` independently confirms 2,500 train batches per epoch.
+
+## A false-pass I introduced while fixing the monitoring gap
+
+The gate job was written as `python run.py ... 2>&1 | tee LOG`. **A pipeline's exit status is the
+last command's**, so `tee` succeeding masks a Python crash. Verified in both directions:
+
+```
+bash -c 'false > /dev/null 2>&1'            -> 1   (redirect preserves status)
+bash -c 'false 2>&1 | tee /dev/null'        -> 0   (pipe MASKS status)
+```
+
+So the gate's `rc=0` was **not** evidence of success — it happened to succeed. **The fix for a
+monitoring gap contained a fresh instance of the same class of defect**: a guard whose failure
+mode is to pass. Seed 1 uses `> LOG 2>&1` instead.
+
+## Seed 1 launched
+
+`seed=42`, `max_epochs=100`, `NUM_WORKERS` at their default 6, `WANDB_MODE=offline`. Budget from
+the measured complete epoch of 21.5 min: **~36 h**, against their config's shipped
+`max_epochs: 500` (~7.5 days). Staged deliberately — one seed answers whether the port reproduces
+the published curve (99 / 89 / 25, ordering and dynamic range) at all; seeds 2–3 are enqueued only
+if it does, rather than spending three more days on a broken port.
+
+Watcher armed on **both** the done and `.failed` markers.
