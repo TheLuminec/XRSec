@@ -885,7 +885,12 @@ records. Paired on the same 17 users:
 | | `raw` | `dyn` | delta |
 | --- | --- | --- | --- |
 | cross-application A1 | **0.351** (0.364/0.353/0.335) | 0.234 | **+0.117** [+0.042, +0.192] |
-| within-application A0 | 0.730 | 0.500 | +0.223 - larger, so the placement reading holds |
+| within-application A0 | **0.723** (0.730 / 0.732 / 0.707) | 0.500 | +0.223 [+0.184, +0.263] - larger, so the placement reading holds |
+
+*The A0 cell read **0.730** here until 2026-09-16 - that is seed 1 alone, printed beside a
+three-seed difference. The three-seed mean is 0.723 (`across_xr_alignment_RESULTS.md`), and 0.723 -
+0.500 is the +0.223 already in the row, so the row was internally inconsistent: a level from one seed
+beside a delta from three. Caught by the progress-report pass.*
 | verification AUC on the 17 | 0.704-0.733 | | against a recorded-position lookup of 0.585-0.598 |
 
 **Epoch 1 is the finding, not a caveat on it.** A model one epoch from initialisation reaching
@@ -1835,10 +1840,32 @@ per-user mean over game A, probe = individual game B windows, both directions, p
 | 2 | xyz | 0.071 | 0.033 - chance |
 | 2 | xz only | 0.074 | 0.046 |
 
-**Prediction held.** Height is the only static cue that does anything here, it does it only in group 1
-(2.6-2.8x chance), and in group 2 it is *exactly* chance to three decimals. Lateral is at chance in
-both, replicating Across-XR's 0.527 a second way - on this corpus placement carries nothing across an
-application boundary.
+~~**Prediction held.**~~ **HALF HELD, AND I SCORED ONLY THE HALF THAT DID - corrected 2026-09-16, caught
+by the progress-report pass.** The registration made two level predictions: group 2 height-only
+*below 0.10* at N=30, and group 1 height-only ***above 0.15*** at N=30. Group 2 read **0.033** - held.
+**Group 1 read 0.092 - the registered level was NOT reached.** It clears 0.15 only at N=17 (0.153), and
+the registration named N=30. I wrote "Prediction held" because the script's verdict line scored group 2
+alone, and I read that line rather than the registration.
+
+**It is also the partition defect again, in my own registration.** The band/falsifier partition was
+written for group 2's line only ("below 0.10 holds / 0.10-0.15 weakened / above 0.15 falsifier"), so
+group 1's band had **no named outcome for landing below it** - and it landed below it. The rule this
+file carries says to do the subtraction for every registered band and name the region between; I did
+it for one of the two bands in the same registration.
+
+**What survives is real and is smaller than what I wrote.** Height remains the only static cue with any
+signal here, and the groups still separate on it - group 1 at **2.8x chance** (0.092 vs 0.033) against
+group 2 at **exactly chance** - which is the contrast the posture reading rests on, and the geometry
+statistic (0.718 vs 0.493) supports it independently. But the *size* registered for group 1 was not
+met: a same-posture height cue cross-application is weaker than I predicted, not merely present.
+**Report it as "group 2 at chance as predicted; group 1 above chance but below its registered level".**
+Lateral is at chance in both, replicating Across-XR's 0.527 a second way - on this corpus placement
+carries nothing across an application boundary.
+
+**The general lesson is about where a verdict is read from.** A script that prints a one-line verdict
+invites reading that line instead of the registration it is meant to score, and **a verdict computed
+on part of a registration reports a pass for the whole of it.** This is the fixture rule's cousin: the
+check was correct about what it checked, and was silently narrower than the claim it was quoted for.
 
 **The consequence is worth more than the confirmation.** The largest training-free static figure
 anywhere in Questset is **0.153 at N=17**, against the 0.6-0.8 that placement carries *within* a

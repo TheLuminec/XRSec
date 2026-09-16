@@ -300,9 +300,12 @@ placement caveat.
 **Quaternion is scalar-first** (`HeadOrientationW,X,Y,Z`), reordered to this
 pipeline's x,y,z,w by name. `|q|` cannot validate that -- the norm is
 invariant to permutation -- so the check used was this project's invariant:
-device local +Y rotated into world lands at **+0.968** on the up axis over
-all 60 people, matching the ~0.95 every other dataset reads, which also
-confirms Y-up and no axis remap.
+device local +Y rotated into world lands at **+0.934** on the up axis over
+all 120 sessions, matching the ~0.95 every other dataset reads, which also
+confirms Y-up and no axis remap. Per title: beat_saber 0.984,
+medal_of_honor 0.950, forklift_simulator 0.938, **cooking_simulator 0.866**
+(a game of looking down and reaching). The invariant spans 0.12, so quote
+the per-title figure rather than the pooled one.
 
 ## Not converted
 

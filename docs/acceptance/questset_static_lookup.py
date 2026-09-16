@@ -154,13 +154,29 @@ def main():
 
     (Path(__file__).parent / "questset_static_lookup.json").write_text(json.dumps(results, indent=2))
 
-    print("\nVERDICT against the registration (group 2, y only, N=30):")
+    # Score EVERY registered band, not only the one the falsifier is written on.
+    # The first version of this block scored group 2 alone and printed a single
+    # verdict, which was then read as the verdict for the whole registration --
+    # while group 1's registered level had in fact been missed (2026-09-16).
     g2y = results["groups"]["2"]["axes"]["y only"][30]["mean"]
     g1y = results["groups"]["1"]["axes"]["y only"][30]["mean"]
-    verdict = ("FALSIFIER FIRED - withdraw the geometry reading" if g2y > 0.15 else
-               "weakened, report as reduced but not destroyed" if g2y >= 0.10 else
-               "prediction HOLDS - height is posture-bound")
-    print(f"  group 1 y-only {g1y:.3f}   group 2 y-only {g2y:.3f}   -> {verdict}")
+    g2_verdict = ("FALSIFIER FIRED - withdraw the geometry reading" if g2y > 0.15 else
+                  "weakened - reduced but not destroyed" if g2y >= 0.10 else
+                  "HELD - at chance as predicted")
+    g1_verdict = ("HELD - above the registered 0.15" if g1y > 0.15 else
+                  "NOT MET - above chance but below the registered 0.15")
+    whole = "HELD" if (g1y > 0.15 and g2y < 0.10) else "PARTIAL - see both lines"
+    results["verdict"] = {
+        "group_1_y_only_N30": {"value": g1y, "registered": "> 0.15", "verdict": g1_verdict},
+        "group_2_y_only_N30": {"value": g2y, "registered": "< 0.10", "verdict": g2_verdict},
+        "whole_registration": whole,
+    }
+    (Path(__file__).parent / "questset_static_lookup.json").write_text(json.dumps(results, indent=2))
+
+    print("\nVERDICT against the registration - BOTH bands, y only, N=30:")
+    print(f"  group 1  {g1y:.3f}  registered > 0.15  -> {g1_verdict}")
+    print(f"  group 2  {g2y:.3f}  registered < 0.10  -> {g2_verdict}")
+    print(f"  whole registration: {whole}")
     print("  (y-only is scale-invariant, so standardised and raw-metre values coincide.)")
 
 

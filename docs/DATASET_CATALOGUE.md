@@ -810,7 +810,7 @@ thing that would strengthen the paper - a **second cross-application corpus** - 
 | controllers | present (`LeftTouch*`, `RightTouch*`) - irrelevant to us by scope, neither benefit nor cost |
 | sessions | **one per game, one sitting** - see the correction below |
 | duration | at least 10 min per game, 40+ h total |
-| position frame | **"relative to initial position"** - see the consequence below |
+| position frame | **ABSOLUTE** (head Y 1.354-1.765 m) - the published schema says "relative to initial position" and is wrong; see below |
 
 **TWO CORRECTIONS TO MY OWN FIRST READING, both the same error.** I read the collection window
 (2023-06-16 to 2024-01-17) as **"multiple sessions across different days" per user**. It is the
@@ -823,13 +823,26 @@ and any claim that this corpus adds cross-day evidence would be false. Both erro
 shape this file warns about throughout: **structure inferred from a summary line rather than read
 off the schema.**
 
-**The position frame is a real difference and it cuts in our favour.** Positions are recorded
-**relative to each session's initial position**, so absolute placement *and* absolute head height
-are gone by construction. Consequences: our **P2 `raw` static-cue audit cannot be reproduced here**
-(there is no absolute height to find, so a null would be about the recording, not about anthropometry
-- state this rather than run it and report a null); and **our `dyn` headline is unaffected**, because
-`dyn` removes the same cues itself. Questset is therefore a corpus where the static cue was removed
-by the *recorders*, which makes any behavioural claim on it unusually clean.
+~~**The position frame is a real difference and it cuts in our favour.** Positions are recorded
+relative to each session's initial position...~~ **WITHDRAWN 2026-09-16 - the published schema is wrong
+and this paragraph repeated it.** Assessed from `signetlabdei/questset`'s documentation before the data
+was fetched; the files say otherwise. **The HMD track is absolute**: mean head Y 1.354-1.765 m across
+the 60 people (median 1.593), the first row of every file at real head height rather than 0, lateral
+means spread at sd ~0.56 m. So **the `raw` static-cue audit IS applicable here**, and every `raw`
+Questset figure carries the usual placement caveat.
+
+**And the static cue turned out to be posture-dependent, which is better than "absent".** Measured
+after conversion (`docs/acceptance/questset_geometry.py`): head height is preserved across Beat Saber /
+Cooking Simulator (both standing, P = 0.718) and **destroyed** across Medal of Honor / Forklift
+Simulator (standing vs seated, P = 0.493, chance - 30 of 30 people drop ~0.44 m). **Group 2 is
+therefore a corpus where the static cue was removed by the *games***, which is what this paragraph
+wrongly attributed to the recorders - and group 1 is its contrast. See CLAUDE.md for both results
+and for a correction to the lookup scoring.
+
+**This withdrawal was late, and that is the lesson.** It was corrected in CLAUDE.md, the converter
+and `PROVENANCE.md` the same night, and **missed here** until a later read-through found this
+paragraph still saying the opposite. A correction reaches the places it was carried to, not the
+places the error lives; `grep` for the claim before calling it corrected.
 
 ### The existing identification paper is NOT a competitor, and the reason is the protocol
 
@@ -887,7 +900,7 @@ corroboration of the collapse our paper is about, from a group with no stake in 
   only fully crossed corpus**, and that sentence in `PAPER_PLAN.md` stays true as written.
 - **Two ordered cross-application cells per user**, against Across-XR's twenty. Far fewer
   quasi-replications inside the corpus.
-- **No `raw` static-cue audit** - the recorders removed the cue.
+- ~~**No `raw` static-cue audit** - the recorders removed the cue.~~ **Withdrawn**: positions are absolute, the audit applies, and the static cue splits on posture (see above).
 
 **Cost:** 3 GB, CC BY 4.0, direct download, **no agreement to sign, no account, no request**. The
 cheapest acquisition ever assessed in this file, and the only one that addresses a constraint the

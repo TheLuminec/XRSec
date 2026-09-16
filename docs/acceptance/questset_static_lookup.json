@@ -134,5 +134,18 @@
         }
       }
     }
+  },
+  "verdict": {
+    "group_1_y_only_N30": {
+      "value": 0.09228554334469637,
+      "registered": "> 0.15",
+      "verdict": "NOT MET - above chance but below the registered 0.15"
+    },
+    "group_2_y_only_N30": {
+      "value": 0.03310343226149469,
+      "registered": "< 0.10",
+      "verdict": "HELD - at chance as predicted"
+    },
+    "whole_registration": "PARTIAL - see both lines"
   }
 }
