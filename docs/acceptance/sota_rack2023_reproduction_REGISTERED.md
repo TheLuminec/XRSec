@@ -781,3 +781,94 @@ asserting it again.
 guard, in a certificate, that the guard's absence could not contradict.** The fix for the 09-11
 monitoring failure was itself reported as done before being done. Two instances in one amendment
 of stating a safeguard exists because it was intended.
+
+---
+
+# SALVAGE RECORD — 2026-09-17, written on AVALON after the Miami node was lost
+
+**The node that ran seed 1 died and its data is not currently recoverable.** Everything below was
+reported by that node over the coordination channel between 2026-09-17 11:20 and its loss, and was
+**never committed from it**. It is transcribed here so a 36-hour run is not reduced to nothing.
+
+**READ THIS AS SECOND-HAND.** Every figure here is a transcription of a peer's report, not a value
+read from an artefact on disk. It has **not** been gated, nothing here reproduces from a file we
+hold, and this file is the only copy. Treat it as a lead for a re-run, **never as a result**, and do
+not put any of it in the paper. If the disk is recovered, the artefacts supersede this record
+entirely and this section should be replaced by them rather than reconciled with them.
+
+## What ran
+
+Job `28cdbed5839ec810`, **seed 42**, `max_epochs=100`, completed **rc=0 at 2026-09-17 11:20 EDT**,
+log reaching epoch 99. Output directory on the lost node was `outputs/2026-09-15/21-02-02/`.
+Measured cost ~21.5 min/epoch including validation, ~36 h for the seed.
+
+## Checkpoints that existed (all lost unless the disk is recovered)
+
+| monitored metric | epoch |
+| --- | --- |
+| `sequence_top_1_accuracy_5_mins` | **052** |
+| `min_loss` | 093 |
+| `max_r_precision` / majority_vote | 089 |
+| `last.ckpt` | 099 |
+
+## The validation curve, as reported
+
+`sequence_top_1_accuracy_5_mins/validation/mean`, decoded from the offline wandb history —
+**100 validation points over the 9 validation subjects, under the authors' hardcoded `[::150]`
+enrolment.** These are **not** the paper's test figures and were never compared against the
+published 99 / 89 / 25 curve; that comparison was the next step and did not happen.
+
+| epochs | mean |
+| --- | --- |
+| 0-5 | 0.156 -> 0.827 (rise) |
+| 20-39 | 0.878 |
+| 40-51 | 0.906 |
+| 53-69 | 0.904 |
+| 70-84 | 0.904 |
+| 85-99 | 0.910 |
+
+Per-epoch scatter about +/-0.01, full range 0.882-0.923. **argmax epoch 052 = 0.9228**, with
+epoch 091 = 0.9223 — a tie inside the band. The 10-minute and 15-minute curves **drift down** over
+the same epochs (10-min 0.93 -> 0.89-0.91).
+
+**Reading, and it survives the loss because it is about shape rather than level:** the curve is a
+**plateau, not a spike on a rising curve**, so the 100-epoch cap was not binding and no budget
+extension is indicated. That conclusion is the durable part of the run.
+
+**And do not quote 0.9228 as the level.** It is the maximum over ~100 noisy points on a flat curve,
+so it sits roughly **+0.015 above the plateau** for free — this repo's selection-inflation rule in
+its textbook form. The supportable figure is the plateau, **~0.905**, with the 9-subject caveat
+attached.
+
+## The gate that was about to run, and its referent
+
+The validation gate was to reproduce **0.9227739722096133** at `epoch_052`
+(`sequence_top_1_accuracy_5_mins` checkpoint) via `eval_harness --split validation --gate`.
+**It never ran.** That referent is useless without the checkpoint, and is recorded only so a re-run
+can be checked against the same number if the disk comes back.
+
+## What is NOT lost
+
+The **registration above this line** — protocol, the exact-match check against the paper's Table IV,
+the environment pins (`pytorch-lightning 1.9.5`, `pytorch-metric-learning` pinned to the last 1.x,
+Python 3.8.20), all deviations, and Amendments 1-7 including the pandas regression, the infeasible
+shipped configuration, the `| tee` false pass and the never-armed watcher. **The reproduction can be
+re-launched from this file alone** on any node that can be provisioned to those pins. What a re-run
+costs is ~36 h of GPU; what it does not cost is any of the diagnosis, which is the expensive half and
+is safe.
+
+## The lesson, and it is the one this file already carried
+
+CLAUDE.md: *"'It was gated' and 'there is a committed certificate that it was gated' are different
+claims, and only the second survives the session"* — and its extension, that a commit which cannot
+reach `origin` is not a committed certificate. **Seed 1 satisfied neither.** It ran for 36 hours, its
+outcome was read from a watcher file, reported over a chat channel, and discussed across four
+messages — and at no point did a single number reach a file on `origin`. The registration was
+committed before the run; nothing was committed during or after it.
+
+**So the rule needs its operational half, which nobody had written down: commit the result as soon as
+it exists, not when the analysis around it is finished.** The seed-1 curve was decoded, read,
+interpreted and argued about while living in exactly one place. A one-line JSON with the argmax, the
+window means and the checkpoint epochs, pushed at 11:20, would have cost a minute and would have
+survived. **Every long run should write its result artefact to `origin` before anyone reasons about
+it** — the reasoning is what takes the time, and it is the window in which the disk can die.
