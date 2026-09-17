@@ -2698,6 +2698,34 @@ Across 29 `dyn` transfer checkpoints, 28 came back within 1e-4 of their recorded
 is noise by construction - which is the sensitivity you want from a gate: it passes what
 should reproduce and fails what cannot. Use it for any scoring outside the training path.
 
+**AND THE OPERATIONAL HALF, ADOPTED BY THE USER 2026-09-17 AFTER A NODE DIED MID-ANALYSIS:
+COMMIT A RESULT THE MOMENT IT EXISTS, NOT WHEN THE ANALYSIS AROUND IT IS FINISHED.** The Miami node
+was lost with its data unrecoverable. Rack seed 1 had run **36 hours**, completed rc=0, and **not one
+of its numbers had reached a file on `origin`** - the curve was decoded, read, interpreted and argued
+across four messages while living on exactly one disk. The registration was committed *before* the
+run and nothing was committed *during or after* it, so the rule as previously written was satisfied
+and the run was still lost. Transcribed second-hand into
+`docs/acceptance/sota_rack2023_reproduction_REGISTERED.md` under SALVAGE RECORD.
+
+**The window in which a disk can die is the analysis window, and that is the long one.** A one-line
+JSON with the argmax, the window means and the checkpoint epochs, pushed when the watcher fired,
+would have cost a minute. So: **write the result artefact and push it before reasoning about it** -
+the reasoning is the expensive part and it is entirely re-doable; the numbers are cheap to save and
+impossible to recreate without the GPU time. This applies to every long run, and it is now the
+standing rule.
+
+**A SECOND SINGLE POINT OF FAILURE IS STILL LIVE, FOUND BY THE SAME AUDIT (2026-09-17).** The **ten
+gated checkpoints every cross-application result in this project rests on are not on AVALON.** The
+programme run directories (`runs/2026-09-10/*`, `runs/2026-09-11/*`) are absent here; the 122 `.pth`
+files on this machine are unrelated legacy artefacts inside `processed_datasets/`. So the zero-shot
+seeds, C2-lo, the raw arms and everything the Schach comparison and the Questset arms need to
+re-score exist on **one machine**, the same exposure that just cost 36 hours. **Replicate them off
+that node.** They are small - `bilstm` at `embedding_dim=128` is ~153k parameters, so the whole set
+is a few tens of MB - and the copy is internal use between the project's own machines, on a corpus
+AVALON already holds, so no DUA question arises. Until that is done, **no Questset arm can run
+anywhere but that node**, and a second disk failure would cost not a run but the ability to re-score
+anything for a reviewer.
+
 **"It was gated" and "there is a committed certificate that it was gated" are different
 claims, and only the second survives the session** (Trainer, 2026-09-08). **And a commit that
 cannot reach `origin` is not a committed certificate** (2026-09-09): Miami's harness cannot
