@@ -677,8 +677,14 @@ counted. Give the pool only where the validation draw itself is under discussion
   the reading**: the rhythm-game affinity is present *without any exposure*, so it is a property of
   the activity pair rather than something exposure creates - which is a better result than the one I
   mis-attributed, and it would have been stated backwards.
-- **G17.** Use "the reason is not the rank argument" (C1-full) and strike the superseded
-  "the honest route still fails for the rank reason". A wording decision, not a measurement.
+- **G17 RESOLVED (2026-09-17).** Recorded as **correction 7** in
+  `across_xr_alignment_RESULTS.md`, following that file's convention - the body sentence stays where
+  it was made and the correction is an amendment. The paper uses the C1-full wording: the honest
+  train-user fit fails for the **test-fitted advantage**, not the rank argument. The rank argument is
+  real and belongs to **A2-full** (-0.055 [-0.086, -0.029], 6/6 checkpoints). The distinction is
+  load-bearing rather than cosmetic: the recommendation to the field - that a corpus supporting this
+  method needs far more multi-application participants - follows from A2's reason, not A2-full's.
+  **All outline gaps are now closed.**
 
 ### One environment fact the reproductions must not share
 

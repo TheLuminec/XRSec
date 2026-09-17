@@ -109,6 +109,25 @@ rewritten.
    caveats in Amendment 6, and the registration's protocol section). Without the qualifier the
    sentence is false as written. Nothing in the Schach comparison changes: their BRV encoding never
    sees head position.
+7. **"The honest route still fails for the rank reason the registration named"** (body, C2-lo seed-1
+   reading, point (3)). **Superseded by the C1-full section above it**, which states the mechanism
+   correctly: *"the reason is **not the rank argument** — that one is A2-full's, and holds in 6/6
+   checkpoints — but the test-fitted advantage: A2' fits on the 17 people it is scored on and
+   reaches +0.148; A2 fits on 32 other people and reaches −0.008, so more correspondences did not
+   help."* The two sentences name **different mechanisms for different quantities** and the earlier
+   one attaches A2-full's reason to A2. **The paper uses the C1-full wording**; the seed-1 sentence
+   stays where it was made, per this block's convention, and is not to be quoted.
+
+   *Why the distinction is worth a correction rather than a tidy-up.* Both readings end in "the
+   honest route does not carry", so the conclusion is identical and nothing downstream moves — which
+   is exactly why a wrong mechanism attached to a right conclusion survives unexamined. This file
+   already carries the rule from the rescaling result: **record the mechanism separately from the
+   band, because otherwise a wrong model gets confirmed by a right number.** The rank argument is
+   real and it is A2-full's (32 correspondences in 128-d, an arbitrary 96-d complement, −0.055
+   [−0.086, −0.029], 6/6 checkpoints). A2's failure is the test-fitted advantage, and the actionable
+   specification for the field — that a corpus supporting this method needs far more
+   multi-application participants — follows from **A2's** reason, not A2-full's. Closes outline gap
+   G17.
 
 
 ## Amendment 8 — paired on their 17 people, one harness per direction (2026-09-15 20:45)
