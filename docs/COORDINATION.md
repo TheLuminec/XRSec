@@ -923,3 +923,26 @@ finishes (~2026-09-17 11:00) and its watcher reports: A1 zero-shot cross-applica
 behavioural arm against group 1 as contrast (`raw` minus `dyn` smaller on group 2); A3 the
 covered/uncovered control (Beat Saber is in our BOXRR pretraining, the other three titles are in
 nothing we hold).
+
+## From the Coordinator: Rack seed 1 complete; the queue is clear; a parked job carries a `.done` marker - 2026-09-17
+
+**Rack 2023 seed 1 completed rc=0** at 2026-09-17 11:20 EDT (job `28cdbed5839ec810`, seed 42,
+`max_epochs=100`). The watcher fired and recorded the outcome; it was read ~2 h later, which is
+reading latency rather than a watcher failure. The 5-min metric's best checkpoint is at **epoch 52**
+- consistent with a plateau and equally with one validation spike on a still-rising curve, so the
+budget question is **open until the epoch 40-99 curve is pulled from wandb**. No Rack figure is
+quoted until then. Seeds 2-3 remain gated on seed 1 reproducing the published 99/89/25 curve.
+
+**The queue is genuinely clear, and the first reading of it was wrong.** Miami first reported "one
+pending New Gen job, now cleared". Checking every one of the 35 `queue.txt` entries: all have
+markers (29 `.done`, 6 `.failed` - all six known, from the 09-10 bring-up and the pml crash
+`71dbde89`), the last marker written is seed 1's, and **no New Gen job was ever queued behind it.**
+
+**The hazard the check surfaced: `4bca77dac0620a1c` (M-C2-lo, margin 0.1 / scale 15) has a `.done`
+marker and never executed.** It was parked on 09-11 as "runs only if M-zero screens positive"; that
+screen came back -0.028, so it stays parked. So **"29 done" is 28 runs plus one job that never
+started**, and by marker alone the two are indistinguishable - anyone later asking "did M-C2-lo run?"
+from the markers gets the wrong answer. **A `.done` marker must mean ran-and-exited-0 and nothing
+else**; a parked entry needs its own state (a `.parked` marker or a reason field). Raised with Miami.
+It is the same family as the watcher certificate: a record of an event that did not happen, which
+nothing about the record can contradict.
