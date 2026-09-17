@@ -462,8 +462,7 @@ The same applies to the figure their paper reports as its overall similarity-mod
 which is computed with a reference set drawn from all five applications *including the query's own*. It
 is therefore neither a within- nor a cross-application figure, it inherits the overlap above through
 the query application's share of the reference set, and it is not a comparator for anything in this
-paper. Our earlier internal comparisons of a verification figure against 78.5% were made before this
-was understood and are superseded.
+paper.
 
 ### 5.5 Registration and gating
 
