@@ -2560,10 +2560,45 @@ k-curve already needs, so any existing checkpoint can be scored with no retraini
 - **Never quote rank-1 without N.** Chance moves with the gallery size, so rank-1 at 48
   identities and rank-1 at 419 are different questions. Both are in every row.
 
-**Matching N is half the comparison, and it is the half that is easy to forget.** The
+**78.5% IS NOT A CROSS-APPLICATION FIGURE AND IS SELF-MATCH CONTAMINATED - WITHDRAWN AS A
+COMPARATOR 2026-09-17.** Raised by the paper review, verified here against the Frontiers text.
+Their own sentence (p.792): *"To evaluate the model's overall performance in user identification,
+**we used data from all users and VR applications as a reference**."* So 78.5% is the
+**all-applications-reference** cell - the reference set includes **the query's own application** -
+and by this file's own verified reading of `slm_compute_accuracies.py` that is
+`embeddings[::150]` over all five, which is the cell already recorded above as **containing
+self-matches**. The identification is confirmed numerically: their Figure 4 range is 67.7%
+(Half-Life: Alyx) to 86.0% (Beat Saber), and the per-query-application values measured here from
+their own JSON for that cell are **0.691** and **0.863**.
+
+**So every comparison in this file of our rank-1 against "a published 0.785 at the same gallery
+size" is void**, on two independent counts: it is not cross-application, and its reference set
+contains the query's own application. It appears at four sites (this paragraph, the
+"Identification is a separate scale" head, and twice in the first-identification-numbers section);
+all four are superseded by this block rather than rewritten, per the convention here.
+**`docs/LITERATURE_BRIEFING.md` calling it "the *directly comparable* external number" is false**
+and is corrected there.
+
+**Nothing in the paper moves.** Every figure we place against Schach et al. goes against **0.180**,
+the mean of the 20 off-diagonal cells, which is cross-application by construction and carries no
+self-match - verified in their code and reproduced from their JSON. The draft, the progress report
+and the paper plan were checked and **none of them quotes 78.5%**. The comparator that was wrong
+was the one this project used *before* the released code made the clean cell available, and the
+switch to 0.180 happened for unrelated reasons - which is luck rather than diligence, and is the
+reason this block is emphatic.
+
+**The general form, and it is this file's recurring bug wearing its oldest hat.** "The closest
+published number at a matched gallery size" was matched on **N and metric** and never on **what the
+reference set contained**. Matching N is half the comparison; matching the *gallery composition* is
+the other half, and a figure can be at the right N, on the right people, under the right metric, and
+still be answering a different question.
+
+~~**Matching N is half the comparison, and it is the half that is easy to forget.** The
 closest published leave-users-out result is **rank-1 closed-set identification over 17
 unseen users on a single 15-second window: 83.1% within-application, 78.5% averaged
-across applications** (`docs/LITERATURE_BRIEFING.md`, source X). Two mismatches with
+across applications** (`docs/LITERATURE_BRIEFING.md`, source X).~~ *(78.5% withdrawn above;
+83.1% stands as the within-application figure and is itself self-match contaminated, see the
+Across-XR section.)* Two mismatches with
 ours, not one:
 
 | | theirs | ours |

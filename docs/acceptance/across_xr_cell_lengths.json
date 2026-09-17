@@ -1,0 +1,1514 @@
+{
+ "n_cells": 245,
+ "n_users": 49,
+ "rows": {
+  "min": 40629,
+  "median": 89580,
+  "max": 130282
+ },
+ "minutes": {
+  "min": 7.36,
+  "median": 15.75,
+  "max": 26.02
+ },
+ "rate_hz": {
+  "median": 92.31,
+  "min": 79.56,
+  "max": 99.4
+ },
+ "per_cell": {
+  "0/beat_saber": {
+   "rows": 86637,
+   "duration_s": 938.28,
+   "hz": 92.34,
+   "minutes": 15.64
+  },
+  "0/half_life_alyx": {
+   "rows": 96842,
+   "duration_s": 1050.35,
+   "hz": 92.2,
+   "minutes": 17.51
+  },
+  "0/social_vr": {
+   "rows": 74895,
+   "duration_s": 811.89,
+   "hz": 92.25,
+   "minutes": 13.53
+  },
+  "0/superhot_vr": {
+   "rows": 87351,
+   "duration_s": 947.02,
+   "hz": 92.24,
+   "minutes": 15.78
+  },
+  "0/synth_riders": {
+   "rows": 83584,
+   "duration_s": 907.92,
+   "hz": 92.06,
+   "minutes": 15.13
+  },
+  "1/beat_saber": {
+   "rows": 79119,
+   "duration_s": 858.52,
+   "hz": 92.16,
+   "minutes": 14.31
+  },
+  "1/half_life_alyx": {
+   "rows": 100645,
+   "duration_s": 1091.71,
+   "hz": 92.19,
+   "minutes": 18.2
+  },
+  "1/social_vr": {
+   "rows": 69297,
+   "duration_s": 752.05,
+   "hz": 92.14,
+   "minutes": 12.53
+  },
+  "1/superhot_vr": {
+   "rows": 124221,
+   "duration_s": 1561.3,
+   "hz": 79.56,
+   "minutes": 26.02
+  },
+  "1/synth_riders": {
+   "rows": 69187,
+   "duration_s": 750.09,
+   "hz": 92.24,
+   "minutes": 12.5
+  },
+  "2/beat_saber": {
+   "rows": 80824,
+   "duration_s": 877.17,
+   "hz": 92.14,
+   "minutes": 14.62
+  },
+  "2/half_life_alyx": {
+   "rows": 113653,
+   "duration_s": 1236.77,
+   "hz": 91.9,
+   "minutes": 20.61
+  },
+  "2/social_vr": {
+   "rows": 76153,
+   "duration_s": 825.52,
+   "hz": 92.25,
+   "minutes": 13.76
+  },
+  "2/superhot_vr": {
+   "rows": 83259,
+   "duration_s": 903.98,
+   "hz": 92.1,
+   "minutes": 15.07
+  },
+  "2/synth_riders": {
+   "rows": 72082,
+   "duration_s": 784.37,
+   "hz": 91.9,
+   "minutes": 13.07
+  },
+  "3/beat_saber": {
+   "rows": 94538,
+   "duration_s": 956.71,
+   "hz": 98.82,
+   "minutes": 15.95
+  },
+  "3/half_life_alyx": {
+   "rows": 110568,
+   "duration_s": 1125.0,
+   "hz": 98.28,
+   "minutes": 18.75
+  },
+  "3/social_vr": {
+   "rows": 83029,
+   "duration_s": 838.88,
+   "hz": 98.98,
+   "minutes": 13.98
+  },
+  "3/superhot_vr": {
+   "rows": 95856,
+   "duration_s": 973.89,
+   "hz": 98.43,
+   "minutes": 16.23
+  },
+  "3/synth_riders": {
+   "rows": 86960,
+   "duration_s": 878.78,
+   "hz": 98.96,
+   "minutes": 14.65
+  },
+  "4/beat_saber": {
+   "rows": 97486,
+   "duration_s": 987.14,
+   "hz": 98.76,
+   "minutes": 16.45
+  },
+  "4/half_life_alyx": {
+   "rows": 130282,
+   "duration_s": 1317.23,
+   "hz": 98.91,
+   "minutes": 21.95
+  },
+  "4/social_vr": {
+   "rows": 65198,
+   "duration_s": 658.74,
+   "hz": 98.97,
+   "minutes": 10.98
+  },
+  "4/superhot_vr": {
+   "rows": 94010,
+   "duration_s": 951.62,
+   "hz": 98.79,
+   "minutes": 15.86
+  },
+  "4/synth_riders": {
+   "rows": 87672,
+   "duration_s": 887.94,
+   "hz": 98.74,
+   "minutes": 14.8
+  },
+  "5/beat_saber": {
+   "rows": 96332,
+   "duration_s": 978.88,
+   "hz": 98.41,
+   "minutes": 16.31
+  },
+  "5/half_life_alyx": {
+   "rows": 101623,
+   "duration_s": 1030.68,
+   "hz": 98.6,
+   "minutes": 17.18
+  },
+  "5/social_vr": {
+   "rows": 65167,
+   "duration_s": 660.2,
+   "hz": 98.71,
+   "minutes": 11.0
+  },
+  "5/superhot_vr": {
+   "rows": 102867,
+   "duration_s": 1044.59,
+   "hz": 98.48,
+   "minutes": 17.41
+  },
+  "5/synth_riders": {
+   "rows": 93633,
+   "duration_s": 941.97,
+   "hz": 99.4,
+   "minutes": 15.7
+  },
+  "6/beat_saber": {
+   "rows": 86265,
+   "duration_s": 934.78,
+   "hz": 92.28,
+   "minutes": 15.58
+  },
+  "6/half_life_alyx": {
+   "rows": 96267,
+   "duration_s": 1041.54,
+   "hz": 92.43,
+   "minutes": 17.36
+  },
+  "6/social_vr": {
+   "rows": 63178,
+   "duration_s": 684.71,
+   "hz": 92.27,
+   "minutes": 11.41
+  },
+  "6/superhot_vr": {
+   "rows": 86734,
+   "duration_s": 940.46,
+   "hz": 92.22,
+   "minutes": 15.67
+  },
+  "6/synth_riders": {
+   "rows": 73375,
+   "duration_s": 794.28,
+   "hz": 92.38,
+   "minutes": 13.24
+  },
+  "7/beat_saber": {
+   "rows": 90658,
+   "duration_s": 982.44,
+   "hz": 92.28,
+   "minutes": 16.37
+  },
+  "7/half_life_alyx": {
+   "rows": 89907,
+   "duration_s": 974.92,
+   "hz": 92.22,
+   "minutes": 16.25
+  },
+  "7/social_vr": {
+   "rows": 66944,
+   "duration_s": 725.31,
+   "hz": 92.3,
+   "minutes": 12.09
+  },
+  "7/superhot_vr": {
+   "rows": 88572,
+   "duration_s": 961.25,
+   "hz": 92.14,
+   "minutes": 16.02
+  },
+  "7/synth_riders": {
+   "rows": 81800,
+   "duration_s": 887.29,
+   "hz": 92.19,
+   "minutes": 14.79
+  },
+  "8/beat_saber": {
+   "rows": 95207,
+   "duration_s": 1032.27,
+   "hz": 92.23,
+   "minutes": 17.2
+  },
+  "8/half_life_alyx": {
+   "rows": 98105,
+   "duration_s": 1060.69,
+   "hz": 92.49,
+   "minutes": 17.68
+  },
+  "8/social_vr": {
+   "rows": 65689,
+   "duration_s": 712.23,
+   "hz": 92.23,
+   "minutes": 11.87
+  },
+  "8/superhot_vr": {
+   "rows": 86028,
+   "duration_s": 956.02,
+   "hz": 89.99,
+   "minutes": 15.93
+  },
+  "8/synth_riders": {
+   "rows": 83266,
+   "duration_s": 902.65,
+   "hz": 92.25,
+   "minutes": 15.04
+  },
+  "9/beat_saber": {
+   "rows": 94900,
+   "duration_s": 1024.64,
+   "hz": 92.62,
+   "minutes": 17.08
+  },
+  "9/half_life_alyx": {
+   "rows": 91563,
+   "duration_s": 987.63,
+   "hz": 92.71,
+   "minutes": 16.46
+  },
+  "9/social_vr": {
+   "rows": 60496,
+   "duration_s": 653.09,
+   "hz": 92.63,
+   "minutes": 10.88
+  },
+  "9/superhot_vr": {
+   "rows": 90216,
+   "duration_s": 975.88,
+   "hz": 92.45,
+   "minutes": 16.26
+  },
+  "9/synth_riders": {
+   "rows": 81591,
+   "duration_s": 879.81,
+   "hz": 92.74,
+   "minutes": 14.66
+  },
+  "10/beat_saber": {
+   "rows": 90040,
+   "duration_s": 976.64,
+   "hz": 92.19,
+   "minutes": 16.28
+  },
+  "10/half_life_alyx": {
+   "rows": 91523,
+   "duration_s": 987.34,
+   "hz": 92.7,
+   "minutes": 16.46
+  },
+  "10/social_vr": {
+   "rows": 65522,
+   "duration_s": 710.07,
+   "hz": 92.28,
+   "minutes": 11.83
+  },
+  "10/superhot_vr": {
+   "rows": 85477,
+   "duration_s": 927.81,
+   "hz": 92.13,
+   "minutes": 15.46
+  },
+  "10/synth_riders": {
+   "rows": 92374,
+   "duration_s": 999.51,
+   "hz": 92.42,
+   "minutes": 16.66
+  },
+  "11/beat_saber": {
+   "rows": 92922,
+   "duration_s": 1007.16,
+   "hz": 92.26,
+   "minutes": 16.79
+  },
+  "11/half_life_alyx": {
+   "rows": 115127,
+   "duration_s": 1246.0,
+   "hz": 92.4,
+   "minutes": 20.77
+  },
+  "11/social_vr": {
+   "rows": 63830,
+   "duration_s": 691.85,
+   "hz": 92.26,
+   "minutes": 11.53
+  },
+  "11/superhot_vr": {
+   "rows": 91437,
+   "duration_s": 991.56,
+   "hz": 92.22,
+   "minutes": 16.53
+  },
+  "11/synth_riders": {
+   "rows": 70588,
+   "duration_s": 764.64,
+   "hz": 92.32,
+   "minutes": 12.74
+  },
+  "12/beat_saber": {
+   "rows": 95817,
+   "duration_s": 1039.32,
+   "hz": 92.19,
+   "minutes": 17.32
+  },
+  "12/half_life_alyx": {
+   "rows": 62162,
+   "duration_s": 675.12,
+   "hz": 92.08,
+   "minutes": 11.25
+  },
+  "12/social_vr": {
+   "rows": 64240,
+   "duration_s": 696.51,
+   "hz": 92.23,
+   "minutes": 11.61
+  },
+  "12/superhot_vr": {
+   "rows": 89705,
+   "duration_s": 972.99,
+   "hz": 92.19,
+   "minutes": 16.22
+  },
+  "12/synth_riders": {
+   "rows": 86853,
+   "duration_s": 940.45,
+   "hz": 92.35,
+   "minutes": 15.67
+  },
+  "13/beat_saber": {
+   "rows": 92096,
+   "duration_s": 999.14,
+   "hz": 92.18,
+   "minutes": 16.65
+  },
+  "13/half_life_alyx": {
+   "rows": 86810,
+   "duration_s": 939.61,
+   "hz": 92.39,
+   "minutes": 15.66
+  },
+  "13/social_vr": {
+   "rows": 72453,
+   "duration_s": 784.31,
+   "hz": 92.38,
+   "minutes": 13.07
+  },
+  "13/superhot_vr": {
+   "rows": 87107,
+   "duration_s": 944.95,
+   "hz": 92.18,
+   "minutes": 15.75
+  },
+  "13/synth_riders": {
+   "rows": 84807,
+   "duration_s": 918.6,
+   "hz": 92.32,
+   "minutes": 15.31
+  },
+  "14/beat_saber": {
+   "rows": 98551,
+   "duration_s": 998.88,
+   "hz": 98.66,
+   "minutes": 16.65
+  },
+  "14/half_life_alyx": {
+   "rows": 102341,
+   "duration_s": 1034.19,
+   "hz": 98.96,
+   "minutes": 17.24
+  },
+  "14/social_vr": {
+   "rows": 80612,
+   "duration_s": 814.81,
+   "hz": 98.93,
+   "minutes": 13.58
+  },
+  "14/superhot_vr": {
+   "rows": 90865,
+   "duration_s": 922.8,
+   "hz": 98.47,
+   "minutes": 15.38
+  },
+  "14/synth_riders": {
+   "rows": 98804,
+   "duration_s": 998.33,
+   "hz": 98.97,
+   "minutes": 16.64
+  },
+  "15/beat_saber": {
+   "rows": 99255,
+   "duration_s": 1007.65,
+   "hz": 98.5,
+   "minutes": 16.79
+  },
+  "15/half_life_alyx": {
+   "rows": 98923,
+   "duration_s": 1004.73,
+   "hz": 98.46,
+   "minutes": 16.75
+  },
+  "15/social_vr": {
+   "rows": 75879,
+   "duration_s": 769.66,
+   "hz": 98.59,
+   "minutes": 12.83
+  },
+  "15/superhot_vr": {
+   "rows": 93138,
+   "duration_s": 944.52,
+   "hz": 98.61,
+   "minutes": 15.74
+  },
+  "15/synth_riders": {
+   "rows": 96618,
+   "duration_s": 977.74,
+   "hz": 98.82,
+   "minutes": 16.3
+  },
+  "16/beat_saber": {
+   "rows": 102540,
+   "duration_s": 1039.41,
+   "hz": 98.65,
+   "minutes": 17.32
+  },
+  "16/half_life_alyx": {
+   "rows": 105037,
+   "duration_s": 1068.05,
+   "hz": 98.34,
+   "minutes": 17.8
+  },
+  "16/social_vr": {
+   "rows": 67452,
+   "duration_s": 685.49,
+   "hz": 98.4,
+   "minutes": 11.42
+  },
+  "16/superhot_vr": {
+   "rows": 62192,
+   "duration_s": 630.58,
+   "hz": 98.63,
+   "minutes": 10.51
+  },
+  "16/synth_riders": {
+   "rows": 86418,
+   "duration_s": 877.14,
+   "hz": 98.52,
+   "minutes": 14.62
+  },
+  "17/beat_saber": {
+   "rows": 62774,
+   "duration_s": 697.57,
+   "hz": 89.99,
+   "minutes": 11.63
+  },
+  "17/half_life_alyx": {
+   "rows": 73359,
+   "duration_s": 796.7,
+   "hz": 92.08,
+   "minutes": 13.28
+  },
+  "17/social_vr": {
+   "rows": 55379,
+   "duration_s": 600.58,
+   "hz": 92.21,
+   "minutes": 10.01
+  },
+  "17/superhot_vr": {
+   "rows": 89187,
+   "duration_s": 967.55,
+   "hz": 92.18,
+   "minutes": 16.13
+  },
+  "17/synth_riders": {
+   "rows": 86846,
+   "duration_s": 945.61,
+   "hz": 91.84,
+   "minutes": 15.76
+  },
+  "18/beat_saber": {
+   "rows": 94853,
+   "duration_s": 1028.31,
+   "hz": 92.24,
+   "minutes": 17.14
+  },
+  "18/half_life_alyx": {
+   "rows": 96937,
+   "duration_s": 1049.31,
+   "hz": 92.38,
+   "minutes": 17.49
+  },
+  "18/social_vr": {
+   "rows": 52724,
+   "duration_s": 571.95,
+   "hz": 92.18,
+   "minutes": 9.53
+  },
+  "18/superhot_vr": {
+   "rows": 86887,
+   "duration_s": 942.64,
+   "hz": 92.17,
+   "minutes": 15.71
+  },
+  "18/synth_riders": {
+   "rows": 99820,
+   "duration_s": 1080.31,
+   "hz": 92.4,
+   "minutes": 18.01
+  },
+  "19/beat_saber": {
+   "rows": 98399,
+   "duration_s": 1001.76,
+   "hz": 98.23,
+   "minutes": 16.7
+  },
+  "19/half_life_alyx": {
+   "rows": 99785,
+   "duration_s": 1012.57,
+   "hz": 98.55,
+   "minutes": 16.88
+  },
+  "19/social_vr": {
+   "rows": 57354,
+   "duration_s": 581.81,
+   "hz": 98.58,
+   "minutes": 9.7
+  },
+  "19/superhot_vr": {
+   "rows": 92975,
+   "duration_s": 946.11,
+   "hz": 98.27,
+   "minutes": 15.77
+  },
+  "19/synth_riders": {
+   "rows": 90633,
+   "duration_s": 919.08,
+   "hz": 98.61,
+   "minutes": 15.32
+  },
+  "20/beat_saber": {
+   "rows": 91419,
+   "duration_s": 923.37,
+   "hz": 99.01,
+   "minutes": 15.39
+  },
+  "20/half_life_alyx": {
+   "rows": 95924,
+   "duration_s": 968.31,
+   "hz": 99.06,
+   "minutes": 16.14
+  },
+  "20/social_vr": {
+   "rows": 96931,
+   "duration_s": 981.29,
+   "hz": 98.78,
+   "minutes": 16.35
+  },
+  "20/superhot_vr": {
+   "rows": 91392,
+   "duration_s": 925.95,
+   "hz": 98.7,
+   "minutes": 15.43
+  },
+  "20/synth_riders": {
+   "rows": 90098,
+   "duration_s": 906.5,
+   "hz": 99.39,
+   "minutes": 15.11
+  },
+  "21/beat_saber": {
+   "rows": 101279,
+   "duration_s": 1024.59,
+   "hz": 98.85,
+   "minutes": 17.08
+  },
+  "21/half_life_alyx": {
+   "rows": 96208,
+   "duration_s": 978.14,
+   "hz": 98.36,
+   "minutes": 16.3
+  },
+  "21/social_vr": {
+   "rows": 68203,
+   "duration_s": 693.1,
+   "hz": 98.4,
+   "minutes": 11.55
+  },
+  "21/superhot_vr": {
+   "rows": 92289,
+   "duration_s": 935.94,
+   "hz": 98.61,
+   "minutes": 15.6
+  },
+  "21/synth_riders": {
+   "rows": 74158,
+   "duration_s": 749.22,
+   "hz": 98.98,
+   "minutes": 12.49
+  },
+  "22/beat_saber": {
+   "rows": 85877,
+   "duration_s": 930.87,
+   "hz": 92.25,
+   "minutes": 15.51
+  },
+  "22/half_life_alyx": {
+   "rows": 91800,
+   "duration_s": 994.24,
+   "hz": 92.33,
+   "minutes": 16.57
+  },
+  "22/social_vr": {
+   "rows": 63390,
+   "duration_s": 686.66,
+   "hz": 92.32,
+   "minutes": 11.44
+  },
+  "22/superhot_vr": {
+   "rows": 83764,
+   "duration_s": 909.69,
+   "hz": 92.08,
+   "minutes": 15.16
+  },
+  "22/synth_riders": {
+   "rows": 89814,
+   "duration_s": 975.99,
+   "hz": 92.02,
+   "minutes": 16.27
+  },
+  "23/beat_saber": {
+   "rows": 84772,
+   "duration_s": 919.07,
+   "hz": 92.24,
+   "minutes": 15.32
+  },
+  "23/half_life_alyx": {
+   "rows": 89344,
+   "duration_s": 969.32,
+   "hz": 92.17,
+   "minutes": 16.16
+  },
+  "23/social_vr": {
+   "rows": 71115,
+   "duration_s": 770.81,
+   "hz": 92.26,
+   "minutes": 12.85
+  },
+  "23/superhot_vr": {
+   "rows": 87106,
+   "duration_s": 944.71,
+   "hz": 92.2,
+   "minutes": 15.75
+  },
+  "23/synth_riders": {
+   "rows": 89572,
+   "duration_s": 971.46,
+   "hz": 92.2,
+   "minutes": 16.19
+  },
+  "24/beat_saber": {
+   "rows": 94402,
+   "duration_s": 1024.21,
+   "hz": 92.17,
+   "minutes": 17.07
+  },
+  "24/half_life_alyx": {
+   "rows": 87823,
+   "duration_s": 947.49,
+   "hz": 92.69,
+   "minutes": 15.79
+  },
+  "24/social_vr": {
+   "rows": 61232,
+   "duration_s": 664.28,
+   "hz": 92.18,
+   "minutes": 11.07
+  },
+  "24/superhot_vr": {
+   "rows": 97120,
+   "duration_s": 1054.0,
+   "hz": 92.14,
+   "minutes": 17.57
+  },
+  "24/synth_riders": {
+   "rows": 92526,
+   "duration_s": 1002.34,
+   "hz": 92.31,
+   "minutes": 16.71
+  },
+  "25/beat_saber": {
+   "rows": 90231,
+   "duration_s": 978.03,
+   "hz": 92.26,
+   "minutes": 16.3
+  },
+  "25/half_life_alyx": {
+   "rows": 95383,
+   "duration_s": 1032.81,
+   "hz": 92.35,
+   "minutes": 17.21
+  },
+  "25/social_vr": {
+   "rows": 71341,
+   "duration_s": 771.92,
+   "hz": 92.42,
+   "minutes": 12.87
+  },
+  "25/superhot_vr": {
+   "rows": 88889,
+   "duration_s": 964.14,
+   "hz": 92.19,
+   "minutes": 16.07
+  },
+  "25/synth_riders": {
+   "rows": 94200,
+   "duration_s": 1021.04,
+   "hz": 92.26,
+   "minutes": 17.02
+  },
+  "26/beat_saber": {
+   "rows": 92014,
+   "duration_s": 997.52,
+   "hz": 92.24,
+   "minutes": 16.63
+  },
+  "26/half_life_alyx": {
+   "rows": 92726,
+   "duration_s": 1008.22,
+   "hz": 91.97,
+   "minutes": 16.8
+  },
+  "26/social_vr": {
+   "rows": 63369,
+   "duration_s": 757.92,
+   "hz": 83.61,
+   "minutes": 12.63
+  },
+  "26/superhot_vr": {
+   "rows": 89732,
+   "duration_s": 974.81,
+   "hz": 92.05,
+   "minutes": 16.25
+  },
+  "26/synth_riders": {
+   "rows": 96742,
+   "duration_s": 1050.12,
+   "hz": 92.12,
+   "minutes": 17.5
+  },
+  "27/beat_saber": {
+   "rows": 91660,
+   "duration_s": 994.66,
+   "hz": 92.15,
+   "minutes": 16.58
+  },
+  "27/half_life_alyx": {
+   "rows": 99603,
+   "duration_s": 1077.47,
+   "hz": 92.44,
+   "minutes": 17.96
+  },
+  "27/social_vr": {
+   "rows": 62487,
+   "duration_s": 676.54,
+   "hz": 92.36,
+   "minutes": 11.28
+  },
+  "27/superhot_vr": {
+   "rows": 84949,
+   "duration_s": 921.98,
+   "hz": 92.14,
+   "minutes": 15.37
+  },
+  "27/synth_riders": {
+   "rows": 86677,
+   "duration_s": 938.67,
+   "hz": 92.34,
+   "minutes": 15.64
+  },
+  "28/beat_saber": {
+   "rows": 92540,
+   "duration_s": 1003.6,
+   "hz": 92.21,
+   "minutes": 16.73
+  },
+  "28/half_life_alyx": {
+   "rows": 95847,
+   "duration_s": 1040.16,
+   "hz": 92.15,
+   "minutes": 17.34
+  },
+  "28/social_vr": {
+   "rows": 58345,
+   "duration_s": 632.16,
+   "hz": 92.29,
+   "minutes": 10.54
+  },
+  "28/superhot_vr": {
+   "rows": 93410,
+   "duration_s": 1012.89,
+   "hz": 92.22,
+   "minutes": 16.88
+  },
+  "28/synth_riders": {
+   "rows": 91921,
+   "duration_s": 1028.33,
+   "hz": 89.39,
+   "minutes": 17.14
+  },
+  "29/beat_saber": {
+   "rows": 92040,
+   "duration_s": 998.26,
+   "hz": 92.2,
+   "minutes": 16.64
+  },
+  "29/half_life_alyx": {
+   "rows": 40629,
+   "duration_s": 441.3,
+   "hz": 92.07,
+   "minutes": 7.36
+  },
+  "29/social_vr": {
+   "rows": 71086,
+   "duration_s": 770.58,
+   "hz": 92.25,
+   "minutes": 12.84
+  },
+  "29/superhot_vr": {
+   "rows": 84241,
+   "duration_s": 913.43,
+   "hz": 92.22,
+   "minutes": 15.22
+  },
+  "29/synth_riders": {
+   "rows": 83400,
+   "duration_s": 903.48,
+   "hz": 92.31,
+   "minutes": 15.06
+  },
+  "30/beat_saber": {
+   "rows": 90851,
+   "duration_s": 985.78,
+   "hz": 92.16,
+   "minutes": 16.43
+  },
+  "30/half_life_alyx": {
+   "rows": 100752,
+   "duration_s": 1093.84,
+   "hz": 92.11,
+   "minutes": 18.23
+  },
+  "30/social_vr": {
+   "rows": 56350,
+   "duration_s": 610.51,
+   "hz": 92.3,
+   "minutes": 10.18
+  },
+  "30/superhot_vr": {
+   "rows": 84745,
+   "duration_s": 921.16,
+   "hz": 92.0,
+   "minutes": 15.35
+  },
+  "30/synth_riders": {
+   "rows": 92364,
+   "duration_s": 1003.4,
+   "hz": 92.05,
+   "minutes": 16.72
+  },
+  "31/beat_saber": {
+   "rows": 80295,
+   "duration_s": 903.0,
+   "hz": 88.92,
+   "minutes": 15.05
+  },
+  "31/half_life_alyx": {
+   "rows": 99060,
+   "duration_s": 1068.61,
+   "hz": 92.7,
+   "minutes": 17.81
+  },
+  "31/social_vr": {
+   "rows": 64978,
+   "duration_s": 714.32,
+   "hz": 90.96,
+   "minutes": 11.91
+  },
+  "31/superhot_vr": {
+   "rows": 62674,
+   "duration_s": 681.89,
+   "hz": 91.91,
+   "minutes": 11.36
+  },
+  "31/synth_riders": {
+   "rows": 81738,
+   "duration_s": 887.44,
+   "hz": 92.11,
+   "minutes": 14.79
+  },
+  "32/beat_saber": {
+   "rows": 82883,
+   "duration_s": 898.98,
+   "hz": 92.2,
+   "minutes": 14.98
+  },
+  "32/half_life_alyx": {
+   "rows": 86712,
+   "duration_s": 941.22,
+   "hz": 92.13,
+   "minutes": 15.69
+  },
+  "32/social_vr": {
+   "rows": 73222,
+   "duration_s": 792.82,
+   "hz": 92.36,
+   "minutes": 13.21
+  },
+  "32/superhot_vr": {
+   "rows": 92899,
+   "duration_s": 1008.12,
+   "hz": 92.15,
+   "minutes": 16.8
+  },
+  "32/synth_riders": {
+   "rows": 91500,
+   "duration_s": 994.87,
+   "hz": 91.97,
+   "minutes": 16.58
+  },
+  "33/beat_saber": {
+   "rows": 92245,
+   "duration_s": 1000.01,
+   "hz": 92.24,
+   "minutes": 16.67
+  },
+  "33/half_life_alyx": {
+   "rows": 104104,
+   "duration_s": 1126.75,
+   "hz": 92.39,
+   "minutes": 18.78
+  },
+  "33/social_vr": {
+   "rows": 73589,
+   "duration_s": 797.19,
+   "hz": 92.31,
+   "minutes": 13.29
+  },
+  "33/superhot_vr": {
+   "rows": 90095,
+   "duration_s": 977.24,
+   "hz": 92.19,
+   "minutes": 16.29
+  },
+  "33/synth_riders": {
+   "rows": 92401,
+   "duration_s": 1000.33,
+   "hz": 92.37,
+   "minutes": 16.67
+  },
+  "34/beat_saber": {
+   "rows": 84360,
+   "duration_s": 914.63,
+   "hz": 92.23,
+   "minutes": 15.24
+  },
+  "34/half_life_alyx": {
+   "rows": 89960,
+   "duration_s": 972.78,
+   "hz": 92.48,
+   "minutes": 16.21
+  },
+  "34/social_vr": {
+   "rows": 77119,
+   "duration_s": 835.25,
+   "hz": 92.33,
+   "minutes": 13.92
+  },
+  "34/superhot_vr": {
+   "rows": 93424,
+   "duration_s": 1012.71,
+   "hz": 92.25,
+   "minutes": 16.88
+  },
+  "34/synth_riders": {
+   "rows": 91131,
+   "duration_s": 986.64,
+   "hz": 92.36,
+   "minutes": 16.44
+  },
+  "35/beat_saber": {
+   "rows": 60589,
+   "duration_s": 656.87,
+   "hz": 92.24,
+   "minutes": 10.95
+  },
+  "35/half_life_alyx": {
+   "rows": 94206,
+   "duration_s": 1017.61,
+   "hz": 92.58,
+   "minutes": 16.96
+  },
+  "35/social_vr": {
+   "rows": 69632,
+   "duration_s": 754.23,
+   "hz": 92.32,
+   "minutes": 12.57
+  },
+  "35/superhot_vr": {
+   "rows": 87158,
+   "duration_s": 944.87,
+   "hz": 92.24,
+   "minutes": 15.75
+  },
+  "35/synth_riders": {
+   "rows": 96762,
+   "duration_s": 1048.29,
+   "hz": 92.3,
+   "minutes": 17.47
+  },
+  "36/beat_saber": {
+   "rows": 85439,
+   "duration_s": 926.18,
+   "hz": 92.25,
+   "minutes": 15.44
+  },
+  "36/half_life_alyx": {
+   "rows": 99723,
+   "duration_s": 1081.85,
+   "hz": 92.18,
+   "minutes": 18.03
+  },
+  "36/social_vr": {
+   "rows": 56059,
+   "duration_s": 627.18,
+   "hz": 89.38,
+   "minutes": 10.45
+  },
+  "36/superhot_vr": {
+   "rows": 81880,
+   "duration_s": 914.93,
+   "hz": 89.49,
+   "minutes": 15.25
+  },
+  "36/synth_riders": {
+   "rows": 89835,
+   "duration_s": 973.65,
+   "hz": 92.27,
+   "minutes": 16.23
+  },
+  "37/beat_saber": {
+   "rows": 85018,
+   "duration_s": 922.2,
+   "hz": 92.19,
+   "minutes": 15.37
+  },
+  "37/half_life_alyx": {
+   "rows": 87003,
+   "duration_s": 944.97,
+   "hz": 92.07,
+   "minutes": 15.75
+  },
+  "37/social_vr": {
+   "rows": 70150,
+   "duration_s": 759.87,
+   "hz": 92.32,
+   "minutes": 12.66
+  },
+  "37/superhot_vr": {
+   "rows": 91984,
+   "duration_s": 998.15,
+   "hz": 92.15,
+   "minutes": 16.64
+  },
+  "37/synth_riders": {
+   "rows": 87539,
+   "duration_s": 949.07,
+   "hz": 92.24,
+   "minutes": 15.82
+  },
+  "38/beat_saber": {
+   "rows": 92387,
+   "duration_s": 1001.65,
+   "hz": 92.23,
+   "minutes": 16.69
+  },
+  "38/half_life_alyx": {
+   "rows": 100155,
+   "duration_s": 1083.99,
+   "hz": 92.39,
+   "minutes": 18.07
+  },
+  "38/social_vr": {
+   "rows": 71205,
+   "duration_s": 770.41,
+   "hz": 92.42,
+   "minutes": 12.84
+  },
+  "38/superhot_vr": {
+   "rows": 93187,
+   "duration_s": 1011.29,
+   "hz": 92.15,
+   "minutes": 16.85
+  },
+  "38/synth_riders": {
+   "rows": 81195,
+   "duration_s": 879.17,
+   "hz": 92.35,
+   "minutes": 14.65
+  },
+  "39/beat_saber": {
+   "rows": 90112,
+   "duration_s": 915.4,
+   "hz": 98.44,
+   "minutes": 15.26
+  },
+  "39/half_life_alyx": {
+   "rows": 107319,
+   "duration_s": 1089.26,
+   "hz": 98.52,
+   "minutes": 18.15
+  },
+  "39/social_vr": {
+   "rows": 66730,
+   "duration_s": 675.33,
+   "hz": 98.81,
+   "minutes": 11.26
+  },
+  "39/superhot_vr": {
+   "rows": 94972,
+   "duration_s": 963.34,
+   "hz": 98.59,
+   "minutes": 16.06
+  },
+  "39/synth_riders": {
+   "rows": 87595,
+   "duration_s": 888.46,
+   "hz": 98.59,
+   "minutes": 14.81
+  },
+  "40/beat_saber": {
+   "rows": 89356,
+   "duration_s": 906.4,
+   "hz": 98.58,
+   "minutes": 15.11
+  },
+  "40/half_life_alyx": {
+   "rows": 114252,
+   "duration_s": 1160.76,
+   "hz": 98.43,
+   "minutes": 19.35
+  },
+  "40/social_vr": {
+   "rows": 64102,
+   "duration_s": 651.28,
+   "hz": 98.42,
+   "minutes": 10.85
+  },
+  "40/superhot_vr": {
+   "rows": 90134,
+   "duration_s": 913.46,
+   "hz": 98.67,
+   "minutes": 15.22
+  },
+  "40/synth_riders": {
+   "rows": 98484,
+   "duration_s": 997.29,
+   "hz": 98.75,
+   "minutes": 16.62
+  },
+  "41/beat_saber": {
+   "rows": 92795,
+   "duration_s": 943.35,
+   "hz": 98.37,
+   "minutes": 15.72
+  },
+  "41/half_life_alyx": {
+   "rows": 97212,
+   "duration_s": 1004.84,
+   "hz": 96.74,
+   "minutes": 16.75
+  },
+  "41/social_vr": {
+   "rows": 75530,
+   "duration_s": 768.35,
+   "hz": 98.3,
+   "minutes": 12.81
+  },
+  "41/superhot_vr": {
+   "rows": 90914,
+   "duration_s": 922.04,
+   "hz": 98.6,
+   "minutes": 15.37
+  },
+  "41/synth_riders": {
+   "rows": 93726,
+   "duration_s": 950.47,
+   "hz": 98.61,
+   "minutes": 15.84
+  },
+  "42/beat_saber": {
+   "rows": 99950,
+   "duration_s": 1012.3,
+   "hz": 98.74,
+   "minutes": 16.87
+  },
+  "42/half_life_alyx": {
+   "rows": 98117,
+   "duration_s": 992.44,
+   "hz": 98.86,
+   "minutes": 16.54
+  },
+  "42/social_vr": {
+   "rows": 70265,
+   "duration_s": 710.48,
+   "hz": 98.9,
+   "minutes": 11.84
+  },
+  "42/superhot_vr": {
+   "rows": 88494,
+   "duration_s": 895.61,
+   "hz": 98.81,
+   "minutes": 14.93
+  },
+  "42/synth_riders": {
+   "rows": 100602,
+   "duration_s": 1014.81,
+   "hz": 99.13,
+   "minutes": 16.91
+  },
+  "43/beat_saber": {
+   "rows": 98326,
+   "duration_s": 998.42,
+   "hz": 98.48,
+   "minutes": 16.64
+  },
+  "43/half_life_alyx": {
+   "rows": 105691,
+   "duration_s": 1071.82,
+   "hz": 98.61,
+   "minutes": 17.86
+  },
+  "43/social_vr": {
+   "rows": 66014,
+   "duration_s": 671.4,
+   "hz": 98.32,
+   "minutes": 11.19
+  },
+  "43/superhot_vr": {
+   "rows": 89580,
+   "duration_s": 908.44,
+   "hz": 98.61,
+   "minutes": 15.14
+  },
+  "43/synth_riders": {
+   "rows": 91356,
+   "duration_s": 927.19,
+   "hz": 98.53,
+   "minutes": 15.45
+  },
+  "44/beat_saber": {
+   "rows": 85336,
+   "duration_s": 925.31,
+   "hz": 92.22,
+   "minutes": 15.42
+  },
+  "44/half_life_alyx": {
+   "rows": 94318,
+   "duration_s": 1020.24,
+   "hz": 92.45,
+   "minutes": 17.0
+  },
+  "44/social_vr": {
+   "rows": 66512,
+   "duration_s": 720.22,
+   "hz": 92.35,
+   "minutes": 12.0
+  },
+  "44/superhot_vr": {
+   "rows": 99776,
+   "duration_s": 1082.35,
+   "hz": 92.18,
+   "minutes": 18.04
+  },
+  "44/synth_riders": {
+   "rows": 86191,
+   "duration_s": 932.77,
+   "hz": 92.4,
+   "minutes": 15.55
+  },
+  "45/beat_saber": {
+   "rows": 82069,
+   "duration_s": 889.43,
+   "hz": 92.27,
+   "minutes": 14.82
+  },
+  "45/half_life_alyx": {
+   "rows": 90545,
+   "duration_s": 983.24,
+   "hz": 92.09,
+   "minutes": 16.39
+  },
+  "45/social_vr": {
+   "rows": 65796,
+   "duration_s": 712.65,
+   "hz": 92.33,
+   "minutes": 11.88
+  },
+  "45/superhot_vr": {
+   "rows": 90515,
+   "duration_s": 981.54,
+   "hz": 92.22,
+   "minutes": 16.36
+  },
+  "45/synth_riders": {
+   "rows": 84650,
+   "duration_s": 917.99,
+   "hz": 92.21,
+   "minutes": 15.3
+  },
+  "46/beat_saber": {
+   "rows": 83869,
+   "duration_s": 909.1,
+   "hz": 92.25,
+   "minutes": 15.15
+  },
+  "46/half_life_alyx": {
+   "rows": 92564,
+   "duration_s": 1001.35,
+   "hz": 92.44,
+   "minutes": 16.69
+  },
+  "46/social_vr": {
+   "rows": 60321,
+   "duration_s": 653.31,
+   "hz": 92.33,
+   "minutes": 10.89
+  },
+  "46/superhot_vr": {
+   "rows": 94686,
+   "duration_s": 1028.02,
+   "hz": 92.11,
+   "minutes": 17.13
+  },
+  "46/synth_riders": {
+   "rows": 86638,
+   "duration_s": 938.33,
+   "hz": 92.33,
+   "minutes": 15.64
+  },
+  "47/beat_saber": {
+   "rows": 84287,
+   "duration_s": 914.2,
+   "hz": 92.2,
+   "minutes": 15.24
+  },
+  "47/half_life_alyx": {
+   "rows": 95506,
+   "duration_s": 1032.96,
+   "hz": 92.46,
+   "minutes": 17.22
+  },
+  "47/social_vr": {
+   "rows": 65746,
+   "duration_s": 780.0,
+   "hz": 84.29,
+   "minutes": 13.0
+  },
+  "47/superhot_vr": {
+   "rows": 92464,
+   "duration_s": 1005.5,
+   "hz": 91.96,
+   "minutes": 16.76
+  },
+  "47/synth_riders": {
+   "rows": 89464,
+   "duration_s": 969.1,
+   "hz": 92.32,
+   "minutes": 16.15
+  },
+  "48/beat_saber": {
+   "rows": 84429,
+   "duration_s": 915.54,
+   "hz": 92.22,
+   "minutes": 15.26
+  },
+  "48/half_life_alyx": {
+   "rows": 109533,
+   "duration_s": 1184.96,
+   "hz": 92.44,
+   "minutes": 19.75
+  },
+  "48/social_vr": {
+   "rows": 63429,
+   "duration_s": 686.49,
+   "hz": 92.4,
+   "minutes": 11.44
+  },
+  "48/superhot_vr": {
+   "rows": 90047,
+   "duration_s": 976.91,
+   "hz": 92.18,
+   "minutes": 16.28
+  },
+  "48/synth_riders": {
+   "rows": 88948,
+   "duration_s": 963.59,
+   "hz": 92.31,
+   "minutes": 16.06
+  }
+ },
+ "measured_on": "converted corpus processed_datasets/CrossApplicationXR_Dataset",
+ "raw_release": {
+  "source": "external_datasets/across-xr (49 participant CSVs, game_id column)",
+  "n_cells": 245,
+  "total_rows": 21203962,
+  "rows": {
+   "min": 40629,
+   "median": 89580,
+   "max": 206181
+  },
+  "note": "total_rows matches the 21,203,962 recorded in CLAUDE.md exactly"
+ },
+ "conversion_defect": {
+  "cells_affected": 1,
+  "cells_bit_exact": 244,
+  "cell": "user 1 / superhot_vr",
+  "raw_rows": 206181,
+  "converted_rows": 124221,
+  "rows_lost": 81960,
+  "mechanism": "the raw cell contains ONE backward time jump at row 81,961 (42:25.395 -> 16:24.099), so it is two recordings under one game_id. split_sessions correctly emits two sessions, both named superhot_vr_take1.csv, and the second overwrites the first.",
+  "blast_radius": "user 1 is in the TRAINING split (0-22), so no test-set figure (users 32-48) is affected. The C1/C2 arms trained on 0-22 saw a Superhot cell 40% short for one participant: 0.39% of corpus rows.",
+  "claim_adjudicated": "\"40k-206k rows per participant per game\" is CORRECT for the RAW release (40,629 - 206,181). It is NOT true of our converted corpus, whose max is 130,282 because of the defect above. Cite the raw figures."
+ }
+}

@@ -209,6 +209,17 @@ sequence-accuracy curve over observation time:
   **78.5%** averaged over all applications; **100%** at a 10-minute sequence.
 
 X's split — 23 train / 9 validation / 17 test, disjoint users — is our protocol exactly.
+> **CORRECTION 2026-09-17 - 78.5% IS NOT DIRECTLY COMPARABLE AND IS WITHDRAWN AS A COMPARATOR.**
+> Verified against the Frontiers text: *"we used data from all users and VR applications as a
+> reference"* (p.792). It is the **all-applications-reference** figure, so the reference set
+> includes **the query's own application**, and that cell is self-match contaminated - the
+> reference is a 1-in-150 subsample of the same recordings the queries come from. Their Figure 4
+> range (67.7% Alyx to 86.0% Beat Saber) matches the per-application values measured from their
+> released JSON for that cell (0.691, 0.863), which identifies it beyond doubt.
+> **The comparable cross-application figure is 18.0%**, the mean of the 20 off-diagonal cells.
+> Every comparison in our paper is made against that. Sentences below calling 78.5% "directly
+> comparable" or pairing it with our rank-1 are superseded by this note.
+
 That makes their 78.5% the *directly comparable* external number, and we currently have
 no figure that can be placed next to it. Adding rank-1 / CMC over the held-out fold to
 `model/metrics.py` costs one function over embeddings we already compute, and it turns
