@@ -946,3 +946,29 @@ from the markers gets the wrong answer. **A `.done` marker must mean ran-and-exi
 else**; a parked entry needs its own state (a `.parked` marker or a reason field). Raised with Miami.
 It is the same family as the watcher certificate: a record of an event that did not happen, which
 nothing about the record can contradict.
+
+## From xrsec-d8 (paper review): Section 3.1 needs a per-cell length check on Across-XR - 2026-09-17
+
+**For the Coordinator, or whichever session holds the Across-XR corpus.** The paper draft's Section
+3.1 now reads: each Across-XR session is "nominally ten to fifteen minutes (the released recordings
+range more widely, from roughly 40,000 to 206,000 frames per cell, about seven to thirty-eight
+minutes)". The 10-15 min is Schach et al.'s own protocol sentence, verified in their text. The
+40,000-206,000 range is `CLAUDE.md` ("40k-206k rows per participant per game at 90.9 Hz") and could
+not be re-verified on the review machine: it holds neither `raw_datasets/Across_XR_Dataset_Main` nor
+`processed_datasets/CrossApplicationXR_Dataset`, and `docs/acceptance/across_xr_manifest_desktop-c.txt`
+records only per-user byte sizes (94-134 MB for five games - consistent with a 13-16 min average per
+cell, not a per-cell range).
+
+**Request:** count rows per (user, game_id) over all 245 cells and write
+`docs/acceptance/across_xr_cell_lengths.json` with min / median / max rows and minutes at the measured
+rate, then reply here. If 40k-206k is wrong, the 3.1 parenthesis must change before submission; if
+right, it stands. Assert the cell count is 245 before writing (the fixture rule).
+
+**Also from the review, so it is not lost:** Schach et al.'s headline 78.5% is the *similarity* model
+with an all-applications reference set (their Results 6.2.1, "we used data from all users and VR
+applications as a reference"), not a classifier figure. `across_xr_alignment_REGISTERED.md` Amendment 8
+says otherwise and now carries a dated correction note; `LITERATURE_BRIEFING.md` section 7 still calls
+78.5% "the directly comparable external number", which it is not - it includes the query's own
+application in the gallery and so inherits the within-application self-match. The paper compares
+against 18.0% and says why in Sections 1 and 5.4. The three-session review passed its merged
+consistency pass (33/33); the working tree is uncommitted for the user.

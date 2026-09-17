@@ -715,3 +715,18 @@ registered bands, falsifiers and outcomes of Amendment 6 are unaffected: P2 was 
 the headline and `raw` as the audit on a corpus where every application shares a posture, and that
 is now said rather than assumed. The original text above is left as registered. Recorded as
 correction 6 on the certificate; user decision `e8c077b`.
+
+# NOTE — 2026-09-17, paper review: a mis-attribution in Amendment 8, corrected here rather than edited there
+
+Amendment 8's protocol paragraph says "the classification model (the 78.5%-class figures) is the one
+with within-user time splits". The 78.5% is **not** the classification model's figure. Read from the
+arXiv full text (2509.08539, Section 6.2.1 "Overall Performance"): *"we used data from all users and VR
+applications as a reference ... On average, the model achieved an accuracy of 78.5% across all users
+and VR applications"* — the **similarity** model, scored with a reference set drawn from all five
+applications including the query's own. The classification model's figure is 43.2% (their Section
+6.3). Nothing registered in Amendment 8 depends on the attribution: the paired comparison is against
+the cross-application 0.180, which is unaffected. The consequence for the paper is that 78.5% inherits
+the within-application self-match overlap through the query application's share of the reference set
+and is neither a within- nor a cross-application figure; it is not a comparator. Their released
+all-five-reference cells average 0.8019, which is not 0.785, so the two are not asserted to be the same
+computation. (Amendment 8's text stands as written, per this file's convention.)

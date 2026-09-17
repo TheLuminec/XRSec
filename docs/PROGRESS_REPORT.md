@@ -914,24 +914,61 @@ rank-1 at N=17 carries a dashed chance line at 0.0588.
 
 ## C14 - Registered predictions and verdicts
 - **Type:** table.
-- **Data [PLAN, QG, QL]:**
+- **Scope (review pass, 2026-09-17):** every band or falsifier registered in
+  `docs/acceptance/across_xr_alignment_REGISTERED.md` (original text and Amendments 1-8), in
+  `questset_geometry.json`, `questset_static_lookup.json` and `across_xr_within_application.json`
+  has a row, including the ones whose outcome went against the prediction. Where a band and its
+  falsifier did not meet, the unnamed region is stated in the "registered" column. The paper's
+  Table 3 may print the subset that bears on a reported claim, but every row here is a registered
+  outcome and no row may be dropped silently - an omitted negative is the failure mode this table
+  exists to prevent. Verdicts are read against the interval, not against p < 0.05.
+- **Data [PLAN, OUT, RES, P3S, QG, QL, CL]:**
 
-  | prediction | registered | measured | verdict |
+  | prediction | registered (source) | measured | verdict |
   | --- | --- | --- | --- |
-  | P1: head-only `dyn` cross-application rank-1 at N=17 | band 0.18-0.35; falsifier < 0.12 | 0.234 [0.182, 0.292], 3 seeds | HELD |
-  | P2: `raw` minus `dyn` positive | no band | +0.117 [+0.042, +0.192] | HELD |
-  | P3: unseen-application cell below seen-application cell | directional | -0.036 [-0.054, -0.018] | HELD |
-  | Exposure carries to unseen application | falsifier <= 0; headline threshold CI lower > +0.030 | +0.049 [+0.021, +0.078] | falsifier excluded; threshold NOT MET |
-  | C2-lo beats theirs, their metric | +0.08..+0.20 | +0.119 [+0.050, +0.192] | BEAT |
-  | C2-lo beats theirs, our metric | +0.05..+0.17 | +0.176 [+0.092, +0.260] | BEAT (0.006 past the upper edge, declared, not argued) |
-  | Zero-shot vs theirs | registered as UNRESOLVED | +0.025 / +0.035 | UNRESOLVED |
-  | Template averaging lifts their model to 0.20-0.32 (our metric) | band | 0.199 | FAILED (0.001 below the edge) |
-  | Honest alignment A2 minus A1 | +0.05..+0.20 | +0.011 [-0.020, +0.041] | band excluded (negative result) |
-  | Activity diversity (Nymeria swap) | +0.005 to +0.03 | -0.0012 [-0.0045, +0.0020] | band excluded [CL] |
-  | Questset height P, group 2 | falsifier < 0.60 | 0.493 | FALSIFIER FIRED |
-  | Questset height P, group 1 | band > 0.65 | 0.718 | HELD |
-  | Questset height-only lookup, group 2, N=30 | < 0.10 | 0.033 | HELD (exactly chance) |
-  | Questset height-only lookup, group 1, N=30 | > 0.15 | 0.092 | **NOT MET** (above chance, below the registered level) |
+  | **P1**: head-only `dyn` cross-application rank-1 at N=17 | band 0.18-0.35; falsifier < 0.12; [0.12, 0.18) and > 0.35 unnamed (original registration) | 0.234 [0.182, 0.292], 3 seeds | HELD, inside the band |
+  | **P2**: `raw` minus `dyn`, zero-shot, cross-application (R-zero A1 - dyn A1) | band **+0.00 to +0.06**; falsifier < -0.03; (-0.03, 0.00) and > +0.06 unnamed (Amendment 6) | **+0.117 [+0.042, +0.192]**, 3 seeds, every seed at epoch 1 of a 120-epoch budget (patience 15) | direction HELD and the falsifier excluded by 0.07; **the registered SIZE was under-predicted**: the mean sits at twice the band's upper edge and the interval spans that edge (lower bound inside the band, upper bound above it), so "inside" against "above" is not resolved and is not argued. `p2.json` verdict: "interval spans a registered edge: unresolved" |
+  | P2, exposed: `raw` minus `dyn`, C2-lo (R-C2-lo A1 - dyn C2-lo A1) | band +0.00 to +0.06; falsifier < -0.03 (Amendment 6) | +0.029 [-0.068, +0.134], 1 `raw` seed against 3 `dyn` seeds | UNRESOLVED: the interval spans both band edges and zero |
+  | P2, within-application: `raw` A0 gain exceeds `raw` A1 gain | directional (Amendment 6): the within cell carries placement (P=0.7525) and should gain more | A0 +0.223 [+0.184, +0.263] against A1 +0.117 | HELD; the within-application `raw` figure is never quoted as a biometric |
+  | **P3**: unseen-application cell below seen-application cell (P3 - C2-hi on X-cells) | directional (original registration; Amendment 4) | -0.036 [-0.054, -0.018] | HELD (dose-confounded by 20% less in-domain data; a direction, not a measurement) |
+  | Exposure carries to an application held out of training (P3 - Z-676 on X-cells, pooled) | band +0.02 to +0.07 at the mean; falsifier <= 0; (0, +0.02] named "unresolved"; headline "crosses an activity boundary" needs CI lower bound > +0.030 (Amendment 4) | +0.049 [+0.021, +0.078], five applications, seed-averaged | inside the band; falsifier excluded; **headline threshold NOT MET** (lower bound 0.021 against 0.030) |
+  | P3 control: removing one application leaves the seen cells where they were (P3 non-X - C2-hi non-X within +-0.03) | band +-0.03 (Amendment 4) | -0.009 [-0.025, +0.008] | HELD: 20% less in-domain data cost nothing measurable on seen cells, so the P3 runs are comparable to C2-hi |
+  | P3 mechanism: the two rhythm games carry best | ordering prediction, not a band (Amendment 4 iii) | Beat Saber +0.084, Synth Riders +0.065 are the top two of five | HELD |
+  | P3 mechanism: Social VR carries least, below +0.03 | ordering prediction (Amendment 4 iii; second addendum) | Social VR +0.038 [+0.001, +0.073], 2 seeds; **Alyx is least at +0.026** | **FAILED**: Social VR carries about as much as the mean; the task-structure ordering holds at the top and not at the bottom |
+  | P3: Synth Riders carries at >= +0.04 on its cells | second addendum to Amendment 4, registered with two runs outstanding | +0.065 [+0.034, +0.095], 2 seeds (+0.077 / +0.053) | HELD |
+  | P3 embeddings: test-fitted alignment ceiling A2' - A1 below +0.03 | Amendment 4 | +0.003 / +0.039 / +0.135 / +0.136 / +0.131 (Superhot / Alyx / Beat Saber / Synth Riders / Social VR) | **FAILED on three of five**: the ceiling is present on three held-out applications and absent on two at identical configuration - the run-dependence C2-lo's seeds showed, on a second arm |
+  | **C2-lo beats theirs, their metric** (paired per user) | point in +0.08 to +0.20; outcome partition BEAT / LOSS / UNRESOLVED by the interval (Amendment 8) | +0.119 [+0.050, +0.192], 15/17 users | **BEAT**, inside the band |
+  | **C2-lo beats theirs, our metric** | point in +0.05 to +0.17 (Amendment 8) | +0.176 [+0.092, +0.260], 16/17 users | **BEAT**; 0.006 past the band's upper edge, declared and not argued |
+  | Zero-shot vs theirs, their metric | point in -0.05 to +0.06, predicted UNRESOLVED (Amendment 8; power note: MDD 0.081 at N=17) | +0.025 [-0.031, +0.080], 10/17 users | UNRESOLVED, as predicted; not a beat and not parity |
+  | Zero-shot vs theirs, our metric | predicted UNRESOLVED (Amendment 8) | +0.035 [-0.050, +0.122], 10/17 users | UNRESOLVED, as predicted |
+  | Template averaging lifts their model to 0.20-0.32 under our metric | band (Amendment 8) | 0.199 [0.146, 0.258] | **FAILED** by 0.001 below the edge, not argued; the averaging gain is model-specific (+0.028 / +0.075 on ours, +0.019 on theirs) |
+  | C2-lo - zero-shot (exposure at a 3.87% dose) | registered as a dose statement: above +0.05 is informative, a null is a result about the dose (Amendment 1) | +0.141 [+0.101, +0.182], 3 paired seeds (`schach_paired_review_addenda.json`; the aggregate certificate's own draw reads [+0.100, +0.183]) | above +0.05: a 3.87% dose carries |
+  | C2-hi - Z-676 (exposure at a 14.1% dose, 495 identities) | band +0.05 to +0.20; falsifier < +0.03; [+0.03, +0.05) unnamed (Amendment 1) | +0.089 [+0.047, +0.131], 1 seed | band held at the mean; the lower edge sits 0.003 below +0.05 and is not argued either way |
+  | Z-676 - zero-shot (identity count without exposure) | within +-0.03 (Amendment 1) | -0.013 [-0.039, +0.013], seed 1 (three-seed per-user means: -0.016 [-0.040, +0.007]) | mean inside the band; the interval extends past -0.03, so flatness holds at the mean and is not resolved at the edge |
+  | C2-hi - C2-lo (dose effect, predicted positive) | directional (Amendment 1) | -0.068 [-0.099, -0.037] against the three-seed per-user mean (`schach_paired_review_addenda.json`); the aggregate's seed-1 pairing reads -0.061 [-0.099, -0.026] | **FAILED**: sign reversed; the dose reading is withdrawn and both arms are read against their own controls (Amendment 5) |
+  | C2-lo-half - C2-lo (dose at fixed identities) | within +-0.03; below -0.03 dose binds; above +0.03 regularisation (Amendment 5) | -0.028 [-0.062, +0.009], 1 seed | mean inside the band; the interval extends below -0.03: "dose may bind" is not excluded and is reported as unresolved |
+  | C1-full - C1 (budget-matched their-protocol arm) | [0, +0.08]; < 0 named "capacity-limited" (Amendment 3 and addendum) | +0.033 | HELD: C1 was under-trained by about 0.03 |
+  | C1-full stays below the zero-shot 0.234 | falsifier: at or above 0.234 (Amendment 3) | 0.164 [0.128, 0.205] | HELD: their protocol on our model, trained out, is still 0.07 below zero-shot |
+  | Test-fitted alignment ceiling A2' - A1, zero-shot | band >= +0.15; programme falsifier CI upper < +0.05; [+0.05, +0.15) unnamed (original registration; defect recorded in Amendment 2) | +0.026 [+0.000, +0.051], 3 seeds | band excluded by a factor of 2.9 at the interval's upper end; the falsifier missed by 0.001 and the result lands in the unnamed gap - not argued; the verdict rests on where the interval fell |
+  | **Honest alignment A2 - A1, zero-shot** (fit on users 0-31) | band +0.05 to +0.20; falsifier < +0.05 (original registration) | +0.011 [-0.020, +0.041], 3 seeds | **band excluded, falsifier FIRED** (negative result, reported as such) |
+  | Honest alignment, exposed and smaller arms | same band | C2-lo -0.003 [-0.011, +0.005]; C2-hi -0.003; Z-676 -0.005; C1 -0.002 | band excluded on every `dyn` arm |
+  | Alignment guard: permuted correspondences A2-null <= A1 + 0.03 | guard (original registration) | -0.074 [-0.126, -0.029] | HELD: the fit is person-specific |
+  | Alignment guard: unrestricted 128-d fit A2-full <= A2 | guard (original registration) | -0.055 [-0.086, -0.029] | HELD |
+  | Alignment seed check: A2 - A1 seeds within 0.05 | original registration | seed range 0.010 | HELD |
+  | Margin/scale screen: M-zero - zero-shot | band -0.02 to +0.04; above +0.04 the screen fires; below -0.02 the sign-flip reading (Amendment 7; a SCREEN resolving about +-0.037) | -0.028 [-0.045, -0.012], 1 seed | below -0.02: **sign reversal at 4,096 identities**; size against the edge not resolved; no seeds and no M-C2-lo, as registered |
+  | Activity diversity (Nymeria swap, earlier programme) | +0.005 to +0.03; falsifier < +0.005 | -0.0012 [-0.0045, +0.0020], 5 paired seeds | band excluded [CL] |
+  | Across-XR within-application lateral placement P(within<between) | band 0.80-0.95; falsifier < 0.65; [0.65, 0.80) unnamed (`across_xr_within_application.json`) | 0.7525 [0.7114, 0.7748] | lands in the unnamed gap: a registration defect, recorded; the design consequence (a same-application arm is not placement-free) holds under either mechanism |
+  | Questset lateral P at chance | band 0.45-0.60 [QG] | 0.526 (group 1) / 0.549 (group 2) | HELD in both groups |
+  | Questset height P, group 2 (standing vs seated) | band > 0.65; falsifier < 0.60; 0.60-0.65 "weakened" [QG] | 0.493 | **FALSIFIER FIRED** |
+  | Questset height P, group 1 (both standing) | band > 0.65 [QG] | 0.718 | HELD |
+  | Questset height-only lookup, group 2, N=30 | < 0.10 holds; 0.10-0.15 weakened; > 0.15 falsifier [QL] | 0.033 | HELD (exactly chance) |
+  | Questset height-only lookup, group 1, N=30 | > 0.15 [QL]; no outcome named below the band | 0.092 | **NOT MET** (2.8x chance, below the registered level) |
+
+- **Say it this way:** a row that reads FAILED or NOT MET stays in the table and in the paper. The
+  registered size of P2 was wrong by a factor of two in the direction that makes the static cue
+  larger; the P3 ordering held at the top and failed at the bottom; the P3 ceilings show the
+  test-fitted rotation on three of five held-out applications. None of these changes a headline,
+  and all of them are reported.
 
 ## C-D1 - Across-XR split (optional)
 - **Type:** simple bar split into three segments.

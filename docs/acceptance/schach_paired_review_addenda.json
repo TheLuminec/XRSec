@@ -1,0 +1,121 @@
+{
+ "what": "review addenda computed from committed certificates only; see module docstring",
+ "gate": {
+  "aggregate_Z676-A1_seed1_mean": {
+   "certificate": -0.013112367142183584,
+   "recomputed": -0.013112367142183584,
+   "passed": true
+  },
+  "aggregate_C2hi-C2lo_seed1_mean": {
+   "certificate": -0.060981512387759625,
+   "recomputed": -0.060981512387759625,
+   "passed": true
+  },
+  "aggregate_C2lo-A1_3seed_mean": {
+   "certificate": 0.14088354022972238,
+   "recomputed": 0.1408835402297224,
+   "passed": true
+  },
+  "paired_C2lo-theirs_D1_mean": {
+   "certificate": 0.11887484597903256,
+   "recomputed": 0.11887484597903256,
+   "passed": true
+  },
+  "paired_theirs_sd_users_ddof1": {
+   "certificate": 0.09269649059559655,
+   "recomputed": 0.09269649059559655,
+   "passed": true
+  },
+  "alignment_vs_paired_per_seed_A1_within_2e-3": {
+   "passed": true,
+   "arms": [
+    "zero_shot",
+    "c2lo"
+   ]
+  }
+ },
+ "n_boot": 10000,
+ "rng_seed": 67,
+ "cross_vs_three_seed_mean": {
+  "Z676-zero_shot": {
+   "mean": -0.015877305305603873,
+   "ci95_boot": [
+    -0.039661403103310275,
+    0.006776887874147585
+   ],
+   "note": "aggregate.json pairs to seed 1 only: -0.013 [-0.039, +0.012]"
+  },
+  "C2hi-C2lo": {
+   "mean": -0.06758798489079511,
+   "ci95_boot": [
+    -0.0987879201549508,
+    -0.03711436510836743
+   ],
+   "note": "aggregate.json pairs to seed 1 only: -0.061 [-0.099, -0.026]"
+  },
+  "C2lo-zero_shot": {
+   "mean": 0.1408835402297224,
+   "ci95_boot": [
+    0.10079404239058183,
+    0.18227995639681518
+   ]
+  },
+  "C2hi-Z676": {
+   "mean": 0.08917286064453116,
+   "ci95_boot": [
+    0.047191480602848196,
+    0.13034503557796073
+   ]
+  }
+ },
+ "ten_minute_raw_minus_dyn_our_vote": {
+  "zero_shot_3v3": {
+   "mean": 0.07712418300653594,
+   "ci95_boot": [
+    -0.05490196078431374,
+    0.207516339869281
+   ],
+   "raw_level": 0.4343137254901961,
+   "dyn_level": 0.3571895424836601
+  },
+  "exposed_1v3": {
+   "mean": -0.2137254901960784,
+   "ci95_boot": [
+    -0.33726715686274505,
+    -0.08480392156862743
+   ],
+   "raw_level": 0.49705882352941183,
+   "dyn_level": 0.7107843137254902
+  },
+  "exposed_1v1_seed1": {
+   "mean": -0.19558823529411765,
+   "ci95_boot": [
+    -0.32941176470588235,
+    -0.06176470588235293
+   ],
+   "dyn_seed1_level": 0.6926470588235294
+  }
+ },
+ "single_window_exposed_raw_minus_dyn_check": {
+  "mean": 0.02938926627700503,
+  "ci95_boot": [
+   -0.06822274402499566,
+   0.1312284586249352
+  ]
+ },
+ "per_user_sd_ddof1_their_metric": {
+  "theirs": 0.09269649059559655,
+  "zero_shot": 0.0708912041012264,
+  "c2lo": 0.11321954213947238,
+  "ddof0_for_reference": {
+   "theirs": 0.08992880514111029,
+   "zero_shot": 0.06877456998507679,
+   "c2lo": 0.1098390896764975
+  }
+ },
+ "template_gain_our_metric_minus_their_metric": {
+  "theirs": 0.01832803262061744,
+  "zero_shot": 0.02772759633929489,
+  "c2lo": 0.07521543191804558
+ }
+}
