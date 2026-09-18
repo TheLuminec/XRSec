@@ -179,8 +179,17 @@ that it needs re-deciding rather than inheriting.
 | | registered | measured | verdict |
 | --- | --- | --- | --- |
 | **P1** head-only `dyn` cross-application rank-1 @ N=17 | band 0.18-0.35, falsifier < 0.12 | **0.234** [0.181, 0.292], 3 seeds | **HELD**, inside the band |
-| **P2** `raw` minus `dyn` positive | (no band) | **+0.117** [+0.042, +0.192], 3 seeds, epoch-1 selection (run 2026-09-11; this row said UNRUN until 2026-09-15) | **HELD** |
+| **P2** `raw` minus `dyn` positive | band **+0.00..+0.06**, falsifier **< -0.03** (Amendment 6) | **+0.117** [+0.042, +0.192], 3 seeds, epoch-1 selection (run 2026-09-11; this row said UNRUN until 2026-09-15) | **falsifier excluded; the interval sits ABOVE the band and Amendment 6 named no outcome there - UNRESOLVED as to size** |
 | **P3** unseen-application cell below the seen-application cell | directional | **-0.036** [-0.054, -0.018] | **HELD** |
+
+*The P2 row read "(no band) ... HELD" until 2026-09-17, found by the partition audit. A band did
+exist - Amendment 6 registered +0.00..+0.06 with a falsifier below -0.03 - and the measurement sits
+**above** it, in a region the amendment does not name. The direction held and the falsifier is
+excluded; the **size** is unresolved, which is what the p2 harness itself records
+(`"verdict_A1": "interval spans a registered edge: unresolved"`) and what `PAPER_OUTLINE.md` R5
+already said. **This file was the only site that was wrong**, and nothing downstream had used it -
+but Table 3 of the draft is still unfilled, and filling it from here would have put "no band, held"
+into the paper for a prediction that had a band and landed outside it.*
 
 **The five claims the programme ends on.**
 

@@ -1317,6 +1317,59 @@ read by both parties, and still not fire at review** - so the mitigation is not 
 here but a mechanical one: **do the subtraction and write the third outcome's meaning into the
 registration**, every time, as a line of the template rather than an act of attention.
 
+**THE WHOLE REPO WAS AUDITED FOR THIS ON 2026-09-17 (LAPTOP-C), AND THE HEADLINE IS THE NEGATIVE.**
+All 136 occurrences of a decision rule across every doc and harness, not the 106 the coordinator's
+file list would have reached - the omitted files included `PAPER_DRAFT.md`, which is the one the
+request was worried about. `docs/acceptance/registered_band_partition_audit.md`:
+
+| | |
+| --- | --- |
+| registrations carrying a decision rule | **28** |
+| partition the line cleanly | **13** |
+| leave an unnamed region | **15** |
+| measurements that actually landed in one | **4** |
+| **conclusions resting on a verdict the registration did not license** | **ZERO** |
+
+All four were reported as something other than a pass or a fail - R13 as "the data chose a third
+outcome", R2 via its own amendment, R16 mis-scored and corrected the same day, R10 as "unresolved".
+**So the rule is violated often in drafting and has not yet produced a wrong conclusion**, which is
+the result and should be stated before either defect the audit found. The gate was that the pass had
+to rediscover all three known violations independently before its clean cells counted; it did, and
+found a fourth.
+
+**THE FOURTH IS A SILENT BAND, AND IT IS THE QUESTSET DEFECT IN A SECOND FILE.**
+`across_xr_within_application.py` registers **two** bands - lateral [0.80, 0.95] and height
+[0.85, 0.97] - and its verdict block scored **lateral only**. The height figure was computed
+(P = 0.8894, CI [0.8483, 0.9007]), written to the certificate, and never compared to its own band
+anywhere in the repo. It also has no falsifier - the key is literally `falsifier_lateral_below` - so
+nothing below 0.85 was ever named. **And the two scoring conventions disagree on it**: the point
+estimate is inside the band, the interval's lower edge sits **0.0017** below it. Per this file's own
+rule the interval governs, so the verdict is *not contained* - and per this file's own near-miss
+rule that is where the reporting stops, because **the substance rests on the 0.14 gap between lateral
+0.7525 and height 0.8894, not on whether 0.8483 clears 0.85.** Fixed: the block is now
+`print_verdicts()`, scores every registered band, names the unnamed region, and prints an explicit
+warning when the two conventions disagree. Exercised against the committed certificate rather than
+trusted to `py_compile`, which passes unbound names.
+
+**A FIX APPLIED WHERE A DEFECT WAS FOUND IS NOT A FIX APPLIED WHERE THE DEFECT IS.** The identical
+bug - a harness scoring one line of a multi-line registration and printing a verdict that reads as
+the verdict for the whole - was found in `questset_static_lookup.py` on 09-16 and fixed *there*, with
+a comment explaining why. Nobody looked for the second instance, which was sitting in a passing
+harness in the same directory. **When a defect is found in one harness, grep the family before
+closing it.**
+
+**AND THE STRUCTURAL FIX IS WORTH MORE THAN EITHER FINDING.** Every clean registration in the audit
+shares exactly one property: **it names the middle region in prose.** Amendment 4 writes
+"(0, +0.02] unresolved"; `questset_geometry.py` writes "0.60-0.65 unnamed-but-named-here as
+weakened"; the Questset A1 arm names all four regions in a table. Every defective one names two
+endpoints and lets the middle fall out. So the registration template gets a **mandatory third line**:
+
+> **band:** ___   **falsifier:** ___   **landing between them means:** ___
+
+Three instances in one week, two of them after the rule was written and read by both parties, says
+**attention is not the lever** - the third line turns this from something to remember into something
+visibly missing from a form.
+
 **The substance was unaffected, and that is the reading to imitate.** The registered band was
 excluded by a factor of 2.8 at the interval's upper end and sits **14x below** the value Schach
 et al. measured for the same quantity (+0.34), so the conclusion - the cross-application gap on

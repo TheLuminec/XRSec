@@ -297,14 +297,47 @@ def main() -> int:
     args.out.write_text(json.dumps(report, indent=2))
     print(f"\nwrote {args.out}")
 
-    lateral = report["splits"].get("take", {}).get("lateral") or report["splits"].get("half", {}).get("lateral")
-    if lateral:
-        low, high = lateral["ci95"]
-        print("\n=== registered band, read against the INTERVAL ===")
-        print(f"  lateral P = {lateral['p']:.4f}, CI95 [{low:.4f}, {high:.4f}]")
-        print(f"  band 0.80-0.95: {'CONTAINED' if 0.80 <= low and high <= 0.95 else 'not contained'}")
-        print(f"  falsifier <0.65: {'FIRED' if high < 0.65 else 'did not fire'}")
+    print_verdicts(report)
     return 0
+
+
+def print_verdicts(report):
+    """Score EVERY registered band against its interval. Callable so it can be
+    exercised on a committed certificate without re-running the whole harness."""
+    # SCORE EVERY REGISTERED BAND, NOT THE FIRST ONE (fixed 2026-09-17).
+    # This block read `lateral` alone while the registration above carries TWO bands.
+    # The height figure was computed, written to JSON, and never compared to its own
+    # band anywhere in the repo - so a registered prediction sat unscored in a passing
+    # harness. It is the same defect as questset_static_lookup's group-1 miss: a verdict
+    # computed on PART of a registration reads as the verdict for the whole of it.
+    # A fix applied where a defect was found is not a fix applied where the defect is.
+    split = "take" if "lateral" in report["splits"].get("take", {}) else "half"
+    bands = {"lateral": (0.80, 0.95, 0.65), "height": (0.85, 0.97, None)}
+    print("\n=== registered bands, read against the INTERVAL ===")
+    print(f"  (split={split}; both bands scored, and the unnamed regions named)")
+    for axis, (lo_b, hi_b, fals) in bands.items():
+        cell = report["splits"].get(split, {}).get(axis)
+        if not cell:
+            print(f"  {axis:8} NOT COMPUTED - cannot be scored")
+            continue
+        low, high = cell["ci95"]
+        contained = lo_b <= low and high <= hi_b
+        print(f"  {axis:8} P = {cell['p']:.4f}, CI95 [{low:.4f}, {high:.4f}]")
+        print(f"           band {lo_b:.2f}-{hi_b:.2f}: "
+              f"{'CONTAINED' if contained else 'NOT contained'}"
+              f"   (point estimate {'inside' if lo_b <= cell['p'] <= hi_b else 'outside'})")
+        if fals is None:
+            print(f"           falsifier: NONE REGISTERED for {axis} - nothing below "
+                  f"{lo_b:.2f} was ever named, so a low value has no registered meaning")
+        else:
+            print(f"           falsifier <{fals:.2f}: {'FIRED' if high < fals else 'did not fire'}")
+            if high >= fals and not contained:
+                print(f"           UNNAMED REGION: the interval lies between the falsifier "
+                      f"and the band. The registration named neither outcome.")
+        if contained != (lo_b <= cell["p"] <= hi_b):
+            print(f"           *** THE TWO CONVENTIONS DISAGREE on {axis}. This project's rule "
+                  f"is the INTERVAL, so the verdict is 'not contained'. Report the gap size "
+                  f"({min(abs(low - lo_b), abs(high - hi_b)):.4f}) rather than the verdict alone.")
 
 
 if __name__ == "__main__":

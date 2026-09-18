@@ -450,6 +450,13 @@ rotated embeddings whose correct answer is known by construction.
 `[TABLE 3: registered predictions and verdicts — prediction, registered band and falsifier, measured
 value with interval, verdict. Chart spec C14.]`
 
+`[POPULATE TABLE 3 FROM docs/PAPER_OUTLINE.md (R5) AND across_xr_alignment_RESULTS.md — NOT from
+PAPER_PLAN's summary table. P2 in particular: it has a registered band (+0.00..+0.06, falsifier
+< -0.03, Amendment 6) and the measurement +0.117 [+0.042, +0.192] sits ABOVE it, so the verdict is
+"falsifier excluded, size unresolved", not "held". Every row of this table must carry its interval
+beside its band — a band is settled by where the interval falls, not by whether a point estimate is
+inside it, and this table is where a reader checks that we followed our own rule.]`
+
 ---
 
 ## 6 Results
