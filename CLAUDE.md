@@ -1679,6 +1679,16 @@ Consequences to build around rather than remember:
   distribution, and clause 4 does not bite.** The general rule still stands for anything
   outside that boundary - convert wherever the raw data lands rather than centralising and
   copying - and "same institution" is the test, not "a machine we have an account on".
+- **`external_datasets/` HELD RAW BOXRR-23, UNTRACKED AND UNIGNORED, UNTIL 2026-09-17.** Found by
+  the coordinator while cleaning up after its own unscoped `git add -A`, which hung walking 68 GB.
+  `.venv/` (5.2 GB), `external_datasets/` (68 GB, including `boxrr-23/`), `exchange_from_miami/` and
+  `manifests_for_miami/` were all outside `.gitignore`, so **any `git add -A && git push` in this
+  repo would have pushed raw BOXRR-23 to a git remote - a clause 4 distribution event**, not a size
+  accident. Now ignored with the reason written beside the rule. **The exposure is the DEFAULT, not
+  the mistake**: `git add -A` is the ordinary thing to type, the repo is where DUA data is converted,
+  and nothing between the two said no. When a licence obligation and a working directory share a
+  machine, the guard belongs in the tooling rather than in whoever is typing - and it was absent here
+  for the entire time this project has held the corpus.
 - **BOXRR-derived data does not go to cloud storage** (user, 2026-09-09, on a Google Drive
   the project now has for code, results and write-ups). That is a policy decision rather
   than an interpretation, and it is the right way round: clause 15's destruction obligation
