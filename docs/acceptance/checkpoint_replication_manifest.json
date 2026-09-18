@@ -1,0 +1,236 @@
+{
+ "note": "Checkpoints every cross-application result rests on. Acceptance = each copy reproduces \"recorded\" on CPU within 0.002.",
+ "count": 23,
+ "checkpoints": [
+  {
+   "path": "runs/2026-09-10/17-24-33_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_seed1_gate.json"
+   ],
+   "run_id": "655dd23af5ed",
+   "seed": 1,
+   "recorded": 0.568792534534494,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/18-41-34_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_seed2_gate.json"
+   ],
+   "run_id": "f2f947553746",
+   "seed": 2,
+   "recorded": 0.5807075104498945,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/20-05-56_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_seed3_gate.json"
+   ],
+   "run_id": "981aa86f4bd4",
+   "seed": 3,
+   "recorded": 0.587957626395572,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/21-22-10_train/checkpoints/across-xr-matched-c1-dyn10s_users_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c1_seed1_gate.json"
+   ],
+   "run_id": "984f4a622b4f",
+   "seed": 1,
+   "recorded": 0.5282154545239511,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/21-23-27_train/checkpoints/across-xr-zero-shot-676-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_z676_seed1_gate.json"
+   ],
+   "run_id": "1faeea6e5e70",
+   "seed": 1,
+   "recorded": 0.556161266709694,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/21-41-37_train/checkpoints/across-xr-matched-c2hi-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2hi_seed1_gate.json"
+   ],
+   "run_id": "4a1ba1eb4442",
+   "seed": 1,
+   "recorded": 0.6831065247215614,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/22-01-22_train/checkpoints/across-xr-matched-c2lo-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2lo_seed1_gate.json"
+   ],
+   "run_id": "a34056530b9d",
+   "seed": 1,
+   "recorded": 0.6987672957582045,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/23-19-43_train/checkpoints/across-xr-matched-c1-dyn10s-full_users_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c1full_seed1_gate.json"
+   ],
+   "run_id": "9bc8a8908f69",
+   "seed": 1,
+   "recorded": 0.5721354765050551,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/23-24-01_train/checkpoints/across-xr-p3-loao-superhot-vr-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_superhot_vr_gate.json"
+   ],
+   "run_id": "c2e7eadf2f9f",
+   "seed": 1,
+   "recorded": 0.6749467156750109,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-10/23-44-03_train/checkpoints/across-xr-matched-c2lo-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2lo_seed2_gate.json"
+   ],
+   "run_id": "f55fd57db721",
+   "seed": 2,
+   "recorded": 0.7008753581855537,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/01-02-11_train/checkpoints/across-xr-p3-loao-half-life-alyx-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_half_life_alyx_gate.json"
+   ],
+   "run_id": "7b957695ac6e",
+   "seed": 1,
+   "recorded": 0.6483084074766166,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/01-21-53_train/checkpoints/across-xr-p3-loao-beat-saber-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_beat_saber_gate.json"
+   ],
+   "run_id": "ab1affebece8",
+   "seed": 1,
+   "recorded": 0.6448102904851049,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/01-41-39_train/checkpoints/across-xr-p3-loao-synth-riders-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_synth_riders_gate.json"
+   ],
+   "run_id": "9292a5747e7d",
+   "seed": 1,
+   "recorded": 0.6495300081774438,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/02-01-25_train/checkpoints/across-xr-p3-loao-social-vr-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_social_vr_gate.json"
+   ],
+   "run_id": "6a0675b0b8f9",
+   "seed": 1,
+   "recorded": 0.6682077163643491,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/02-21-10_train/checkpoints/across-xr-matched-c2lo-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2lo_seed3_gate.json"
+   ],
+   "run_id": "26fbf01d1ad9",
+   "seed": 3,
+   "recorded": 0.7189556504615863,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/03-39-35_train/checkpoints/across-xr-matched-c2lohalf-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2lohalf_seed1_gate.json"
+   ],
+   "run_id": "67e26f8e9022",
+   "seed": 1,
+   "recorded": 0.6654628238875974,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/04-57-16_train/checkpoints/across-xr-p3-loao-synth-riders-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_synth_riders_seed2_gate.json"
+   ],
+   "run_id": "faedc2ab5179",
+   "seed": 2,
+   "recorded": 0.6565718073333423,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/05-15-56_train/checkpoints/across-xr-p3-loao-social-vr-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_p3_social_vr_seed2_gate.json"
+   ],
+   "run_id": "59de81d60826",
+   "seed": 2,
+   "recorded": 0.6601564611943123,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/13-37-58_train/checkpoints/across-xr-zero-shot-raw10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_raw_seed1_gate.json"
+   ],
+   "run_id": "142a7637af0c",
+   "seed": 1,
+   "recorded": 0.7328432340522951,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/13-50-23_train/checkpoints/across-xr-zero-shot-raw10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_raw_seed2_gate.json"
+   ],
+   "run_id": "c39ab0ce8c3d",
+   "seed": 2,
+   "recorded": 0.7037494751821339,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/14-02-45_train/checkpoints/across-xr-zero-shot-raw10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_raw_seed3_gate.json"
+   ],
+   "run_id": "b019ab0887c2",
+   "seed": 3,
+   "recorded": 0.7111232981962317,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/14-15-10_train/checkpoints/across-xr-matched-c2lo-dyn10s-raw_multi3_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_c2lo_raw_seed1_gate.json"
+   ],
+   "run_id": "fa9ec92e5c82",
+   "seed": 1,
+   "recorded": 0.7595950327942528,
+   "eval_users": 17
+  },
+  {
+   "path": "runs/2026-09-11/14-27-53_train/checkpoints/across-xr-zero-shot-dyn10s-m0-1s15-0_multi2_bilstm_10s_20hz_emb128_train.pth",
+   "certs": [
+    "across_xr_alignment_mzero_seed1_gate.json"
+   ],
+   "run_id": "5d3d4995555e",
+   "seed": 1,
+   "recorded": 0.5559583089755893,
+   "eval_users": 17
+  }
+ ]
+}

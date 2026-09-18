@@ -14,11 +14,18 @@ GPU time and none of the diagnosis.**
 
 ## 0. Before anything else — two things that are not optional
 
-**(a) Replicate the checkpoints.** The ten gated programme checkpoints are on **one machine** and
+**(a) Replicate the checkpoints.** The **23** gated programme checkpoints are on **one machine** and
 not on AVALON (verified 2026-09-17: every `runs/2026-09-10/*` and `runs/2026-09-11/*` directory is
 absent here). They are a few tens of MB in total — `bilstm` at `embedding_dim=128` is ~153k
 parameters. Until they are copied, **no Questset arm can run anywhere but that node**, and a second
-disk failure costs not a run but the ability to re-score anything for a reviewer. This is the same
+disk failure costs not a run but the ability to re-score anything for a reviewer.
+
+**Copy against the manifest, not against a remembered count.** This kit said *ten* until 2026-09-17;
+the certificates say **23**. `docs/acceptance/checkpoint_replication_manifest.json` enumerates all of
+them with each one's `recorded` figure. **Acceptance is not that the files arrived** - it is that each
+copy reproduces its `recorded` figure on the receiving machine within the 0.002 the certificate was
+gated at. AVALON can run that check on CPU, since it holds every corpus involved, which keeps the
+verification independent of the sending node. This is the same
 exposure that just cost 36 hours. Copy the `checkpoints/` directory **and** each run's
 `.hydra/config.yaml`, so the split, encoding and seed travel with the weights.
 

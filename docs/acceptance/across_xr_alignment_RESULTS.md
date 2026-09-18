@@ -726,6 +726,8 @@ Riders (0.077 → 0.053) and not for Social VR (0.044 → 0.032, away from the t
 Two points either way remain good evidence for seed stability; the certificate says what
 was chosen. (ii) **Durability:** the certificates, rows and analysis are on origin and will
 outlive everything; `runs/` is gitignored, so the 18 gated checkpoints in
+*(**count corrected 2026-09-17: it is 23, not 18** - `across_xr_alignment_*_gate.json` is 23
+files naming 23 distinct checkpoints. See `checkpoint_replication_manifest.json`.)*
 `runs/miami-alignment/` exist on one disk and are BOXRR-derived under clause 15 (not to be
 copied elsewhere). A gated checkpoint buys the right to compare against its recorded row
 without re-running it — whoever next plans to reuse one of these as a control should check

@@ -2749,7 +2749,7 @@ the reasoning is the expensive part and it is entirely re-doable; the numbers ar
 impossible to recreate without the GPU time. This applies to every long run, and it is now the
 standing rule.
 
-**A SECOND SINGLE POINT OF FAILURE IS STILL LIVE, FOUND BY THE SAME AUDIT (2026-09-17).** The **ten
+**A SECOND SINGLE POINT OF FAILURE IS STILL LIVE, FOUND BY THE SAME AUDIT (2026-09-17).** The **23
 gated checkpoints every cross-application result in this project rests on are not on AVALON.** The
 programme run directories (`runs/2026-09-10/*`, `runs/2026-09-11/*`) are absent here; the 122 `.pth`
 files on this machine are unrelated legacy artefacts inside `processed_datasets/`. So the zero-shot
@@ -2760,6 +2760,24 @@ is a few tens of MB - and the copy is internal use between the project's own mac
 AVALON already holds, so no DUA question arises. Until that is done, **no Questset arm can run
 anywhere but that node**, and a second disk failure would cost not a run but the ability to re-score
 anything for a reviewer.
+
+**THE COUNT WAS WRONG AT EVERY SITE AND THE ERROR WAS IN THE DIRECTION THAT LOSES DATA (2026-09-17).**
+This entry said **ten** and the PROGRAMME COMPLETE block says **18**; the certificates on disk say
+**23** - `docs/acceptance/across_xr_alignment_*_gate.json` is 23 files naming 23 distinct checkpoints
+in 23 distinct run directories, enumerated now at
+`docs/acceptance/checkpoint_replication_manifest.json` with each one's `recorded` figure. Nobody had
+counted; both numbers were carried from memory of how many *arms* the programme had, and an arm is
+not a checkpoint - P3 alone contributes seven, and three of the seeds re-use a stem name in different
+run directories. **"Copy the ten checkpoints" would have under-copied by 13 and nothing downstream
+would have said so**, because a missing checkpoint presents as a missing gate certificate months
+later rather than as an error at copy time.
+
+**The replication's acceptance criterion is not that the files arrived.** Each certificate carries
+the checkpoint's `recorded` figure and the tolerance it was gated at (0.002; observed gaps 2e-5 to
+3e-4), so the copy is verified by **re-scoring on the receiving machine and reproducing `recorded`** -
+which AVALON can do on CPU, since it holds every corpus involved. That makes the check independent of
+the sending node, which is the property that matters: a transfer verified by the sender is a claim
+about the sender.
 
 **"It was gated" and "there is a committed certificate that it was gated" are different
 claims, and only the second survives the session** (Trainer, 2026-09-08). **And a commit that
