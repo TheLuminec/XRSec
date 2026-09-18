@@ -2772,6 +2772,25 @@ run directories. **"Copy the ten checkpoints" would have under-copied by 13 and 
 would have said so**, because a missing checkpoint presents as a missing gate certificate months
 later rather than as an error at copy time.
 
+**AND THE COPY ITSELF HAS A SILENT FAILURE MODE THAT THE ACCEPTANCE CRITERION BELOW CANNOT SEE
+(LAPTOP-C, 2026-09-17, catching the coordinator's own instruction).** The 23 paths collapse to **15
+distinct basenames** - three seeds share the zero-shot `dyn` stem, three the C2-lo stem, three the
+zero-shot `raw` stem, two synth-riders and two social-vr. So `cp .../checkpoints/*.pth dest/` over
+the 23 directories **completes rc=0, prints nothing, and leaves 15 files**, and **every survivor
+passes its own gate** - last writer wins and the last writer is a real seed. The 8 that never
+arrived are not there to fail, so a per-file integrity check sees nothing and the re-score gate
+below sees nothing. **The only thing that catches it is asserting the destination count is 23 before
+scoring anything**, which is this file's own rule about computing a count independently of the rows
+you are displaying, pointed at a copy instead of a query. Preserve the run-directory structure or
+rename on copy. The worst case is the zero-shot `dyn` stem losing two of three seeds: that arm is
+the paper's headline and its 0.010 seed spread is what every replication band for it was built from.
+
+**The general form, and it is why this belongs here rather than in a message.** A verification step
+can be correct, independent, and still blind to the failure that happened *upstream of what it
+receives*. "Each file I received is intact" and "I received every file" are different claims, and an
+acceptance criterion that only makes the first reads as complete. Same family as the fixture rule: a
+check pointed at nothing reports success about nothing.
+
 **The replication's acceptance criterion is not that the files arrived.** Each certificate carries
 the checkpoint's `recorded` figure and the tolerance it was gated at (0.002; observed gaps 2e-5 to
 3e-4), so the copy is verified by **re-scoring on the receiving machine and reproducing `recorded`** -

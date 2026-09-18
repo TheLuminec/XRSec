@@ -1,5 +1,5 @@
 {
- "note": "Checkpoints every cross-application result rests on. Acceptance = each copy reproduces \"recorded\" on CPU within 0.002.",
+ "note": "Checkpoints every cross-application result rests on. READ ALL THREE LINES BEFORE COPYING.\n(1) PRESERVE THE RUN-DIRECTORY STRUCTURE, OR RENAME ON COPY. The 23 paths collapse to 15 distinct basenames, so `cp .../checkpoints/*.pth dest/` completes rc=0, prints nothing, and leaves 15 files. The failure is INVISIBLE to any per-file check: last writer wins, the last writer is a real seed, and all 15 survivors pass their own gate. The 8 that never arrived are not there to fail. Worst case is the zero-shot dyn stem losing 2 of 3 seeds - that arm is the paper's headline and its 0.010 seed spread is what its replication band was built from.\n(2) ASSERT THE DESTINATION COUNT IS 23 BEFORE SCORING ANYTHING. This is upstream of the re-score gate and the re-score gate cannot substitute for it.\n(3) THEN each copy must reproduce its `recorded` figure on the RECEIVING machine within 0.002 (observed gaps 2e-5 to 3e-4), via docs/acceptance/across_xr_alignment.py --checkpoints <path>. Verification by the sender is a claim about the sender. Copy .hydra/config.yaml with each .pth.",
  "count": 23,
  "checkpoints": [
   {
@@ -232,5 +232,14 @@
    "recorded": 0.5559583089755893,
    "eval_users": 17
   }
- ]
+ ],
+ "distinct_basenames": 15,
+ "files_lost_by_a_flat_copy": 8,
+ "colliding_basenames": {
+  "across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth": 3,
+  "across-xr-matched-c2lo-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth": 3,
+  "across-xr-p3-loao-synth-riders-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth": 2,
+  "across-xr-p3-loao-social-vr-dyn10s_multi3_bilstm_10s_20hz_emb128_train.pth": 2,
+  "across-xr-zero-shot-raw10s_multi2_bilstm_10s_20hz_emb128_train.pth": 3
+ }
 }

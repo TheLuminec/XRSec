@@ -22,7 +22,10 @@ disk failure costs not a run but the ability to re-score anything for a reviewer
 
 **Copy against the manifest, not against a remembered count.** This kit said *ten* until 2026-09-17;
 the certificates say **23**. `docs/acceptance/checkpoint_replication_manifest.json` enumerates all of
-them with each one's `recorded` figure. **Acceptance is not that the files arrived** - it is that each
+them with each one's `recorded` figure. **Do not flatten the copy**: the 23 paths collapse to 15
+basenames, so `cp .../checkpoints/*.pth dest/` silently leaves 15 files, each one a valid checkpoint
+that passes its own gate. **Assert the destination count is 23 before scoring anything.**
+**Acceptance is not that the files arrived** - it is that each
 copy reproduces its `recorded` figure on the receiving machine within the 0.002 the certificate was
 gated at. AVALON can run that check on CPU, since it holds every corpus involved, which keeps the
 verification independent of the sending node. This is the same

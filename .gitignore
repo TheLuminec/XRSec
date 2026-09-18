@@ -25,3 +25,13 @@ results/runs_all.csv
 # references them. The balance pilot's result is recorded in CLAUDE.md as INVALID.
 /pilot_*/
 external_sota/
+
+# Raw dataset sources, venv and machine-to-machine exchange staging.
+# NOT merely large: external_datasets/boxrr-23 is raw BOXRR-23, and committing it
+# to a remote is a clause 4 distribution event under the UC Berkeley agreement.
+# These were untracked and unignored until 2026-09-17, so any `git add -A` in this
+# repo would stage 68GB including that corpus. See CLAUDE.md, "Data".
+.venv/
+external_datasets/
+exchange_from_miami/
+manifests_for_miami/

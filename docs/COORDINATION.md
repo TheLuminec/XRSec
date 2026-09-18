@@ -986,10 +986,25 @@ exactly this. AVALON holds every corpus involved, so the check is independent of
 **a transfer verified by the sender is a claim about the sender.** Copy `.hydra/config.yaml` with
 each `.pth`; the split, encoding and seed travel with the weights.
 
-**A STANDING LICENCE QUESTION, OPEN, FOR THE USER AND NOBODY ELSE.** Is a **personally-held laptop**
+**THE COPY MUST NOT BE FLATTENED - LAPTOP-C caught this in the coordinator's own instruction.** The
+23 paths collapse to **15 distinct basenames** (3 share the zero-shot `dyn` stem, 3 the C2-lo stem, 3
+the zero-shot `raw` stem, 2 synth-riders, 2 social-vr). `cp .../checkpoints/*.pth dest/` therefore
+**completes rc=0 and leaves 15 files**, and **every survivor passes its own gate** because the last
+writer wins and the last writer is a real seed. The 8 that never arrived are not there to fail, so
+the re-score acceptance above **cannot see this**. **Assert the destination count is 23 before
+scoring anything**; preserve the run-directory structure or rename on copy. Worst case is the
+zero-shot `dyn` stem losing 2 of 3 seeds - the paper's headline arm, whose 0.010 seed spread every
+replication band for it was built from. Recorded in the manifest's own `note` field, where the person
+doing the copy will be looking.
+
+**A LICENCE QUESTION, DELIBERATELY PARKED - not awaiting an answer.** Is a **personally-held laptop**
 inside "same institution" for BOXRR-23 clause 4? The existing ruling covers the Miami box because it
 is the institution's hardware in its server room; it does not obviously extend to the user's own
 laptop, and "a machine we have an account on" is explicitly not the test. **Moot today** - nothing on
 LAPTOP-C is BOXRR-derived - and it must not be settled by default the first time someone wants to
 move a corpus in a hurry. LAPTOP-C declined to rule on it and flagged it, which is the correct
-handling.
+handling - and then argued the better disposition, which is adopted here: **ask it where it has a
+concrete consequence, not now.** LAPTOP-C's routing was decided by the "holds neither the checkpoints
+nor the corpus" disjunct on its own, so the ruling was never load-bearing today, and a question put
+to the user in the abstract spends their attention and gets a worse answer than the same question
+asked beside an actual proposed transfer.
