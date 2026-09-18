@@ -1367,6 +1367,37 @@ a comment explaining why. Nobody looked for the second instance, which was sitti
 harness in the same directory. **When a defect is found in one harness, grep the family before
 closing it.**
 
+**"GREP THE FAMILY" FAILED ON ITS FIRST REAL TEST, AND BOTH REASONS ARE GENERAL (LAPTOP-C,
+2026-09-17).** Having fixed the unearned "design target" claim at three sites, the coordinator checked
+for completeness by grepping the four phrasings it had just corrected. **All four returned zero hits
+and the claim was live at two further sites** - §9 and, worse, **Contribution 4 of §1**, a numbered
+contribution promising "with a mechanism" whose mechanism was the excluded one. They were worded *"is
+not enough"*, *"the most actionable output"*, *"the corpus that would move them"*, *"a property of the
+available data rather than of the method"*. Two mechanisms, and neither requires anyone to be careless:
+
+1. **The family for a prose claim is the CLAIM, not the string.** Abstracts, introductions,
+   contribution lists and conclusions **exist in order to restate**, so they are precisely where the
+   same claim appears in deliberately fresh words. Sweep the **subject** - every mention of
+   *thirty-two*, *correspondences*, *alignment* - never the sentence that was edited.
+2. **`PAPER_DRAFT.md` is hard-wrapped at ~100 characters, so claims straddle line breaks.** `grep
+   "property of the available data rather than of the method"` returns **nothing** on a file
+   containing exactly that sentence, because it breaks after "a property of". Normalise whitespace
+   before searching prose (`re.sub(r'\s+',' ',text)`), and note the failure direction: **a zero-hit
+   grep reads as "already fixed"**, which is the same failure-open shape as the coverage scan that
+   reported five absent certificates that all existed.
+
+**This is the third time in one day that a check was correct about what it checked and silently
+narrower than the claim it was quoted for** - after the Questset verdict scored on one group, and the
+acceptance criterion blind to files that never arrived. The shape is now the thing to look for, not
+each instance.
+
+**AND THE CLAIM THAT KEEPS SURVIVING IS THE ONE THAT READS AS USEFUL.** Every site of this defect
+phrased the null as a *deliverable*: a design target, an actionable specification, "the most actionable
+output of this work". **A conclusion that sounds actionable recruits the reader against checking it**,
+which is a different failure from a wrong number and is not caught by any numerical gate. When a null
+is being written up, check specifically whether it has been converted into a recommendation - that is
+where this project's prose fails, five sites in one document.
+
 **AND THE STRUCTURAL FIX IS WORTH MORE THAN EITHER FINDING.** Every clean registration in the audit
 shares exactly one property: **it names the middle region in prose.** Amendment 4 writes
 "(0, +0.02] unresolved"; `questset_geometry.py` writes "0.60-0.65 unnamed-but-named-here as

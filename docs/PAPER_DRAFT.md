@@ -21,8 +21,8 @@ Figure slots are marked `[FIGURE n: ...]` and reference the chart specifications
 
 ## Abstract
 
-Motion-based identification in extended reality is close to solved within a single application and
-collapses across applications. The reference study for this problem reports 83.1% rank-1
+Motion-based identification in extended reality is reported as close to solved within a single
+application and as collapsing across applications. The reference study for this problem reports 83.1% rank-1
 identification within an application and 18.0% across applications among seventeen unseen users
 (chance 5.88%), using head motion together with both hand controllers. We re-assess that
 cross-application risk on the same corpus, the same user split and the same metric, using **head
@@ -65,8 +65,11 @@ moved elsewhere. Schach, Rack, McMahan and Latoschik (2026) report 83.1% rank-1 
 seventeen unseen users within an application, and **18.0% across applications** — gallery drawn from
 one application, probe from another, chance 5.88% at a gallery of seventeen. Their own abstract is
 explicit that the ability to identify users "across different XR applications remains limited". That
-collapse from near-solved to roughly three times chance is the gap this paper addresses, and 18.0% is
-the number against which everything here is measured.
+reported collapse, from near-solved to roughly three times chance, is the gap this paper addresses, and
+18.0% is the number against which everything here is measured. We show in Section 5.4 that the drop
+overstates the collapse — their within-application figure contains self-matches and their
+cross-application figure does not — so the two are not on the same footing, and we never pair our own
+within-application number against 83.1%.
 
 **Scope: head motion only.** We use head orientation and head position and nothing else. This is a
 design decision about which device class the method must cover, not a concession. Every published
@@ -107,9 +110,10 @@ the second term.
    applications, including applications absent from every pretraining corpus (Section 6.4). The
    stricter registered threshold for this claim was not met, and we say so.
 4. **A negative answer, with a mechanism, to the reference study's own proposed fix.** Train-user-only
-   orthogonal alignment of application embedding spaces does not carry on a static-free encoding, and
-   the reason is a property of the corpus rather than of the method: at most thirty-two people are
-   recorded in two or more applications, and no amount of pretraining raises that number
+   orthogonal alignment of application embedding spaces does not carry on a static-free encoding. The
+   fitted map is **person-specific**: it helps, when it helps at all, only the people it was fitted on.
+   The corpus offers at most thirty-two participants outside the evaluation split to fit on, a number no
+   amount of pretraining raises; whether *more* would make the fit transfer is not settled here
    (Section 6.7).
 5. **The per-user distribution as a metric argument**, made first on the reference study's own released
    per-user arrays and then on ours: the population mean conceals individuals identified far more often
@@ -952,11 +956,12 @@ distribution rather than the mean, the reference study's own released per-user v
 individual and the least.
 
 The route the reference study proposes for closing the cross-application gap — fitting orthogonal
-alignments on training users — does not carry on a static-free encoding, and the reason is a property of
-the available data rather than of the method: thirty-two people recorded in two or more applications is
-not enough to fit a transformation that generalises to new ones. That is the most actionable output of
-this work. The field's cross-application results are limited by corpora, and the corpus that would move
-them is one in which many people are recorded in many applications.
+alignments on training users — does not carry on a static-free encoding. The map it fits is
+person-specific: it helps, when it helps at all, only the people it was fitted on, and the corpus offers
+at most thirty-two participants outside the evaluation split to fit it on. Whether a far larger fitting
+population would recover a transformation that does transfer is **untested here**, and it is the most
+actionable *question* this work leaves: the corpus that could answer it is one in which many people are
+recorded in many applications.
 
 ---
 

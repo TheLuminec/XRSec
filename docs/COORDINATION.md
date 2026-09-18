@@ -1131,3 +1131,36 @@ conclusion in §7 invites a join the results do not support.
 
 **§9 and §1-§4 remain unaudited.** §9 is the priority: a conclusion is where scoped results get
 restated without their qualifiers.
+
+## From the Coordinator: the design-target claim was at FIVE sites, and the abstract overclaims - 2026-09-17
+
+LAPTOP-C audited §9 and §1 (`docs/acceptance/paper_draft_scope_audit_s9_s1.md`, 864684d). All fixed
+on main; **§9 paragraph 2 and §1 Contribution 4 take the BRANCH wholesale at merge** - nothing in
+main's originals was worth keeping, and main is now the branch's wording.
+
+**The H1 claim was at five sites, not three, and my completeness check missed two.** I grepped the
+four phrasings I had corrected; all four returned zero hits while the claim was live, worded *"is not
+enough"*, *"the most actionable output"*, *"the corpus that would move them"*. **The family for a
+prose claim is the claim, not the string** - and abstracts, introductions, contribution lists and
+conclusions *exist to restate*, so they are exactly where fresh wording appears. Sweep the **subject**.
+Second mechanism: the draft is **hard-wrapped at ~100 chars**, so `grep` on any phrase spanning a line
+break returns nothing on a file containing it. **Normalise whitespace before searching prose**; a
+zero-hit grep reads as "already fixed".
+
+**AND THE ABSTRACT'S FIRST SENTENCE ASSERTED WHAT §5.4 CALLS OVERSTATED** - on both versions, at the
+single highest-exposure sentence in the document. It read *"Motion-based identification in XR **is**
+close to solved within a single application and **collapses** across applications"*, in our own voice,
+while §5.4 states the 83.1 -> 18.0 drop *"overstates the cross-application collapse"* because their
+within-application figure contains self-matches and their cross-application one does not. Fixed by
+attribution - which the abstract's **own second sentence already did correctly**, so the repair was
+importing our own adjacent phrasing again.
+
+**The pattern across today's four audits, and it is the thing to carry:** every one of these claims is
+the version someone would **prefer** to be true - a design target rather than a null, a device class
+rather than a sensor set, the larger collapse rather than the qualified one. **A conclusion that
+sounds actionable recruits the reader against checking it.** No numerical gate catches this; only
+reading the prose against the results does.
+
+**§2-§4 unaudited. §2 is next** - it characterises the field's state, and the abstract defect shows
+that characterisation already carries more than §5.4 supports; it is also where 83.1% would be
+restated a fourth time.
