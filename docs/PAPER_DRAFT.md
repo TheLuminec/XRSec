@@ -718,9 +718,10 @@ conclusion.)
 available for fitting an alignment are bounded by the number of people recorded in two or more
 applications — thirty-two here, and the reference study had the same thirty-two — and no amount of
 pretraining raises that number. The honest answer to their future-work proposal is not "we failed to
-make it work" but **"this corpus cannot support it; a corpus that could would need far more
-multi-application participants"**. That is a specification a future data collection can be designed
-against, which is more useful than a null.
+make it work" but **"the map we fitted on thirty-two people did not transfer to seventeen others"**.
+Whether a larger fitting population would cure that is **not established by this experiment**, and we
+decline to present it as a design target: the failure we measured is one of transfer *across people*,
+not of having too few of them, so more participants might or might not help.
 
 `[FIGURE 9: alignment variants — dot-and-whisker of each variant's gain over the unaligned model, with
 zero and the reference study's published +0.34 drawn as reference lines. Chart spec C13.]`
@@ -831,16 +832,17 @@ The first is the static-cue audit. A risk assessment built on a behaviour-only e
 behavioural risk, which is the right quantity for some questions and an *underestimate* of what a wearer
 faces. On this corpus a head-only model one epoch from initialisation reaches 0.351 cross-application
 from static anthropometry and posture alone. Any deployment in which head position reaches an
-application — which is most of them, since position is what the runtime needs — carries that term whether
+application carries that term whether
 or not the behavioural term is present, and it requires no model training worth the name. The
 qualification that head height survives an application change only **across applications that share a
 posture** narrows where this bites but does not remove it; the applications in these corpora that share a
 posture are the majority.
 
-The second is that head-only suffices. Non-trivial cross-application identification is available from
+The second concerns the sensor set. Non-trivial cross-application identification is available from
 head tracking alone — in the exposed arm, better than a published head-plus-controllers figure on the
-same people. AR glasses without hand tracking are therefore inside the scope of this risk, not outside
-it, which is not how the device class is usually discussed.
+same people. So a missing hand or controller channel does not by itself put a device outside this risk.
+We stop short of a claim about AR glasses specifically: **every corpus scored here is VR**, and head-only
+is our scope rather than a device we tested on.
 
 The third is the distribution. The field reports rank-1 means, and the means conceal a wide spread over
 individuals that is visible in the reference study's own released arrays. A defence, a disclosure or a
@@ -848,10 +850,12 @@ consent notice calibrated on a population mean is calibrated on nobody in partic
 
 **Alignment as a corpus specification.** The most useful output of our negative alignment result is not
 the null itself but the number thirty-two. Fitting a transformation between two applications' embedding
-spaces requires people recorded in both, and the fully crossed corpus that makes the whole
-cross-application literature possible offers thirty-two of them among its non-test users. A corpus built
-to support this method would need far more; that is a concrete design target for a future collection,
-and it is available now because the route was run honestly rather than assumed to fail.
+spaces requires people recorded in both, and the only fully crossed cross-application corpus we are
+aware of offers thirty-two of them among its non-test users. Whether a corpus with more would support
+the method is **not established**: the map fitted on those thirty-two did not transfer to seventeen
+others, which is a failure across people rather than a shortage of them, and a larger fitting
+population might or might not cure it. What is available now is the negative itself, and it is
+available because the route was run honestly rather than assumed to fail.
 
 **The within-application gap remains open and confounded.** Our within-application figures (0.500
 zero-shot, 0.616 exposed) sit well below the reference study's 0.831, but the two are not comparable for

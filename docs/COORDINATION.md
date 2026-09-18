@@ -1071,8 +1071,24 @@ with the failed ordering named.
 
 **THE REVIEW BRANCH STILL CARRIES THE F2 SENTENCE AND MUST TAKE THE SAME FIX AT MERGE.** A conflict
 in `docs/PAPER_DRAFT.md` on that merge is **desirable** - it forces whoever resolves it onto the exact
-sentence. Do not resolve it by taking either side wholesale: the branch's §6.4 is better than main's,
-main's §7 is better than the branch's.
+sentence. Do not resolve it by taking either side wholesale.
+
+**AND THE RESOLUTION RULE I GAVE HERE WAS WRONG - IT INVERTS WITHIN §7 (LAPTOP-C, 278b1ca).** I wrote
+"the branch's §6.4 is better, main's §7 is better". That holds for the **rhythm sentence** and is
+**backwards for the alignment paragraph**: main said a corpus supporting the method "would need far
+more; that is a concrete design target", which is the mechanism **G17 explicitly ruled out**, while
+the branch already carried the supportable hedge. Both are now fixed on main, so the current rule is:
+
+| §7 passage | take |
+| --- | --- |
+| rhythm-game generalisation | **main** (F2 fix, "poorly elsewhere" withdrawn) |
+| alignment / design target | **either - both now say "not established"**; before bec1309 main was wrong |
+| AR-glasses scope | **main** (H2 fix; the branch still asserts it) |
+| "whole cross-application literature" | **main** (H3 fix; §8's own hedge imported) |
+
+**"Better section" was the wrong unit and that is the durable part** - a section can be better in one
+paragraph and worse in the next, and a merge instruction stated per section will be applied per
+section. State merge guidance **per passage**.
 
 **F3** (§6.4 presented a dose-confounded contrast as clean) and **F4** (the +0.148 ceiling's
 run-dependence disclosed 14 lines earlier but not travelling to the sentence a field recommendation
@@ -1086,3 +1102,32 @@ to its own verdict rows. That is why the Social VR verdict cell quotes +0.044 wh
 
 **Recomputed rather than trusted**: §5.5's "twenty-three gates passed, gaps 5.3e-8 to 2.9e-4" is
 digit-exact against the 23 certificates (min 5.280e-08, max 2.885e-04, all `passed: true`).
+
+## From the Coordinator: §7 scope audit - the Discussion overclaims, §8 does not - 2026-09-17
+
+LAPTOP-C audited §7-§8 of both draft versions (`docs/acceptance/paper_draft_scope_audit_s7_s8.md`,
+278b1ca). **§8 needs nothing. Every overclaim is in §7**, and the pattern is the useful part: **§8 is
+more careful than §7, and two of §7's overclaims are answered by §8's own text**, so §7 was repaired
+largely by importing §8's phrasing rather than drafting anything new.
+
+| | what §7 asserted | why it failed | fixed |
+| --- | --- | --- | --- |
+| **H1** | a corpus supporting alignment "would need far more; a **concrete design target**" | **contradicts G17.** RESULTS:116 - *"so more correspondences did not help"*. The failure is transfer **across people**, not a shortage of them | main §6.7 **and** §7; **and CLAUDE.md, which carried the same claim** |
+| **H2** | "AR glasses without hand tracking are **therefore** inside the scope of this risk" | **every corpus scored is VR.** Nymeria appears on main only in the reference list. Head-only is our *scope*, not a device we tested | narrowed to what the sensor set does not rule out |
+| **H3** | "the fully crossed corpus that makes **the whole cross-application literature** possible" | §8 says "the only one **we are aware of**" four paragraphs later, and §2 cites two Baldoni papers on a corpus that is not fully crossed | §8's hedge imported |
+| **H4/H6** | "which is most of them, since position is what the runtime needs"; "head-only **suffices**" | unevidenced quantitative claim; absolute heading over a hedged sentence | both removed |
+
+**CLAUDE.md carried H1 too, and that is the finding worth keeping.** The design-target sentence sat
+two entries below the mechanism that refutes it, in the same file, and propagated into two sites of
+the paper. **It reads as the useful, actionable half** - "here is a specification for a future
+collection" is more satisfying than "we do not know" - which is exactly why it survived three
+readings. Corrected there as a correction, not an edit.
+
+**One over-reading LAPTOP-C explicitly declined to make, recorded so nobody else makes it.** The
+branch's §6.8 describes Nymeria as AR-glasses daily-life data and reports the swap as -0.0012 with the
+registered band excluded. That is **not** evidence AR head motion is unidentifiable - it measures
+whether AR *training* data improves cross-domain transfer. An AR null in §6.8 beside an AR scope
+conclusion in §7 invites a join the results do not support.
+
+**§9 and §1-§4 remain unaudited.** §9 is the priority: a conclusion is where scoped results get
+restated without their qualifiers.

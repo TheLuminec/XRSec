@@ -856,9 +856,18 @@ that an orthogonal map can genuinely rotate - but "never carries" without the en
 false as written, and the headline arm is `dyn`. **A correction inherits the scope of the claim it
 corrects, and is wrong in a new way if it widens it.** The
 correspondences available for fitting are **capped at 32 by the corpus** - people recorded in two
-or more applications - and no amount of pretraining raises that; a corpus that could support the
-method would need far more multi-application participants, which is an actionable specification
-rather than a null. And **the test-fitted ceiling that motivates the idea is run-dependent**,
+or more applications - and no amount of pretraining raises that. **This file said until 2026-09-17
+that "a corpus that could support the method would need far more multi-application participants,
+which is an actionable specification rather than a null" - and that contradicts the mechanism
+recorded two entries above.** G17 settled that the honest fit fails for the **test-fitted
+advantage**, not the rank argument: A2' fits on the 17 people it is scored on and reaches +0.148,
+A2 fits on **32 other** people and reaches -0.008, *"so more correspondences did not help"*
+(`across_xr_alignment_RESULTS.md`:116). The demonstrated failure is **transfer across people**, and
+more participants do not obviously cure a map that does not generalise across them - they might or
+might not. **So the design target was never earned**, and it had propagated into two sites of the
+paper draft before the scope audit caught it. The supportable sentence is *"whether more would help
+is not established"*. Recorded as a correction rather than an edit because the specification reads
+as the useful, actionable half and is the version anyone would prefer to be true. And **the test-fitted ceiling that motivates the idea is run-dependent**,
 present in one of three seeds at identical configuration (C2-lo) - the "three of five P3 runs" once cited here are five *different* configurations and do not bear on it, **so it was never
 a target** - a single-run diagnostic bound of that kind is not evidence that application
 embeddings differ by a rotation, which raises the bar for every claim of that shape including the
