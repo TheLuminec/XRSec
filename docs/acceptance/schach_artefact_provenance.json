@@ -1,0 +1,38 @@
+{
+ "what": "Provenance for the two Section 2 claims about Schach et al.'s artefacts, raised by the S2-S4 scope audit as asserted-without-provenance. Section 5.2 documents its own provenance to the digit; these did not. Now they do.",
+ "claim_1_code": {
+  "statement": "Their released evaluation code implements orthogonal Procrustes alignment across applications.",
+  "file": "external_sota/schach2026/training-and-evaluation/evaluation/helpers/compute_transformation_matrix.py",
+  "repo_commit": "4ec4106a3904f07c3157b434981cd53ad1062634",
+  "sha256_of_file": "da43200ef3251b3d36e8df52ab0a6fb82c3d7ee539b7a79b4ddb4f7a45e622ae",
+  "import_line": "from scipy.linalg import orthogonal_procrustes",
+  "use_site": "align_multiple_cosine(): R, _ = orthogonal_procrustes(Xi.T, X_star.T), iterated to max_iter",
+  "verdict": "CONFIRMED by reading the file"
+ },
+ "claim_2_version": {
+  "statement": "The alignment material appears only in the journal version; the preprint does not contain it.",
+  "method": "pdftotext both versions, case-insensitive term counts. Counting is independent of any displayed excerpt, per the rule that a view is a claim about the data.",
+  "counts": {
+   "preprint_arxiv_2509.08539v1": {
+    "words": 8406,
+    "procrustes": 0,
+    "orthogonal": 0,
+    "alignment": 0,
+    "align": 0,
+    "rotation": 4
+   },
+   "journal_frontiers": {
+    "words": 12136,
+    "procrustes": 1,
+    "orthogonal": 19,
+    "alignment": 15,
+    "align": 21,
+    "rotation": 18
+   }
+  },
+  "verdict": "CONFIRMED, decisively: the preprint contains ZERO occurrences of procrustes/orthogonal/alignment/align across 8,406 words; the journal version contains 1/19/15/21 across 12,136."
+ },
+ "still_open": {
+  "J2_rack2023_protocol": "UNRESOLVED on AVALON - no Rack et al. 2023 PDF on this machine (only their code repo, Versatile-XR-User-Identification). The draft sentence is neutralised with an inline VERIFY marker rather than left asserting a seen-user protocol."
+ }
+}

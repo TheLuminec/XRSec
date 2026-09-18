@@ -136,7 +136,14 @@ current generation of hardware; Rogers et al. (2015) and Miller et al. (2020) es
 and hand trajectories carry identity, and Miller et al. (2021) extended the setting to matching users
 across systems with a Siamese network. Rack et al. (2023) contributed both a dataset and a protocol:
 "Who is Alyx?" records seventy-six players of *Half-Life: Alyx* over mostly two sessions on different
-days, and reports cross-session identification of users *seen* during training in the high seventies.
+days, and reports cross-session identification in the high seventies. `[VERIFY BEFORE SUBMISSION: this read
+"of users *seen* during training". Our reproduction registration, written from their shipped config,
+records a DISJOINT split — 63 users, train 27 / validation 9 / test 27 — and attributes their prose
+figures to the 27 *test* subjects, at a 33.3 s window against the 20 s in our literature briefing. The
+two records describe different quantities, so their paper plausibly contains both a seen-user
+benchmark and a disjoint-split experiment. Settle against the Frontiers text before restoring any
+characterisation: as written we discredited a cited work in our own voice, using the exact criticism we
+level at our own lineage, while reproducing their disjoint-split figures.]`
 Nair et al. (2023) demonstrated the scale of the exposure, identifying users from among more than
 50,000 in the Berkeley Open Extended Reality Recordings corpus from head and hand motion alone.
 
@@ -147,11 +154,10 @@ the family our own model belongs to, and which the reference study also adopts.
 
 **Encodings.** Rack et al. (2022) introduced the body-relative family — SR, BR, BRV, BRA — and reported
 the acceleration variant best in their setting. Their ordering was obtained with a full body frame
-derived from the head *and* both controllers. A head-only rig cannot construct that frame, and we
-measure the ordering to invert in our setting: on pooled head-only corpora the raw encoding beats the
-best body-relative alternative by a wide margin, because the body-relative encodings remove the
-absolute pose that carries most of a head-only signal and return nothing constructed from the hands in
-its place. This is one reason our behaviour-only encoding is defined differently (Section 4.2) rather
+derived from the head *and* both controllers. A head-only rig cannot construct that frame, so we would
+not expect their ordering to carry here: the body-relative encodings remove the absolute pose that
+carries most of a head-only signal and return nothing constructed from the hands in its place. That is
+a design argument, not a result of this paper — we report no encoding comparison. This is one reason our behaviour-only encoding is defined differently (Section 4.2) rather
 than adopted from that family.
 
 **Cross-application identification.** Baldoni et al. (2025) report roughly 30% identification across
@@ -174,10 +180,12 @@ over ten minutes. They then disqualify their own result, because the transformat
 the *test* users: they describe it as a post hoc diagnostic upper bound rather than a deployable,
 generalising solution, and they name the honest version — fit the transformations on training and
 validation users, then apply them to unseen test users and applications — as future work. We run that
-honest version in Section 6.7. Note that this material appears only in the journal version of their
-paper; the preprint does not contain it. Their released evaluation code contains an
-`orthogonal_procrustes`-based multi-domain alignment, which corroborates the method independently of
-the text.
+honest version in Section 6.7. This material appears only in the journal version: the arXiv
+preprint (2509.08539v1) contains **no occurrence** of "Procrustes", "orthogonal", "alignment" or
+"align", against 1, 19, 15 and 21 respectively in the journal text. Their released evaluation code
+implements it independently of either text — `evaluation/helpers/compute_transformation_matrix.py` at
+commit `4ec4106` imports `scipy.linalg.orthogonal_procrustes` and applies it iteratively across
+applications in `align_multiple_cosine`.
 
 ---
 

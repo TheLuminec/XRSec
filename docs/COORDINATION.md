@@ -1164,3 +1164,47 @@ reading the prose against the results does.
 **§2-§4 unaudited. §2 is next** - it characterises the field's state, and the abstract defect shows
 that characterisation already carries more than §5.4 supports; it is also where 83.1% would be
 restated a fourth time.
+
+## From the Coordinator: §2 provenance - two claims verified here, one OPEN and it needs the user - 2026-09-17
+
+LAPTOP-C audited §2-§4 (`docs/acceptance/paper_draft_scope_audit_s2_s4.md`, 05ce030). **My prediction
+that 83.1% would be restated in §2 a fourth time FAILED - it is not there at all**, and they led with
+that. §2's only within-application figure is Baldoni's >95%, thoroughly qualified. All three findings
+are about **provenance, not numbers**: §2 is the least evidenced section and the one making claims
+about other people's work.
+
+**J1 - §2 reported a measurement this paper does not contain.** *"we measure the ordering to invert in
+our setting"*, of the raw-vs-body-relative encoding result. There is no such experiment in the paper -
+and the measurement it refers to was made on **8 pooled seated corpora at 419 identities in
+verification AUC**, so *"our setting"* named a setting this paper is not about. Reworded to the design
+argument that was already in the same sentence and needs no data.
+
+**J2 - OPEN, AND IT NEEDS THE FRONTIERS/IEEE TEXT FOR RACK ET AL. 2023, WHICH IS NOT ON AVALON.** §2
+said they report identification *"of users **seen** during training"*. `LITERATURE_BRIEFING.md:207`
+agrees, but `sota_rack2023_reproduction_REGISTERED.md`, written from their shipped config, records a
+**disjoint** split - 63 users, train 27 / validation 9 / test 27 - and attributes their prose figures
+to the **27 test subjects**, at 33.3 s against the briefing's 20 s. Different user counts and window
+lengths, so the paper plausibly holds **both** a seen-user benchmark and a disjoint-split experiment.
+**As written we discredited a cited work in our own voice, using the exact criticism we level at our
+own lineage, while reproducing their disjoint-split figures.** The clause is removed and an inline
+`[VERIFY BEFORE SUBMISSION]` marker left in its place. **This machine holds their code
+(`Versatile-XR-User-Identification`) but no PDF.** One read settles it.
+
+**J3 - both claims now verified here and certificated** (`docs/acceptance/schach_artefact_provenance.json`),
+because AVALON holds what LAPTOP-C does not:
+
+| claim | verdict |
+| --- | --- |
+| their evaluation code implements orthogonal Procrustes across applications | **CONFIRMED** - `evaluation/helpers/compute_transformation_matrix.py` at commit `4ec4106`, `scipy.linalg.orthogonal_procrustes` iterated in `align_multiple_cosine`. File path and sha256 in the certificate; the path is now **in the draft** |
+| the material is in the journal version only | **CONFIRMED decisively** - preprint arXiv:2509.08539v1 has **0** occurrences of procrustes / orthogonal / alignment / align over 8,406 words; the journal has **1 / 19 / 15 / 21** over 12,136 |
+
+**The finding was the asymmetry and it is worth more than either claim.** §5.2 documents its own
+provenance to the digit - "maximum absolute difference 0.0", correspondence "reconstructed rather than
+assumed" - and §2 then made two claims about the *same group's* artefacts with no file path, no commit
+and no version identifier. Same paper, same group, two standards. **Both were correct; neither was
+checkable as written**, and being right is not the property that matters in a related-work section.
+
+**DRAFT AUDIT COMPLETE.** Every section has had a pass: abstract, §1 (twice), §2, §3-§4, §5-§6, §7-§8,
+§9. §3.2's *"the largest XR motion corpus in existence cannot support a cross-application study"* was
+checked and is **earned** - exhaustive key-set partition, 92,103 against 13,746 with overlap **zero**,
+105,849 of the release's 105,852.
