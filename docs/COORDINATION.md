@@ -946,3 +946,50 @@ from the markers gets the wrong answer. **A `.done` marker must mean ran-and-exi
 else**; a parked entry needs its own state (a `.parked` marker or a reason field). Raised with Miami.
 It is the same family as the watcher certificate: a record of an event that did not happen, which
 nothing about the record can contradict.
+
+## From the Coordinator: LAPTOP-C surveyed, GPU stood down, checkpoint count corrected to 23 - 2026-09-17
+
+A GPU session was offered for a 2-hour window. It is **LAPTOP-C** - the user's personal Windows 11
+laptop, RTX 3050 Ti 4 GB, the machine CLAUDE.md's GPU-throughput table was measured on. Surveyed
+before being given work, which is what kept the window from being wasted:
+
+| | |
+| --- | --- |
+| checkpoints | **none of ours.** `runs/2026-09-10` and `runs/2026-09-11` absent; newest run dir is `runs/2026-09-03` |
+| corpora | the 8 seated corpora, **356 identities**, 6.9 GB. No BOXRR, no who_is_alyx, no Nymeria, no Across-XR, no Questset |
+| consequence | **no live arm can run there.** Every one needs corpora it does not hold, and the 4 GB card cannot hold GPU-resident samples past ~419 identities |
+
+**The GPU was stood down rather than given a manufactured job.** The blocker today is that the node
+holding the checkpoints is offline; that is not something LAPTOP-C can act on. Assigned instead: a
+**partition audit of every registered band in the repo** - no GPU, no corpus, and it protects the
+paper where it is most exposed.
+
+**LAPTOP-C's own flag is the durable part.** `find . -name "*.pth"` returns **142** there and **none
+are ours**: 120 are retired boosting-era artefacts under `runs/2026-03-*` to `2026-05-*` whose
+`state_dict` layout pre-dates slottable extractors and which `load_checkpoint` would reject anyway,
+3 are loose inside `processed_datasets/`, the rest are torchmetrics LPIPS weights in `.venv`.
+**"142 checkpoints on LAPTOP-C" is a decoy sentence** - it has the shape of partial redundancy and is
+none. The single point of failure is intact.
+
+**THE CHECKPOINT COUNT WAS WRONG EVERYWHERE AND IS 23.** This channel, CLAUDE.md and `RELAUNCH_KIT.md`
+said ten or 18; `docs/acceptance/across_xr_alignment_*_gate.json` is **23 certificates naming 23
+distinct checkpoints in 23 distinct run directories**, now enumerated at
+`docs/acceptance/checkpoint_replication_manifest.json` with each one's `recorded` figure (31ee3e2).
+Ten and 18 were **arm** counts, and an arm is not a checkpoint - P3 alone contributes seven. **Hand
+whoever does the replication the manifest, not a number.**
+
+**And the acceptance criterion for that replication is a re-score, not a file listing.** Each
+certificate carries the checkpoint's `recorded` figure and the 0.002 tolerance it was gated at
+(observed gaps 2e-5 to 3e-4), so a copy is accepted when **AVALON reproduces `recorded` on CPU** via
+`docs/acceptance/across_xr_alignment.py --checkpoints <path>`, whose built-in checkpoint gate does
+exactly this. AVALON holds every corpus involved, so the check is independent of the sending node -
+**a transfer verified by the sender is a claim about the sender.** Copy `.hydra/config.yaml` with
+each `.pth`; the split, encoding and seed travel with the weights.
+
+**A STANDING LICENCE QUESTION, OPEN, FOR THE USER AND NOBODY ELSE.** Is a **personally-held laptop**
+inside "same institution" for BOXRR-23 clause 4? The existing ruling covers the Miami box because it
+is the institution's hardware in its server room; it does not obviously extend to the user's own
+laptop, and "a machine we have an account on" is explicitly not the test. **Moot today** - nothing on
+LAPTOP-C is BOXRR-derived - and it must not be settled by default the first time someone wants to
+move a corpus in a hurry. LAPTOP-C declined to rule on it and flagged it, which is the correct
+handling.
