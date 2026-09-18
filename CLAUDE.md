@@ -3110,6 +3110,44 @@ The pattern in both: **a guard whose failure mode is to pass is worse than no gu
 it also removes the caution that would otherwise apply. Verify a guard in both directions -
 that it passes when it should and *blocks when it should* - or it is decoration.
 
+**A THIRD MEMBER, AND IT MAY DISABLE THE LOCK GUARD ON THE VERY MACHINE IT WAS WRITTEN FOR
+(LAPTOP-C, 2026-09-17).** `flock` and `setsid` **do not exist in Git Bash for Windows**, and
+`queue_runner.sh` uses `flock -n` at its lock and `setsid` in its selftest. **That lock was
+upstreamed because DESKTOP-C lost a night's GPU to two concurrent runners** - and DESKTOP-C is a
+Windows box. So if its bash is Git Bash, the guard written for that machine **cannot run on that
+machine**, and its `selftest` can only ever fail there. **Not asserted**: LAPTOP-C can speak only for
+LAPTOP-C, and DESKTOP-C may have WSL. Settling it is three lines on that node:
+
+```bash
+for t in flock setsid; do printf '%-8s %s\n' "$t" "$(command -v $t || echo MISSING)"; done
+bash queue_runner.sh selftest-markers | tail -3
+```
+
+`selftest-markers` needs only coreutils by design, so the marker half is checkable everywhere even
+where the lock half is not. **The pattern is now established rather than anecdotal**: `bc`, `kill -0`
+and now `flock`/`setsid` - **three guards in this project whose failure mode on a Windows node is to
+be absent, and absence reads as fine.** Before writing any guard that will run on a Windows node,
+check that its tools exist there; a portability assumption inside a safety mechanism is a safety
+mechanism that is off on exactly the machines nobody checked.
+
+**AND THE SAME SCRIPT REPORTED AN UNREADABLE QUEUE AS A DRAINED ONE - FIXED, verified in both
+directions (2026-09-17).** `ROOT` defaults to a Miami-specific path; on any other machine `mkdir -p`
+and `touch` failed silently under no `set -e`, and `status` then read a **nonexistent** queue file and
+printed `queued: 0 pending of 0 total`, **exit 0** - byte-identical to a genuinely drained queue. It
+now refuses with exit 2 and names the default as Miami's. **The first attempt to reproduce this
+failed and that is the instructive half**: on a writable path `mkdir -p` succeeds and the bug is
+invisible, so the fixture has to put the root under an **unwritable parent**. A fixture must
+reproduce the *conditions*, not merely exercise the path - the pandas lesson, in bash.
+
+**A marker recorded an EVENT where it needed to record a STATE, which is why a parked job read as a
+completion.** Four situations wrote the same file - a clean exit, a failure whose retry was
+suppressed, a hand-park, and a marker touched to skip something - so `4bca77dac0620a1c` (M-C2-lo),
+parked on 09-11 and never run, was indistinguishable from 28 real completions. Markers now carry
+`rc=` or `parked=` and classify as **ok / failed / parked / unverified**; `status` tallies *jobs*
+rather than `ls | wc -l` over *files*, which had been counting sidecars and inflating `done:` to
+**41 for 35 jobs**. The tool now surfaces by itself the finding that previously took a hand count of
+all 35 entries.
+
 **AND ONE OF OURS HAD NEVER RUN AT ALL - `assert_evaluation_users_are_unseen` was vacuous from
 its first day (New Gen, 2026-09-10; blast radius established from code and git history, nothing
 re-run).** The guard reads user directories off the *sample index*:

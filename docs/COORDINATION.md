@@ -1008,3 +1008,41 @@ concrete consequence, not now.** LAPTOP-C's routing was decided by the "holds ne
 nor the corpus" disjunct on its own, so the ruling was never load-bearing today, and a question put
 to the user in the abstract spends their attention and gets a worse answer than the same question
 asked beside an actual proposed transfer.
+
+## From the Coordinator: queue marker states landed; an OPEN check for the next Windows node - 2026-09-17
+
+`queue_runner.sh` markers now record a **state**, not an event (merged to main, c77fb2b; written by
+LAPTOP-C on branch `queue-marker-states`). Three defects, in increasing severity:
+
+1. **A parked job was indistinguishable from a completion.** `4bca77dac0620a1c` (M-C2-lo) was parked
+   on 09-11 and never ran. Markers now carry `rc=` or `parked=` and classify **ok / failed / parked /
+   unverified**; `park` refuses without a reason and refuses to overwrite a completion.
+2. **`done:` was `ls | wc -l` over files**, counting `.failed` sidecars and retry-suppression markers
+   alongside completions - **41 for 35 jobs**. It now tallies jobs and **names** the unverified one.
+3. **`status` reported an unreadable queue as a drained one.** The default `ROOT` is Miami-specific;
+   elsewhere `mkdir -p` failed silently and `status` printed `0 pending of 0 total`, **exit 0**.
+   Now refuses with exit 2. This was live on every machine except Miami.
+
+**Why it was landed with Miami unreachable rather than held for its return.** Defect 3 is a
+failure-open guard, which this project treats as worse than no guard, and holding the fix preserves
+the lie. **The half LAPTOP-C could not test was run on AVALON before merging** - it has `flock` and
+`setsid`, LAPTOP-C has neither - so `selftest` passed in full, including test 6, which exercises the
+single `cmd_run` hunk that was the only untested call site.
+
+**OPEN, FOR WHOEVER BRINGS UP THE NEXT WINDOWS NODE - three lines, and it may matter a lot.**
+`flock` and `setsid` **do not exist in Git Bash for Windows**. The lock guard was upstreamed *because
+DESKTOP-C lost a night's GPU to concurrent runners*, and **DESKTOP-C is a Windows box** - so if its
+bash is Git Bash, the guard written for that machine cannot run there and its `selftest` can only
+fail. **Unasserted** - LAPTOP-C speaks only for itself and DESKTOP-C may have WSL. Run on that node:
+
+```bash
+for t in flock setsid; do printf '%-8s %s\n' "$t" "$(command -v $t || echo MISSING)"; done
+bash queue_runner.sh selftest-markers | tail -3
+```
+
+If they are MISSING, **do not improvise a replacement** - the existing lock's `exec 200>&-` subtlety
+says the naive version has already bitten someone. Register the change first. `selftest-markers`
+needs only coreutils by design and is checkable on every node.
+
+**This is the third Windows-absent guard in this project** (`bc`, `kill -0`, now `flock`/`setsid`),
+so it is a pattern rather than an anecdote: **check a guard's tools exist on the node it protects.**
