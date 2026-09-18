@@ -1,5 +1,19 @@
 # SOTA reproduction: Rack et al. 2023 on who_is_alyx — REGISTERED BEFORE RUNNING
 
+> **WHICH RACK 2023 THIS IS (added 2026-09-17).** There are **two** Rack et al. 2023 papers and a
+> draft audit conflated them. This registration targets **Rack, Kobs, Fernando, Hotho, Latoschik,
+> *Versatile User Identification in Extended Reality using Pretrained Similarity-Learning*,
+> arXiv:2302.07517** - repo `Versatile-XR-User-Identification`, confirmed from its own `Citation.cff`.
+> **Disjoint subject split** (27/9/27 of 63), 500-frame / 33.3 s windows, the 99 / 89 / 25 curve.
+>
+> It is **NOT** Rack, Fernando, Yalcin, Hotho, Latoschik, *Who is Alyx?*, Front. Virtual Real. 4,
+> doi:10.3389/frvir.2023.1272234 - which is the **dataset** paper, uses a **seen-user** protocol
+> (*"map input motion sequences to one of the 71 users"*, session one enrolment / session two test),
+> 300-frame / ~20 s windows, and reports the high seventies. `LITERATURE_BRIEFING.md` line 205
+> describes that one and is correct; this file describes the other one and is correct. Quote the
+> author list and venue, never "Rack et al. 2023".
+
+
 **Written 2026-09-10 on the Miami server, before any training run and before any number
 from this code existed on this machine.** Registered per the project rule that a target
 chosen after seeing a result is not a target.

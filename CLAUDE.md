@@ -3961,6 +3961,42 @@ out-of-range indices must be reported as a named layer-1 corpus failure rather t
 with an `IndexError` - that is the case where the two user lists differ, and it should read
 as a finding rather than a crash.
 
+**THERE ARE TWO RACK ET AL. 2023 PAPERS AND THIS PROJECT CONFLATED THEM FOR A DAY (settled
+2026-09-17 against both primary sources).** A draft audit flagged that §2 described Rack et al. 2023
+as a **seen-user** protocol while `sota_rack2023_reproduction_REGISTERED.md` records a **disjoint**
+split, and concluded the paper might contain both. **It does not - they are different papers by the
+same first author in the same year:**
+
+| | reference 4 | reference 5 |
+| --- | --- | --- |
+| | Rack, **Fernando, Yalcin**, Hotho, Latoschik | Rack, **Kobs**, Fernando, Hotho, Latoschik |
+| | *Who is Alyx? A new behavioral biometric dataset* | *Versatile User Identification in XR using Pretrained Similarity-Learning* |
+| venue | Front. Virtual Real. 4, doi:10.3389/frvir.2023.1272234 | arXiv:2302.07517 |
+| protocol | **seen-user**: trained to map a sequence to one of the **71** players with two sessions | **disjoint** subjects |
+| split | by **session** - session one enrolment (last 5 min validation), entire session two test | by **subject**, train 27 / validation 9 / test 27 of 63 |
+| window | **300 frames, "about 20 s"** | 500 frames, **33.3 s** |
+| figure | high seventies | the 99 / 89 / 25 curve |
+| repo | - | `Versatile-XR-User-Identification` - **the one being reproduced** |
+
+Verified from the Frontiers text itself, not from a summary: *"We train the GRU and CNN to map input
+motion sequences to one of the 71 users"*, *"we consider session one for enrolment... we use entire
+session two for the test set"*, *"300 consecutive frames (about 20 s)"*, and **zero** occurrences of
+"held-out". The reproduction target was confirmed from the repo's own `Citation.cff`, which names
+Kobs and arXiv:2302.07517.
+
+**So §2's original wording was right and the audit's alarm was a false positive - but it was the
+right alarm to raise.** As written, §2 attributed a seen-user protocol to "Rack et al. (2023)" while
+the reference list holds two Rack 2023 entries, so the prose merged two papers into one citation.
+**The registration and the briefing were each correct about a different paper**, which is exactly
+what makes this class hard: two internally consistent records that contradict each other because
+they are about different objects.
+
+**The rule: a same-author, same-year citation is ambiguous until the author LIST and venue are
+matched, not just the surname and date.** And the tell was available without either paper - the two
+records disagreed on **user count and window length**, which are facts about the experiment rather
+than about anyone's reading of it. **When two of our own records disagree on a primary fact, suspect
+two objects before suspecting an error.**
+
 **A PUBLISHED PAPER CAN HAVE PUBLISHED TRAINING CODE AND UNPUBLISHED EVALUATION CODE, and the
 second is where the numbers live (Miami, 2026-09-10).** Rack et al.'s public repo trains
 faithfully - its shipped config equals the paper's Table IV cell for cell - and **cannot compute
