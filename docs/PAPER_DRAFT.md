@@ -569,7 +569,12 @@ registered for the phrase "crosses an activity boundary" — that the lower edge
 
 A related registered prediction also held: the unseen-application cell sits **below** the
 seen-application cell, −0.036 [−0.054, −0.018]. Training on all five applications was buying something,
-which is worth establishing rather than assuming.
+which is worth establishing rather than assuming. This contrast is **dose-confounded and was registered
+as such**: the held-out-application arm also trains on 20% less Across-XR data, so two explanations are
+sufficient for the gap. The registered control separates them — on the *seen* cells the same pair reads
+−0.009 [−0.025, +0.008], so the 20% cut costs nothing measurable and the deficit is attributable to the
+held-out application rather than to dose. We report the confound and its control together because the
+contrast is not clean on its own.
 
 `[FIGURE 6: forest plot of leave-one-application-out gains, per application, pooled, and
 covered/uncovered subsets, with the +0.030 registered threshold drawn and labelled NOT MET. Chart spec
@@ -698,7 +703,11 @@ is a `dyn` result and must be stated as one.
 by −0.074, so the orthogonal component our fit recovers is real and person-specific; it is simply tiny.
 The honest fit fails not because the fit is rank-deficient but because of the **test-fitted advantage**:
 the ceiling variant fits on the seventeen people it is then scored on and reaches +0.148, while the
-honest variant fits on thirty-two *other* people and reaches −0.008 — more correspondences did not help,
+honest variant fits on thirty-two *other* people and reaches −0.008 on the same arm and the same seed.
+That +0.148 is **one run of three at identical configuration** (the other two read −0.004 and +0.016,
+as reported above), so it is a single-run bound and not a rate; the contrast below rests on the *sign*
+of the gap between the two variants, which holds on every seed, and not on the magnitude of the
+ceiling. More correspondences did not help,
 because the correspondences are not the same people. (The rank argument is real and belongs to a
 different variant: the unrestricted 128-d fit, which must invent an arbitrary 96-dimensional complement
 from at most thirty-two correspondences, loses −0.055 [−0.086, −0.029] in six of six checkpoints. It is
@@ -807,7 +816,12 @@ people or the specific application — is a hypothesis this corpus cannot test.
 twice the mean cross-application rate, in both directions, in the arm that never saw Across-XR at all.
 This says the affinity is a property of the activity pair rather than something exposure creates, and it
 suggests that "cross-application" is not one quantity: a gallery collected in a rhythm game generalises
-well to another rhythm game and poorly elsewhere. A risk assessment that averages over application pairs
+to another rhythm game unusually well. We stop there deliberately. The wider claim — that
+cross-application transfer is *ordered* by task structure — was registered and **failed at the bottom**:
+the application that carries least is Half-Life: Alyx at +0.026, an activity our pretraining covers,
+while the Social VR scenario we predicted would carry least sits mid-table (Section 6.4). So the
+rhythm-pair affinity is established and a general task-structure ordering is not, and "poorly elsewhere"
+is not a thing we measured. A risk assessment that averages over application pairs still
 reports a number that no particular pair of applications has.
 
 **What this means for risk assessment.** Three of our results bear on how cross-application risk should

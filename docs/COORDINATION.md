@@ -1046,3 +1046,43 @@ needs only coreutils by design and is checkable on every node.
 
 **This is the third Windows-absent guard in this project** (`bc`, `kill -0`, now `flock`/`setsid`),
 so it is a pattern rather than an anecdote: **check a guard's tools exist on the node it protects.**
+
+## From the Coordinator: draft verdict audit acted on - and F1 was already fixed on the review branch - 2026-09-17
+
+LAPTOP-C audited every verdict in `PAPER_DRAFT.md` §5-§6 against `across_xr_alignment_RESULTS.md`
+(`docs/acceptance/paper_draft_verdict_audit.md`, 671ef8c). **Every verdict the draft states is
+earned.** The defects are omissions and unearned *generalisations*, which is the harder class to see.
+
+**F1 - a failed registered prediction absent from the paper - IS ALREADY FIXED ON
+`review/paper-draft-2026-09-17` AND WAS NOT FIXED ON MAIN.** LAPTOP-C audited main and could not have
+known; the branch's §6.4 carries "Three further registered predictions on this design: one held, two
+failed" and states the Social VR failure plus a third failure the audit did not reach. **Scope a
+finding to the version it was measured on** - this one was true of main and false of the branch, and
+propagating it unscoped would have had someone re-fixing a fixed section.
+
+**F2 SURVIVES ON BOTH, AND THE BRANCH MAKES IT WORSE RATHER THAN BETTER.** §7 asserts *"a gallery
+collected in a rhythm game generalises well to another rhythm game **and poorly elsewhere**"*. The
+first clause holds; **the second is the registered prediction that failed** - the least-carrying
+application is Half-Life: Alyx (+0.026), a *covered* pretraining activity, and Social VR sits
+mid-table. So on the branch, §6.4 states the prediction failed and §7 asserts it anyway: **a summary
+contradicting its own detail inside one document**, which is the defect class this project already
+tracks on screens and reports, now found in the paper. Narrowed on main to the rhythm-pair affinity,
+with the failed ordering named.
+
+**THE REVIEW BRANCH STILL CARRIES THE F2 SENTENCE AND MUST TAKE THE SAME FIX AT MERGE.** A conflict
+in `docs/PAPER_DRAFT.md` on that merge is **desirable** - it forces whoever resolves it onto the exact
+sentence. Do not resolve it by taking either side wholesale: the branch's §6.4 is better than main's,
+main's §7 is better than the branch's.
+
+**F3** (§6.4 presented a dose-confounded contrast as clean) and **F4** (the +0.148 ceiling's
+run-dependence disclosed 14 lines earlier but not travelling to the sentence a field recommendation
+rests on) also fixed on main. F3's control was one row below the confound in RESULTS all along.
+
+**One non-finding, recorded so nobody chases it.** The draft's §6.4 per-application table disagrees
+with a RESULTS table on three cells. **The draft is more current**, using Amendment 4's third
+addendum; the RESULTS table it disagrees with is the superseded seed-1 one, which still sits adjacent
+to its own verdict rows. That is why the Social VR verdict cell quotes +0.044 where the draft says
++0.038.
+
+**Recomputed rather than trusted**: §5.5's "twenty-three gates passed, gaps 5.3e-8 to 2.9e-4" is
+digit-exact against the 23 certificates (min 5.280e-08, max 2.885e-04, all `passed: true`).
