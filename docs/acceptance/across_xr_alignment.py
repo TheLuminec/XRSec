@@ -305,15 +305,56 @@ def gate(ckpt_path: str, device) -> dict:
     from normalization import ChannelNormalizer
     from utils import load_checkpoint
 
-    shard = ROOT / "results" / "runs" / f"{results_log.machine_name()}.jsonl"
+    # SEARCH EVERY SHARD, NOT THIS MACHINE'S (fixed 2026-09-20).
+    # This read `results/runs/{machine_name()}.jsonl` only, which silently assumes the
+    # checkpoint was TRAINED on the machine running the gate. That is false for any
+    # replicated checkpoint - i.e. exactly the case this gate exists to certify after a
+    # node is recovered - and it fails with FileNotFoundError on a machine that has no
+    # shard of its own, rather than saying what it could not find. A checkpoint's
+    # recorded row lives in whichever machine's shard trained it; find it there.
     rel = str(pathlib.Path(ckpt_path).resolve().relative_to(ROOT)).replace("\\", "/")
-    rows = [json.loads(l) for l in shard.read_text(encoding="utf-8").splitlines() if l.strip()]
-    rows = [r for r in rows if (r.get("checkpoint") or "").replace("\\", "/") == rel and r.get("mode") == "train"]
+    rows = []
+    shards = sorted((ROOT / "results" / "runs").glob("*.jsonl"))
+    for shard in shards:
+        for line in shard.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            if (r.get("checkpoint") or "").replace("\\", "/") == rel and r.get("mode") == "train":
+                r["_shard"] = shard.name
+                rows.append(r)
     if not rows:
-        return {"checkpoint": rel, "passed": False, "reason": "no training row in the shard"}
+        return {"checkpoint": rel, "passed": False,
+                "reason": f"no training row in any of {len(shards)} shards: "
+                          f"{[s.name for s in shards]}"}
     row = rows[-1]
     model, ck = quiet(load_checkpoint, ckpt_path, device, 100, return_checkpoint=True)
-    es = ck["eval_split"]
+    es = dict(ck["eval_split"])
+
+    # REMAP ABSOLUTE CORPUS PATHS ONTO THIS MACHINE (added 2026-09-20).
+    # `eval_split` stores test_dirs and exclude_users as ABSOLUTE paths from the machine
+    # that trained the checkpoint - e.g. /run/media/feng/Data/CalebProject/XRSec/... - so a
+    # replicated checkpoint cannot be gated anywhere but its home node even when the corpus
+    # is byte-identical. Rewrite anything at or below `processed_datasets/` onto ROOT, and
+    # record what was remapped in the certificate rather than doing it silently.
+    remapped = []
+    def _here(p):
+        q = str(p).replace("\\", "/")
+        i = q.find("processed_datasets/")
+        if i < 0:
+            return p
+        local = str(ROOT / q[i:])
+        if local != str(p):
+            remapped.append({"from": str(p), "to": local})
+        return local
+    if es.get("test_dirs"):
+        es["test_dirs"] = [_here(d) for d in es["test_dirs"]]
+    if es.get("exclude_users"):
+        es["exclude_users"] = [_here(d) for d in es["exclude_users"]]
+    for d in es.get("test_dirs") or []:
+        if not os.path.isdir(d):
+            return {"checkpoint": rel, "passed": False,
+                    "reason": f"corpus path does not resolve on this machine after remap: {d}"}
     seed = int(ck.get("seed", row["seed"]))
     swap = (not bool(es.get("swap_data", False))) if bool(es.get("test_on_excluded", False)) else bool(es.get("swap_data", False))
     dataset = quiet(SiameseDataset, list(es["test_dirs"]), samples_per_user=int(row.get("samples_per_user") or 512),
