@@ -1,0 +1,31 @@
+{
+ "observed": "2026-09-20T15:07:04.895218-04:00",
+ "observer": "DESKTOP-C",
+ "peers": {
+  "LAPTOP-C": {
+   "Online": false,
+   "Active": false,
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "OS": "windows"
+  },
+  "feng-MS-7B51": {
+   "Online": true,
+   "Active": false,
+   "LastHandshake": "2026-09-20T15:05:19.1229799-04:00",
+   "OS": "linux"
+  },
+  "AVALON": {
+   "Online": true,
+   "Active": true,
+   "LastHandshake": "2026-09-20T15:05:34.7099069-04:00",
+   "OS": "linux"
+  },
+  "fishseus": {
+   "Online": false,
+   "Active": false,
+   "LastHandshake": "0001-01-01T00:00:00Z",
+   "OS": "linux"
+  }
+ },
+ "note": "feng-MS-7B51 (Miami) reads Online=True with a live handshake. This is a claim about the HOST being reachable on the tailnet, NOT about its disks or the 23 checkpoints. Port 22 closed, consistent with COORDINATION.md recording that Miami never had sshd. laptop-c and fishseus read offline in the same output, so the field discriminates and this is not a stale entry."
+}

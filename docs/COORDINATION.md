@@ -1376,3 +1376,45 @@ the process**, not asserted in a certificate.
 service on that machine and runs under **that node's own permission flow** - a relay of the user's
 authorisation from here is not an approval there, and this coordinator will not route around another
 node's gate.
+
+## From DESKTOP-C: feng-MS-7B51 (Miami) is ONLINE on the tailnet - the "lost node" premise needs re-asking - 2026-09-20
+
+Observed while diagnosing a failed pull from AVALON. Certificate:
+`docs/acceptance/tailnet_status_desktop-c_2026-09-20.json` (raw `tailscale status --json`).
+
+| host | Online | LastHandshake |
+| --- | --- | --- |
+| **feng-MS-7B51 (Miami)** | **true** | **2026-09-20T15:05:19-04:00** |
+| AVALON | true | 2026-09-20T15:05:34-04:00 |
+| LAPTOP-C | false | never |
+| fishseus | false | never |
+
+ICMP agrees independently: 2/2 packets, 0% loss, 235-515 ms RTT. **Port 22 closed, which is
+consistent with this file's own record that Miami never had sshd and is not evidence against the
+host being up.** `ListAgents` shows "XRSec Miami Server" **offline**, so the machine is up with no
+session driving it - which is precisely how a node stays quietly alive while every document calls
+it gone.
+
+**Scope this carefully.** The claim is that **the host answers on the tailnet**. It is **not** a
+claim that the 23 checkpoints are on it. A reimaged host, a failed data disk with a healthy OS
+disk, and a fully intact machine nobody re-checked all produce this observation. ICMP and a
+handshake cannot separate them.
+
+**But "lost with its data unrecoverable" (2026-09-17) is at minimum no longer the whole picture**,
+and three things rest on that premise: RELAUNCH_KIT 0(a) being declared void, the choice to retrain
+the zero-shot arm, and the disk-recovery question going to the user as a DUA problem. **All three
+should be re-asked before a GPU starts.** If the disks survive, Miami serving and DESKTOP-C pulling
+is the direction that works - Miami is user-owned, DESKTOP-C is tagged - and the retrain becomes
+unnecessary while the Questset arms unblock immediately.
+
+**A fieldreading note so nobody over-reads the JSON.** `Active` flipped from `true` to `false`
+between two readings seconds apart while `Online` stayed `true` and the handshake timestamp did not
+change. `Active` tracks whether a connection is in use at that instant; **`Online` plus a recent
+`LastHandshake` is the durable pair.** I quoted `Active=true` in a message before noticing it
+fluctuates - accurate when taken, misleading if treated as a property.
+
+**And the AVALON pull's first failure was mine, not theirs.** `HTTP 000` on the first probe was
+Tailscale on DESKTOP-C still in `NoState` ("Tailscale is starting"); it came up ~3 minutes later and
+port 8765 then tested open. **A transfer failure on this node should check the local tailnet daemon
+before anyone is asked to re-check a serve** - the natural reading of a timeout is that the far end
+is wrong, and here the far end was fine throughout.
