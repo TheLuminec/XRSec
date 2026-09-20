@@ -1,0 +1,64 @@
+{
+ "what": "Transfer verification: Across-XR and Questset pulled from AVALON to DESKTOP-C",
+ "date": "2026-09-20",
+ "receiver": "DESKTOP-C",
+ "sender": "AVALON (http on tailnet IP, port 8765)",
+ "authorisation": "The user authorised the pull directly in the receiving session. A peer's relay of that authorisation was explicitly not treated as the approval.",
+ "archives": {
+  "across_xr.tar.gz": {
+   "bytes": 856839342,
+   "bytes_expected": 856839342,
+   "sha256": "8d4c9ee008cf2eb3dc26678f075e7a55d0b9364470290d2c7300662e4e36518d",
+   "sha256_match": true
+  },
+  "questset.tar.gz": {
+   "bytes": 286421687,
+   "bytes_expected": 286421687,
+   "sha256": "0031d2e6db21da979959dff2f3fc100a52d0be0dbb5a6b8c054caff383700c27",
+   "sha256_match": true
+  }
+ },
+ "per_file_verification": {
+  "method": "per file against the manifest, never totals - a total-against-total comparison cannot exclude two files differing in compensating directions",
+  "CrossApplicationXR_Dataset": {
+   "manifest_entries": 248,
+   "on_disk": 248,
+   "missing": 0,
+   "extra": 0,
+   "size_mismatch": 0,
+   "verdict": "PASS"
+  },
+  "Questset": {
+   "manifest_entries": 123,
+   "on_disk": 123,
+   "missing": 0,
+   "extra": 0,
+   "size_mismatch": 0,
+   "verdict": "PASS"
+  }
+ },
+ "verifier_proven_in_both_directions": {
+  "why": "A verifier that has only ever returned PASS has not been shown capable of returning FAIL. Three negative controls were run against the real corpus.",
+  "neg_1_fabricated_missing_file": "detected, missing=1, rc=1",
+  "neg_2_one_byte_size_change": "detected, size_mismatch=1 (manifest=1048 disk=1047), rc=1 - the compensating-delta case the per-file rule exists for",
+  "neg_3_wrong_root": "fixture check fired and STOPPED with a path-convention diagnosis, instead of reporting 123 missing and 123 extra which would read as catastrophe"
+ },
+ "identities_landed": {
+  "CrossApplicationXR_Dataset": {
+   "user_dirs": 49,
+   "raw_entries": 50,
+   "note": "CITATION.txt sits INSIDE users/, so `ls | wc -l` over-counts by one here"
+  },
+  "Questset": {
+   "user_dirs": 60,
+   "raw_entries": 60,
+   "note": "CITATION.txt sits at the dataset ROOT, so `ls | wc -l` happens to be correct here"
+  },
+  "consequence": "The off-by-one is corpus-dependent - it depends on where the citation file sits - so `find -maxdepth 1 -type d` should be used unconditionally rather than only on corpora known to carry one."
+ },
+ "licence": {
+  "CrossApplicationXR_Dataset": "CC BY-NC-SA 4.0 - NonCommercial and ShareAlike travel with any derived data",
+  "Questset": "CC BY 4.0 - attribution only",
+  "note": "Neither is BOXRR-derived, so no DUA clause-4 question arises on this transfer. CITATION.txt is present in both trees. Do NOT reason about these under the BOXRR agreement, and do not apply their freedoms to BOXRR-derived data."
+ }
+}
