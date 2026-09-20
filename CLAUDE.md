@@ -1527,8 +1527,22 @@ Model input lives in `processed_datasets/<Dataset_Name>/users/<user_id>/<task>.c
 for d in processed_datasets/*/users; do echo "$(find "$d" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l) users  $d"; done
 ```
 
-**That command used `ls | wc -l` until 2026-09-20 and over-counted by one on any corpus carrying a
-citation file** (DESKTOP-C). BOXRR's `users/` holds **4,021 entries and 4,020 directories** - the
+**That command used `ls | wc -l` until 2026-09-20 and over-counted by one on any corpus whose
+citation file sits INSIDE `users/`** (DESKTOP-C). *This entry read "any corpus carrying a citation
+file" for a few hours and that is false — measured on three corpora:*
+
+| corpus | `CITATION.txt` | dirs / entries |
+| --- | --- | --- |
+| BOXRR-23 | inside `users/` | 4,020 / **4,021** |
+| Across-XR | inside `users/` | 49 / **50** |
+| **Questset** | at the **dataset root** | 60 / 60 — **no off-by-one** |
+
+**So it is corpus-dependent, and tracks where the file was placed rather than whether the corpus has
+one.** Questset carries a citation file and counts correctly. That matters because the narrower
+reading suggests a conditional fix — "apply `-type d` to the corpora known to carry one" — and the
+licence tells you nothing about which directory the converter put it in. **`find -maxdepth 1 -type d`
+belongs everywhere, unconditionally.** Two corpora said "citation file"; the third said "placement",
+and only the third generalises. BOXRR's `users/` holds **4,021 entries and 4,020 directories** - the
 extra is `CITATION.txt`, which clause 5 requires to travel with the data. The loader skips it via
 `os.path.isdir`, so **no result is affected**; what was wrong was the documented way to check a
 corpus. It is this file's own "compute a count independently of the rows you display" rule biting the
