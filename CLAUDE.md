@@ -1524,8 +1524,16 @@ Model input lives in `processed_datasets/<Dataset_Name>/users/<user_id>/<task>.c
 **Which datasets exist is per-machine and must be checked, not assumed** — `processed_datasets/` is ~6.9GB when fully populated and cannot travel through git, so two checkouts of this repo routinely hold different data. Confirm before planning a run:
 
 ```bash
-for d in processed_datasets/*/users; do echo "$(ls "$d" 2>/dev/null | wc -l) users  $d"; done
+for d in processed_datasets/*/users; do echo "$(find "$d" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l) users  $d"; done
 ```
+
+**That command used `ls | wc -l` until 2026-09-20 and over-counted by one on any corpus carrying a
+citation file** (DESKTOP-C). BOXRR's `users/` holds **4,021 entries and 4,020 directories** - the
+extra is `CITATION.txt`, which clause 5 requires to travel with the data. The loader skips it via
+`os.path.isdir`, so **no result is affected**; what was wrong was the documented way to check a
+corpus. It is this file's own "compute a count independently of the rows you display" rule biting the
+command the file recommends - and it reads as a real user count, which is exactly the kind of
+off-by-one that ends up in a table.
 
 The table below describes the corpus when fully populated. `normalize=per_dataset` and `within_dataset_negatives` are **no-ops on a single dataset**, so a machine holding only one of these cannot reproduce any multi-dataset result.
 
