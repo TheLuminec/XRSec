@@ -14,6 +14,17 @@ GPU time and none of the diagnosis.**
 
 ## 0. Before anything else — two things that are not optional
 
+> **(a) IS VOID AS OF 2026-09-20: THERE IS NO SENDING NODE.** The 23 checkpoints were **Miami's**,
+> and Miami is the node that died - verified from `origin` by matching the manifest's 23 `run_id`s
+> against each shard: `feng-ms-7b51.jsonl` holds **23/23** with the manifest paths verbatim,
+> `desktop-c.jsonl` and `laptop-c.jsonl` hold **0/23**. So the audit's "second single point of
+> failure" and the node that died were **the same disk**, and this instruction stood for three days
+> with nobody able to execute it. **Step 0(b) is therefore no longer a tidy-up item - the disks are
+> the only known route to these weights, and the clause-4 question about an external recovery vendor
+> is on the critical path.** All 24 certificates and 23 result rows are on `origin`, so every recorded
+> figure survives; what is lost is re-scoring for a reviewer and the Questset arms. The copy
+> discipline below still applies to any checkpoint set that is recovered or retrained.
+
 **(a) Replicate the checkpoints.** The **23** gated programme checkpoints are on **one machine** and
 not on AVALON (verified 2026-09-17: every `runs/2026-09-10/*` and `runs/2026-09-11/*` directory is
 absent here). They are a few tens of MB in total — `bilstm` at `embedding_dim=128` is ~153k
@@ -65,7 +76,14 @@ a node where nothing could run.
 The Rack reproduction needs `15_fps-63_subjects-metric_learning_movement.hdf5`, built from
 who_is_alyx by their `01_aggregate.py`, which selects players with exactly 2 sessions — taking
 AVALON's 76 players to **63**, matching their config filename to the digit. AVALON holds the
-who_is_alyx corpus (76 users), so this is reproducible without re-downloading anything.
+**raw** who_is_alyx corpus at `external_datasets/who-is-alyx` - **14 GB, 76 players in the original
+`players/NN/` layout**, CC BY-NC-SA 4.0, *not* a DUA corpus - so this is reproducible without
+re-downloading anything. **Note what that sentence is a claim about: it is true of AVALON and of no
+other node.** It was written on Miami and read on DESKTOP-C as a property of the project. Our
+converted `processed_datasets/who_is_alyx` **cannot substitute**, on two independent counts: their
+`01_aggregate.py` reads the original layout, and **ours is head-only by project scope while the
+reproduction runs as published WITH CONTROLLERS**, so the controller channels do not exist in it at
+all. A corpus can be present, correct, and still be the wrong object.
 
 **Prefer copying an already-gated corpus to reconverting one.** `code_identity` covers `model/*.py`
 and **not** the `prepare_*.py` converters, so two machines can hold materially different
