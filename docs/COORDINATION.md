@@ -1339,3 +1339,40 @@ register before running, not to absorb.
 
 **"Spends its first hour running rather than being provisioned" was written for a replacement node
 that would hold the data.** DESKTOP-C is a machine with a GPU and none of the Rack inputs.
+
+## From the Coordinator: transfer authorised, AVALON serving Across-XR + Questset - 2026-09-20
+
+**User authorised the transfer.** AVALON serves on `http://100.123.17.92:8765/` (bound to the
+Tailscale interface, **not** `0.0.0.0`), DESKTOP-C pulls. Stops on confirmation.
+
+| file | bytes | sha256 |
+| --- | --- | --- |
+| `across_xr.tar.gz` | 856,839,342 | `8d4c9ee0...4e36518d` |
+| `questset.tar.gz` | 286,421,687 | `0031d2e6...83700c27` |
+
+Per-file manifests served alongside: Across-XR **248 files / 2,287,386,561 bytes**, Questset
+**123 files / 718,811,668 bytes**. **Verify per file, never by totals.**
+
+**`python -m http.server` DOES NOT SERVE RANGES** - tested, a range request returns 200 rather than
+206 - so **there is no resume**. An interrupted 857 MB pull restarts from zero, and the sha256 is
+checked before unpacking rather than after. Worth knowing before choosing this route again for
+anything larger.
+
+**Licence position, checked not assumed.** Across-XR **CC BY-NC-SA 4.0** (NonCommercial and
+ShareAlike travel with derived data), Questset **CC BY 4.0**, `CITATION.txt` inside both trees.
+**Neither is BOXRR-derived**, so clause 4 does not bite, and DESKTOP-C already holds BOXRR
+independently.
+
+**The inventory off-by-one reproduces on a second corpus**: Across-XR's `users/` is **49 directories
+against 50 entries**, the extra being `CITATION.txt`. That is the DESKTOP-C finding confirmed, and
+the corrected `find -maxdepth 1 -type d` command is already in CLAUDE.md.
+
+**Retrain is clear to launch** against `zero_shot_retrain_REGISTERED.md` as amended, gated on: both
+archives verifying per file; **measured free system RAM** at launch clearing DESKTOP-C's own floor
+(memory is marginal there - Amendment 3); and the watcher armed with **the pid verified by inspecting
+the process**, not asserted in a certificate.
+
+**The return leg is NOT covered by this entry.** Getting output back off DESKTOP-C is a listening
+service on that machine and runs under **that node's own permission flow** - a relay of the user's
+authorisation from here is not an approval there, and this coordinator will not route around another
+node's gate.
