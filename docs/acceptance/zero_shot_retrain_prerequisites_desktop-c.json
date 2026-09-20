@@ -1,0 +1,108 @@
+{
+ "what": "Pre-launch prerequisites for the zero-shot dyn retrain (docs/acceptance/zero_shot_retrain_REGISTERED.md)",
+ "host": "DESKTOP-C",
+ "written": "2026-09-20",
+ "training_not_started": true,
+ "blocked_on": "user decision on the outbound transfer route; registration makes it a precondition",
+ "checks": {
+  "code_identity": {
+   "this_tree": "517cdaa57b",
+   "all_23_original_checkpoints": "517cdaa57b",
+   "match": true,
+   "note": "read from the code_identity field of the 23 Miami rows, not assumed. model/ is uniformly i/lf, so the mixed-line-ending hazard is absent."
+  },
+  "training_identities_post_draw": {
+   "pool_directories_only": 4096,
+   "per_seed_after_val_draw": {
+    "1": 3072,
+    "2": 3072,
+    "3": 3072
+   },
+   "registered": 3072,
+   "match": true,
+   "note": "computed with the loader's own select_validation_users, i.e. POST-draw, not the pre-draw pool. BOXRR users/ holds 4021 entries but 4020 directories - the extra is CITATION.txt, which the loader skips via os.path.isdir. The inventory command in CLAUDE.md uses `ls | wc -l` and therefore over-counts by one on any corpus carrying a citation file."
+  },
+  "sample_cache": {
+   "warm_for_this_arm": true,
+   "entries": {
+    "BOXRR-23-Dataset 10s20hz_full-nearest-s5": 4020,
+    "who-is-alyx 10s20hz_full-nearest-s5": 76
+   },
+   "note": "matches the original arm's sample_time=10, sample_rate=20, channels=full, resample=nearest, window_stride=5. Index build is a cache hit, not a CSV reparse."
+  },
+  "smoke_run": {
+   "result": "rc=0, completed end to end",
+   "scope": "276 identities (max_users={BOXRR-23_Dataset:200} + 76 alyx), epochs=1, seed=1",
+   "paths_exercised": [
+    "cache load (311 hits, 0 built)",
+    "encoding=dyn",
+    "identity_softmax + bilstm",
+    "normalize=per_dataset over 2 datasets",
+    "validation draw (72 held out; 204 training classes)",
+    "CROSS-CORPUS evaluate() on an unseen corpus via eval_normalize=target_fit",
+    "AUC/EER/lookup/position_lookup/amplitude reporting",
+    "checkpoint save, plot, results row"
+   ],
+   "paths_NOT_exercised": [
+    "scoring on CrossApplicationXR_Dataset, which this node does not hold - ViewGauss stood in as the unseen corpus",
+    "the full 4096-identity index build (memory not yet measured at full scale)",
+    "epochs>1, so early_stopping_patience never evaluated"
+   ],
+   "note": "This DID execute the evaluation path. The last Rack gate drove training_step in a manual loop and never ran validation, then crashed at minute 22 - stating which path a gate exercised is the point of this field."
+  }
+ },
+ "environment_vs_original": {
+  "python_version": {
+   "miami": "3.13.15",
+   "desktop_c": "3.12.10",
+   "differs": true
+  },
+  "torch_version": {
+   "miami": "2.14.0+cu130",
+   "desktop_c": "2.10.0+cu130",
+   "differs": true
+  },
+  "cuda_version": {
+   "miami": "13.0",
+   "desktop_c": "13.0",
+   "differs": false
+  },
+  "numpy_version": {
+   "miami": "2.5.3",
+   "desktop_c": "2.4.2",
+   "differs": true
+  },
+  "device_name": {
+   "miami": "NVIDIA GeForce RTX 4060 Ti",
+   "desktop_c": "NVIDIA GeForce RTX 5060 Ti",
+   "differs": true
+  },
+  "device_capability": {
+   "miami": "8.9",
+   "desktop_c": "12.0",
+   "differs": true
+  },
+  "torch_arch_list": {
+   "miami": "sm_75;sm_80;sm_86;sm_90;sm_100;sm_120",
+   "desktop_c": "sm_75;sm_80;sm_86;sm_90;sm_100;sm_120",
+   "differs": false
+  }
+ },
+ "arithmetic_path": {
+  "desktop_c": {
+   "capability_tag": "sm_120",
+   "in_arch_list": true,
+   "path": "NATIVE"
+  },
+  "miami": {
+   "capability_tag": "sm_89",
+   "in_arch_list": false,
+   "path": "COMPATIBILITY"
+  }
+ },
+ "UNREGISTERED_AXES_FOUND": {
+  "python_version": "3.13.15 -> 3.12.10",
+  "torch_version": "2.14.0+cu130 -> 2.10.0+cu130",
+  "why_it_matters": "The registration names device, numpy and pair draw. torch is a four-minor DOWNGRADE in the library that owns the cuDNN BiLSTM kernel this arm trains. CLAUDE.md prices that kernel at up to 7e-4 AUC BETWEEN DEVICES; between torch versions it is unmeasured here. Registered now, before the run, so it cannot be reached for afterwards - which is the registration's own stated reason for naming the other three."
+ }
+}
