@@ -20,7 +20,7 @@ access routes.
 
 | dataset | identities | sessions each | activity | device |
 | --- | --- | --- | --- | --- |
-| BOXRR-23 (our slice) | **2,020** | 4.45 recordings | Beat Saber | VR |
+| BOXRR-23 (our slice) | **4,020** | 4.45 recordings (17,872 over 4,020; median 4) | Beat Saber | VR |
 | Head_and_Gaze | 100 | many videos | 360-degree video | VR |
 | PanoSaliency | 99 | 22 median | 360-degree video | VR |
 | Who Is Alyx | 76 | **2, different days** | Half-Life: Alyx | VR |
@@ -30,7 +30,32 @@ access routes.
 | Panonut360 | 21 | 15 | 360-degree video | VR |
 | NJIT_6DOF | 18 | **1** | room-scale walking | VR |
 | 360_em | 13 | 15 median | position-only, 0 windows at `channels=full` | VR |
-| **total** | **2,452** (2,439 with windows) | | **~5 activity types** | |
+| **Nymeria** | 50 | 2 sequences, **one sitting** | unscripted daily life, 17 scripts | **real AR glasses** (Project Aria) |
+| **Across XR Applications** | 49 | 5 applications, **one sitting**, one unbroken recording each | Superhot, Half-Life: Alyx, Beat Saber, Synth Riders, Social VR | VR |
+| **Questset** | 60 | 2 titles of 4, **one sitting** | Beat Saber, Cooking Sim, Medal of Honor, Forklift Sim | VR |
+| **total** | **4,611** (4,598 with windows at `channels=full`) | | **~5 activity types plus daily life** | |
+
+*Regenerated 2026-09-20 from `processed_datasets/` on AVALON, counting **directories** under each
+`users/` (never `ls | wc -l`, which over-counts by one wherever a `CITATION.txt` sits inside
+`users/` - BOXRR, Nymeria and Across-XR; Questset keeps its `CITATION.txt` at the dataset root
+and counts correctly at 60 either way, so the trap tracks **where the file sits**, not whether
+one exists). The old total of 2,452 was 2,020 BOXRR + 419 +
+13 and predated the BOXRR Stage 3 conversion, Nymeria, Across-XR and Questset. The 13 without
+windows are `360_em`.*
+
+**Caveats that must travel with the three newest counts, because a number alone says something
+false:**
+
+- **Across-XR is fully crossed** - every participant in all five applications, no missing cells,
+  the only such corpus we hold. One sitting; `take_id` carries no information at all (each
+  participant-by-game cell is a single unbroken recording). Test-only by registration; the
+  amended exception is the separately registered 0-22 / 23-31 arm.
+- **Questset is NOT fully crossed** - each user plays 2 of 4 titles and the two groups are
+  disjoint, so it is two 2-application corpora of ~30 users, not one 60-user cross-application
+  corpus. One sitting per user. CC BY 4.0.
+- **Nymeria is one sitting per participant**, so it can never pay the cross-session cost. It is
+  the corpus's only Z-up source and is rotated to Y-up at conversion (world-side and
+  device-side; see the coordinate-frame table).
 
 **The on-disk directory names are not the short names used above, and two of them do not
 even start with the corpus's short name.** Recorded here because it has now cost a session
@@ -105,12 +130,17 @@ Per-file manifests for cross-machine verification live in
 
 | | identities |
 | --- | --- |
-| on disk now | **2,439** |
+| on disk now (AVALON, 2026-09-20; 2,439 until BOXRR Stage 3, Nymeria, Across-XR and Questset) | **4,611** |
 | + open, unfetched, excluding BOXRR | **~2,840** |
 | + the rest of BOXRR-23 | **~82,200** |
 | + everything granted on request | **~82,500** |
 
-**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 2,439
+*The three rows below "on disk now" were computed from the old 2,439 and have **not** been
+recomputed: they mix corpus counts with an unfetched-BOXRR estimate that is not on disk, so
+regenerating them from `processed_datasets/` would be inventing a figure. Read them as
+"increment over the old baseline", not as absolute totals against 4,611.*
+
+**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 4,611
 to over 80,000 with no new permission, and the practical ceiling becomes conversion and
 training time rather than availability. What B and C actually buy is **activity coverage**:
 roughly 5 activity types on disk today against 30-plus reachable, spanning rhythm games,
@@ -152,9 +182,9 @@ all, whatever else it offers.
 
 | # | Dataset | Identities | Sessions/user | Task(s) | Head 6DoF | Licence | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | BOXRR-23 [B1] | 105,852 total; **81,369** with >=2 recordings | ~45 avg | Beat Saber | yes | CC BY-NC-SA 4.0 + DUA | **2,020 converted, in use** |
+| 1 | BOXRR-23 [B1] | 105,852 total; **81,369** with >=2 recordings | ~45 avg | Beat Saber | yes | CC BY-NC-SA 4.0 + DUA | **4,020 converted, in use** (2,020 as of Stage 1-2, 2,000 added in Stage 3) |
 | 2 | Who Is Alyx [C7] | 76 | 2, different days | Half-Life: Alyx | yes | open, in catalogue | **converted, in use** |
-| 3 | Across XR Applications [X1] | 49 (23/9/**17 test**) | 5 apps x takes | Superhot, Alyx, Beat Saber, Synth Riders, Social VR | yes, ~90Hz | CC BY-NC-SA 4.0 | verified to the header, **queued to convert** |
+| 3 | Across XR Applications [X1] | 49 (23/9/**17 test**) | 5 apps x takes | Superhot, Alyx, Beat Saber, Synth Riders, Social VR | yes, ~90Hz | CC BY-NC-SA 4.0 | **converted, 49 users / 245 sessions, on AVALON** (was "queued to convert") |
 | 4 | MooreCrossDomain23 [C5] | 45 | 2 (BuildA / BuildB) | two distinct VR builds | yes | open, in catalogue | verified, not fetched |
 | 5 | VR.net [C6] | 21 | varies | **7 apps** (below) | yes | open, in catalogue | verified, not fetched |
 | 6 | LiebersBeatSaber23 [C1] | 15 | **25** | Beat Saber | yes | open, in catalogue | verified, not fetched |
@@ -364,7 +394,7 @@ lot of rows. So pulling the whole zip to get one CSV wastes about 30%, not 90%.
 
 | | identities | transfer | per identity |
 | --- | --- | --- | --- |
-| BOXRR-23 | 2,020 | 9.0GB | **4.6 MB** |
+| BOXRR-23 (Stage 1-2 slice; a download record, not the current corpus of 4,020) | 2,020 | 9.0GB | **4.6 MB** |
 | Nymeria | 100 | ~135GB | **~1,380 MB** |
 
 300x. So **Nymeria is not an identity-count acquisition** - BOXRR answers that axis far more
