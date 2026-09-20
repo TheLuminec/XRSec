@@ -3214,6 +3214,15 @@ bash queue_runner.sh selftest-markers | tail -3
 `selftest-markers` needs only coreutils by design, so the marker half is checkable everywhere even
 where the lock half is not.
 
+**A FOURTH MEMBER, AND IT IS A METRIC RATHER THAN A MISSING TOOL (DESKTOP-C, 2026-09-20).** A
+pre-flight index build drove that machine from **13.7 GB free to 0.03 GB** — and at that instant the
+offending process read **2.5 GB RSS**, because Windows trims working sets under pressure. **So a
+memory guard written against process RSS reads healthy while the machine is dying.** Same
+failure-open shape as `bc`, `kill -0` and `flock`/`setsid`, but nothing is absent here — the number
+is present, plausible, and wrong in the direction that passes. **Gate on system *available* memory,
+never on RSS.** It surfaced only because the two figures were on screen together and disagreed, which
+is this file's "read a summary against the detail printed beside it" rule paying out a third time.
+
 **CLOSED 2026-09-20, AND THE PREDICTION HELD.** On DESKTOP-C both read **MISSING**; its bash is Git
 Bash and no WSL is on the path. So **the lock guard upstreamed because DESKTOP-C lost a night's GPU to
 two concurrent runners cannot run on DESKTOP-C**, and its `selftest` can only ever fail there.

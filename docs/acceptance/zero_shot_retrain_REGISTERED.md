@@ -131,3 +131,37 @@ exercised, not which path passed.**
 Identity count verified **post-draw through the loader's own `select_validation_users`**, not on the
 pre-draw pool: pool 4,096 = 4,020 BOXRR + 76 alyx, draw 1,024, **training 3,072 on every seed** —
 exactly the registered figure. That is the distinction that cost this project a matched arm once.
+
+## AMENDMENT 3: the retrain is MEMORY-MARGINAL on DESKTOP-C, and RSS will not tell you
+
+**DESKTOP-C retracted its own correction, against itself, in the direction that makes things worse.**
+It had told me the ~23 GB memory note was "the wrong number to reach for" because this arm is
+BOXRR+alyx at a ~3 GB window tensor. **The note was right.** Its decomposition is 4,146 identities at
+10 s / stride 5 = 707k windows — **essentially this arm's scale**, not a pooled-corpus outlier — and
+it separates the two quantities explicitly: *"the training tensor alone is ~4 GB, with the process
+reaching 23.1 GB once the eval index and Torch are in."* Half a sentence was quoted against the other
+half, and **the hedge on the conclusion made a misread of the evidence look disciplined.**
+
+**Measured, and the abort is the result.** A pre-flight build of the full 4,096-identity index —
+`create_dataloader_from_path` only, no model, no GPU, no training — drove free physical memory from
+**13.7 GB to 0.03 GB**, and was killed before the machine thrashed. **No peak figure exists**: the
+script prints only on completion, so it died before reporting. The real run is at least this heavy
+and adds a model on top. **Not claimed**: that the arm cannot run there. The machine idles nearer
+21 GB free once filesystem scans and file cache are released, so it is **marginal and dependent on
+what else is running**, not impossible.
+
+**PROCESS RSS UNDERSTATES CONSUMPTION EXACTLY WHEN IT MATTERS MOST.** At the instant the system had
+**0.03 GB free**, the offending process read **2.5 GB RSS** — Windows trims working sets under
+pressure. **A memory guard written against process RSS reads healthy while the machine is dying**,
+which is the failure-open shape this project already catalogues for `bc`, `kill -0` and
+`flock`/`setsid`, arriving in a fourth place. **Gate on system available memory, never on RSS.** It
+surfaced only because the two numbers were on screen together and disagreed — the "read a summary
+against the detail printed beside it" rule paying out again.
+
+**Added to acceptance** (DESKTOP-C proposed it; adopted):
+
+5. **Launch gated on measured free system RAM**, not on RSS and not on a remembered figure.
+6. **One `.done` marker per seed**, so a kill under memory pressure costs **one seed rather than
+   three**. The DESKTOP-C notes already record the harness killing background jobs under memory
+   pressure, and a training child surviving its killed wrapper. A four-to-six hour job that dies at
+   hour three on a machine that cannot ship its output is the worst available outcome.
