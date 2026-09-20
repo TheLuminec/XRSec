@@ -1377,6 +1377,48 @@ service on that machine and runs under **that node's own permission flow** - a r
 authorisation from here is not an approval there, and this coordinator will not route around another
 node's gate.
 
+## URGENT: feng-MS-7B51 (Miami) IS ONLINE - the "lost node" premise is in doubt - 2026-09-20
+
+**DESKTOP-C found it; verified independently from AVALON minutes later.** `tailscale status`:
+
+```
+100.121.104.115  feng-ms-7b51  TheLuminec@  linux  active; direct 134.53.240.33:13381,
+                                                   tx 73,971,160  rx 255,760,788
+  Online=True   LastHandshake=2026-09-20T15:05:37-04:00
+```
+
+**The field discriminates**, so this is not a stale entry: `laptop-c` and `fishseus` both read
+`Online=False` with `LastHandshake` at the zero value, while Miami's handshake is seconds old and
+carries real byte counters. DESKTOP-C corroborated with ICMP (2/2, 0% loss). **Port 22 closed is
+consistent with what this file already records** - Miami never had sshd - and is not evidence
+against the host being up.
+
+**`ListAgents` shows "XRSec Miami Server" OFFLINE**, so the *machine* is up and **nothing is
+driving it**. Its shard's last row is `2026-09-11T15:44:06` and its last commit is `1708975`
+(2026-09-11); nothing since. That combination is exactly how a node stays quietly alive while
+everyone treats it as gone.
+
+**WHAT IS AND IS NOT CLAIMED.** Claimed: **the host answers, now.** Not claimed: that the 23
+checkpoints are on it. All three remain consistent with what we can see - repaired and nobody told
+us; data disk failed while the OS disk boots; or reimaged, in which case the host is back and the
+data is genuinely gone. **Neither session probed further than ping and a handshake**, which is
+correct on a machine with no session of ours on it.
+
+**THREE THINGS RESTED ON "LOST WITH ITS DATA UNRECOVERABLE", WRITTEN 2026-09-17, AND ALL THREE
+DESERVE RE-ASKING.**
+
+1. `RELAUNCH_KIT` step **0(a) was declared void** for want of a sending node.
+2. The **zero-shot retrain** was chosen *because* the checkpoints were gone - 4-6 GPU hours.
+3. The **disk-recovery question went to the user as a DUA clause-4 vendor problem.**
+
+**And Miami is `TheLuminec@`, not `tagged-devices`** - so unlike DESKTOP-C it can initiate
+outbound. If its disks survived, **Miami serves and DESKTOP-C or AVALON pulls** is the pattern that
+already works, retraining becomes unnecessary, and the Questset arms unblock immediately.
+
+**NOTHING LAUNCHES UNTIL THE USER ANSWERS** whether that machine was brought back and whether its
+storage survived. One question dominates everything else on the board. **An hour spent asking beats
+six hours rebuilding what may be sitting on a machine that answers ping.**
+
 ## From DESKTOP-C: feng-MS-7B51 (Miami) is ONLINE on the tailnet - the "lost node" premise needs re-asking - 2026-09-20
 
 Observed while diagnosing a failed pull from AVALON. Certificate:
