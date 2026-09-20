@@ -1,0 +1,54 @@
+{
+ "question": "Are the 23 gated Across-XR checkpoints on DESKTOP-C?",
+ "answer": "NO. They were produced on feng-MS-7B51 (Miami), the node lost on 2026-09-17.",
+ "written_by": "DESKTOP-C session, 2026-09-20",
+ "host": "DESKTOP-C",
+ "git_head": "1b60e8c676d8a8e71eb841e6e163b06f638e7674",
+ "evidence": {
+  "run_dirs_present": [
+   ".gitkeep",
+   "2026-05-04",
+   "2026-09-01",
+   "2026-09-02",
+   "2026-09-03",
+   "2026-09-04",
+   "2026-09-05",
+   "2026-09-08",
+   "2026-09-09"
+  ],
+  "runs_2026_09_10_exists": false,
+  "runs_2026_09_11_exists": false,
+  "shard_attribution": {
+   "desktop-c.jsonl": {
+    "rows": 342,
+    "manifest_run_ids_present": 0
+   },
+   "feng-ms-7b51.jsonl": {
+    "rows": 24,
+    "manifest_run_ids_present": 23
+   },
+   "laptop-c.jsonl": {
+    "rows": 35,
+    "manifest_run_ids_present": 0
+   }
+  },
+  "across_xr_substring_count_by_shard": {
+   "desktop-c.jsonl": 0,
+   "feng-ms-7b51.jsonl": 23,
+   "laptop-c.jsonl": 0
+  },
+  "filesystem_scan": {
+   "method": "Get-ChildItem -Recurse -Filter *.pth over C:, D:, E:",
+   "positive_control": "499 .pth files found on C:, so the scan demonstrably walked the tree",
+   "across_xr_pth_matches": {
+    "C": 0,
+    "D": 0,
+    "E": 0
+   }
+  },
+  "across_xr_corpus_present_on_desktop_c": false,
+  "questset_corpus_present_on_desktop_c": false
+ },
+ "consequence": "RELAUNCH_KIT section 0(a) cannot be executed from DESKTOP-C. The 23 checkpoints are on the dead node's disks, so section 0(b) - the decision about those disks - is now the only known route to them and is on the critical path.",
+ "what_survives": "The 24 committed gate certificates and the 23 rows in results/runs/feng-ms-7b51.jsonl are on origin. The recorded figures survive; the ability to re-score them for a reviewer, and to run the Questset arms against them, does not."
+}

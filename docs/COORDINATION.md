@@ -1208,3 +1208,55 @@ checkable as written**, and being right is not the property that matters in a re
 §9. §3.2's *"the largest XR motion corpus in existence cannot support a cross-application study"* was
 checked and is **earned** - exhaustive key-set partition, 92,103 against 13,746 with overlap **zero**,
 105,849 of the release's 105,852.
+
+## From DESKTOP-C: the 23 checkpoints are NOT here - they were Miami's, and Miami is the dead node - 2026-09-20
+
+The coordinator tasked DESKTOP-C with serving the 23 gated Across-XR checkpoints to AVALON, on the
+reading that DESKTOP-C is the "one machine" holding them. **It is not, and never was.** Certificate:
+`docs/acceptance/checkpoint_provenance_desktop-c.json`.
+
+| check | result |
+| --- | --- |
+| `runs/2026-09-10`, `runs/2026-09-11` | **absent**; `runs/` on this machine stops at 2026-09-09 |
+| manifest `run_id`s in `desktop-c.jsonl` (342 rows) | **0 of 23** |
+| manifest `run_id`s in `feng-ms-7b51.jsonl` (24 rows) | **23 of 23**, and its `run_dir` fields are the manifest paths verbatim |
+| substring `across-xr` per shard | desktop-c **0**, laptop-c **0**, feng-ms-7b51 **23** |
+| `across-xr-*.pth` on C:, D:, E: | **0**, with 499 `.pth` found on C: as a positive control that the scan walked the tree |
+| Across-XR corpus in `processed_datasets/` | **absent** (Questset too) - this node could not have run or re-scored them |
+
+`feng-MS-7B51` is Miami (this file, line 686; CLAUDE.md line 3761). **So the single point of failure
+the 09-17 audit identified was the node that died, and the audit and the loss were the same event
+seen from two sides.** The audit said the checkpoints "exist on one machine, the same exposure that
+just cost 36 hours" - the sentence was truer than it read: not the same *kind* of exposure, the same
+*disk*.
+
+**This is the project's recurring bug at the top of a work order.** "They are on one machine" was
+established by finding them absent on AVALON, and the machine was then named by elimination rather
+than by looking. `results/runs/*.jsonl` is one grep and answers it exactly, because the shard name is
+derived from `platform.node()` and cannot be chosen - the provenance was committed to origin all
+along, in the same repo as the manifest.
+
+**Consequence: RELAUNCH_KIT 0(a) cannot be executed by anyone.** There is no sending node. 0(b) -
+what happens to the dead node's disks - is no longer a tidy-up item to settle before the hardware
+moves; it is the **only known route to these 23 checkpoints**, and the DUA clause-4 question about an
+external recovery vendor sits directly on the critical path. **That is the user's call and is raised,
+not decided, here.**
+
+**What survives, so this is scoped rather than alarmed:** the 24 gate certificates and the 23 Miami
+rows are on origin, so every *recorded figure* survives and no published number is in question. What
+is lost with the disks is the ability to **re-score** for a reviewer, and to run the Questset arms
+against these checkpoints at all. If the disks are unrecoverable the arms need retraining, which is
+GPU time and none of the diagnosis - the same shape as the Rack loss.
+
+**Also closing an OPEN item from 2026-09-17, since I am the Windows node it was addressed to:**
+
+```
+flock    MISSING
+setsid   MISSING
+```
+
+`bash queue_runner.sh selftest-markers` **PASSES** in full on this node (marker half needs only
+coreutils, by design). So the prediction holds: **the lock guard upstreamed because DESKTOP-C lost a
+night's GPU to concurrent runners cannot run on DESKTOP-C** - this bash is Git Bash, there is no WSL
+in the path. Per the instruction I have **not** improvised a replacement. Fourth Windows-absent
+guard after `bc`, `kill -0`, and this one counts twice.
