@@ -1312,3 +1312,30 @@ be the wrong object.
 **And the kit's own sentence was a claim about one machine.** "AVALON holds who_is_alyx so this is
 reproducible without re-downloading" is true of AVALON and of nowhere else; it was written on Miami
 and read on DESKTOP-C as though it were a property of the project. Corrected in the kit.
+
+**DESKTOP-C node readiness, recorded because nothing else records it.** Our own stack is operational
+here; Rack's is absent entirely.
+
+| | |
+| --- | --- |
+| python / torch / numpy | 3.12.10 / 2.10.0+cu130 / 2.4.2 |
+| device / capability | RTX 5060 Ti / **(12, 0)** |
+| `torch.cuda.get_arch_list()` | `sm_75, sm_80, sm_86, sm_90, sm_100, sm_120` |
+| `torch_geometric` | 2.7.0, imports - the auto-import trap is not live here |
+
+**sm_120 is present against a device capability of (12, 0), so kernels here run NATIVE rather than
+through the CUDA compatibility path.** That is the *pair* this file asks for rather than the device
+name, and it is the opposite of what Miami measured for itself (sm_89 absent from its build) - so
+those two nodes differed on the native/compatibility axis as well as on numpy, and any figure ever
+compared across them carries both.
+
+For Rack: `py -0p` offers **3.14 and 3.12 only**, and `uv`, `conda`, `mamba` and `pyenv` are all
+MISSING - so Python 3.8.20 is not merely absent, there is no manager here to install it with.
+`external_sota/` does not exist, and the raw who_is_alyx corpus is not on this disk; our
+`processed_datasets/who_is_alyx` cannot substitute, being our converted layout **and head-only by
+project scope** against a reproduction that runs with controllers. Note also that torch 2.0.1+cu118
+does not emit sm_120, so this Blackwell card may force a torch newer than Miami's - a deviation to
+register before running, not to absorb.
+
+**"Spends its first hour running rather than being provisioned" was written for a replacement node
+that would hold the data.** DESKTOP-C is a machine with a GPU and none of the Rack inputs.
