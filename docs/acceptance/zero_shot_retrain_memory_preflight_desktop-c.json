@@ -1,0 +1,27 @@
+{
+ "what": "Pre-flight memory measurement for the zero-shot dyn retrain on DESKTOP-C - ABORTED, and the abort is the result",
+ "written": "2026-09-20",
+ "host": "DESKTOP-C",
+ "training_not_started": true,
+ "outcome": "DID NOT COMPLETE. The full 4,096-identity index build at sample_time=10, window_stride=5 drove free physical memory from 13.7 GB to 0.03 GB and was killed by me before the machine thrashed.",
+ "what_was_measured": {
+  "free_ram_at_launch_gib": 13.7,
+  "free_ram_at_kill_gib": 0.03,
+  "free_ram_after_kill_gib": 17.76,
+  "peak_process_rss": "NOT OBTAINED - the script prints only on completion and was killed first",
+  "index_build_completed": false,
+  "scope": "create_dataloader_from_path only: no model, no GPU tensors, no training. The real run is at least this heavy and adds a model."
+ },
+ "corrects_an_earlier_claim_of_mine": {
+  "claimed": "the ~23 GB figure in the DESKTOP-C memory note is for pooled 8-corpus runs; this arm is BOXRR+alyx at roughly a 3 GB window tensor",
+  "wrong_because": "the note's own decomposition says 4146 identities at 10s/stride-5 = 707k windows, which is BOXRR 4020 + alyx 76 + Nymeria 50 - essentially THIS arm's scale. The 3.6 GiB window tensor was right; treating it as the PROCESS footprint was not, and the note explicitly distinguishes the two ('the training tensor alone is ~4GB, with the process reaching 23.1GB once the eval index and Torch are in').",
+  "status": "retracted. The note was right and the arm is memory-marginal on this node."
+ },
+ "the_metric_gotcha_worth_keeping": "At the moment the system had 0.03 GB free, the offending process read 2.5 GB RSS. Windows trims working sets under pressure, so PROCESS RSS UNDERSTATES CONSUMPTION EXACTLY WHEN IT MATTERS. A memory guard written against RSS reads healthy while the machine dies - the failure-open shape this project catalogues. Gate on system available memory, not on process RSS.",
+ "feasibility": {
+  "free_ram_now_gib": 21.2,
+  "reading": "Marginal and dependent on what else is running, not impossible. The build exhausted memory when started with 13.7 GB free; the machine idles nearer 21 GB free once scans and caches are released. The arm needs the machine substantially cleared, and a launch should gate on free RAM at start rather than assume it.",
+  "not_claimed": "that it fits. The build has never completed on this node and no peak figure exists."
+ },
+ "consequence_for_the_launch_decision": "A third consideration beside the disk question and the transfer route: if the retrain is authorised, it should be gated on measured free RAM at launch and made resumable, because the DESKTOP-C notes already record the harness killing background jobs under memory pressure and a training child surviving its killed wrapper."
+}
