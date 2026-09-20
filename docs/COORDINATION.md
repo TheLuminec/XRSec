@@ -1260,3 +1260,55 @@ coreutils, by design). So the prediction holds: **the lock guard upstreamed beca
 night's GPU to concurrent runners cannot run on DESKTOP-C** - this bash is Git Bash, there is no WSL
 in the path. Per the instruction I have **not** improvised a replacement. Fourth Windows-absent
 guard after `bc`, `kill -0`, and this one counts twice.
+
+## From the Coordinator: the 23 checkpoints were MIAMI'S - step 0(a) is void - 2026-09-20
+
+**DESKTOP-C found it and I verified it from `origin` independently.** The manifest's 23 `run_id`s
+against each shard: **`feng-ms-7b51.jsonl` 23/23** with the `run_dir` fields matching the manifest
+paths verbatim; `desktop-c.jsonl` **0/23** over 326 rows; `laptop-c.jsonl` **0/23**. `feng-MS-7B51` is
+the Miami server (line 278 of this file). **So the "second single point of failure" the 09-17 audit
+found and the node that died were the same disk**, and `RELAUNCH_KIT` step 0(a) - "replicate the
+checkpoints off that node" - has had **no sending node** for three days.
+
+DESKTOP-C corroborated from its own side and **built a positive control into the scan**, which is why
+the null is a measurement: its first filesystem pass exited 1 with empty output - indistinguishable
+from a clean result - so it re-ran and found 499 `.pth` files of which **zero** matched
+`across-xr-*`. The node also holds **no Across-XR corpus**, so it could not have produced those runs.
+
+**THE METHOD FAILURE IS THE COORDINATOR'S.** "They are on one machine" was established by finding them
+**absent on AVALON**; the machine was then named **by elimination rather than by looking**. The shard
+filename comes from `platform.node()` and cannot be chosen, so the provenance was on `origin`, in the
+same repo as the manifest, **one grep away** - and two work orders were written on top of it. **An
+absence proves where a thing is not; naming where it is needs a positive observation.**
+
+**Scope, because this reads bigger than it is.** All **24 gate certificates and 23 Miami result rows
+are on `origin`** - every recorded figure survives and **no published number is in question**. What
+the disks hold is the ability to **re-score for a reviewer** and to **run the Questset arms**. If they
+are unrecoverable those arms need retraining: GPU time and none of the diagnosis.
+
+**FOR THE USER, AND ON THE CRITICAL PATH NOW.** The dead node's disks were a tidy-up item to settle
+before the hardware moved. They are now **the only known route to these 23 checkpoints.** The DUA
+question stands unchanged and is the user's alone: in-house recovery at the same institution is
+covered by the existing ruling; **handing a disk to an external vendor is plausibly a clause-4
+distribution event.** Not decided here.
+
+## From the Coordinator: Rack seed 1 - AVALON serves the raw corpus, no external download - 2026-09-20
+
+DESKTOP-C checked its prerequisites rather than assuming them and found the node bare: no
+`external_sota/`, no PL or `pytorch-metric-learning`, and **no raw who-is-alyx**. It asked before
+starting a 6.74 GB outbound fetch, which is correct.
+
+**It does not need one.** AVALON holds `external_datasets/who-is-alyx`: **14 GB, 76 players in the
+original `players/NN/` layout**, **CC BY-NC-SA 4.0** - *not* a DUA corpus, so no clause-4 question
+arises and none of the BOXRR machinery attaches. Route is the established one: **AVALON serves, the
+peer pulls.**
+
+**Their converted-CSV objection is right and worth recording**: `processed_datasets/who_is_alyx`
+cannot substitute, on two independent counts - their `01_aggregate.py` reads the original layout, and
+**ours is head-only by project scope while the reproduction runs as published with controllers**, so
+the controller channels do not exist in our copy at all. A corpus can be present, correct, and still
+be the wrong object.
+
+**And the kit's own sentence was a claim about one machine.** "AVALON holds who_is_alyx so this is
+reproducible without re-downloading" is true of AVALON and of nowhere else; it was written on Miami
+and read on DESKTOP-C as though it were a property of the project. Corrected in the kit.

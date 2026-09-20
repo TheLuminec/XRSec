@@ -2852,6 +2852,46 @@ the reasoning is the expensive part and it is entirely re-doable; the numbers ar
 impossible to recreate without the GPU time. This applies to every long run, and it is now the
 standing rule.
 
+**THE 23 CHECKPOINTS WERE MIAMI'S, AND MIAMI IS THE NODE THAT DIED - SO THE "SECOND SINGLE POINT OF
+FAILURE" AND THE FIRST WERE THE SAME DISK (DESKTOP-C, 2026-09-20; verified here from origin).** The
+entry below told two sessions to "replicate them off that node" for three days. **There is no sending
+node.** Decisive, and checkable from `origin` alone - the manifest's 23 `run_id`s against each shard:
+
+| shard | manifest `run_id`s present | `run_dir` matches |
+| --- | --- | --- |
+| `desktop-c.jsonl` (326 rows) | **0 / 23** | 0 |
+| `laptop-c.jsonl` (35 rows) | **0 / 23** | 0 |
+| **`feng-ms-7b51.jsonl`** (24 rows) | **23 / 23** | **23**, the manifest paths verbatim |
+
+`feng-MS-7B51` is the Miami server (`docs/COORDINATION.md`:278). DESKTOP-C corroborated it from the
+other side: zero `across-xr-*.pth` anywhere on C:, D: or E:, **with a positive control** - its first
+scan exited 1 with empty output, which is indistinguishable from a clean null, so it re-ran and found
+499 `.pth` files of which none matched. And the node holds **no Across-XR corpus at all**, so it could
+not have trained or re-scored those runs even if the weights appeared.
+
+**THE METHOD FAILURE IS MINE AND IT IS THIS FILE'S OLDEST BUG.** "They are on one machine" was
+established by finding them **absent on AVALON**, and the machine was then named **by elimination
+rather than by looking**. The shard filename derives from `platform.node()` and cannot be chosen, so
+the provenance sat on `origin`, in the same repo as the manifest, **one grep away, the whole time** -
+and I wrote a work order on top of it, twice. Same shape as the coverage scan that reported five
+absent certificates that all existed: **the check was correct about what it checked and silently
+narrower than the claim it was quoted for.** An absence proves where a thing is *not*; naming where it
+*is* needs a positive observation, and this project records the provenance of every run by design.
+
+**What is lost and what is not - scoped, because this reads bigger than it is.** The **24 gate
+certificates and all 23 Miami rows are on `origin`**, so every recorded figure survives and **no
+published number is in question**. What the disks hold is the ability to **re-score for a reviewer**
+and to **run the Questset arms against these checkpoints**. If they are gone, those arms need
+retraining - GPU time and none of the diagnosis, the same shape as the Rack loss.
+
+**So the disk decision is no longer a tidy-up item; it is the only known route to these weights**, and
+the DUA clause-4 question about an external recovery vendor is on the critical path. That is the
+user's call and is raised in `COORDINATION.md`.
+
+---
+
+*Superseded entry, kept because its reasoning is still correct and only its subject was wrong:*
+
 **A SECOND SINGLE POINT OF FAILURE IS STILL LIVE, FOUND BY THE SAME AUDIT (2026-09-17).** The **23
 gated checkpoints every cross-application result in this project rests on are not on AVALON.** The
 programme run directories (`runs/2026-09-10/*`, `runs/2026-09-11/*`) are absent here; the 122 `.pth`
@@ -3164,7 +3204,14 @@ bash queue_runner.sh selftest-markers | tail -3
 ```
 
 `selftest-markers` needs only coreutils by design, so the marker half is checkable everywhere even
-where the lock half is not. **The pattern is now established rather than anecdotal**: `bc`, `kill -0`
+where the lock half is not.
+
+**CLOSED 2026-09-20, AND THE PREDICTION HELD.** On DESKTOP-C both read **MISSING**; its bash is Git
+Bash and no WSL is on the path. So **the lock guard upstreamed because DESKTOP-C lost a night's GPU to
+two concurrent runners cannot run on DESKTOP-C**, and its `selftest` can only ever fail there.
+`selftest-markers` passes in full on the same node, which is the split working as designed. **It
+counts twice toward the pattern**, since the same script's selftest needs `setsid` as well as the
+lock needing `flock`. No replacement improvised; a naive one is how the `exec 200>&-` subtlety bites. **The pattern is now established rather than anecdotal**: `bc`, `kill -0`
 and now `flock`/`setsid` - **three guards in this project whose failure mode on a Windows node is to
 be absent, and absence reads as fine.** Before writing any guard that will run on a Windows node,
 check that its tools exist there; a portability assumption inside a safety mechanism is a safety
