@@ -349,3 +349,40 @@ which refuse if the counts disagree. For this arm, condition 6's identity count 
 log's loader line and the generator printout (both quoted beside each row), `num_drop_users` /
 `num_excluded_users` from the row, and `eval_split` from the checkpoint. The logger fix, the dead
 `elif`'s removal and its comment's correction go into the next identity step after seed 3.
+
+## Amendment 9 — 2026-09-21, seed 1 pair complete; the budget follow-up registered before it is needed
+
+| seed 1, 48 held-out Nymeria users | control | treatment | paired delta |
+|---|---|---|---|
+| `selected_test_auc` | 0.5415 | **0.7082** | **+0.1667** |
+| `selected_test_acc` | 0.5047 | 0.6411 | +0.1364 |
+| `best_epoch` / budget | 120 / 120 | 118 / 120 | both censored |
+| `position_lookup_auc` | 0.7232780555884043 | 0.7232780555884043 | **byte-identical** |
+| `amplitude_auc` | 0.508104446861479 | 0.508104446861479 | **byte-identical** |
+| training identities (log + generator) | 3,072 | 3,072 | matched |
+| test line | 47,796 windows / 48 users | 47,796 / 48 | identical |
+| `peak_mb` under the cap | 11,436 | 11,745 | (was OOM at 32,768) |
+
+Rows on `miami-server` at 402443e, pushed before reading. **Against the registration:** treatment
+inside its band (0.60–0.72, near the top); the delta lands in the region Amendment 1 named — above
++0.15 — whose instruction was to check the control first, and **the control sits inside every one of
+its bands** (AUC, position lookup, amplitude), so the delta is not manufactured by a depressed control.
+The byte-identical training-free baselines are the `lookup_auc`-moved diagnostic used in the confirming
+direction: both arms scored the same 48 users on the same pairs. `lookup_auc` on the encoded windows
+differs (0.5024 vs 0.5036), as it should — that column is `dyn` rounding residue of the model's input.
+
+**One seed. No interval yet; seeds 2 and 3 decide whether +0.17 is the effect or a draw.** Caveats
+attached to any quotation: both arms budget-limited; the treatment selects its epoch partly on Nymeria
+validation users and the control cannot (registered nuisance); positives are cross-activity within one
+sitting and cannot pay the cross-session cost; the script-pair follow-up (gallery script ≠ probe script)
+that separates "learns head dynamics" from "learns the person's activity mix" is not yet run.
+
+**Budget follow-up, registered now, run AFTER seed 3 and not instead of it.** Both arms censor at 120,
+so the registered condition is live. Seed 1, both arms, `epochs=240`, `early_stopping_patience=15`,
+everything else identical, composed config printed. **Prediction:** the control is at its zero-shot
+level (0.53–0.55 across every scale measured) and moves by **0.00 to +0.01**; the treatment moves by
+**0.00 to +0.03**; the paired delta stays within **±0.03 of +0.167**. **Falsifier:** the delta shrinks by
+more than 0.05 (the 120-epoch gain was partly the treatment converging faster, not learning more) or
+the control rises above 0.57 (the zero-shot ceiling was the budget, which would re-open the zero-shot
+rows). **Landing between:** delta moves by 0.03–0.05 — report as budget-sensitive, quote the 240-epoch
+pair as the headline with the 120-epoch pair beside it. Cost: ~2 × 160 min on Miami.

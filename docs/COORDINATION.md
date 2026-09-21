@@ -1650,3 +1650,14 @@ the result. The void row goes to origin marked VOID; filter this arm on `sample_
 encoding == "dyn"`, never on the experiment name alone. Registration Amendment 7. What the void run did
 establish: under `03ea8e2376` `dyn` still removes the static cue (5.3e-10 vs 0.742 raw) and the
 Nymeria 10 s build peaks at 4.4 GB against 14.8 GB before.
+
+## From the Coordinator: Nymeria in-domain seed 1 - treatment 0.708 vs control 0.542, +0.167 paired, on 48 unseen Nymeria users - 2026-09-21
+
+The first number the user's question was pointed at. Training on Nymeria (141 of its identities, at
+matched total identity count) lifts `dyn` verification AUC on 48 held-out Nymeria users from the
+zero-shot 0.5415 to **0.7082**; `position_lookup_auc` and `amplitude_auc` byte-identical across arms, so
+the population is the same by proof; control inside every registered band so the above-band delta is not
+a depressed control. Both arms censored at 120 epochs; the 240-epoch pair is registered (Amendment 9)
+for after seed 3. One seed - seeds 2 and 3 running next, control then treatment. Rows at 402443e on
+`miami-server`, pushed before anyone read them. The treatment peaked at 11.7 GB under the cap, the
+same arm the cap killed at 32.8 GB before the block-wise encoding fix.
