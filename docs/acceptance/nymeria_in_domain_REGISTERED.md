@@ -231,3 +231,14 @@ restated from the measured index:** ≈ 1,029 windows per Nymeria user at the ar
 Nymeria training users supply ≈ 145k windows beside ≈ 495k from BOXRR + alyx (the zero-shot arm's
 519,211 scaled to 2,931 of 3,072 identities) — **≈ 23 % of training windows**, revising the ≈ 21 %
 estimate in the design section. Read the row's own loader lines for the exact figure.
+
+*Correction to Amendment 5 (Miami, same hour, read from `model/dataset.py:203`): the loader prints
+**one pooled line** for all `data_dirs` after filtering `exclude_users`, `drop_users` and `keep_users`,
+so seed 1's stdout cannot show "242919 samples from 236 users" — its Nymeria contribution is 141 users
+(treatment) or 0 (control) inside a three-corpus total. The 10 s gate is therefore a **standalone
+Nymeria-only build** at the arm's setting, exactly like the 5 s one, whose own print must read
+`Loaded 242919 samples from 236 users`. Both standalone gates run under `gated_launch.sh` with markers,
+which also yields an index build's `peak_mb` **before** seed 1 rather than after. Seed 1's pooled line
+is reported verbatim beside the row's `num_train_identities` / `num_drop_users` / `num_excluded_users`
+as a cross-check, not as the Nymeria gate. My sentence was an inference about the instrument that a
+grep would have settled.*
