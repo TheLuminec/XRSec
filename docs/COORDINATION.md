@@ -1680,3 +1680,10 @@ through `gated_launch.sh` as an `xrsec-<job>.scope`, with `/home/feng/xrsec_mark
 completion/failure record. Told them: suppress the heartbeat check while the unit is disabled, red-chip any
 marker with `rc!=0` or `oom_kill!=0`, key the "GPU idle while a job is live" rule on an active
 `xrsec-*.scope` rather than `current.txt`, and watch `MemAvailable` never RSS. Nothing on Miami touched.
+
+## From the Coordinator: Nymeria in-domain, THREE SEEDS, all credited - +0.18 on the rows, 0.669 with activity matched - 2026-09-21 16:35
+
+Rows c8210b9. Paired delta +0.1817, CI [+0.1407, +0.2227]; constrained (cross-script positives, same-script
+negatives) treatment 0.662 / 0.679 / 0.666 against the 0.65 credit line, controls 0.473 / 0.466 / 0.476,
+constrained delta +0.197, CI [+0.164, +0.231]. All six gates within 1e-3 on CPU. Amendment 13 has the table
+and the sentence to quote. The 240-epoch seed-1 pair is running on Miami; the logger identity step follows it.

@@ -596,6 +596,8 @@ it ran (`docs/acceptance/nymeria_in_domain_REGISTERED.md`, 12 amendments, every 
 | --- | --- | --- | --- | --- |
 | 1 | 0.5415 | 0.7082 | +0.167 | control **0.473**, treatment **0.662** |
 | 2 | 0.5269 | 0.7263 | +0.199 | control **0.466**, treatment **0.679** |
+| 3 | 0.5386 | 0.7177 | +0.179 | control **0.476**, treatment **0.666** |
+| **mean** | 0.536 | 0.717 | **+0.182, CI [+0.141, +0.223]** | control 0.472, **treatment 0.669, CI on the delta [+0.164, +0.231]** |
 
 `position_lookup_auc` and `amplitude_auc` byte-identical across arms within a seed (same 48 people,
 same pairs), both controls inside every registered band, both arms budget-limited at 120 epochs.
@@ -608,7 +610,7 @@ so a same-script pair from two strangers reads as *more* alike to it than one pe
 than "partly activity" (that invites "so partly person too"), and does not say the zero-shot model
 carries no person signal at all, only that the activity cue outweighs it under this pairing. So ~0.04-0.05
 of the row figures was activity and the rest is how the person moves; quote the constrained figure,
-never 0.7263. Third seed and a 240-epoch pair pending; one sitting per participant, so this cannot pay
+never 0.7263. Three seeds, all credited; the 240-epoch pair pending; one sitting per participant, so this cannot pay
 the cross-session cost. **What it took to get here is on the same page**: the `dyn` index build held ten
 times its output and killed the first treatment under the memory cap (fixed bit-identical), a generator
 edit silently ran the config defaults under the arm's name (caught by Miami before a number was read), and

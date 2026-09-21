@@ -488,3 +488,40 @@ stronger than whatever person signal remains. The treatment figure to quote is t
 (0.662 / 0.679), never 0.7263. And the harness bug's lesson, recorded because it is the Rack seed-1
 shape again: **a gate is evidence about the path it exercises — run the cheapest instance of every
 path once before the expensive one, not only the cheapest instance overall.**
+
+## Amendment 13 — 2026-09-21 16:35, three seeds complete; the script-pair follow-up credits all three
+
+Rows at c8210b9 (`miami-server`). All six gates pass on CPU (gaps 4.0e-5 to 9.5e-4, tolerance 1e-3).
+`position_lookup_auc` / `amplitude_auc` byte-identical across arms within every seed.
+
+| seed | control (row) | treatment (row) | paired | control **constrained** | treatment **constrained** | verdict |
+|---|---|---|---|---|---|---|
+| 1 | 0.5415 | 0.7082 | +0.1667 | 0.4729 | **0.6622** | credited |
+| 2 | 0.5269 | 0.7263 | +0.1994 | 0.4660 | **0.6787** | credited |
+| 3 | 0.5386 | 0.7177 | +0.1791 | 0.4762 | **0.6658** | credited |
+| **mean** | 0.5357 | 0.7174 | **+0.1817**, sd 0.0165, **95 % CI [+0.1407, +0.2227]** | 0.4717 | **0.6689** | **+0.1972**, sd 0.0134, **CI [+0.1639, +0.2306]** |
+
+**Against the registration, by where the intervals fall.** Falsifier (CI upper < +0.02): nowhere near.
+Registered band +0.05 to +0.15: the interval lies almost entirely above it; its top edge (0.15) sits just
+inside the interval's lower end (0.1407), so this is **not written as "band excluded"** — it is "the delta
+exceeds the registered band, with the band's edge inside the interval". All three controls inside
+0.52–0.57, so the above-band region's instruction (check the control first) is discharged three times.
+Treatment rows inside 0.60–0.72 on seeds 1 and 3, above on seed 2 — all three **credited at their
+constrained figures** (0.662 / 0.679 / 0.666, mean **0.669**), which clear the registered 0.65 line on
+every seed. Activity share (unconstrained minus constrained on the same embeddings): 0.050 / 0.043 /
+0.047. The controls read 8–9 SE below chance on every seed under the constrained protocol.
+
+**The sentence this arm supports:** *training on Nymeria lifts verification of never-seen Nymeria users
+under `dyn` from 0.536 to 0.717 (paired +0.18, CI +0.14 to +0.22, three seeds); about 0.05 of that is
+which activities the person did, and the remainder — 0.669 with every positive across two scripts and
+every negative within one — is how the person moves, on real AR glasses, across daily-life activities.*
+Quote 0.669 as the capability figure, never 0.717 or 0.726.
+
+**Power, recorded because the design was better than it needed to be:** paired sd 0.0165 (rows) and
+0.0134 (constrained) at n = 3 give MDDs of ~0.024 and ~0.033; the effect is 6–8× the MDD. The interval is
+wide relative to the band because of the effect's size, not under-powering.
+
+**Standing caveats:** five of six 120-epoch runs selected epoch 116–120 (the 240-epoch seed-1 pair of
+Amendment 9 is running on Miami, configs differing from the seed-1 pair by exactly `epochs`); one
+sitting per participant, so no cross-session cost is paid; the treatment selects its epoch partly on
+Nymeria validation users. The logger identity step (Amendment 8) follows the 240-epoch pair.

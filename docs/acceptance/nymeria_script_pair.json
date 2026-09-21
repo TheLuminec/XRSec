@@ -118,5 +118,65 @@
   "scripts_per_user_min": 2,
   "verdict": "BAND: credited (motion)",
   "seconds": 58.5
+ },
+ "2026-09-21/13-38-42_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth": {
+  "checkpoint": "2026-09-21/13-38-42_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 3,
+  "arm": "control",
+  "run_id": "319b7f32b347",
+  "recorded": 0.5385744935936398,
+  "gate_rescored_cpu": 0.5386217269632552,
+  "gate_gap": 4.723336961531821e-05,
+  "gate_tol": 0.001,
+  "gate_passed": true,
+  "users": 48,
+  "windows": 47796,
+  "constrained_auc": 0.4762435621685452,
+  "constrained_pairs": [
+   12288,
+   12288
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 0,
+   "no_same_script_negative": 0
+  },
+  "unconstrained_auc_same_embeddings": 0.5361257784954705,
+  "unconstrained_pairs": [
+   12034,
+   12034
+  ],
+  "scripts_per_user_min": 2,
+  "verdict": "control: < 0.50 activity-reversed / 0.50-0.56 band / 0.56-0.60 between / > 0.60 falsifier",
+  "seconds": 57.9
+ },
+ "2026-09-21/14-57-30_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth": {
+  "checkpoint": "2026-09-21/14-57-30_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 3,
+  "arm": "treatment",
+  "run_id": "e2ff80b76f95",
+  "recorded": 0.7176762554380629,
+  "gate_rescored_cpu": 0.7186236878236135,
+  "gate_gap": 0.0009474323855506173,
+  "gate_tol": 0.001,
+  "gate_passed": true,
+  "users": 48,
+  "windows": 47796,
+  "constrained_auc": 0.6658031576209598,
+  "constrained_pairs": [
+   12288,
+   12288
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 0,
+   "no_same_script_negative": 0
+  },
+  "unconstrained_auc_same_embeddings": 0.712317934899923,
+  "unconstrained_pairs": [
+   12034,
+   12034
+  ],
+  "scripts_per_user_min": 2,
+  "verdict": "BAND: credited (motion)",
+  "seconds": 59.2
  }
 }
