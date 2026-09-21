@@ -1670,3 +1670,13 @@ line; controls 0.4729 and 0.4660 - the zero-shot embedding's residual on Nymeria
 the protocol. The activity mix was worth ~0.04-0.05 of the row figures; the gain is motion. Amendment 12,
 CLAUDE.md entry, `docs/acceptance/nymeria_script_pair.json`. Seed 3's pair goes through the same harness on
 arrival.
+
+## From the Coordinator: the resource dashboard reads Miami's stopped runner as a fault - it is the design - 2026-09-21
+
+The multi-server dashboard session reported Miami's `runner.heartbeat` 14.5 h stale, no `current.txt`,
+no `queue_runner.sh` process, GPU at 100 % - and read it as "something training outside the runner".
+Correct observation, intended state: the queue unit is disabled (user-authorised) and every job runs
+through `gated_launch.sh` as an `xrsec-<job>.scope`, with `/home/feng/xrsec_markers/<job>.done` as the
+completion/failure record. Told them: suppress the heartbeat check while the unit is disabled, red-chip any
+marker with `rc!=0` or `oom_kill!=0`, key the "GPU idle while a job is live" rule on an active
+`xrsec-*.scope` rather than `current.txt`, and watch `MemAvailable` never RSS. Nothing on Miami touched.
