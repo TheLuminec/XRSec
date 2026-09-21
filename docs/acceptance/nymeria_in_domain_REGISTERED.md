@@ -474,3 +474,17 @@ the residual was.
 
 Seed 3's pair runs through the same harness the moment its files arrive. Caveats unchanged: two seeds,
 no interval; both arms budget-limited (240-epoch pair registered); one sitting per participant.
+
+*Addendum to Amendment 12 (Miami, same hour).* At 12,288 + 12,288 pairs the Hanley–McNeil standard
+error near chance is ~0.0037, so the controls sit **8.2 and 9.3 SE below 0.50** — real, and not a
+harness fault. The sign carries the mechanism: below chance means the zero-shot embedding scores a
+same-script pair from two different people as **more** similar than a cross-script pair from one
+person. That is an active activity cue pointing the wrong way for identification once the script is
+matched, not merely an absent person cue — so the sentence to write is *"the zero-shot residual on
+Nymeria is anti-identifying once activity is matched"*, not *"0.53–0.55 was partly activity"*, which
+invites *"so it was partly person too"*. With one caution against the tempting corollary: it does **not**
+say the zero-shot model carries no person signal, only that under this pairing the activity cue is
+stronger than whatever person signal remains. The treatment figure to quote is the constrained one
+(0.662 / 0.679), never 0.7263. And the harness bug's lesson, recorded because it is the Rack seed-1
+shape again: **a gate is evidence about the path it exercises — run the cheapest instance of every
+path once before the expensive one, not only the cheapest instance overall.**

@@ -602,10 +602,13 @@ same pairs), both controls inside every registered band, both arms budget-limite
 **The script-pair protocol is what makes it a result**: with every positive one person across two
 scripts and every negative two people in the same script, an activity cue has nothing to read, and the
 treatment still separates unseen users at 0.66-0.68 - the registered credit line was 0.65 - while the
-zero-shot control falls **below chance** on the same pairs. So the activity mix was worth ~0.04-0.05 of
-the row figures and the rest is how the person moves; and the zero-shot Nymeria rows this file has
-carried at 0.53-0.55 were partly activity, which names their residual without changing any conclusion
-drawn from them. Third seed and a 240-epoch pair pending; one sitting per participant, so this cannot pay
+zero-shot control falls **below chance** on the same pairs - 8-9 standard errors below at 24,576 pairs,
+so a same-script pair from two strangers reads as *more* alike to it than one person across two scripts:
+**the zero-shot residual on Nymeria is anti-identifying once activity is matched**, which is sharper
+than "partly activity" (that invites "so partly person too"), and does not say the zero-shot model
+carries no person signal at all, only that the activity cue outweighs it under this pairing. So ~0.04-0.05
+of the row figures was activity and the rest is how the person moves; quote the constrained figure,
+never 0.7263. Third seed and a 240-epoch pair pending; one sitting per participant, so this cannot pay
 the cross-session cost. **What it took to get here is on the same page**: the `dyn` index build held ten
 times its output and killed the first treatment under the memory cap (fixed bit-identical), a generator
 edit silently ran the config defaults under the arm's name (caught by Miami before a number was read), and
