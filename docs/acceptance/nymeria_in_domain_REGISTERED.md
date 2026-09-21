@@ -215,3 +215,19 @@ independently from the JSON): the digest is the first 12 hex characters of sha25
 names, sorted, joined by newline** — not the `<corpus>/<user>` strings the JSON stores (hashing those
 gives e.g. `ea9de44af445` for seed 1's V, not `72a5ff18e4a6`). A node that hashes the full string will
 report a mismatch and blame its corpus; the arithmetic is in `digest()` in the generator.*
+
+## Amendment 5 — 2026-09-21 05:20, corpus closed; the loader figures both nodes must reproduce
+
+The corpus this arm runs on is now fixed: **236 participants, 1,100 sequences**, manifest
+`nymeria_manifest_avalon.txt.gz` (1,102 files under `users/`). Loader on AVALON, `channels=full`:
+
+| setting | users | windows | shape |
+|---|---|---|---|
+| 5 s @ 20 Hz, `raw` (the standard corpus check) | 236 | **244,019** | (244019, 7, 100) — two independent cache builds agree |
+| **10 s @ 20 Hz, stride 5, `dyn` (this arm's setting)** | 236 | **242,919** | (242919, 7, 200) |
+
+Miami reproduces both before seed 1 (the second one as the first line of seed 1's own stdout). **Dose,
+restated from the measured index:** ≈ 1,029 windows per Nymeria user at the arm's setting, so the 141
+Nymeria training users supply ≈ 145k windows beside ≈ 495k from BOXRR + alyx (the zero-shot arm's
+519,211 scaled to 2,931 of 3,072 identities) — **≈ 23 % of training windows**, revising the ≈ 21 %
+estimate in the design section. Read the row's own loader lines for the exact figure.
