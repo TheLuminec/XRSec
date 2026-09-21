@@ -184,3 +184,28 @@ the directories the loader will read — the counts a row reports (`num_train_id
 The held-out 48 are fixed at `docs/acceptance/nymeria_in_domain_heldout48.txt` (drawn once, seed 67,
 over the 231 participants with ≥ 2 sequences; the 5 single-sequence participants train only, since their
 only positives would be same-recording). Sequences per held-out user: 2–8, median 5.
+
+## Amendment 4 — 2026-09-21, from Miami's dry run of the generator (all facts about the instrument)
+
+1. **Every list is now explicit on both arms.** The treatment's 47 Nymeria validation users were a
+   runtime draw, and a numpy `Generator` stream is not stable across feature releases (AVALON numpy
+   2.4.3, Miami 2.5.3) — the count was safe (round(188 × 0.25) = 47), *which* 47 was not. The treatment
+   config now carries V + the 47 (1,071 `validation_users`), so the pipeline draws nothing at runtime.
+2. **The lists travel as committed reference files by NAME**, `nymeria_in_domain_lists_s{1,2,3}.json`
+   (`<corpus>/<user>`), drawn once on AVALON; every other node rebuilds its configs with
+   `--from-reference`, which asserts each named directory exists there and reproduces the digests. The
+   digests in the JSON supersede the two quoted in an earlier message to Miami (the digest is now over
+   sorted names; `dropB` is unchanged, `V` is not comparable to the old value).
+3. **The held-out 48 are asserted absent** from both arms' validation, drop and training lists, and
+   validation and drop are asserted disjoint — asserted, not inferred, per the vacuous-guard rule.
+4. YAML entries are quoted, so a directory name carrying a colon or a space errors rather than silently
+   composing a different config.
+5. **On Miami the interpreter is `.venv313/bin/python`** (3.13.15). `.venv` there is Python 3.14, on which
+   Hydra 1.3.6 cannot parse its own arguments, so a run issued with `.venv/bin/python` would fail at
+   startup inside the gated scope with an rc that has nothing to do with the experiment. Miami
+   re-checked it live. The run shape in condition 5 is issued with `.venv313`.
+
+Digests (over sorted user names): Nymeria users `21a122db402a` (236); seed 1 V `72a5ff18e4a6`, Vtreat
+`e0dc503a5c88`, dropB `666edb78f6a4`; seed 2 V `1e079dc28f2d`, Vtreat `7028540b705d`, dropB `e4db0aa32be6`;
+seed 3 V `eeea7263f192`, Vtreat `65168fd64c37`, dropB `46300540e09b`; dropC `8f0ffa0ab435` and held
+`8842e13112a7` on every seed. Both arms 3,072 training identities, BOXRR nested, alyx identical, on all three.
