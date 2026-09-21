@@ -242,3 +242,52 @@ which also yields an index build's `peak_mb` **before** seed 1 rather than after
 is reported verbatim beside the row's `num_train_identities` / `num_drop_users` / `num_excluded_users`
 as a cross-check, not as the Nymeria gate. My sentence was an inference about the instrument that a
 grep would have settled.*
+
+## Amendment 6 — 2026-09-21 ~08:00, seed 1: control landed, treatment OOM-killed by the cap, identity step
+
+**Control s1 (identity `517cdaa57b`, row on `miami-server` at d6c453e):** `selected_test_auc` **0.5415**,
+`position_lookup_auc` 0.7233, `amplitude_auc` 0.5081, `eval_positive_fraction` 0.500, pooled loader
+lines 519,211 / 3,072 (training — exactly the zero-shot arm's count, an independent corroboration of
+the composition), 47,796 / 48 (held-out), 167,128 / 1,024 (validation). Bands: control 0.52–0.57
+**holds**, position lookup 0.68–0.78 **holds**, amplitude 0.50–0.56 **holds**. **`best_epoch` = 120 of
+120: right-censored**, the validation-selected epoch is the last one, so 0.5415 is a lower bound on
+what this arm reaches under a longer budget. The programme's zero-shot arms sat at 116–118 of 120
+under the same budget. The budget stays at 120/15 for comparability; **if the treatment censors too,
+a longer-budget pair is a registered follow-up**, not a change made after seeing a number.
+
+**Treatment s1: `rc=137 oom_kill=1 peak_mb=32768`, killed at the 32 GB cap 56 s in, during the index
+build, before any epoch.** The machine was untouched (MemAvailable back to 44 GB). Miami measured
+the cause by sampling the cgroup rather than by inference — and corrected its own earlier reading
+that the 14.8 GB gate peak was mostly page cache: Nymeria-only 10 s stride 5 read **max anon 12,219 MB
+against 1,302 MB of cache**, and the same build under `raw` read 3,004 MB anon. **`encoding=dyn` cost
+~4x `raw` at index build**; the pooled control build peaked at 30,752 MB of 32,768. Certificate:
+`docs/acceptance/nymeria_in_domain_memory_miami.md`. **The cap was not raised** — fitting a job by
+shrinking the guard is the guard's failure mode, and the user's instruction forbids it.
+
+**The fix is in the encoding, and it is proven bit-identical.** `apply_encoding` now works in blocks
+of 4,096 windows (`ENCODING_BLOCK_WINDOWS`), with the previous body kept verbatim as `_encode_block`;
+every encoding is per-window, so nothing changes. Measured on AVALON under `gated_launch.sh`,
+Nymeria-only at the arm's setting:
+
+| | before | after |
+|---|---|---|
+| output tensor sha256 (242,919 × 7 × 200, float32) | `cecf77bd9fc9483f` | **`cecf77bd9fc9483f`** |
+| `window_mean_positions` / amplitudes / dataset ids / session ids / start times | 5 shas | **all 5 identical** |
+| max RSS | 13,554 MB | **4,629 MB** |
+| cgroup peak (page cache included) | 14,551 MB | **4,535 MB** |
+
+plus a unit test asserting `torch.equal` between block-wise and whole-tensor encoding for every
+encoding on both channel sets at a block size that does not divide the window count. **This moves
+`code_identity` from `517cdaa57b` to `03ea8e2376`.** Two logging repairs ride in the same step:
+`num_train_identities` is now written on the `identity_softmax` path (it was silently absent from
+every identity-trained row — Miami: 0 of 25 in its shard — because `WindowDataset` carries the count as
+`num_classes` and no `sample_index`), and the generator sets `experiment_name` (the logger's key;
+`experiment` composed but was inert, so the s1 row reads `xrsec`). `eval_split` lives in the checkpoint,
+not the row, by design; condition 6 reads it from there.
+
+**Acceptance for the identity step, before the pair is read:** Miami re-runs control s1 under
+`03ea8e2376` and it must reproduce **0.5415** to same-device cuDNN run-to-run precision (the gap is
+reported as a number; digit-identical is the strongest form) with the same three loader lines; that
+reproduction is what certifies the memory change touched no numerics on the GPU path. Then treatment s1.
+The `517cdaa57b` control row stays in the shard as the pre-step record; the pair that is read is the
+two rows under `03ea8e2376`. Both markers' `peak_mb` go on record.

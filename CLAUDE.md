@@ -4286,6 +4286,26 @@ no gain.
 Note the ms/step column rises with batch size while windows/s also rises - throughput is
 the figure that matters for epoch time, not per-step latency.
 
+## The `dyn` index build held ten times its output, and it OOM-killed the first capped job on Miami
+
+**(2026-09-21.)** `apply_encoding` was applied to the whole concatenated sample tensor at once, and
+`_dynamics_only` widens the position tensor to float64 and holds several copies - so a Nymeria-only
+10 s stride-5 `dyn` build peaked at **14.5 GB for a 1.36 GB output** (AVALON and Miami agree), `raw`
+on the same windows at 3.0 GB, and the pooled 3,213-identity build reached 30.7 GB against a 32 GB
+cap; the treatment arm, ~23 % more windows, was killed at the cap 56 s in with the machine intact -
+the guard working. **Miami's first explanation ("mostly page cache, reclaimed before the OOM
+killer") was wrong and was corrected by sampling the cgroup: 12.2 GB anonymous against 1.3 GB of
+cache.** The DESKTOP-C "23 GB index build" note and the Miami 100 %-RAM crash are the same mechanism.
+Fixed by encoding in blocks of 4,096 windows with the old body kept as the per-block function:
+**output and all five metadata tensors hash identical before and after, peak 14.5 -> 4.5 GB**, a
+`torch.equal` unit test over every encoding, and `code_identity` moves `517cdaa57b` -> `03ea8e2376`;
+the GPU-side proof is the control seed reproducing its recorded figure under the new identity. The
+cap was **not** raised to fit the job: fitting a job by shrinking the guard is the guard's own
+failure mode. Two logging repairs rode in the same step - `num_train_identities` was silently absent
+from every `identity_softmax` row (the train loader's `WindowDataset` has `num_classes`, no
+`sample_index`), and a config key `experiment` composes but is inert; the logger records
+`experiment_name`.
+
 ## CPU and GPU scoring differ by up to 7e-4 AUC
 
 Measured 2026-09-04: scoring a `dyn` checkpoint (`314cd507f1`) on CPU against its recorded

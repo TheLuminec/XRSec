@@ -165,3 +165,21 @@ def test_position_only_channel_set_is_handled():
         assert out.shape == window.shape
     centred = apply_encoding(window.clone(), "br")
     assert torch.allclose(centred[:, :, 0], torch.zeros(2, 3), atol=1e-6)
+
+
+@pytest.mark.parametrize("encoding", [e for e in ENCODINGS if e != "raw"])
+@pytest.mark.parametrize("channels", [7, 3])
+def test_block_wise_encoding_is_bit_identical_to_whole_tensor(encoding, channels):
+    """apply_encoding now works in blocks of windows so a corpus-sized dyn build no longer
+    holds float64 copies of the whole tensor (14.5 GB peak for a 1.36 GB output, and an
+    OOM at a 32 GB cap, 2026-09-21). Every encoding is per-window, so the result must be
+    bit-identical - asserted with torch.equal, not allclose - at a block size that does
+    not divide the window count, on both channel sets."""
+    generator = torch.Generator().manual_seed(7)
+    samples = torch.randn(1000, channels, 40, generator=generator)
+    if channels == 7:
+        samples[:, :4] = samples[:, :4] / samples[:, :4].norm(dim=1, keepdim=True)
+    whole = apply_encoding(samples, encoding, block=None)
+    blocked = apply_encoding(samples, encoding, block=96)
+    assert blocked.shape == whole.shape and blocked.dtype == whole.dtype
+    assert torch.equal(blocked, whole)

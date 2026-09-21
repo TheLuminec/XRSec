@@ -27,7 +27,7 @@ CORPORA = {"BOXRR-23_Dataset": PD / "BOXRR-23_Dataset" / "users", "who_is_alyx":
 BOXRR, ALYX, NYM = CORPORA["BOXRR-23_Dataset"], CORPORA["who_is_alyx"], CORPORA["Nymeria_Dataset"]
 HELDOUT = ROOT / "docs" / "acceptance" / "nymeria_in_domain_heldout48.txt"
 REF = lambda seed: ROOT / "docs" / "acceptance" / f"nymeria_in_domain_lists_s{seed}.json"
-FIXED = dict(mode="train", experiment="nymeria_in_domain", encoding="dyn", sample_time=10, sample_rate=20,
+FIXED = dict(mode="train", experiment_name="nymeria_in_domain",  # the logger records experiment_name; `experiment` is inert encoding="dyn", sample_time=10, sample_rate=20,
              window_stride=5, extractor="bilstm", objective="identity_softmax", embedding_dim=128,
              normalize="per_dataset", within_dataset_negatives=True, cross_session_positives=True,
              epochs=120, early_stopping_patience=15, val_user_fraction=0.25, max_users=None,

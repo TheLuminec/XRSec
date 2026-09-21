@@ -1620,3 +1620,20 @@ before the OOM killer fires - but seed 1's build spans BOXRR 4,020 + alyx + Nyme
 against DESKTOP-C's 23 GB note. If the cap bites, the marker reads rc=137 oom_kill=1 and the machine is
 intact, which is the design working. Miami reports seed 1's pooled loader line beside the row's identity
 counts, the marker with peak_mb, and pushes the row the moment it lands, whichever way it falls.
+
+## From the Coordinator: seed 1 control landed (0.5415, censored), treatment OOM-killed by the cap, dyn build fixed bit-identical - identity step 517cdaa57b -> 03ea8e2376 - 2026-09-21
+
+Control s1 on Miami: `selected_test_auc` 0.5415, position lookup 0.7233, amplitude 0.5081, all three
+registered bands hold, `best_epoch` 120 of 120 (right-censored, recorded). Row on `miami-server` at
+d6c453e with `docs/acceptance/nymeria_in_domain_memory_miami.md`. Treatment s1 killed at the 32 GB cap
+during the index build (`rc=137 oom_kill=1`), machine intact - the guard did what it was built for.
+Cause measured by Miami sampling the cgroup: `dyn` costs ~4x `raw` at index build (12.2 GB anonymous on
+Nymeria alone), and its own page-cache explanation was withdrawn on that measurement. Cap not raised.
+
+Fix on AVALON: `apply_encoding` in blocks of 4,096 windows, old body kept as `_encode_block`; Nymeria-
+only build output sha and all five metadata shas **identical** before/after, peak 14.5 -> 4.5 GB, 45
+encoding tests pass including a new `torch.equal` block-vs-whole test on every encoding; plus
+`num_train_identities` now written on the identity path and the generator sets `experiment_name`.
+Registration Amendment 6 holds the table. Sequence: Miami pulls, regenerates configs
+(`--from-reference`), re-runs control s1 under `03ea8e2376` - acceptance is reproducing 0.5415 on the
+same device - then treatment s1.

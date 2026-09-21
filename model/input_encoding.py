@@ -189,19 +189,47 @@ def _dynamics_only(quaternion, position):
     return relative * sign, rotated
 
 
-def apply_encoding(samples: torch.Tensor, encoding: str) -> torch.Tensor:
+ENCODING_BLOCK_WINDOWS = 4096
+
+
+def apply_encoding(samples: torch.Tensor, encoding: str,
+                   block: int = ENCODING_BLOCK_WINDOWS) -> torch.Tensor:
     """
     Transform windows in place-compatible fashion, preserving the channel count.
+
+    Applied in blocks of `block` windows. Every encoding here is a per-window transform -
+    nothing reduces across the window axis - so the result is bit-identical to encoding
+    the whole tensor at once, and the peak memory is one block's float64 intermediates
+    rather than the whole corpus's. Measured before this (2026-09-21, Nymeria 242,919
+    windows at 10 s stride 5, `dyn`): 14.5 GB peak for a 1.36 GB output on AVALON and
+    Miami alike, and the pooled 3,213-identity build reached 30.7 GB against a 32 GB cap
+    - `dyn` cost ~4x `raw` at index build, because `_dynamics_only` widens the whole
+    position tensor to float64 and holds several copies of it at once. The treatment
+    arm of the Nymeria in-domain test was OOM-killed at that cap before its first epoch.
 
     Args:
         samples: (windows, channels, timesteps)
         encoding: one of ENCODINGS
+        block: windows per block; None or 0 encodes the whole tensor at once
     """
     if encoding not in ENCODINGS:
         raise ValueError(f"encoding must be one of {ENCODINGS}, got {encoding!r}.")
     if encoding == "raw" or samples.numel() == 0:
         return samples
+    count = int(samples.shape[0])
+    if not block or count <= block:
+        return _encode_block(samples, encoding)
+    out = None
+    for start in range(0, count, block):
+        chunk = _encode_block(samples[start:start + block], encoding)
+        if out is None:
+            out = torch.empty((count,) + tuple(chunk.shape[1:]), dtype=chunk.dtype, device=chunk.device)
+        out[start:start + block] = chunk
+    return out
 
+
+def _encode_block(samples: torch.Tensor, encoding: str) -> torch.Tensor:
+    """One block of windows, exactly as apply_encoding did on the whole tensor before."""
     quaternion, position = _split(samples)
 
     if encoding in ("yawc", "dyn"):
