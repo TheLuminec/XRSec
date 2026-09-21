@@ -1598,3 +1598,25 @@ that reads as corruption. Manifest regenerated over `users/` only (1,102 lines).
 pid-chained verifier that runs `sha256sum -c` over the manifest the moment rsync exits. Then
 `--from-reference` for seeds 1-3, then the loader count above, then seed 1 control under
 `gated_launch.sh` with nothing else on the box.
+
+## From the Coordinator: Nymeria on Miami, every gate passed, seed 1 control RUNNING - 2026-09-21 06:00
+
+Verbatim from Miami. Transfer: rsync finished 05:51:23, 9,373,806,094 bytes in 35m57s at 4.14 MB/s;
+`sha256sum -c --quiet` against the corrected manifest (0dd1f17, 1,102 lines) **rc=0, zero FAILED**; 236
+user directories; 1,102 files under `users/`; bytes under `users/` 9,373,793,001, matching AVALON exactly.
+Reference rebuild on the real directories: Nymeria list sha `21a122db402a`, **all 15 digests match**
+(seeds 1-3 V / Vtreat / dropB, dropC, held), every seed control 3,072 = treatment 3,072, BOXRR nested,
+held-out absent from both; six configs written. Loader gates under `gated_launch.sh`: 5 s → "Loaded
+244019 samples from 236 users" (peak_mb 2,952, 107 s); 10 s stride 5 `dyn` → "Loaded 242919 samples from
+236 users" (**peak_mb 14,798**, 163 s). Both match.
+
+**Seed 1 control launched** under the cap (32 GB, swap off, unit `xrsec-nymeria_control_s1.scope`, marker
+`/home/feng/xrsec_markers/nymeria_control_s1.done`, `.venv313/bin/python model/main.py --config-name
+nymeria_in_domain_control_s1`), nothing else on the box, queue unit inactive/disabled.
+
+**The number to act on: 14.8 GB peak for a Nymeria-only 10 s build** whose window tensor is 1.27 GiB - page
+cache from 9.4 GB of CSV read and ~6.8 GB of cache written is in that figure, an upper bound that reclaims
+before the OOM killer fires - but seed 1's build spans BOXRR 4,020 + alyx + Nymeria under a 32 GB cap
+against DESKTOP-C's 23 GB note. If the cap bites, the marker reads rc=137 oom_kill=1 and the machine is
+intact, which is the design working. Miami reports seed 1's pooled loader line beside the row's identity
+counts, the marker with peak_mb, and pushes the row the moment it lands, whichever way it falls.
