@@ -1460,3 +1460,64 @@ Tailscale on DESKTOP-C still in `NoState` ("Tailscale is starting"); it came up 
 port 8765 then tested open. **A transfer failure on this node should check the local tailnet daemon
 before anyone is asked to re-check a serve** - the natural reading of a timeout is that the far end
 is wrong, and here the far end was fine throughout.
+
+## From the Coordinator: Nymeria Stage 3 is streaming - the full release, and 264 is not reachable - 2026-09-21
+
+**User's order:** collect all the Nymeria files, verify them, process them, propagate to Miami, start a
+test. Status at 01:10:
+
+**The released corpus is 236 participants / 1,100 head sequences, not 264 / 1,200.** The 2026-09-20 URL
+index the user generated and HuggingFace's `dataset_metadata.json` agree sequence-for-sequence (1,100 /
+236, zero either way). The paper's 264 and 1,200 are the *collected* set; 28 participants and 100
+sequences were never released, and no export from the explorer reaches them. `participants_metadata.csv`
+lists 275 names, 39 of them absent from the release, which is the same gap seen from the other side.
+
+**Stage 3 (all remaining sequences, every participant) launched 00:56 on AVALON**, pid 599789,
+`$CLAUDE_JOB_DIR/tmp/nymeria_stage3.py`, markers `nymeria_stage3_markers.jsonl`, STOP file honoured
+between sequences. 637 sequences, 476.8 GB in at 27-41 MB/s (~4.5 h), ~8 GB out. Order: the 5
+single-sequence participants first (new identities), then the rest by name. Per sequence, before
+anything is deleted: size **and sha1** against the index, **gravity read from the raw trajectory**
+(exact so far), raw rate (999-1002 Hz), |q|, LF endings, local +Y → world-up, and the camera-rgb
+`T_Device_Camera` from `online_calibration.jsonl` per device serial. First sequences: gravity exact,
+forward-in-device (0.0859, -0.6245, 0.7763) against the constant's derivation (0.086, -0.625, 0.776).
+Gates: MemAvailable ≥ 4 GB (system, `/proc/meminfo`) and ≥ 60 GB free disk before every download.
+
+**Two launcher lessons, both mine, both cheap.** The first launch died on sequence 1 with a numpy
+in-place divide on a read-only array - after a 580 MB download, a passing gravity check and a
+conversion, all discarded. `py_compile` passes that; a `LIMIT=1` proof run through the real unit is what
+catches it, and is now the rule before any streaming run. And `setsid cmd &` from a job-control shell
+**forks**, so `$!` names a parent that has already exited: the worker was alive at [4/637] while the pid
+file said dead. Record the pid from `pgrep -f 'name[.]py'`, never from `$!` after `setsid`.
+
+**The existing 462 sequences verified on AVALON (all pass):** columns, finite, monotonic, 58.8-60.4 Hz,
+no gap over 0.02 s, t0 = 0, |q| within 3.3e-16, LF only. Local +Y → world-up reproduces Data's figures
+exactly (Stage 1 0.9125, Stage 2 0.8807, pooled 0.8876). Broken down with the HF metadata: per script
+the Stage 2 minus Stage 1 delta runs -0.10 (S5-Workout, n=6/8) to +0.06 (S2-Where_is_X), not a shift;
+all ten device serials read 0.88-0.93; within-participant |delta| median 0.040 against a
+participant-mean sd of 0.067; Stage 1 and 2 sequences have the same median duration (1056 s / 1086 s),
+so the cheapest-50 selection did not pick shorter recordings. **Reading: the 0.90 bar was set on 50
+people and the population is wider; the constant is not wrong by device.** Stage 3's per-device
+calibration readings settle that directly and will be tabled when it closes. One sequence is genuinely
+off-axis (jason_smith act4, up = (0.27, 0.32, 0.81), S12-Game_night) and will be looked at rather than
+averaged over.
+
+**Miami: two flags from the node, both to the user, nothing launched.**
+1. **The data volume is not repaired.** `ntfs3(sdc3): MFT: r=4a182, expect seq=1 instead of 0!` at
+   2026-09-21 00:32:20, 62 damage lines this boot (a floor: "64 callbacks suppressed"), all on the same
+   three records the STOP memory names (4a182-4a184 = MANIFEST.sha256 and feng-ms-7b51.results.jsonl).
+   No new record; a read-only walk of every corpus tree added no line. Bounded and not spreading - and
+   the user's "repaired" and the journal disagree. **Nothing of ours writes to sdc3 until the user rules.**
+2. **`xrsec-queue.service` is enabled and active** (pid 4591, 0 pending) with no memory gate ahead of it;
+   anything appended to `queue.txt` executes at once. Miami correctly did not touch the unit on a peer's
+   word. The user should say whether it is stopped until a gated launcher replaces it.
+
+Also from Miami: 45.7 GiB RAM / 42.2 available, 3.6 T free on sdc3, RTX 4060 Ti idle, tree clean at
+`2a4e432`, **no Nymeria on the node**, SSH Miami → AVALON works (rsync over SSH is the resumable route;
+the 8765 serve is down). The Rack seed-1 harness gate was SIGTERMed rc=143 at 15:35:16 on 09-20, 79 s
+in, no traceback: **unfinished, nothing from it quotable.**
+
+**The test is registered** at `docs/acceptance/nymeria_in_domain_REGISTERED.md` - treatment (Nymeria in
+training) against control (`drop_users` = every non-held-out Nymeria user) on the same 48 held-out
+Nymeria users, `dyn` 10 s, three paired seeds, band / falsifier / middle named for each quantity, and
+six launch conditions including a **hard `MemoryMax` cap with swap disabled** proven in both directions
+before the real job. Miami reads the registration and the launcher before either runs.

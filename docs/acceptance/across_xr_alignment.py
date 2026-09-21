@@ -324,9 +324,9 @@ def gate(ckpt_path: str, device) -> dict:
                 r["_shard"] = shard.name
                 rows.append(r)
     if not rows:
-        return {"checkpoint": rel, "passed": False,
-                "reason": f"no training row in any of {len(shards)} shards: "
-                          f"{[s.name for s in shards]}"}
+        return ({"checkpoint": rel, "passed": False,
+                 "reason": f"no training row in any of {len(shards)} shards: "
+                           f"{[s.name for s in shards]}"}, None, None)
     row = rows[-1]
     model, ck = quiet(load_checkpoint, ckpt_path, device, 100, return_checkpoint=True)
     es = dict(ck["eval_split"])
@@ -353,8 +353,9 @@ def gate(ckpt_path: str, device) -> dict:
         es["exclude_users"] = [_here(d) for d in es["exclude_users"]]
     for d in es.get("test_dirs") or []:
         if not os.path.isdir(d):
-            return {"checkpoint": rel, "passed": False,
-                    "reason": f"corpus path does not resolve on this machine after remap: {d}"}
+            return ({"checkpoint": rel, "passed": False,
+                     "reason": f"corpus path does not resolve on this machine after remap: {d}"},
+                    None, None)
     seed = int(ck.get("seed", row["seed"]))
     swap = (not bool(es.get("swap_data", False))) if bool(es.get("test_on_excluded", False)) else bool(es.get("swap_data", False))
     dataset = quiet(SiameseDataset, list(es["test_dirs"]), samples_per_user=int(row.get("samples_per_user") or 512),
