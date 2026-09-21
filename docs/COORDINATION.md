@@ -1567,3 +1567,34 @@ the split and has never been measured (test split 27 subjects against validation
 own index build gets its `peak_mb` read from the marker on seed 1 before seeds 2-3 run. **No kernel OOM
 at 15:35:16**: the rc=143 that ended the Rack seed-1 gate was a userspace SIGTERM with no named sender;
 the gate stays UNFINISHED.
+
+## From the Coordinator: Nymeria CLOSED on AVALON - 236 / 1,100, every sequence verified; transfer to Miami running - 2026-09-21 05:30
+
+**Stage 3 finished 05:12: 637 sequences, 0 skipped, 476.80 GB in 4.28 h.** Every zip matched the index by
+size and sha1; gravity read from every raw trajectory before deletion, exact (max deviation 0.0) on all
+637; raw rate 999-1002 Hz; |q| exact; 199.9 new hours. The corpus is now the whole release: **236
+participants, 1,100 sequences, 9,373,793,001 bytes under `users/`**, sequences per participant 1-8
+(median 5). Loader at 5 s @ 20 Hz `full`: **236 users, 244,019 windows, shape (244019, 7, 100)** - two
+independent cache builds on AVALON (mine, Data's) agree exactly. Stage 3 section written into the
+corpus's `PROVENANCE.md` (which travels with the corpus, not git).
+
+**The device-frame constant is right for every device, from calibration rather than variance shares.**
+camera-rgb `T_Device_Camera` from all 637 zips: a per-device constant (within-device spread 0.000 deg),
+every one of nine serials within **1.64 deg** of the reference device, the pipeline's constant within
+**1.0 deg in-plane** on every serial, camera pitch 4.9-5.9 deg below device horizontal everywhere (the
+component Gram-Schmidt removed by design). So the Stage 2 frame-check miss is **population posture across
+20 scripts** with the wrong-constant alternative excluded, not bounded. All 1,100 read 0.881 pooled; the
+nine sequences below 0.6 are locally exact and off-axis by sustained tilt or lying down.
+
+**Two of my own errors caught in the same hour, recorded.** The first provenance draft said 0.888 pooled
+and "five below 0.6" where the computation beside it said 0.8806 and nine - transcribed from memory of the
+Stage 1-2 figure instead of read from the output printed one screen above; corrected before anyone read
+it. And the first manifest included `PROVENANCE.md`, against this project's own rule that per-machine
+documents stay out of a digest (CLAUDE.md, "Design the digest over the CSV payload only") - and I then
+appended to that file while Miami's rsync was already running, which would have shown as a FAILED line
+that reads as corruption. Manifest regenerated over `users/` only (1,102 lines).
+
+**Transfer:** Miami is pulling over rsync/SSH (Miami initiates; ~4 MB/s tonight, ~40 min), with a
+pid-chained verifier that runs `sha256sum -c` over the manifest the moment rsync exits. Then
+`--from-reference` for seeds 1-3, then the loader count above, then seed 1 control under
+`gated_launch.sh` with nothing else on the box.
