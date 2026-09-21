@@ -386,3 +386,40 @@ more than 0.05 (the 120-epoch gain was partly the treatment converging faster, n
 the control rises above 0.57 (the zero-shot ceiling was the budget, which would re-open the zero-shot
 rows). **Landing between:** delta moves by 0.03–0.05 — report as budget-sensitive, quote the 240-epoch
 pair as the headline with the 120-epoch pair beside it. Cost: ~2 × 160 min on Miami.
+
+## Amendment 10 — 2026-09-21, seed 2 replicates; the script-pair follow-up REGISTERED before seed 3 lands
+
+| seed | control | treatment | paired delta | budget (c / t) |
+|---|---|---|---|---|
+| 1 | 0.5415 | 0.7082 | +0.1667 | 120 / 118 of 120 |
+| 2 | 0.5269 | **0.7263 — above band, NOT credited** | +0.1994 | 116 / 120 of 120 |
+
+Rows at 87ad92f (`miami-server`). Seed 2's control inside all three bands; its treatment above 0.72, the
+region whose instruction is *report as exceeding and do not credit until the script-pair follow-up has
+been run*. Miami applied that instruction as written. Population proof holds again and its signature is
+the right one: `position_lookup_auc` / `amplitude_auc` byte-identical **within** a seed (0.7279 / 0.5133)
+and different **between** seeds — the pair manifest is seeded per run, the 48 people are fixed. Three of
+four arms at or within two epochs of the cap: "both arms budget-limited" is a standing qualifier on the
+delta, not a footnote.
+
+**The follow-up, registered now.** The live alternative to "the model learned how these people move"
+is "the model learned which activities these people did": with 1–8 sequences per participant across 20
+scripts, a random negative pair (two people) is also, most of the time, two *different scripts*, so an
+activity cue makes negatives easy and inflates AUC through them. The test removes that cue by
+construction: on the same 48 held-out users and the same treatment checkpoints, score **positives only
+across different scripts** (same person, script A vs script B) and **negatives only within the same
+script** (two people doing the same script), balanced. If the model reads activity, this AUC collapses
+toward the control's; if it reads the person's motion, it survives.
+
+| quantity | **band** | **falsifier** | **landing between them means** |
+|---|---|---|---|
+| treatment AUC, cross-script positives / same-script negatives, per seed | **≥ 0.65** — the gain is motion, the treatment is *credited* at its constrained figure | **< 0.58** — the gain was the activity mix; the treatment is **not** credited and the negative becomes the headline | 0.58–0.65: partly activity mix; report both figures, credit only the constrained one |
+| control AUC under the same protocol | 0.50–0.56 | > 0.60 | 0.56–0.60: the zero-shot model reads something script-specific; say so before reading the treatment |
+| standard-protocol reproduction (the gate) | each row's `selected_test_auc` within 1e-3 on CPU | outside | outside: the harness feeds the checkpoint something else; nothing from it is read |
+
+Which outcome is strong: the falsifier — an activity-mix reading would void two seeds of an above-band
+result and is the one that most needs reporting. Harness: `docs/acceptance/nymeria_script_pair.py`,
+built on `score_nymeria.py`'s gate (reproduce the recorded figure on the recorded users first), script
+labels from HuggingFace `dataset_metadata.json` joined on `<participant>/act<N>`, run on AVALON (CPU)
+against the checkpoints copied from Miami, all six rows once seed 3 lands. Reported per seed, whichever
+way it falls.
