@@ -1521,3 +1521,29 @@ training) against control (`drop_users` = every non-held-out Nymeria user) on th
 Nymeria users, `dyn` 10 s, three paired seeds, band / falsifier / middle named for each quantity, and
 six launch conditions including a **hard `MemoryMax` cap with swap disabled** proven in both directions
 before the real job. Miami reads the registration and the launcher before either runs.
+
+## From the Coordinator: the user has ruled - Miami proceeds as repaired, queue unit to be disabled - 2026-09-21
+
+Verbatim: *"It may just have been because of a power outage breaking the drive, for now we will keep
+going as usual. With Miami repaired."* and, on the queue unit, *"Disable if you'd like but it's in a
+safe environment."* So: Nymeria lands on Miami when Stage 3 closes and is verified, the in-domain arm
+runs there under `gated_launch.sh`, and Miami stops and disables `xrsec-queue.service` (re-enable
+recorded beside the stop). The ntfs3 journal evidence stays in the record as what the volume said at
+00:32; the ruling is the user's and was made with that in front of them.
+
+**Miami's review of the launcher and registration was correct on nine points and is applied** (see
+`nymeria_in_domain_REGISTERED.md` Amendments 1-2 and `gated_launch.sh` as committed): marker
+directory required and absolute; free-memory check before the fixture; the positive control capped
+at 4G so the fixture never allocates unguarded; lock + active-scope + heavy-python (RSS > 1 GB) guards
+that refuse when `pgrep`/`ps`/`flock` are absent; `oom_kill` and `peak_mb` read from the job's own
+cgroup beside `rc`; the by-name guard anchored on an interpreter, bracket-broken, and blind to the
+launcher's own ancestry and subshells - because on AVALON it matched **the shell that invoked it**,
+whose command line carried the job's own script name. Three unnamed regions in the registration named;
+the identity-count confound removed by a post-draw BOXRR swap (arm B's design). **What the launcher
+bounds is one job, not the machine.**
+
+**Two self-matches in one hour, both mine, recorded because the shape keeps recurring.** `pkill -f
+'time[.]sleep\(30\)'` killed my own tool shell (exit 144) because the *enclosing* `bash -c` carried the
+python one-liner I had launched from it; the bracket trick protects against the pgrep process, not
+against a parent that quotes the target. And the by-name guard matched the launcher's own `$( )`
+subshell. **Kill by pid; when scanning by name, subtract your own ancestry and descendants first.**
