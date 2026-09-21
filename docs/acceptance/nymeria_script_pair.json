@@ -1,0 +1,32 @@
+{
+ "2026-09-21/07-55-55_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth": {
+  "checkpoint": "2026-09-21/07-55-55_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 1,
+  "arm": "control",
+  "run_id": "6579aad03df0",
+  "recorded": 0.541536678870519,
+  "gate_rescored_cpu": 0.5416103998819987,
+  "gate_gap": 7.372101147962162e-05,
+  "gate_tol": 0.001,
+  "gate_passed": true,
+  "users": 48,
+  "windows": 47796,
+  "constrained_auc": 0.4729430145687527,
+  "constrained_pairs": [
+   12288,
+   12288
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 0,
+   "no_same_script_negative": 0
+  },
+  "unconstrained_auc_same_embeddings": 0.5368872332737291,
+  "unconstrained_pairs": [
+   12045,
+   12045
+  ],
+  "scripts_per_user_min": 2,
+  "verdict": "control: report against 0.50-0.56 / >0.60",
+  "seconds": 58.0
+ }
+}

@@ -423,3 +423,24 @@ built on `score_nymeria.py`'s gate (reproduce the recorded figure on the recorde
 labels from HuggingFace `dataset_metadata.json` joined on `<participant>/act<N>`, run on AVALON (CPU)
 against the checkpoints copied from Miami, all six rows once seed 3 lands. Reported per seed, whichever
 way it falls.
+
+## Amendment 11 — 2026-09-21 13:46, script-pair harness gated; the control landed in a region Amendment 10 did not name — named here BEFORE the treatment's figure is read
+
+**Gate:** seed 1 control, recorded 0.541537, rescored on CPU **0.541610, gap 7.4e-5** (tolerance 1e-3 = the
+documented CPU-vs-GPU band, up to 7e-4 recorded; not slack); recorded-position lookup 0.7233 and
+amplitude 0.5081 reproduce to the digit. Harness `docs/acceptance/nymeria_script_pair.py`, run under
+`gated_launch.sh` (peak 1.4 GB), 48 users / 47,796 windows, every window carries a script label, no user
+skipped (every held-out user has ≥ 2 scripts).
+
+**Seed 1 control under the constrained protocol: 0.4729** on 12,288 + 12,288 pairs; the unconstrained
+shape on the same embeddings reads 0.5369 (beside the row's 0.5415, the manifest draw apart).
+**Below the 0.50–0.56 band, and Amendment 10 named > 0.60 and 0.56–0.60 but nothing below 0.50** —
+the partition defect this file records for the third time, at the bottom end this time, mine. Named
+now, with the treatment's figure not yet computed (its run is launching as this is written; the commit
+timestamp orders them):
+
+| control constrained AUC | **means** |
+|---|---|
+| **< 0.50** | the zero-shot embedding's small residual signal on Nymeria is *activity*, not person: two people doing the same script look more alike to it than one person across two scripts, so removing the activity cue takes it below chance. The 0.53–0.55 zero-shot rows were therefore partly activity. **Consequence for reading the treatment: its constrained figure is read on the registered absolute lines (≥ 0.65 credited, < 0.58 activity mix), not as a delta from a control that this protocol inverts.** |
+
+The treatment's registered lines are unchanged.
