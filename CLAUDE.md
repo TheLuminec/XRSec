@@ -584,6 +584,33 @@ positives are cross-activity within a sitting and cannot pay the cross-session c
 less of a problem under `dyn` than under `raw`); and the cost of the decision is that we no
 longer hold an AR-glasses *test* corpus, and the catalogue's search found no other one.
 
+### Nymeria in domain: the learned component exists on real AR glasses, and it is motion, not activity (2026-09-21)
+
+The first arm trained on Nymeria and tested on Nymeria users it never saw. Full released corpus (236
+participants, 1,100 sequences, all on disk from 2026-09-21), `dyn` 10 s stride 5, treatment (141 Nymeria
+identities in training, 141 BOXRR dropped post-draw so both arms train on 3,072) against control (every
+non-held-out Nymeria user dropped), the same 48 held-out Nymeria users, pinned lists, registered before
+it ran (`docs/acceptance/nymeria_in_domain_REGISTERED.md`, 12 amendments, every one dated):
+
+| seed | control AUC | treatment AUC | paired | constrained: cross-script pos / same-script neg |
+| --- | --- | --- | --- | --- |
+| 1 | 0.5415 | 0.7082 | +0.167 | control **0.473**, treatment **0.662** |
+| 2 | 0.5269 | 0.7263 | +0.199 | control **0.466**, treatment **0.679** |
+
+`position_lookup_auc` and `amplitude_auc` byte-identical across arms within a seed (same 48 people,
+same pairs), both controls inside every registered band, both arms budget-limited at 120 epochs.
+**The script-pair protocol is what makes it a result**: with every positive one person across two
+scripts and every negative two people in the same script, an activity cue has nothing to read, and the
+treatment still separates unseen users at 0.66-0.68 - the registered credit line was 0.65 - while the
+zero-shot control falls **below chance** on the same pairs. So the activity mix was worth ~0.04-0.05 of
+the row figures and the rest is how the person moves; and the zero-shot Nymeria rows this file has
+carried at 0.53-0.55 were partly activity, which names their residual without changing any conclusion
+drawn from them. Third seed and a 240-epoch pair pending; one sitting per participant, so this cannot pay
+the cross-session cost. **What it took to get here is on the same page**: the `dyn` index build held ten
+times its output and killed the first treatment under the memory cap (fixed bit-identical), a generator
+edit silently ran the config defaults under the arm's name (caught by Miami before a number was read), and
+three registration regions were unnamed until a peer or a landing named them.
+
 ### Activity diversity does NOT transfer: the registered band is excluded (2026-09-09)
 
 The experiment the acquisition criterion was pointed at, and it came back negative. Arm B

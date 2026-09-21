@@ -162,10 +162,12 @@ def main() -> int:
             rng = np.random.default_rng(_seed_value(int(row["seed"]), 2))
             pos, neg, skipped = constrained_pairs(ds.sample_index, scripts, rng)
             upos, uneg = unconstrained_pairs(ds.sample_index, scripts, rng)
-            rec.update(constrained_auc=auc_of(model, E, pos, neg), constrained_pairs=[len(pos), len(neg)], skipped_users=skipped,
+            constrained = auc_of(model, E, pos, neg)   # computed first: the verdict below reads it (the control arm never
+            # exercised that read, so a KeyError surfaced only on the first treatment checkpoint, 2026-09-21)
+            rec.update(constrained_auc=constrained, constrained_pairs=[len(pos), len(neg)], skipped_users=skipped,
                        unconstrained_auc_same_embeddings=auc_of(model, E, upos, uneg), unconstrained_pairs=[len(upos), len(uneg)],
                        scripts_per_user_min=min(len({scripts[w] for w in idx.tolist()}) for idx in ds.sample_index.user_sample_indices),
-                       verdict=verdict(rec["constrained_auc"]) if arm == "treatment" else "control: report against 0.50-0.56 / >0.60")
+                       verdict=verdict(constrained) if arm == "treatment" else "control: < 0.50 activity-reversed / 0.50-0.56 band / 0.56-0.60 between / > 0.60 falsifier")
             print(f"  constrained AUC (cross-script pos / same-script neg) {rec['constrained_auc']:.4f} on {len(pos)}+{len(neg)} pairs | "
                   f"unconstrained on the same embeddings {rec['unconstrained_auc_same_embeddings']:.4f} | {rec['verdict']}", flush=True)
         rec["seconds"] = round(time.time() - t0, 1); results[rec["checkpoint"]] = rec

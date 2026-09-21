@@ -1661,3 +1661,12 @@ a depressed control. Both arms censored at 120 epochs; the 240-epoch pair is reg
 for after seed 3. One seed - seeds 2 and 3 running next, control then treatment. Rows at 402443e on
 `miami-server`, pushed before anyone read them. The treatment peaked at 11.7 GB under the cap, the
 same arm the cap killed at 32.8 GB before the block-wise encoding fix.
+
+## From the Coordinator: script-pair follow-up CREDITS both treatment seeds - 0.662 / 0.679 with the activity cue removed; controls below chance - 2026-09-21 13:51
+
+All four gates pass on CPU within 1e-3. Cross-script positives against same-script negatives on the same 48
+users and the same embeddings: treatment 0.6622 (s1) and 0.6787 (s2) against the registered 0.65 credit
+line; controls 0.4729 and 0.4660 - the zero-shot embedding's residual on Nymeria is activity, reversed by
+the protocol. The activity mix was worth ~0.04-0.05 of the row figures; the gain is motion. Amendment 12,
+CLAUDE.md entry, `docs/acceptance/nymeria_script_pair.json`. Seed 3's pair goes through the same harness on
+arrival.

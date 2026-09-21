@@ -444,3 +444,33 @@ timestamp orders them):
 | **< 0.50** | the zero-shot embedding's small residual signal on Nymeria is *activity*, not person: two people doing the same script look more alike to it than one person across two scripts, so removing the activity cue takes it below chance. The 0.53–0.55 zero-shot rows were therefore partly activity. **Consequence for reading the treatment: its constrained figure is read on the registered absolute lines (≥ 0.65 credited, < 0.58 activity mix), not as a delta from a control that this protocol inverts.** |
 
 The treatment's registered lines are unchanged.
+
+## Amendment 12 — 2026-09-21 13:51, script-pair follow-up on seeds 1–2: BOTH treatments CREDITED
+
+All four gates pass on CPU (gaps 7.4e-5, 8.8e-4, 2.5e-4, 4.0e-5, tolerance 1e-3). 48 users, 47,796 windows,
+12,288 + 12,288 constrained pairs per checkpoint, no user skipped. `docs/acceptance/nymeria_script_pair.json`.
+
+| seed | arm | row AUC | unconstrained, same embeddings | **constrained: cross-script pos / same-script neg** | verdict |
+|---|---|---|---|---|---|
+| 1 | control | 0.5415 | 0.5369 | **0.4729** | < 0.50: activity-reversed (Amendment 11) |
+| 1 | treatment | 0.7082 | 0.7122 | **0.6622** | **≥ 0.65 — credited: motion** |
+| 2 | control | 0.5269 | 0.5268 | **0.4660** | < 0.50: activity-reversed |
+| 2 | treatment | 0.7263 | 0.7215 | **0.6787** | **≥ 0.65 — credited: motion** |
+
+**Reading.** With the activity cue removed by construction — every positive is one person across two
+different scripts, every negative is two people doing the same script — the treatment still separates
+unseen Nymeria users at **0.66–0.68**, against a zero-shot model that reads **0.47** on the same pairs.
+The activity mix was worth about **0.04–0.05** of the row figures (unconstrained minus constrained on the
+same embeddings), so the row figures are credited at their constrained values, not at 0.71/0.73, and
+seed 2's above-band 0.7263 is now *exceeding, credited at 0.679*. **The gain is the person's motion, under
+`dyn`, on real AR glasses, across activities, on people never seen** — the sentence the user's question
+asked for, on two seeds, with the alternative excluded by measurement rather than argued away.
+
+**The control's inversion is a finding about the zero-shot rows.** Both controls fall below 0.50 under
+the constrained protocol: the zero-shot embedding's residual signal on Nymeria is activity, not person,
+and the 0.53–0.55 zero-shot figures this project has carried for Nymeria were partly that. Reported as
+such; it does not change any zero-shot conclusion (all were "not resolved above 0.55") but it names what
+the residual was.
+
+Seed 3's pair runs through the same harness the moment its files arrive. Caveats unchanged: two seeds,
+no interval; both arms budget-limited (240-epoch pair registered); one sitting per participant.
