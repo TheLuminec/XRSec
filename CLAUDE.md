@@ -3237,6 +3237,18 @@ is present, plausible, and wrong in the direction that passes. **Gate on system 
 never on RSS.** It surfaced only because the two figures were on screen together and disagreed, which
 is this file's "read a summary against the detail printed beside it" rule paying out a third time.
 
+**A FIFTH MEMBER, AND THE FIX IS A CAP RATHER THAN A CHECK (Coordinator, 2026-09-21).** Miami was driven
+to 100% RAM by one of our Python processes and its data volume was corrupted; the user's instruction is
+that it must not recur. A pre-launch check on `MemAvailable` cannot deliver that - a job that passes it
+can still grow - so `gated_launch.sh` runs one job inside a `systemd --user` scope with `MemoryMax` set
+to MemAvailable minus headroom and **swap disabled**, and the kernel kills the job before the machine
+thrashes. It **proves the cap in both directions on every launch** - a 1.5 GB bloater must die under a
+512 MB cap (rc 137), a 100 MB job must pass, and an uncapped positive control must survive - and
+refuses (exit 2) if `systemd-run` is absent, the memory controller is not delegated, or either fixture
+fails. Verified on AVALON: selftest passes, a real bloating job is killed at rc 137 and its marker
+records it. Linux only by construction; on a node without systemd the answer is to refuse, not to
+improvise. **Gate on system available memory, never RSS, and then cap the job anyway.**
+
 **CLOSED 2026-09-20, AND THE PREDICTION HELD.** On DESKTOP-C both read **MISSING**; its bash is Git
 Bash and no WSL is on the path. So **the lock guard upstreamed because DESKTOP-C lost a night's GPU to
 two concurrent runners cannot run on DESKTOP-C**, and its `selftest` can only ever fail there.
