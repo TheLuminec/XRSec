@@ -154,3 +154,33 @@ and the arm runs there.
 **Condition 4 becomes a mechanism.** The user authorised disabling the queue unit (*"Disable if you'd
 like but it's in a safe environment"*); Miami stops and disables `xrsec-queue.service` so nothing
 ungated can start beside the capped job, and records the command to re-enable it.
+
+## Amendment 3 — 2026-09-21, the swap count is 141, not 188, and the validation draw is pinned
+
+A fact about the instrument, read from `select_validation_users`: the fractional validation draw is
+**one draw over the pooled candidates of every `data_dir`**, `count = round(pool × 0.25)`, seeded from
+the run seed. So Amendment 1's "drop 188 BOXRR training users" was the pre-draw number — the very error
+the New Gen correction names. Post-draw, the treatment's 188 non-held-out Nymeria users split into
+**47 validation + 141 training** (round(188 × 0.25) = 47, fixed for every seed; which 47 varies), so the
+identity-matching swap removes **141** BOXRR users from the treatment's training list, not 188.
+
+**Pinning.** Both arms pass the **control's** validation draw explicitly as `validation_users` (BOXRR +
+alyx users only, since the control drops every non-held-out Nymeria user before the draw). Explicit users
+remove those two corpora from the fractional draw, so in the treatment only Nymeria is drawn — 47 of 188 —
+and BOXRR/alyx validation is identical across arms by construction. Then:
+
+| | training identities | BOXRR training | alyx training | Nymeria training |
+|---|---|---|---|---|
+| control | **3,072** | 3,015 | 57 | 0 (188 dropped) |
+| treatment | **3,072** | 3,015 − 141 = 2,874, a **subset** of the control's | 57, identical | 141 |
+
+The 141 dropped are the **last 141 BOXRR training users in sorted order** (BOXRR users not in the pinned
+validation list), chosen by rule rather than by draw so the nesting is checkable by eye. All lists are
+produced per seed by `docs/acceptance/nymeria_in_domain_lists.py` on the node that runs the arm, from
+the pipeline's own `select_validation_users`, and the counts above are asserted by that script against
+the directories the loader will read — the counts a row reports (`num_train_identities`,
+`num_drop_users`, `num_excluded_users`) must then match them before any figure is quoted.
+
+The held-out 48 are fixed at `docs/acceptance/nymeria_in_domain_heldout48.txt` (drawn once, seed 67,
+over the 231 participants with ≥ 2 sequences; the 5 single-sequence participants train only, since their
+only positives would be same-recording). Sequences per held-out user: 2–8, median 5.

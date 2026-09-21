@@ -1,0 +1,52 @@
+# Nymeria in-domain arm: the 48 held-out users, drawn ONCE with numpy default_rng(67).choice over the
+# sorted list of the 231 released participants holding >=2 head sequences (the 5 single-sequence
+# participants are excluded from the draw: their only positives would be same-recording). Relative
+# to processed_datasets/Nymeria_Dataset/users/. Both arms score exactly these; never redrawn.
+alan_burns
+amy_padilla
+andrew_johnson
+angela_garcia
+austin_lopez
+brittney_goodwin
+cheryl_johnson
+clayton_bradley
+daniel_gregory
+danielle_wu
+dawn_heath
+dean_krause
+denise_carter
+devon_norris
+diane_williams
+douglas_hoffman
+elizabeth_sandoval
+elizabeth_tucker
+emily_farmer
+eric_martin
+frank_hayden
+gloria_carr
+grace_randolph
+hayley_little
+janet_walsh
+jeffrey_king
+jennifer_sexton
+joshua_smith
+katie_white
+kevin_davis
+kim_wilkins
+kristen_thomas
+leah_gaines
+linda_coleman
+logan_walton
+maria_duran
+mary_ortiz
+mitchell_mcdonald
+nancy_david
+patrick_hall
+randy_martin
+robert_howard
+samuel_campos
+stephanie_arnold
+thomas_brown
+thomas_nixon
+tommy_ayala
+victor_sloan

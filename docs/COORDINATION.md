@@ -1547,3 +1547,23 @@ bounds is one job, not the machine.**
 python one-liner I had launched from it; the bracket trick protects against the pgrep process, not
 against a parent that quotes the target. And the by-name guard matched the launcher's own `$( )`
 subshell. **Kill by pid; when scanning by name, subtract your own ancestry and descendants first.**
+
+## From Miami via the Coordinator: queue unit disabled; three findings from its journal - 2026-09-21
+
+`xrsec-queue.service` is **stopped and disabled** (`is-active: failed` because the runner outlived the
+stop timeout and was SIGKILLed after logging "runner exiting"; `is-enabled: disabled`; not masked).
+Re-enable is `systemctl --user enable --now xrsec-queue.service` - **and only with
+`RequiresMountsFor=/run/media/feng/Data` added first**: on the 15:32:48 boot the unit failed 203/EXEC six
+times racing the sdc3 mount and started the instant the mount appeared, which is a job launched before
+anything has checked the volume. Stays disabled through this programme.
+
+**A pull to sdc3 added zero ntfs3 lines** (still 67 this boot, latest 00:32:20). First evidence for the
+user's ruling; recorded as that and no more.
+
+**The unit's cgroup peaked at 18 GB running only a 79-second `eval_harness` gate** - an upper bound that
+includes page cache (reclaimed before the cap kills), not anonymous memory. Two consequences: the
+harness concatenates every window embedding for the split before scoring, so its footprint scales with
+the split and has never been measured (test split 27 subjects against validation's 9); and the arm's
+own index build gets its `peak_mb` read from the marker on seed 1 before seeds 2-3 run. **No kernel OOM
+at 15:35:16**: the rc=143 that ended the Rack seed-1 gate was a userspace SIGTERM with no named sender;
+the gate stays UNFINISHED.
