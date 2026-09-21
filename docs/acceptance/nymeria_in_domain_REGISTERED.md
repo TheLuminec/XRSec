@@ -209,3 +209,9 @@ Digests (over sorted user names): Nymeria users `21a122db402a` (236); seed 1 V `
 `e0dc503a5c88`, dropB `666edb78f6a4`; seed 2 V `1e079dc28f2d`, Vtreat `7028540b705d`, dropB `e4db0aa32be6`;
 seed 3 V `eeea7263f192`, Vtreat `65168fd64c37`, dropB `46300540e09b`; dropC `8f0ffa0ab435` and held
 `8842e13112a7` on every seed. Both arms 3,072 training identities, BOXRR nested, alyx identical, on all three.
+
+*Digest convention (Miami, same day, after reproducing all 15 digests and 13 list invariants
+independently from the JSON): the digest is the first 12 hex characters of sha256 over the **bare user
+names, sorted, joined by newline** — not the `<corpus>/<user>` strings the JSON stores (hashing those
+gives e.g. `ea9de44af445` for seed 1's V, not `72a5ff18e4a6`). A node that hashes the full string will
+report a mismatch and blame its corpus; the arithmetic is in `digest()` in the generator.*
