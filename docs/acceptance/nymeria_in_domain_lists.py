@@ -16,6 +16,7 @@ explicit, so the pipeline draws nothing at runtime on either arm.
 """
 from __future__ import annotations
 import argparse, hashlib, json, os, sys
+import yaml
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "model"))
@@ -27,7 +28,12 @@ CORPORA = {"BOXRR-23_Dataset": PD / "BOXRR-23_Dataset" / "users", "who_is_alyx":
 BOXRR, ALYX, NYM = CORPORA["BOXRR-23_Dataset"], CORPORA["who_is_alyx"], CORPORA["Nymeria_Dataset"]
 HELDOUT = ROOT / "docs" / "acceptance" / "nymeria_in_domain_heldout48.txt"
 REF = lambda seed: ROOT / "docs" / "acceptance" / f"nymeria_in_domain_lists_s{seed}.json"
-FIXED = dict(mode="train", experiment_name="nymeria_in_domain",  # the logger records experiment_name; `experiment` is inert encoding="dyn", sample_time=10, sample_rate=20,
+# The logger records cfg.experiment_name; a key named `experiment` composes but is inert.
+# (An earlier edit put this remark as a trailing comment on the dict's first line and thereby
+# commented out encoding/sample_time/sample_rate, so six configs composed with the 2 s raw
+# defaults and a run under the arm's name was a 2-second raw run - 2026-09-21. Hence the
+# written-config check below: the generator refuses to emit a config missing any fixed key.)
+FIXED = dict(mode="train", experiment_name="nymeria_in_domain", encoding="dyn", sample_time=10, sample_rate=20,
              window_stride=5, extractor="bilstm", objective="identity_softmax", embedding_dim=128,
              normalize="per_dataset", within_dataset_negatives=True, cross_session_positives=True,
              epochs=120, early_stopping_patience=15, val_user_fraction=0.25, max_users=None,
@@ -62,7 +68,14 @@ def write_config(arm, seed, data_dirs, held, val, drop):
     for k, v in FIXED.items():
         body += yaml_list(k, v) if isinstance(v, list) else f"{k}: {'null' if v is None else (str(v).lower() if isinstance(v, bool) else (q(v) if isinstance(v, str) else v))}\n"
     body += yaml_list("data_dirs", data_dirs) + yaml_list("exclude_users", held) + yaml_list("validation_users", val) + yaml_list("drop_users", drop)
-    out.write_text(body); return out
+    out.write_text(body)
+    written = yaml.safe_load(out.read_text())
+    for k, v in FIXED.items():
+        assert k in written, f"{out.name}: fixed key {k!r} missing from the written config"
+        assert written[k] == v, f"{out.name}: {k!r} wrote {written[k]!r}, expected {v!r}"
+    for k, n in (("data_dirs", len(data_dirs)), ("exclude_users", len(held)), ("validation_users", len(val)), ("drop_users", len(drop))):
+        assert len(written[k]) == n, f"{out.name}: {k} has {len(written[k])} entries, expected {n}"
+    return out
 
 def check_arm(arm, all_users, held, val, drop):
     """The registered properties, asserted on the lists the config will carry - never inferred."""

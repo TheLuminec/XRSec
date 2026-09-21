@@ -291,3 +291,40 @@ reported as a number; digit-identical is the strongest form) with the same three
 reproduction is what certifies the memory change touched no numerics on the GPU path. Then treatment s1.
 The `517cdaa57b` control row stays in the shard as the pre-step record; the pair that is read is the
 two rows under `03ea8e2376`. Both markers' `peak_mb` go on record.
+
+## Amendment 7 — 2026-09-21, the control re-run under 03ea8e2376 was VOID: a 2 s `raw` run wearing the arm's name
+
+**Miami caught it before reporting a number.** The re-run's row read `sample_time` 2, `encoding` raw,
+`seq_len` 40, `best_epoch` 2, `selected_test_auc` 0.5985 — every value the config default supplies —
+because the regenerated configs held no `encoding`, `sample_time` or `sample_rate` key. **Cause, mine:**
+the `experiment` → `experiment_name` edit to the generator placed a `#` remark on the dict's first line,
+which commented out the three keys that followed it on that line. `py_compile` passed, Hydra composed,
+and both Miami and I checked only the key that had changed. **This is the project's recurring bug in its
+textbook form — a config default silently standing in for the intended experiment and returning a
+plausible number — produced by the coordinator while fixing a logging key, one step after the
+identity step whose acceptance the run was meant to be.** 0.5985 at epoch 2 *is* a sensible 2 s raw
+result on those users; nothing in it says "wrong experiment".
+
+**What the void run does establish**, tested by Miami rather than inferred: under `03ea8e2376`, `dyn` is
+still applied and still removes the static cue (per-window |mean position| 5.29e-10 against 0.742 for
+`raw` on one alyx user at 10 s stride 5); the standalone 10 s stride-5 `dyn` Nymeria gate re-ran MATCH
+at 242,919 / 236 with **`peak_mb` 4,419 against 14,798** before the fix; identity prints `03ea8e2376`
+with an all-LF tree; all 15 list digests unchanged. And the sample cache is unaffected: encoding is
+deliberately outside its key because `apply_encoding` runs on the assembled index after per-user
+caching; the "0 hit, 3,072 built" that alarmed was the 2 s key naming entries that had never existed.
+
+**Fixes.** The generator now refuses to write a config unless every fixed key reads back from the
+written YAML with its intended value and every list has its expected length; the remark is on its own
+line. Verified on AVALON through Hydra itself (`main.py --cfg job`): both s1 configs compose with
+`sample_time` 10, `sample_rate` 20, `encoding` dyn, `window_stride` 5, `epochs` 120, patience 15,
+`experiment_name` nymeria_in_domain. **Rule from here, both nodes: print the composed config (seed,
+sample_time, sample_rate, encoding, window_stride, epochs, patience, extractor, objective) immediately
+before every launch and paste it beside the result.** Verify the artefact the run consumes, never the
+edit that produced it.
+
+**The void row** (experiment `nymeria_in_domain`, `sample_time` 2, `encoding` raw, `code_identity`
+`03ea8e2376`, Miami's shard) is pushed with its commit message marking it VOID rather than deleted —
+the record shows the run happened — and **any analysis of this arm must filter on `sample_time == 10`
+and `encoding == "dyn"`, not on `experiment` alone**: the `sweep_id`-mixture trap, in a new key.
+
+The acceptance sequence of Amendment 6 restarts from control s1.

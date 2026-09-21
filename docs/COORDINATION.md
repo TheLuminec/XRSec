@@ -1637,3 +1637,16 @@ encoding tests pass including a new `torch.equal` block-vs-whole test on every e
 Registration Amendment 6 holds the table. Sequence: Miami pulls, regenerates configs
 (`--from-reference`), re-runs control s1 under `03ea8e2376` - acceptance is reproducing 0.5415 on the
 same device - then treatment s1.
+
+## From the Coordinator: the identity-step acceptance run was VOID (my generator edit commented out three keys) - fixed, restarting from control s1 - 2026-09-21
+
+Miami caught it before quoting the number: the re-run was `sample_time` 2 / `encoding` raw / `seq_len`
+40 - the config defaults - because my `experiment_name` edit to the arm generator put a `#` on the
+dict's first line and commented out `encoding`, `sample_time`, `sample_rate`. `py_compile` passed, Hydra
+composed, and both of us verified the changed key and not the artefact. The generator now reads every
+written config back and refuses on a missing or wrong fixed key; both s1 configs verified through
+`main.py --cfg job`. Rule for both nodes: print the composed config before every launch, paste it beside
+the result. The void row goes to origin marked VOID; filter this arm on `sample_time == 10 and
+encoding == "dyn"`, never on the experiment name alone. Registration Amendment 7. What the void run did
+establish: under `03ea8e2376` `dyn` still removes the static cue (5.3e-10 vs 0.742 raw) and the
+Nymeria 10 s build peaks at 4.4 GB against 14.8 GB before.
