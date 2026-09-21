@@ -4301,10 +4301,15 @@ Fixed by encoding in blocks of 4,096 windows with the old body kept as the per-b
 `torch.equal` unit test over every encoding, and `code_identity` moves `517cdaa57b` -> `03ea8e2376`;
 the GPU-side proof is the control seed reproducing its recorded figure under the new identity. The
 cap was **not** raised to fit the job: fitting a job by shrinking the guard is the guard's own
-failure mode. Two logging repairs rode in the same step - `num_train_identities` was silently absent
-from every `identity_softmax` row (the train loader's `WindowDataset` has `num_classes`, no
-`sample_index`), and a config key `experiment` composes but is inert; the logger records
-`experiment_name`.
+failure mode. A logging repair rode in the same step and **was wrong about the mechanism** (Miami, same
+day, by grep): `num_train_identities` is computed correctly in `train.py` and then **dropped by
+`results_log.py`, which lists it in `FIELDS` and never copies it out of `history`** - the only field
+in that file that appears once rather than twice - and `eval_split` was never wired into the row at
+all. The `elif` added to `train.py` cannot fire (`num_classes` lives on the identity trainer, not the
+dataset) and is removed in the next identity step, together with the one-line logger fix, **after** the
+Nymeria seeds finish under `03ea8e2376` - a pair does not straddle two identities to record a number
+the loader's stdout and the generator's asserted lists already give twice. Also: a config key
+`experiment` composes but is inert; the logger records `experiment_name`.
 
 ## CPU and GPU scoring differ by up to 7e-4 AUC
 

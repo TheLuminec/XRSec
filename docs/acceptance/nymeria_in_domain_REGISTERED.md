@@ -328,3 +328,24 @@ the record shows the run happened — and **any analysis of this arm must filter
 and `encoding == "dyn"`, not on `experiment` alone**: the `sweep_id`-mixture trap, in a new key.
 
 The acceptance sequence of Amendment 6 restarts from control s1.
+
+## Amendment 8 — 2026-09-21, the identity step is accepted: control s1 reproduces digit-identical
+
+Under `03ea8e2376`, composed config printed and checked first: `selected_test_auc`
+**0.541536678870519 against 0.541536678870519, gap exactly 0.0**; acc, position lookup, amplitude,
+lookup and `best_epoch` identical to every recorded digit; `seq_len` 200; 120 `dyn` NOTE lines; loader
+lines 519,211 / 3,072, 47,796 / 48, 167,128 / 1,024. Marker `rc=0 oom_kill=0 peak_mb=11,436` against
+30,752 before the fix, wall clock 4,790 s against 4,840 s. **The memory change is proven numerics-free
+on the GPU path by reproduction, which is what the acceptance was for.** Treatment s1 is running under
+the same cap.
+
+**Condition 6, as it can actually be met for this arm.** `num_train_identities` is still absent from
+the row, and the reason is one layer below my repair: `results_log.py` lists the field in `FIELDS` and
+never copies it out of `history` (the only field in that file appearing once, not twice), and
+`eval_split` was never wired into the row. My `train.py` `elif` cannot fire and carried a wrong
+mechanism. **Decision: not fixed now.** A one-line logger fix moves `code_identity` again, mid-pair, to
+record a number already given twice — the loader's own stdout line and the generator's asserted lists,
+which refuse if the counts disagree. For this arm, condition 6's identity count is read from the run
+log's loader line and the generator printout (both quoted beside each row), `num_drop_users` /
+`num_excluded_users` from the row, and `eval_split` from the checkpoint. The logger fix, the dead
+`elif`'s removal and its comment's correction go into the next identity step after seed 3.
