@@ -588,3 +588,12 @@ same-device gate on Miami's GPU** (`DEVICE=cuda`, tolerance 1e-4, the harness no
 the environment and records it), **never a wider tolerance**. Amendment 14's e240 band (treatment
 constrained 0.66–0.72, falsifier < 0.62) stands unread until that runs; Miami runs all eight through the
 GPU harness as a same-device cross-check of the CPU constrained figures while it is at it.
+
+*Addendum to Amendment 16 (21:20).* Miami's one-run diagnostic: the e240 pair scored a second time on
+CPU through the same harness. **Both passes agree to every recorded digit** — control rescored
+0.540551503 both times, constrained 0.4752558138635423 both times; treatment rescored 0.732900792 both
+times (and refused both times). So the harness is deterministic on CPU, the 1e-3 tolerance has absorbed
+nothing on the seven checkpoints that passed, and the e240 treatment's 2.5e-3 is **CPU-versus-GPU
+arithmetic on that checkpoint** — 3–60× the arm's others, above the documented 7e-4, and unexplained
+beyond "device". The same-device run on Miami earns its constrained figure; it does not explain the gap,
+and the record says so.

@@ -188,6 +188,7 @@
   "gate_rescored_cpu": 0.540551503499349,
   "gate_gap": 8.190340465974444e-05,
   "gate_tol": 0.001,
+  "device": "cpu",
   "gate_passed": true,
   "users": 48,
   "windows": 47796,
@@ -207,7 +208,7 @@
   ],
   "scripts_per_user_min": 2,
   "verdict": "control: < 0.50 activity-reversed / 0.50-0.56 band / 0.56-0.60 between / > 0.60 falsifier",
-  "seconds": 62.0
+  "seconds": 57.9
  },
  "2026-09-21/18-10-53_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth": {
   "checkpoint": "2026-09-21/18-10-53_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
@@ -218,9 +219,10 @@
   "gate_rescored_cpu": 0.7329007916980319,
   "gate_gap": 0.002452916569179897,
   "gate_tol": 0.001,
+  "device": "cpu",
   "gate_passed": false,
   "users": 48,
   "windows": 47796,
-  "seconds": 27.1
+  "seconds": 31.1
  }
 }
