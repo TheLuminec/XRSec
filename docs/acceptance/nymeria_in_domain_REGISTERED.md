@@ -525,3 +525,34 @@ wide relative to the band because of the effect's size, not under-powering.
 Amendment 9 is running on Miami, configs differing from the seed-1 pair by exactly `epochs`); one
 sitting per participant, so no cross-session cost is paid; the treatment selects its epoch partly on
 Nymeria validation users. The logger identity step (Amendment 8) follows the 240-epoch pair.
+
+## Amendment 14 — 2026-09-21, the 240-epoch pair: censoring resolved, delta holds; e240 constrained figure registered before its checkpoints arrive
+
+Rows at c272f81. Seed 1, both arms, `epochs=240`, `patience=15`, configs differing from the 120-epoch
+pair by exactly one line:
+
+| | 120-epoch | **240-epoch** | shift | Amendment 9 line |
+|---|---|---|---|---|
+| control | 0.5415, best 120 of 120 | **0.5405**, best 141, stopped at 156 | −0.0011 | +0.00..+0.01 — **marginally outside**, reported as such; a thousandth is run-to-run noise here |
+| treatment | 0.7082, best 118 of 120 | **0.7304**, best 212, stopped at 227 | +0.0222 | +0.00..+0.03 — inside |
+| paired delta | +0.1667 | **+0.1900** | +0.0233 | within ±0.03 — inside |
+| falsifier (delta shrinks > 0.05 or control > 0.57) | | | | nowhere near: the delta grew |
+
+**Both arms stopped on patience** (156 − 141 = 227 − 212 = 15, the CLAUDE.md recovery when the config
+field is blank), so **neither is budget-limited and the 120-epoch figures were not an artefact of where
+training stopped.** The informative detail is which arm used the room: the extra budget was worth ~0 to a
+model with no Nymeria in training and +0.022 to one with it — a second, independent signature of the
+same effect. Peaks 9.9 / 11.1 GB under the cap.
+
+**Registered now, before the two e240 checkpoints reach AVALON:** the script-pair protocol on them.
+Treatment constrained **band 0.66–0.72** (at or above the three 120-epoch figures, 0.662–0.679);
+**falsifier < 0.62** (the extra epochs bought activity, not motion); between 0.62–0.66: the gain was
+partly activity, credit at the constrained figure. Control constrained < 0.50 as on every seed; > 0.56
+would be new and reported.
+
+**Record defect for the identity step, found by Miami:** `epochs` reads None on every row of this arm,
+so the budget is recoverable only as `epochs_run − best_epoch`; **select the 240-epoch pair on
+`epochs_run > 120`, never on `epochs`.** The identity step now covers four items: `num_train_identities`
+(computed, dropped by the logger), `eval_split` (never wired — a compact digest and counts go into the row,
+the lists stay in the checkpoint), `epochs` (None), and the dead `elif` in `train.py`. Acceptance: control
+s1 reproduces digit-identical under the new identity on Miami with the four fields populated on the row.
