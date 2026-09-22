@@ -1697,3 +1697,12 @@ band registered before it arrived; the longer budget's gain survives the constra
 machines agree on the constrained protocol within 1.3e-3. Registration Amendment 17 has the closing table
 and the figures to quote (0.669 at 120 epochs, 0.691 at 240, constrained). Rows and JSON at 5ba49da /
 4d32d9e on `miami-server`. Miami's GPU is idle with nothing queued.
+
+## From the Coordinator: e240 pair on the unseen corpora - transfer unchanged (+0.003 pooled), registered bands hold - 2026-09-22
+
+Both e240 checkpoints scored on every corpus they never saw (nine corpora, pooled seated seven, cross- and
+within-application passes), gates exact on CPU. Treatment 0.621 pooled against control 0.618: the arm-B
+null again, at 240 epochs. Across-XR 0.580 cross-application and Questset 0.537 cross-game both "weakened",
+not falsified; Questset below the control by 0.01. Single-seed directions worth a second seed: ViewGauss
++0.049, Head_and_Gaze +0.028. `docs/acceptance/e240_transfer_REGISTERED.md` (result appended below the
+registration), `e240_transfer.json`, rows in `results/runs/avalon.jsonl`.

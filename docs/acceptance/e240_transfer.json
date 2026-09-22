@@ -1,0 +1,864 @@
+{
+ "treatment": {
+  "checkpoint": "2026-09-21/18-10-53_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "gate": {
+   "rescored": 0.7329007916980319,
+   "known_cpu": 0.732900792,
+   "gap": 3.019681171778643e-10,
+   "position_lookup": 0.7232780555884043,
+   "passed": true
+  },
+  "corpora": {
+   "ViewGauss_Head-Movement_Dataset": {
+    "label": "ViewGauss_Head-Movement_Dataset",
+    "cross_session_positives": true,
+    "users": 35,
+    "pairs": 17920,
+    "positive_fraction": 0.5,
+    "auc": 0.63837228580397,
+    "eer": 0.40267857142857144,
+    "acc": 0.5010044642857143,
+    "lookup_auc_encoded": 0.5136588271783322,
+    "position_lookup_auc": 0.9380423596440529,
+    "amplitude_auc": 0.5684041860152264,
+    "by_dataset": {
+     "ViewGauss_Head-Movement_Dataset": {
+      "auc": 0.63837228580397,
+      "eer": 0.40267857142857144,
+      "pairs": 17920,
+      "tier": 1,
+      "lookup_auc": 0.5136588271783322,
+      "lookup_eer": 0.4810825892857143,
+      "amplitude_auc": 0.5684041860152264,
+      "amplitude_eer": 0.4498883928571429,
+      "position_lookup_auc": 0.9380423596440529,
+      "position_lookup_eer": 0.12918526785714285
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Head_and_Gaze_Behavior_Dataset": {
+    "label": "Head_and_Gaze_Behavior_Dataset",
+    "cross_session_positives": true,
+    "users": 100,
+    "pairs": 51200,
+    "positive_fraction": 0.5,
+    "auc": 0.6131405586242675,
+    "eer": 0.41960937499999995,
+    "acc": 0.5034765625,
+    "lookup_auc_encoded": 0.5156818466186524,
+    "position_lookup_auc": 0.8799820022583008,
+    "amplitude_auc": 0.5407559814453125,
+    "by_dataset": {
+     "Head_and_Gaze_Behavior_Dataset": {
+      "auc": 0.6131405586242675,
+      "eer": 0.41960937499999995,
+      "pairs": 51200,
+      "tier": 1,
+      "lookup_auc": 0.5156818466186524,
+      "lookup_eer": 0.49140625000000004,
+      "amplitude_auc": 0.5407559814453125,
+      "amplitude_eer": 0.47160156249999996,
+      "position_lookup_auc": 0.8799820022583008,
+      "position_lookup_eer": 0.19882812500000002
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+    "label": "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)",
+    "cross_session_positives": true,
+    "users": 48,
+    "pairs": 24576,
+    "positive_fraction": 0.5,
+    "auc": 0.5338659617635939,
+    "eer": 0.47395833333333337,
+    "acc": 0.4998372395833333,
+    "lookup_auc_encoded": 0.501241558127933,
+    "position_lookup_auc": 0.7194017701678805,
+    "amplitude_auc": 0.5146152012877994,
+    "by_dataset": {
+     "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+      "auc": 0.5338659617635939,
+      "eer": 0.47395833333333337,
+      "pairs": 24576,
+      "tier": 1,
+      "lookup_auc": 0.501241558127933,
+      "lookup_eer": 0.502197265625,
+      "amplitude_auc": 0.5146152012877994,
+      "amplitude_eer": 0.49308268229166663,
+      "position_lookup_auc": 0.7194017701678805,
+      "position_lookup_eer": 0.349609375
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "NJIT_6DOF_VR_Navigation_Dataset": {
+    "label": "NJIT_6DOF_VR_Navigation_Dataset",
+    "cross_session_positives": true,
+    "users": 18,
+    "pairs": 9216,
+    "positive_fraction": 0.5,
+    "auc": 0.5456554507031853,
+    "eer": 0.4676649305555556,
+    "acc": 0.4998914930555556,
+    "lookup_auc_encoded": 0.5221458246678482,
+    "position_lookup_auc": 0.645205862728166,
+    "amplitude_auc": 0.593102537555459,
+    "by_dataset": {
+     "NJIT_6DOF_VR_Navigation_Dataset": {
+      "auc": 0.5456554507031853,
+      "eer": 0.4676649305555556,
+      "pairs": 9216,
+      "tier": 1,
+      "lookup_auc": 0.5221458246678482,
+      "lookup_eer": 0.4878472222222222,
+      "amplitude_auc": 0.593102537555459,
+      "amplitude_eer": 0.4340277777777778,
+      "position_lookup_auc": 0.645205862728166,
+      "position_lookup_eer": 0.3930121527777778
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "EyeNavGS_6-DoF_Navigation_Dataset": {
+    "label": "EyeNavGS_6-DoF_Navigation_Dataset",
+    "cross_session_positives": true,
+    "users": 22,
+    "pairs": 11264,
+    "positive_fraction": 0.5,
+    "auc": 0.5569036814792097,
+    "eer": 0.46200284090909094,
+    "acc": 0.5043501420454546,
+    "lookup_auc_encoded": 0.5021770414242075,
+    "position_lookup_auc": 0.49372173340852593,
+    "amplitude_auc": 0.500147417557141,
+    "by_dataset": {
+     "EyeNavGS_6-DoF_Navigation_Dataset": {
+      "auc": 0.5569036814792097,
+      "eer": 0.46200284090909094,
+      "pairs": 11264,
+      "tier": 3,
+      "lookup_auc": 0.5021770414242075,
+      "lookup_eer": 0.4966264204545454,
+      "amplitude_auc": 0.500147417557141,
+      "amplitude_eer": 0.4985795454545454,
+      "position_lookup_auc": 0.49372173340852593,
+      "position_lookup_eer": 0.5033735795454546
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Panonut360_Dataset": {
+    "label": "Panonut360_Dataset",
+    "cross_session_positives": true,
+    "users": 21,
+    "pairs": 10752,
+    "positive_fraction": 0.5,
+    "auc": 0.5562247451470823,
+    "eer": 0.46186755952380953,
+    "acc": 0.5063244047619048,
+    "lookup_auc_encoded": 0.5073582482716393,
+    "position_lookup_auc": 0.5113573312218768,
+    "amplitude_auc": 0.520675780281188,
+    "by_dataset": {
+     "Panonut360_Dataset": {
+      "auc": 0.5562247451470823,
+      "eer": 0.46186755952380953,
+      "pairs": 10752,
+      "tier": 2,
+      "lookup_auc": 0.5073582482716393,
+      "lookup_eer": 0.49906994047619047,
+      "amplitude_auc": 0.520675780281188,
+      "amplitude_eer": 0.4838169642857143,
+      "position_lookup_auc": 0.5113573312218768,
+      "position_lookup_eer": 0.49255952380952384
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "360-degree_Saliency_Dataset_(PanoSaliency)": {
+    "label": "360-degree_Saliency_Dataset_(PanoSaliency)",
+    "cross_session_positives": true,
+    "users": 99,
+    "pairs": 34816,
+    "positive_fraction": 0.5,
+    "auc": 0.7380772478440228,
+    "eer": 0.34053308823529416,
+    "acc": 0.6909466911764706,
+    "lookup_auc_encoded": 0.5670495495251718,
+    "position_lookup_auc": 0.575527616850645,
+    "amplitude_auc": 0.6662115572233102,
+    "by_dataset": {
+     "360-degree_Saliency_Dataset_(PanoSaliency)": {
+      "auc": 0.7380772478440228,
+      "eer": 0.34053308823529416,
+      "pairs": 34816,
+      "tier": 2,
+      "lookup_auc": 0.5670495495251718,
+      "lookup_eer": 0.4671415441176471,
+      "amplitude_auc": 0.6662115572233102,
+      "amplitude_eer": 0.37683823529411764,
+      "position_lookup_auc": 0.575527616850645,
+      "position_lookup_eer": 0.4523782169117647
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "CrossApplicationXR_Dataset": {
+    "label": "CrossApplicationXR_Dataset",
+    "cross_session_positives": true,
+    "users": 49,
+    "pairs": 25088,
+    "positive_fraction": 0.5,
+    "auc": 0.5801095958552426,
+    "eer": 0.4453922193877551,
+    "acc": 0.5123565051020408,
+    "lookup_auc_encoded": 0.5103129808329782,
+    "position_lookup_auc": 0.5994158057260891,
+    "amplitude_auc": 0.5005647658507361,
+    "by_dataset": {
+     "CrossApplicationXR_Dataset": {
+      "auc": 0.5801095958552426,
+      "eer": 0.4453922193877551,
+      "pairs": 25088,
+      "tier": 1,
+      "lookup_auc": 0.5103129808329782,
+      "lookup_eer": 0.4921077806122449,
+      "amplitude_auc": 0.5005647658507361,
+      "amplitude_eer": 0.5,
+      "position_lookup_auc": 0.5994158057260891,
+      "position_lookup_eer": 0.43168048469387754
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "CrossApplicationXR_Dataset [within-application]": {
+    "label": "CrossApplicationXR_Dataset [within-application]",
+    "cross_session_positives": false,
+    "users": 49,
+    "pairs": 25088,
+    "positive_fraction": 0.5,
+    "auc": 0.6067231673590594,
+    "eer": 0.42713647959183676,
+    "acc": 0.5137515943877551,
+    "lookup_auc_encoded": 0.5040965145799032,
+    "position_lookup_auc": 0.6419234396963505,
+    "amplitude_auc": 0.5158941609717468,
+    "by_dataset": {
+     "CrossApplicationXR_Dataset": {
+      "auc": 0.6067231673590594,
+      "eer": 0.42713647959183676,
+      "pairs": 25088,
+      "tier": 1,
+      "lookup_auc": 0.5040965145799032,
+      "lookup_eer": 0.49904336734693877,
+      "amplitude_auc": 0.5158941609717468,
+      "amplitude_eer": 0.4909917091836735,
+      "position_lookup_auc": 0.6419234396963505,
+      "position_lookup_eer": 0.39827806122448983
+     }
+    },
+    "same_session_fallback": null
+   },
+   "Questset": {
+    "label": "Questset",
+    "cross_session_positives": true,
+    "users": 60,
+    "pairs": 30720,
+    "positive_fraction": 0.5,
+    "auc": 0.5373046366373698,
+    "eer": 0.47890625,
+    "acc": 0.5070963541666667,
+    "lookup_auc_encoded": 0.5053212081061469,
+    "position_lookup_auc": 0.4773338254292806,
+    "amplitude_auc": 0.5169782087537977,
+    "by_dataset": {
+     "Questset": {
+      "auc": 0.5373046366373698,
+      "eer": 0.47890625,
+      "pairs": 30720,
+      "tier": null,
+      "lookup_auc": 0.5053212081061469,
+      "lookup_eer": 0.4947265625,
+      "amplitude_auc": 0.5169782087537977,
+      "amplitude_eer": 0.48710937499999996,
+      "position_lookup_auc": 0.4773338254292806,
+      "position_lookup_eer": 0.526171875
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Questset [within-application]": {
+    "label": "Questset [within-application]",
+    "cross_session_positives": false,
+    "users": 60,
+    "pairs": 30720,
+    "positive_fraction": 0.5,
+    "auc": 0.6154098256429037,
+    "eer": 0.42350260416666663,
+    "acc": 0.5134765625,
+    "lookup_auc_encoded": 0.5166257900661892,
+    "position_lookup_auc": 0.6794025421142578,
+    "amplitude_auc": 0.5437633429633246,
+    "by_dataset": {
+     "Questset": {
+      "auc": 0.6154098256429037,
+      "eer": 0.42350260416666663,
+      "pairs": 30720,
+      "tier": null,
+      "lookup_auc": 0.5166257900661892,
+      "lookup_eer": 0.48740234375,
+      "amplitude_auc": 0.5437633429633246,
+      "amplitude_eer": 0.4688151041666667,
+      "position_lookup_auc": 0.6794025421142578,
+      "position_lookup_eer": 0.3865885416666667
+     }
+    },
+    "same_session_fallback": null
+   },
+   "SEATED_SEVEN_POOLED": {
+    "label": "SEATED_SEVEN_POOLED",
+    "cross_session_positives": true,
+    "users": 343,
+    "pairs": 159744,
+    "positive_fraction": 0.5,
+    "auc": 0.6210114442541911,
+    "eer": 0.41936473357371795,
+    "acc": 0.5433819110576923,
+    "lookup_auc_encoded": 0.5214299904053968,
+    "position_lookup_auc": 0.7342678647853292,
+    "amplitude_auc": 0.5592582308877698,
+    "by_dataset": {
+     "ViewGauss_Head-Movement_Dataset": {
+      "auc": 0.63837228580397,
+      "eer": 0.40267857142857144,
+      "pairs": 17920,
+      "tier": 1,
+      "lookup_auc": 0.5136588271783322,
+      "lookup_eer": 0.4810825892857143,
+      "amplitude_auc": 0.5684041860152264,
+      "amplitude_eer": 0.4498883928571429,
+      "position_lookup_auc": 0.9380423596440529,
+      "position_lookup_eer": 0.12918526785714285
+     },
+     "Head_and_Gaze_Behavior_Dataset": {
+      "auc": 0.6122062561035156,
+      "eer": 0.423828125,
+      "pairs": 51200,
+      "tier": 1,
+      "lookup_auc": 0.5142411102294921,
+      "lookup_eer": 0.48958984375000003,
+      "amplitude_auc": 0.5404140930175781,
+      "amplitude_eer": 0.47445312500000003,
+      "position_lookup_auc": 0.8795877784729004,
+      "position_lookup_eer": 0.19839843749999997
+     },
+     "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+      "auc": 0.5269187688827515,
+      "eer": 0.48038736979166663,
+      "pairs": 24576,
+      "tier": 1,
+      "lookup_auc": 0.49443838993708294,
+      "lookup_eer": 0.50439453125,
+      "amplitude_auc": 0.5086053907871246,
+      "amplitude_eer": 0.49422200520833337,
+      "position_lookup_auc": 0.7210084497928619,
+      "position_lookup_eer": 0.34903971354166663
+     },
+     "NJIT_6DOF_VR_Navigation_Dataset": {
+      "auc": 0.5440487567289376,
+      "eer": 0.46853298611111116,
+      "pairs": 9216,
+      "tier": 1,
+      "lookup_auc": 0.5145356920030382,
+      "lookup_eer": 0.49479166666666663,
+      "amplitude_auc": 0.5845779607325424,
+      "amplitude_eer": 0.4384765625,
+      "position_lookup_auc": 0.6505017221709828,
+      "position_lookup_eer": 0.3914930555555556
+     },
+     "EyeNavGS_6-DoF_Navigation_Dataset": {
+      "auc": 0.5656840584494851,
+      "eer": 0.45472301136363635,
+      "pairs": 11264,
+      "tier": 3,
+      "lookup_auc": 0.49630150913207,
+      "lookup_eer": 0.5007102272727273,
+      "amplitude_auc": 0.49974198774857953,
+      "amplitude_eer": 0.5042613636363636,
+      "position_lookup_auc": 0.4986325413727563,
+      "position_lookup_eer": 0.5017755681818181
+     },
+     "Panonut360_Dataset": {
+      "auc": 0.5668886837775475,
+      "eer": 0.45182291666666663,
+      "pairs": 10752,
+      "tier": 2,
+      "lookup_auc": 0.49722193157862105,
+      "lookup_eer": 0.5027901785714286,
+      "amplitude_auc": 0.5252940206030329,
+      "amplitude_eer": 0.4827008928571429,
+      "position_lookup_auc": 0.5143661845027725,
+      "position_lookup_eer": 0.48753720238095233
+     },
+     "360-degree_Saliency_Dataset_(PanoSaliency)": {
+      "auc": 0.7372798589686621,
+      "eer": 0.33972886029411764,
+      "pairs": 34816,
+      "tier": 2,
+      "lookup_auc": 0.5729662060325121,
+      "lookup_eer": 0.4599034926470589,
+      "amplitude_auc": 0.6625293150905094,
+      "amplitude_eer": 0.37959558823529416,
+      "position_lookup_auc": 0.5805499776424421,
+      "position_lookup_eer": 0.44950597426470584
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   }
+  },
+  "seconds": 646.1
+ },
+ "control": {
+  "checkpoint": "2026-09-21/16-29-32_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "gate": {
+   "rescored": 0.540551503499349,
+   "known_cpu": 0.540551503,
+   "gap": 4.993490065885453e-10,
+   "position_lookup": 0.7232780555884043,
+   "passed": true
+  },
+  "corpora": {
+   "ViewGauss_Head-Movement_Dataset": {
+    "label": "ViewGauss_Head-Movement_Dataset",
+    "cross_session_positives": true,
+    "users": 35,
+    "pairs": 17920,
+    "positive_fraction": 0.5,
+    "auc": 0.5898412276287468,
+    "eer": 0.44414062499999996,
+    "acc": 0.5013950892857143,
+    "lookup_auc_encoded": 0.5136588271783322,
+    "position_lookup_auc": 0.9380423596440529,
+    "amplitude_auc": 0.5684041860152264,
+    "by_dataset": {
+     "ViewGauss_Head-Movement_Dataset": {
+      "auc": 0.5898412276287468,
+      "eer": 0.44414062499999996,
+      "pairs": 17920,
+      "tier": 1,
+      "lookup_auc": 0.5136588271783322,
+      "lookup_eer": 0.4810825892857143,
+      "amplitude_auc": 0.5684041860152264,
+      "amplitude_eer": 0.4498883928571429,
+      "position_lookup_auc": 0.9380423596440529,
+      "position_lookup_eer": 0.12918526785714285
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Head_and_Gaze_Behavior_Dataset": {
+    "label": "Head_and_Gaze_Behavior_Dataset",
+    "cross_session_positives": true,
+    "users": 100,
+    "pairs": 51200,
+    "positive_fraction": 0.5,
+    "auc": 0.584690689086914,
+    "eer": 0.4395703125,
+    "acc": 0.50705078125,
+    "lookup_auc_encoded": 0.5156818466186524,
+    "position_lookup_auc": 0.8799820022583008,
+    "amplitude_auc": 0.5407559814453125,
+    "by_dataset": {
+     "Head_and_Gaze_Behavior_Dataset": {
+      "auc": 0.584690689086914,
+      "eer": 0.4395703125,
+      "pairs": 51200,
+      "tier": 1,
+      "lookup_auc": 0.5156818466186524,
+      "lookup_eer": 0.49140625000000004,
+      "amplitude_auc": 0.5407559814453125,
+      "amplitude_eer": 0.47160156249999996,
+      "position_lookup_auc": 0.8799820022583008,
+      "position_lookup_eer": 0.19882812500000002
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+    "label": "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)",
+    "cross_session_positives": true,
+    "users": 48,
+    "pairs": 24576,
+    "positive_fraction": 0.5,
+    "auc": 0.546922590997484,
+    "eer": 0.46671549479166663,
+    "acc": 0.5011800130208334,
+    "lookup_auc_encoded": 0.501241558127933,
+    "position_lookup_auc": 0.7194017701678805,
+    "amplitude_auc": 0.5146152012877994,
+    "by_dataset": {
+     "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+      "auc": 0.546922590997484,
+      "eer": 0.46671549479166663,
+      "pairs": 24576,
+      "tier": 1,
+      "lookup_auc": 0.501241558127933,
+      "lookup_eer": 0.502197265625,
+      "amplitude_auc": 0.5146152012877994,
+      "amplitude_eer": 0.49308268229166663,
+      "position_lookup_auc": 0.7194017701678805,
+      "position_lookup_eer": 0.349609375
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "NJIT_6DOF_VR_Navigation_Dataset": {
+    "label": "NJIT_6DOF_VR_Navigation_Dataset",
+    "cross_session_positives": true,
+    "users": 18,
+    "pairs": 9216,
+    "positive_fraction": 0.5,
+    "auc": 0.5318958612135899,
+    "eer": 0.4764539930555556,
+    "acc": 0.4996744791666667,
+    "lookup_auc_encoded": 0.5221458246678482,
+    "position_lookup_auc": 0.645205862728166,
+    "amplitude_auc": 0.593102537555459,
+    "by_dataset": {
+     "NJIT_6DOF_VR_Navigation_Dataset": {
+      "auc": 0.5318958612135899,
+      "eer": 0.4764539930555556,
+      "pairs": 9216,
+      "tier": 1,
+      "lookup_auc": 0.5221458246678482,
+      "lookup_eer": 0.4878472222222222,
+      "amplitude_auc": 0.593102537555459,
+      "amplitude_eer": 0.4340277777777778,
+      "position_lookup_auc": 0.645205862728166,
+      "position_lookup_eer": 0.3930121527777778
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "EyeNavGS_6-DoF_Navigation_Dataset": {
+    "label": "EyeNavGS_6-DoF_Navigation_Dataset",
+    "cross_session_positives": true,
+    "users": 22,
+    "pairs": 11264,
+    "positive_fraction": 0.5,
+    "auc": 0.5560709109976272,
+    "eer": 0.46590909090909094,
+    "acc": 0.5018643465909091,
+    "lookup_auc_encoded": 0.5021770414242075,
+    "position_lookup_auc": 0.49372173340852593,
+    "amplitude_auc": 0.500147417557141,
+    "by_dataset": {
+     "EyeNavGS_6-DoF_Navigation_Dataset": {
+      "auc": 0.5560709109976272,
+      "eer": 0.46590909090909094,
+      "pairs": 11264,
+      "tier": 3,
+      "lookup_auc": 0.5021770414242075,
+      "lookup_eer": 0.4966264204545454,
+      "amplitude_auc": 0.500147417557141,
+      "amplitude_eer": 0.4985795454545454,
+      "position_lookup_auc": 0.49372173340852593,
+      "position_lookup_eer": 0.5033735795454546
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Panonut360_Dataset": {
+    "label": "Panonut360_Dataset",
+    "cross_session_positives": true,
+    "users": 21,
+    "pairs": 10752,
+    "positive_fraction": 0.5,
+    "auc": 0.543747311546689,
+    "eer": 0.4693080357142857,
+    "acc": 0.5011160714285714,
+    "lookup_auc_encoded": 0.5073582482716393,
+    "position_lookup_auc": 0.5113573312218768,
+    "amplitude_auc": 0.520675780281188,
+    "by_dataset": {
+     "Panonut360_Dataset": {
+      "auc": 0.543747311546689,
+      "eer": 0.4693080357142857,
+      "pairs": 10752,
+      "tier": 2,
+      "lookup_auc": 0.5073582482716393,
+      "lookup_eer": 0.49906994047619047,
+      "amplitude_auc": 0.520675780281188,
+      "amplitude_eer": 0.4838169642857143,
+      "position_lookup_auc": 0.5113573312218768,
+      "position_lookup_eer": 0.49255952380952384
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "360-degree_Saliency_Dataset_(PanoSaliency)": {
+    "label": "360-degree_Saliency_Dataset_(PanoSaliency)",
+    "cross_session_positives": true,
+    "users": 99,
+    "pairs": 34816,
+    "positive_fraction": 0.5,
+    "auc": 0.7422017061174122,
+    "eer": 0.3365119485294118,
+    "acc": 0.6905158547794118,
+    "lookup_auc_encoded": 0.5670495495251718,
+    "position_lookup_auc": 0.575527616850645,
+    "amplitude_auc": 0.6662115572233102,
+    "by_dataset": {
+     "360-degree_Saliency_Dataset_(PanoSaliency)": {
+      "auc": 0.7422017061174122,
+      "eer": 0.3365119485294118,
+      "pairs": 34816,
+      "tier": 2,
+      "lookup_auc": 0.5670495495251718,
+      "lookup_eer": 0.4671415441176471,
+      "amplitude_auc": 0.6662115572233102,
+      "amplitude_eer": 0.37683823529411764,
+      "position_lookup_auc": 0.575527616850645,
+      "position_lookup_eer": 0.4523782169117647
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "CrossApplicationXR_Dataset": {
+    "label": "CrossApplicationXR_Dataset",
+    "cross_session_positives": true,
+    "users": 49,
+    "pairs": 25088,
+    "positive_fraction": 0.5,
+    "auc": 0.5734585210314794,
+    "eer": 0.44937818877551017,
+    "acc": 0.5259885204081632,
+    "lookup_auc_encoded": 0.5103129808329782,
+    "position_lookup_auc": 0.5994158057260891,
+    "amplitude_auc": 0.5005647658507361,
+    "by_dataset": {
+     "CrossApplicationXR_Dataset": {
+      "auc": 0.5734585210314794,
+      "eer": 0.44937818877551017,
+      "pairs": 25088,
+      "tier": 1,
+      "lookup_auc": 0.5103129808329782,
+      "lookup_eer": 0.4921077806122449,
+      "amplitude_auc": 0.5005647658507361,
+      "amplitude_eer": 0.5,
+      "position_lookup_auc": 0.5994158057260891,
+      "position_lookup_eer": 0.43168048469387754
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "CrossApplicationXR_Dataset [within-application]": {
+    "label": "CrossApplicationXR_Dataset [within-application]",
+    "cross_session_positives": false,
+    "users": 49,
+    "pairs": 25088,
+    "positive_fraction": 0.5,
+    "auc": 0.5987460745319333,
+    "eer": 0.4301658163265306,
+    "acc": 0.5335220025510204,
+    "lookup_auc_encoded": 0.5040965145799032,
+    "position_lookup_auc": 0.6419234396963505,
+    "amplitude_auc": 0.5158941609717468,
+    "by_dataset": {
+     "CrossApplicationXR_Dataset": {
+      "auc": 0.5987460745319333,
+      "eer": 0.4301658163265306,
+      "pairs": 25088,
+      "tier": 1,
+      "lookup_auc": 0.5040965145799032,
+      "lookup_eer": 0.49904336734693877,
+      "amplitude_auc": 0.5158941609717468,
+      "amplitude_eer": 0.4909917091836735,
+      "position_lookup_auc": 0.6419234396963505,
+      "position_lookup_eer": 0.39827806122448983
+     }
+    },
+    "same_session_fallback": null
+   },
+   "Questset": {
+    "label": "Questset",
+    "cross_session_positives": true,
+    "users": 60,
+    "pairs": 30720,
+    "positive_fraction": 0.5,
+    "auc": 0.547390971713596,
+    "eer": 0.464453125,
+    "acc": 0.5171223958333333,
+    "lookup_auc_encoded": 0.5053212081061469,
+    "position_lookup_auc": 0.4773338254292806,
+    "amplitude_auc": 0.5169782087537977,
+    "by_dataset": {
+     "Questset": {
+      "auc": 0.547390971713596,
+      "eer": 0.464453125,
+      "pairs": 30720,
+      "tier": null,
+      "lookup_auc": 0.5053212081061469,
+      "lookup_eer": 0.4947265625,
+      "amplitude_auc": 0.5169782087537977,
+      "amplitude_eer": 0.48710937499999996,
+      "position_lookup_auc": 0.4773338254292806,
+      "position_lookup_eer": 0.526171875
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   },
+   "Questset [within-application]": {
+    "label": "Questset [within-application]",
+    "cross_session_positives": false,
+    "users": 60,
+    "pairs": 30720,
+    "positive_fraction": 0.5,
+    "auc": 0.6274515300326877,
+    "eer": 0.4121744791666667,
+    "acc": 0.5325846354166667,
+    "lookup_auc_encoded": 0.5166257900661892,
+    "position_lookup_auc": 0.6794025421142578,
+    "amplitude_auc": 0.5437633429633246,
+    "by_dataset": {
+     "Questset": {
+      "auc": 0.6274515300326877,
+      "eer": 0.4121744791666667,
+      "pairs": 30720,
+      "tier": null,
+      "lookup_auc": 0.5166257900661892,
+      "lookup_eer": 0.48740234375,
+      "amplitude_auc": 0.5437633429633246,
+      "amplitude_eer": 0.4688151041666667,
+      "position_lookup_auc": 0.6794025421142578,
+      "position_lookup_eer": 0.3865885416666667
+     }
+    },
+    "same_session_fallback": null
+   },
+   "SEATED_SEVEN_POOLED": {
+    "label": "SEATED_SEVEN_POOLED",
+    "cross_session_positives": true,
+    "users": 343,
+    "pairs": 159744,
+    "positive_fraction": 0.5,
+    "auc": 0.6178768745462492,
+    "eer": 0.4210862379807693,
+    "acc": 0.543701171875,
+    "lookup_auc_encoded": 0.5214299904053968,
+    "position_lookup_auc": 0.7342678647853292,
+    "amplitude_auc": 0.5592582308877698,
+    "by_dataset": {
+     "ViewGauss_Head-Movement_Dataset": {
+      "auc": 0.5898412276287468,
+      "eer": 0.44414062499999996,
+      "pairs": 17920,
+      "tier": 1,
+      "lookup_auc": 0.5136588271783322,
+      "lookup_eer": 0.4810825892857143,
+      "amplitude_auc": 0.5684041860152264,
+      "amplitude_eer": 0.4498883928571429,
+      "position_lookup_auc": 0.9380423596440529,
+      "position_lookup_eer": 0.12918526785714285
+     },
+     "Head_and_Gaze_Behavior_Dataset": {
+      "auc": 0.5868076332092285,
+      "eer": 0.43828124999999996,
+      "pairs": 51200,
+      "tier": 1,
+      "lookup_auc": 0.5142411102294921,
+      "lookup_eer": 0.48958984375000003,
+      "amplitude_auc": 0.5404140930175781,
+      "amplitude_eer": 0.47445312500000003,
+      "position_lookup_auc": 0.8795877784729004,
+      "position_lookup_eer": 0.19839843749999997
+     },
+     "VR_User_Behavior_Dataset_(Spherical_Video_Streaming)": {
+      "auc": 0.541081428527832,
+      "eer": 0.47306315104166663,
+      "pairs": 24576,
+      "tier": 1,
+      "lookup_auc": 0.49443838993708294,
+      "lookup_eer": 0.50439453125,
+      "amplitude_auc": 0.5086053907871246,
+      "amplitude_eer": 0.49422200520833337,
+      "position_lookup_auc": 0.7210084497928619,
+      "position_lookup_eer": 0.34903971354166663
+     },
+     "NJIT_6DOF_VR_Navigation_Dataset": {
+      "auc": 0.5456657409667969,
+      "eer": 0.47200520833333337,
+      "pairs": 9216,
+      "tier": 1,
+      "lookup_auc": 0.5145356920030382,
+      "lookup_eer": 0.49479166666666663,
+      "amplitude_auc": 0.5845779607325424,
+      "amplitude_eer": 0.4384765625,
+      "position_lookup_auc": 0.6505017221709828,
+      "position_lookup_eer": 0.3914930555555556
+     },
+     "EyeNavGS_6-DoF_Navigation_Dataset": {
+      "auc": 0.5549683373821669,
+      "eer": 0.46573153409090906,
+      "pairs": 11264,
+      "tier": 3,
+      "lookup_auc": 0.49630150913207,
+      "lookup_eer": 0.5007102272727273,
+      "amplitude_auc": 0.49974198774857953,
+      "amplitude_eer": 0.5042613636363636,
+      "position_lookup_auc": 0.4986325413727563,
+      "position_lookup_eer": 0.5017755681818181
+     },
+     "Panonut360_Dataset": {
+      "auc": 0.5430323455879748,
+      "eer": 0.46744791666666663,
+      "pairs": 10752,
+      "tier": 2,
+      "lookup_auc": 0.49722193157862105,
+      "lookup_eer": 0.5027901785714286,
+      "amplitude_auc": 0.5252940206030329,
+      "amplitude_eer": 0.4827008928571429,
+      "position_lookup_auc": 0.5143661845027725,
+      "position_lookup_eer": 0.48753720238095233
+     },
+     "360-degree_Saliency_Dataset_(PanoSaliency)": {
+      "auc": 0.7421038175536687,
+      "eer": 0.33679917279411764,
+      "pairs": 34816,
+      "tier": 2,
+      "lookup_auc": 0.5729662060325121,
+      "lookup_eer": 0.4599034926470589,
+      "amplitude_auc": 0.6625293150905094,
+      "amplitude_eer": 0.37959558823529416,
+      "position_lookup_auc": 0.5805499776424421,
+      "position_lookup_eer": 0.44950597426470584
+     }
+    },
+    "same_session_fallback": null,
+    "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl"
+   }
+  },
+  "seconds": 478.0
+ }
+}
