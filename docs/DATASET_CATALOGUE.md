@@ -30,12 +30,12 @@ access routes.
 | Panonut360 | 21 | 15 | 360-degree video | VR |
 | NJIT_6DOF | 18 | **1** | room-scale walking | VR |
 | 360_em | 13 | 15 median | position-only, 0 windows at `channels=full` | VR |
-| **Nymeria** | 50 | 2 sequences, **one sitting** | unscripted daily life, 17 scripts | **real AR glasses** (Project Aria) |
+| **Nymeria** | 236 | 1-8 sequences (median 5; 1,100 in all), **one sitting** | unscripted daily life, 20 scripts | **real AR glasses** (Project Aria) |
 | **Across XR Applications** | 49 | 5 applications, **one sitting**, one unbroken recording each | Superhot, Half-Life: Alyx, Beat Saber, Synth Riders, Social VR | VR |
 | **Questset** | 60 | 2 titles of 4, **one sitting** | Beat Saber, Cooking Sim, Medal of Honor, Forklift Sim | VR |
-| **total** | **4,611** (4,598 with windows at `channels=full`) | | **~5 activity types plus daily life** | |
+| **total** | **4,797** (4,784 with windows at `channels=full`) | | **~5 activity types plus daily life** | |
 
-*Regenerated 2026-09-20 from `processed_datasets/` on AVALON, counting **directories** under each
+*Regenerated 2026-09-21 from `processed_datasets/` on AVALON, counting **directories** under each
 `users/` (never `ls | wc -l`, which over-counts by one wherever a `CITATION.txt` sits inside
 `users/` - BOXRR, Nymeria and Across-XR; Questset keeps its `CITATION.txt` at the dataset root
 and counts correctly at 60 either way, so the trap tracks **where the file sits**, not whether
@@ -53,7 +53,13 @@ false:**
 - **Questset is NOT fully crossed** - each user plays 2 of 4 titles and the two groups are
   disjoint, so it is two 2-application corpora of ~30 users, not one 60-user cross-application
   corpus. One sitting per user. CC BY 4.0.
-- **Nymeria is one sitting per participant**, so it can never pay the cross-session cost. It is
+- **Nymeria is all 236 released participants**, 1,100 sequences (Stage 1 held 50 participants,
+  Stage 2 added 181, Stage 3 took every remaining sequence on 2026-09-20/21). **244,019 windows at
+  5s@20Hz, loader-verified**. The 5 participants with only one sequence cannot form a
+  cross-activity pair and are training-only for any arm that needs one; a same-script positive
+  inside one sitting is the confound this corpus was acquired to avoid. Point clouds for
+  floor-plane height validation exist for only 43 of the 236 (18%). **One sitting per
+  participant**, so it can never pay the cross-session cost. It is
   the corpus's only Z-up source and is rotated to Y-up at conversion (world-side and
   device-side; see the coordinate-frame table).
 
@@ -130,7 +136,7 @@ Per-file manifests for cross-machine verification live in
 
 | | identities |
 | --- | --- |
-| on disk now (AVALON, 2026-09-20; 2,439 until BOXRR Stage 3, Nymeria, Across-XR and Questset) | **4,611** |
+| on disk now (AVALON, 2026-09-21; 2,439 until BOXRR Stage 3, Nymeria, Across-XR and Questset) | **4,797** |
 | + open, unfetched, excluding BOXRR | **~2,840** |
 | + the rest of BOXRR-23 | **~82,200** |
 | + everything granted on request | **~82,500** |
@@ -140,7 +146,7 @@ recomputed: they mix corpus counts with an unfetched-BOXRR estimate that is not 
 regenerating them from `processed_datasets/` would be inventing a figure. Read them as
 "increment over the old baseline", not as absolute totals against 4,611.*
 
-**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 4,611
+**Identity count stops being the binding constraint at B.** BOXRR alone can take us from 4,797
 to over 80,000 with no new permission, and the practical ceiling becomes conversion and
 training time rather than availability. What B and C actually buy is **activity coverage**:
 roughly 5 activity types on disk today against 30-plus reachable, spanning rhythm games,
@@ -193,7 +199,7 @@ all, whatever else it offers.
 | 9 | BOXRR-23, *aligned* [C2] | **11,927** | many | Beat Saber | yes | as B1 | **WIP upstream** — see note |
 | 10 | CREATTIVE3D [D10] | 40 (to confirm) | multiple scenarios | **VR road crossing, incl. simulated low vision** | yes, 125Hz | **CC BY 4.0** | verified open, 7.2GB, not fetched |
 | 11 | 3D-ARM-Gaze [D9] | to confirm | multiple trials | seated arm reaching | head + **neck + trunk** | **Apache-2.0** | verified open, 4.7GB — see caveat |
-| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0 | **needs a click-through** - see below |
+| 12 | **Nymeria** [Y1] | **236** | 4.66 recordings avg, **one sitting** | **daily activities in the wild**, 50 locations | yes, **on real AR glasses** | CC BY-NC 4.0 | **all 236 on disk** (Stages 1-3; the click-through was the user's) - see below |
 
 **VR.net's 7 applications**: Beat Saber, Carton Network, Monster Awaken, Pottery,
 Traffic Cop, VR ROME, Voxel Shot VR. Only 21 participants, but the widest task span of
