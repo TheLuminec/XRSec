@@ -597,3 +597,49 @@ nothing on the seven checkpoints that passed, and the e240 treatment's 2.5e-3 is
 arithmetic on that checkpoint** — 3–60× the arm's others, above the documented 7e-4, and unexplained
 beyond "device". The same-device run on Miami earns its constrained figure; it does not explain the gap,
 and the record says so.
+
+## Amendment 17 — 2026-09-21 ~22:40, the arm is CLOSED: identity step accepted, nine same-device gates, e240 treatment credited
+
+**Identity step `03ea8e2376` → `af7cf72022` accepted** (row at 5ba49da, `miami-server`): control s1 at 120
+epochs, `selected_test_auc` 0.541536678870519 against 0.541536678870519, **gap exactly 0.0** — the third
+digit-identical reproduction of this control and the second across an identity step — and the four
+fields **arrive on the row**: `num_train_identities` 3072, `epochs` 120, `early_stopping_patience` 15,
+`eval_split_digest` 4433d873acf1, beside `num_drop_users` 188 and `num_excluded_users` 48. Stronger than
+the metric: the acceptance checkpoint is **byte-identical** to the `03ea8e2376` control it reproduced
+(sha256 31324f67…8335b both), so the logging step left the weights bit-for-bit unchanged. Condition 6 is
+now readable from the row.
+
+**Nine checkpoints through the script-pair harness on the device that wrote the rows** (`DEVICE=cuda`,
+under the launcher, JSON at 4d32d9e on `miami-server`): all gates 0.0 to 2.3e-8.
+
+| checkpoint | row AUC | constrained (GPU) | constrained (AVALON, CPU) | verdict |
+|---|---|---|---|---|
+| s1 control | 0.5415 | 0.4731 | 0.4729 | activity-reversed |
+| s1 treatment | 0.7082 | **0.6609** | 0.6622 | credited |
+| s2 control | 0.5269 | 0.4660 | 0.4660 | activity-reversed |
+| s2 treatment | 0.7263 | **0.6782** | 0.6787 | credited |
+| s3 control | 0.5386 | 0.4764 | 0.4762 | activity-reversed |
+| s3 treatment | 0.7177 | **0.6649** | 0.6658 | credited |
+| e240 control | 0.5405 | 0.4754 | 0.4753 | activity-reversed |
+| **e240 treatment** | 0.7304 | **0.6906** | (refused at 2.5e-3 on CPU) | **credited — inside Amendment 14's 0.66–0.72, read for the first time** |
+| af7 acceptance control | 0.5415 | 0.4731 | — | identical to its byte-identical twin |
+
+**Three closing readings, Miami's.** The e240 treatment gates at 3.3e-9 on its own device after a 2.5e-3
+refusal on CPU: the refusal was the device, as the deterministic double-CPU pass implied, and its
+constrained figure is earned rather than waived. **The longer budget's gain survives the constraint**
+(+0.0297 constrained against +0.0222 on the rows, 0.6906 vs 0.6609); had the extra epochs bought activity
+mix it would have shrunk toward zero here, so they bought motion. And **the two machines agree on the
+constrained protocol to within 1.3e-3** across the six 120-epoch figures — the cross-machine agreement the
+arm never explicitly had on this metric.
+
+**Final figures for the write-up.** Three seeds at 120 epochs: rows 0.536 → 0.717 (paired +0.182, CI
++0.141 to +0.223); constrained 0.472 → **0.669** (CI on the delta +0.164 to +0.231); the same-device
+constrained treatment figures 0.661 / 0.678 / 0.665. Longer budget (seed 1, 240 epochs, both arms stopped
+on patience): rows 0.540 → 0.730, constrained 0.475 → **0.691**. Quote the constrained figures. Caveats
+that travel with every one: one sitting per participant (no cross-session cost paid); the treatment
+selects its epoch partly on Nymeria validation users; 48 held-out users, a single fixed draw.
+
+Open, not pursued here: the e240 treatment's CPU/GPU divergence (2.5e-3, above the documented 7e-4,
+unexplained beyond "device"); a per-user distribution of the constrained figure (the population-mean
+caveat this project attaches to every rank-1 applies to AUC too); and whether a longer budget on seeds
+2–3 reproduces the +0.03.

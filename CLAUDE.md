@@ -600,7 +600,13 @@ it ran (`docs/acceptance/nymeria_in_domain_REGISTERED.md`, 12 amendments, every 
 | **mean** | 0.536 | 0.717 | **+0.182, CI [+0.141, +0.223]** | control 0.472, **treatment 0.669, CI on the delta [+0.164, +0.231]** |
 
 `position_lookup_auc` and `amplitude_auc` byte-identical across arms within a seed (same 48 people,
-same pairs), both controls inside every registered band, both arms budget-limited at 120 epochs.
+same pairs), all controls inside every registered band. **The budget was not the ceiling**: at 240 epochs
+(seed 1) both arms stopped on patience, the control peaked at epoch 141 and moved -0.001, the treatment
+peaked at 212 and moved +0.022 on the rows and **+0.030 constrained** (0.6906) - the extra epochs bought
+motion, not activity mix. Same-device (GPU) gates on all nine checkpoints sit at 0.0-2.3e-8, and the two
+machines agree on the constrained protocol within 1.3e-3; one checkpoint (e240 treatment) diverges
+CPU-vs-GPU by 2.5e-3, above the documented 7e-4, deterministic on CPU to the digit, unexplained beyond
+"device" - a gate refusal that was resolved on the right device, never by widening the tolerance.
 **The script-pair protocol is what makes it a result**: with every positive one person across two
 scripts and every negative two people in the same script, an activity cue has nothing to read, and the
 treatment still separates unseen users at 0.66-0.68 - the registered credit line was 0.65 - while the
@@ -610,7 +616,7 @@ so a same-script pair from two strangers reads as *more* alike to it than one pe
 than "partly activity" (that invites "so partly person too"), and does not say the zero-shot model
 carries no person signal at all, only that the activity cue outweighs it under this pairing. So ~0.04-0.05
 of the row figures was activity and the rest is how the person moves; quote the constrained figure,
-never 0.7263. Three seeds, all credited; the 240-epoch pair pending; one sitting per participant, so this cannot pay
+never 0.7263. Three seeds and the 240-epoch pair, all credited; one sitting per participant, so this cannot pay
 the cross-session cost. **What it took to get here is on the same page**: the `dyn` index build held ten
 times its output and killed the first treatment under the memory cap (fixed bit-identical), a generator
 edit silently ran the config defaults under the arm's name (caught by Miami before a number was read), and

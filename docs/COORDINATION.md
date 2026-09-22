@@ -1687,3 +1687,13 @@ Rows c8210b9. Paired delta +0.1817, CI [+0.1407, +0.2227]; constrained (cross-sc
 negatives) treatment 0.662 / 0.679 / 0.666 against the 0.65 credit line, controls 0.473 / 0.466 / 0.476,
 constrained delta +0.197, CI [+0.164, +0.231]. All six gates within 1e-3 on CPU. Amendment 13 has the table
 and the sentence to quote. The 240-epoch seed-1 pair is running on Miami; the logger identity step follows it.
+
+## From the Coordinator: Nymeria in-domain arm CLOSED - identity step accepted, e240 treatment credited at 0.691 - 2026-09-21 22:40
+
+Acceptance under `af7cf72022`: control s1 digit-identical (gap 0.0), checkpoint byte-identical to its
+`03ea8e2376` twin, four row fields populated (3072 / 120 / 15 / 4433d873acf1). Nine checkpoints through the
+script-pair harness on Miami's GPU: gates 0.0-2.3e-8; e240 treatment constrained **0.6906**, inside the
+band registered before it arrived; the longer budget's gain survives the constraint (+0.030); the two
+machines agree on the constrained protocol within 1.3e-3. Registration Amendment 17 has the closing table
+and the figures to quote (0.669 at 120 epochs, 0.691 at 240, constrained). Rows and JSON at 5ba49da /
+4d32d9e on `miami-server`. Miami's GPU is idle with nothing queued.
