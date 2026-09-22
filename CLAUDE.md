@@ -3852,6 +3852,13 @@ fix). **The identity on main is now `8db420df4c`**; rows at `bc521f7f8e`, `72b80
 tree, and a tree with mixed line endings is one such: check `git ls-files --eol` before
 reading an identity off a machine you did not set up.
 
+**NEVER PULL INTO A TREE WITH A LIVE RUN: `code_identity()` IS HASHED WHEN THE ROW IS WRITTEN, NOT WHEN
+THE PROCESS STARTS (Miami, 2026-09-21).** A run launched under one identity that finishes after a pull
+touching `model/` stamps its row with the *new* digest - the code that did not produce it - and an
+acceptance built on that row is quietly meaningless. Miami held a pull of a docs-only commit for an hour
+rather than rely on "looks like it only touches docs". The rule is mechanical: no `git pull` on a node
+while any pipeline process is alive there; check with the launcher's active-scope list first.
+
 **One code, three identities, and the third was a mixed-endings tree (settled 2026-09-06).**
 `code_identity()` hashed `path.read_bytes()`, so it followed each file's line endings on
 disk. Reconstructing `model/` from the stored blobs of `1e3adf3` in each state and hashing
