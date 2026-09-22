@@ -539,12 +539,9 @@ def _run_standard_training(args, device):
     train_index = getattr(train_source, "sample_index", None)
     if train_index is not None:
         history["num_train_identities"] = int(getattr(train_index, "num_users", 0))
-    elif getattr(train_source, "num_classes", None) is not None:
-        # identity_softmax trains on a WindowDataset, which carries the index's user
-        # count as num_classes and no sample_index - so this field was silently absent
-        # from every identity-trained row until 2026-09-21 (Miami: 0 of 25 rows in its
-        # shard had it), and "3,072 identities" rested on a stdout line nobody kept.
-        history["num_train_identities"] = int(train_source.num_classes)
+    # (A branch reading WindowDataset.num_classes sat here for a day and could never fire: the
+    # identity path exposes sample_index too, so this value was always computed - and then
+    # dropped by results_log.py, which never copied it out of history. Fixed there, 2026-09-21.)
 
     # Realized label balance of the reported set, so a drift is visible in the record
     # rather than only in a log nobody kept.

@@ -556,3 +556,19 @@ so the budget is recoverable only as `epochs_run − best_epoch`; **select the 2
 (computed, dropped by the logger), `eval_split` (never wired — a compact digest and counts go into the row,
 the lists stay in the checkpoint), `epochs` (None), and the dead `elif` in `train.py`. Acceptance: control
 s1 reproduces digit-identical under the new identity on Miami with the four fields populated on the row.
+
+## Amendment 15 — 2026-09-21 ~21:30, the logger identity step: `03ea8e2376` → `af7cf72022`
+
+Logging only, one step, after seed 3 and the 240-epoch pair, as Amendment 8 decided. `results_log.py`
+now copies `num_train_identities` out of history (it was in `FIELDS` and nowhere else), records `epochs`
+and `early_stopping_patience` from the config (they read None on every row of this arm), and writes
+`eval_split_digest` — 12 hex characters over the split's `<corpus>/<user>` names and flags, machine-
+independent, so two nodes holding one split carry one digest while the lists stay in the checkpoint.
+The dead `elif` in `train.py` and its wrong comment are gone. A unit test asserts the **values arrive on
+a written row** (Miami's point: not that the lines exist) and that the digest is invariant to the
+absolute root and sensitive to one swapped user. Suite: 499 passed. **Acceptance, on Miami:** control s1
+at 120 epochs under `af7cf72022` reproduces `0.541536678870519` digit-identical on the same device, and
+the row shows `num_train_identities` 3072, `epochs` 120, `early_stopping_patience` 15, a 12-character
+`eval_split_digest`, `num_drop_users` 188, `num_excluded_users` 48 — the four fields populated and
+non-null, said which. Until that lands, rows under `af7cf72022` are not compared with rows under
+`03ea8e2376`.

@@ -4337,10 +4337,13 @@ failure mode. A logging repair rode in the same step and **was wrong about the m
 day, by grep): `num_train_identities` is computed correctly in `train.py` and then **dropped by
 `results_log.py`, which lists it in `FIELDS` and never copies it out of `history`** - the only field
 in that file that appears once rather than twice - and `eval_split` was never wired into the row at
-all. The `elif` added to `train.py` cannot fire (`num_classes` lives on the identity trainer, not the
-dataset) and is removed in the next identity step, together with the one-line logger fix, **after** the
-Nymeria seeds finish under `03ea8e2376` - a pair does not straddle two identities to record a number
-the loader's stdout and the generator's asserted lists already give twice. Also: a config key
+all. The `elif` added to `train.py` could not fire (`num_classes` lives on the identity trainer, not the
+dataset) and was removed in the identity step **`03ea8e2376` -> `af7cf72022`** (2026-09-21, after the
+three Nymeria seeds and the 240-epoch pair, so no pair straddles two identities), which also copies
+`num_train_identities` into the row, records `epochs` / `early_stopping_patience` (they read None on
+every row before), and adds `eval_split_digest` - a machine-independent digest of the split's
+`<corpus>/<user>` names, the lists staying in the checkpoint. Logging only; its acceptance is a control
+seed reproducing digit-identical with the four fields populated. Also: a config key
 `experiment` composes but is inert; the logger records `experiment_name`.
 
 ## CPU and GPU scoring differ by up to 7e-4 AUC

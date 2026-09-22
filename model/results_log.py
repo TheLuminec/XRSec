@@ -160,6 +160,10 @@ FIELDS = [
     "device_name",
     "device_capability",
     "torch_arch_list",
+    # added 2026-09-21 (identity step 03ea8e2376 -> next): the budget as configured, and the split digest
+    "epochs",
+    "early_stopping_patience",
+    "eval_split_digest",
 ]
 
 
@@ -371,6 +375,10 @@ def summarize(mode: str, result) -> dict:
         "selected_test_eer": history.get("selected_test_eer"),
         "best_test_eer": history.get("best_test_eer"),
         "best_epoch": history.get("best_epoch"),
+        # Computed by train.py since 2026-09-03 and never copied here: the one field in this
+        # file that appeared in FIELDS and nowhere else, so every identity-trained row lacked
+        # it and "3,072 identities" rested on a stdout line (Miami, 2026-09-21).
+        "num_train_identities": history.get("num_train_identities"),
         "epochs_run": len(history.get("train_loss") or []),
         "final_train_acc": _last(history.get("train_acc")),
         "final_test_acc": _last(history.get("test_acc")),
@@ -502,6 +510,30 @@ def write_combined_csv(path: Path | None = None) -> Path:
     return path
 
 
+def _eval_split_digest(cfg) -> str:
+    """12 hex chars of sha256 over the split's user lists by <corpus>/<user> name plus its flags.
+
+    Machine-independent (no absolute paths), so a row written on Miami and one written on AVALON
+    for the same split carry the same digest. The lists themselves live in the checkpoint."""
+    def names(values):
+        out = []
+        for v in (values or []):
+            p = Path(str(v)); out.append(f"{p.parent.parent.name}/{p.name}")
+        return sorted(out)
+    payload = {
+        "data_dirs": _names(getattr(cfg, "data_dirs", None) or []),
+        "test_dirs": _names(getattr(cfg, "test_dirs", None) or []),
+        "exclude_users": names(getattr(cfg, "exclude_users", None)),
+        "validation_users": names(getattr(cfg, "validation_users", None)),
+        "drop_users": names(getattr(cfg, "drop_users", None)),
+        "swap_data": bool(getattr(cfg, "swap_data", False)),
+        "test_on_excluded": bool(getattr(cfg, "test_on_excluded", False)),
+        "max_users": _params(getattr(cfg, "max_users", None)) if hasattr(getattr(cfg, "max_users", None), "items")
+                     else getattr(cfg, "max_users", None),
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:12]
+
+
 def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) -> Path | None:
     """Append one row describing this run. Returns the path written, or None on failure."""
     try:
@@ -558,6 +590,14 @@ def append_run(cfg, result, dataset_tag: str, results_path: Path | None = None) 
             "val_user_fraction": getattr(cfg, "val_user_fraction", ""),
             "epochs_run": None,
             "rounds_run": None,
+            # The budget, as configured. Read None on every row until 2026-09-21 - recoverable only as
+            # epochs_run - best_epoch (which is how the 240-epoch pair had to be selected).
+            "epochs": getattr(cfg, "epochs", None),
+            "early_stopping_patience": getattr(cfg, "early_stopping_patience", None),
+            # Which users this run trained, validated, dropped and scored - as a digest over
+            # <corpus>/<user> names, so two machines holding the same split agree and the lists
+            # themselves stay in the checkpoint's eval_split (1,000+ paths do not belong in a row).
+            "eval_split_digest": _eval_split_digest(cfg),
             "num_data_dirs": len(cfg.data_dirs or []),
             "num_test_dirs": len(cfg.test_dirs or []),
             "num_excluded_users": len(getattr(cfg, "exclude_users", None) or []),

@@ -290,3 +290,31 @@ def test_a_run_outside_a_sweep_has_no_fold(tmp_path):
     path = _shard(tmp_path)
     results_log.append_run(_cfg(), _history(), dataset_tag="users", results_path=path)
     assert _lines(path)[0]["fold"] == ""
+
+
+def test_budget_identity_count_and_split_digest_arrive_on_the_row(tmp_path):
+    """Three fields were absent from every row until 2026-09-21: `num_train_identities` was
+    computed by train.py and never copied out of history; `epochs` and the evaluation split
+    were never written at all. This asserts the VALUES ARRIVE on a written row, not that the
+    lines exist (Miami: the same shape cost a run this morning). JSONL keeps types."""
+    path = tmp_path / "shard.jsonl"
+    cfg = _cfg(epochs=120, early_stopping_patience=15,
+               exclude_users=["/x/Nym/users/u1", "/x/Nym/users/u2"],
+               validation_users=["/x/DatasetA/users/v1"], drop_users=["/x/DatasetA/users/d1"])
+    history = dict(_history(), num_train_identities=3072)
+    results_log.append_run(cfg, history, dataset_tag="users", results_path=path)
+    row = json.loads(path.read_text().splitlines()[0])
+    assert row["epochs"] == 120
+    assert row["early_stopping_patience"] == 15
+    assert row["num_train_identities"] == 3072
+    assert isinstance(row["eval_split_digest"], str) and len(row["eval_split_digest"]) == 12
+    # machine-independent: the same split under a different absolute root digests identically...
+    other = _cfg(epochs=120, early_stopping_patience=15,
+                 exclude_users=["/miami/Nym/users/u2", "/miami/Nym/users/u1"],
+                 validation_users=["/miami/DatasetA/users/v1"], drop_users=["/miami/DatasetA/users/d1"])
+    assert results_log._eval_split_digest(other) == row["eval_split_digest"]
+    # ...and one swapped user changes it
+    other.drop_users = ["/miami/DatasetA/users/d2"]
+    assert results_log._eval_split_digest(other) != row["eval_split_digest"]
+    for col in ("epochs", "early_stopping_patience", "eval_split_digest", "num_train_identities"):
+        assert col in results_log.FIELDS
