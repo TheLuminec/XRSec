@@ -572,3 +572,19 @@ the row shows `num_train_identities` 3072, `epochs` 120, `early_stopping_patienc
 `eval_split_digest`, `num_drop_users` 188, `num_excluded_users` 48 — the four fields populated and
 non-null, said which. Until that lands, rows under `af7cf72022` are not compared with rows under
 `03ea8e2376`.
+
+## Amendment 16 — 2026-09-21 21:08, e240 pair through the harness: control as before; **treatment REFUSED at the CPU gate**
+
+| e240, seed 1 | recorded (GPU) | rescored (CPU) | gap | gate | constrained |
+|---|---|---|---|---|---|
+| control | 0.540470 | 0.540552 | 8.2e-5 | PASS | **0.4753** (< 0.50, activity-reversed, as on every seed) |
+| treatment | 0.730448 | 0.732901 | **2.5e-3** | **FAIL** (tolerance 1e-3) | **not read** |
+
+The harness did what a gate is for: with the recorded figure not reproduced within the documented
+device band, no constrained figure was read from that checkpoint. Every other gate in this arm sat at
+4.0e-5 to 9.5e-4; this one is the longest-trained model (best epoch 212) and a hypothesis — stated as
+one — is that sharper logits amplify cuDNN-versus-CPU float32 differences. **The resolution is a
+same-device gate on Miami's GPU** (`DEVICE=cuda`, tolerance 1e-4, the harness now takes the device from
+the environment and records it), **never a wider tolerance**. Amendment 14's e240 band (treatment
+constrained 0.66–0.72, falsifier < 0.62) stands unread until that runs; Miami runs all eight through the
+GPU harness as a same-device cross-check of the CPU constrained figures while it is at it.

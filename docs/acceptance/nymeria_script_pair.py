@@ -9,6 +9,7 @@ within GATE_TOL on CPU (CLAUDE.md: CPU-vs-GPU differs by up to 7e-4; below ~1e-3
 a constrained figure is read from that checkpoint.
 
     .venv/bin/python docs/acceptance/nymeria_script_pair.py --shard <miami shard.jsonl> <ckpt.pth> [...]
+    DEVICE=cuda .venv313/bin/python docs/acceptance/nymeria_script_pair.py ...   # on the node that wrote the row
 
 Writes docs/acceptance/nymeria_script_pair.json (one entry per checkpoint) and prints each row's
 verdict against the registered partition.
@@ -27,8 +28,12 @@ from normalization import ChannelNormalizer  # noqa: E402
 from utils import load_checkpoint  # noqa: E402
 from metrics import roc_auc  # noqa: E402
 
-DEVICE = torch.device("cpu")
-GATE_TOL = 1e-3
+DEVICE = torch.device(os.environ.get("DEVICE", "cpu"))
+# Same-device with the recorded row is the standard (CLAUDE.md): cuDNN run-to-run ~1e-6 on the GPU that
+# wrote the row; CPU against a GPU row up to 7e-4 recorded, below ~1e-3 arithmetic. The e240 treatment
+# (best epoch 212) read 2.5e-3 on CPU and was refused here, 2026-09-21 - resolved on the GPU, never by
+# widening this number.
+GATE_TOL = {"cuda": 1e-4, "cpu": 1e-3}[DEVICE.type]
 PAIRS_PER_USER = 256           # per class per anchor user; the pipeline's manifest is 512 at 0.5
 SCRIPTS = ROOT / "docs" / "acceptance" / "nymeria_sequence_scripts.csv"
 OUT = ROOT / "docs" / "acceptance" / "nymeria_script_pair.json"
@@ -151,7 +156,7 @@ def main() -> int:
         _, _, m = evaluate(model, DataLoader(ds, batch_size=256, shuffle=False), nn.BCEWithLogitsLoss(), DEVICE, return_metrics=True)
         gap = abs(float(m["auc"]) - float(row["selected_test_auc"]))
         rec = {"checkpoint": "/".join(ckpt.resolve().parts[-4:]), "seed": row["seed"], "arm": arm, "run_id": row.get("run_id"),
-               "recorded": row["selected_test_auc"], "gate_rescored_cpu": float(m["auc"]), "gate_gap": gap, "gate_tol": GATE_TOL,
+               "recorded": row["selected_test_auc"], "gate_rescored_cpu": float(m["auc"]), "gate_gap": gap, "gate_tol": GATE_TOL, "device": DEVICE.type,
                "gate_passed": gap <= GATE_TOL, "users": len(ds.sample_index.user_sample_indices), "windows": ds.sample_index.sample_count}
         print(f"gate seed {row['seed']} {arm}: recorded {row['selected_test_auc']:.6f} rescored {m['auc']:.6f} gap {gap:.1e} "
               f"{'PASS' if rec['gate_passed'] else 'FAIL'}  ({rec['users']} users, {rec['windows']} windows)", flush=True)
