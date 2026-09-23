@@ -82,3 +82,40 @@ reports. Verified on the composed config, not by reading the generator.
 | treatment on LSO_test, constrained | **> 0.72** | these five scripts are *easier* than the corpus average for the treatment; read LSO against the treatment's own figure as before, and say so. |
 
 Seeds 2–3 chained behind the same assertion gate; 2b4d7ba is pulled between seeds, never during one.
+
+## Amendment 2 — 2026-09-23, RESULT: the falsifier did not fire — the in-domain cue is not task-bound
+
+Rows and Miami's GPU scoring at 8663165 (`miami-server`); checkpoints on AVALON at
+`exchange_from_miami/nymeria_lso/`, hashes verified both ends. All nine gates on the device that wrote
+the rows: 0.0 to 6.1e-8. Constrained AUC on `Nymeria_LSO_test` (25 unseen people, 5 unseen scripts,
+11,701 windows, 5,120 + 5,120 cross-script / same-script pairs):
+
+| model | seed 1 | seed 2 | seed 3 | mean |
+|---|---|---|---|---|
+| control (no Nymeria) | 0.5043 | 0.4989 | 0.5147 | **0.5060** |
+| treatment (20 scripts seen from other people) | 0.6315 | 0.6805 | 0.6595 | **0.6572** |
+| **LSO (15 scripts; these 5 never seen from anyone)** | 0.5947 | 0.6335 | 0.6153 | **0.6145** |
+
+| registered quantity | measured | verdict |
+|---|---|---|
+| LSO − treatment, paired | −0.0368 / −0.0470 / −0.0442, mean **−0.0427, CI [−0.0558, −0.0296]** | **whole interval inside the band −0.06..0.00**; the −0.10 falsifier nowhere near. Clean. |
+| treatment on LSO_test | 0.6572, every seed inside 0.62–0.72 | these five scripts are neither easier nor harder than the corpus; LSO is read against the treatment's own figure |
+| LSO − control | mean **+0.1085, CI [+0.0510, +0.1660]** | point inside the ≥ +0.10 band, interval's lower edge in the +0.03..+0.10 region: **point-in-band, interval-straddling** — the interval decides, and at n = 3 this is the row the design resolves least well; falsifier (≤ +0.03) excluded |
+| baselines across the three models within a seed | 0.7817/0.5373, 0.7803/0.5441, 0.7809/0.5395 — identical | same people, same pairs |
+
+**The sentence this buys:** unseen people doing five tasks no training identity ever performed separate
+at **0.61** against a zero-shot floor of **0.51**, having cost **0.043** against the same model tested on
+tasks it had seen from other people. The credited in-domain result is about how the person moves, not
+how they do the specific activities — the cross-task claim on the target device.
+
+**A qualifier this result adds to the record, Miami's observation.** The control reads **0.506 — chance
+—** here, where on the in-domain test set the same three checkpoints read 0.472, which was written up as
+"8–9 SE below chance, anti-identifying once activity is matched". So that residual is a property of
+*that* test construction (48 people, all 20 scripts, the arm's pair draw), not a constant of the
+zero-shot model; the sentence carries its test set from now on. It does not touch the LSO reading — the
+floor is the floor either way. Housekeeping: Miami's JSON labels two byte-identical control-s1
+checkpoints (the `03ea8e2376` run and the `af7cf72022` acceptance) under one key; they scored identically
+to every digit, a free consistency check, not ten distinct checkpoints.
+
+Three seeds, one test set of 25 people, one sitting per participant — the usual caveats. A CPU
+cross-check of the nine figures on AVALON follows for the cross-machine record.

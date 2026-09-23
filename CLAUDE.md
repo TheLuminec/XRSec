@@ -612,12 +612,23 @@ scripts and every negative two people in the same script, an activity cue has no
 treatment still separates unseen users at 0.66-0.68 - the registered credit line was 0.65 - while the
 zero-shot control falls **below chance** on the same pairs - 8-9 standard errors below at 24,576 pairs,
 so a same-script pair from two strangers reads as *more* alike to it than one person across two scripts:
-**the zero-shot residual on Nymeria is anti-identifying once activity is matched**, which is sharper
-than "partly activity" (that invites "so partly person too"), and does not say the zero-shot model
-carries no person signal at all, only that the activity cue outweighs it under this pairing. So ~0.04-0.05
+**the zero-shot residual on Nymeria is anti-identifying once activity is matched - on that test set**
+(48 people, all 20 scripts, the arm's pair draw), which is sharper than "partly activity" (that invites
+"so partly person too") and does not say the zero-shot model carries no person signal at all, only that
+the activity cue outweighs it under this pairing. **The same three controls read 0.506, chance, on the
+leave-script-out test set** (25 people, 5 held-out scripts), so the residual is a property of the test
+construction, not a constant of the model - carry the test set with the sentence. So ~0.04-0.05
 of the row figures was activity and the rest is how the person moves; quote the constrained figure,
 never 0.7263. Three seeds and the 240-epoch pair, all credited; one sitting per participant, so this cannot pay
-the cross-session cost. **What it took to get here is on the same page**: the `dyn` index build held ten
+the cross-session cost. **And it is not task-bound (leave-script-out, 2026-09-23,
+`docs/acceptance/nymeria_lso_REGISTERED.md`)**: five scripts removed from every training identity
+(25 % of sequences, chosen by rule), the same 3,072 identities retrained, scored on 25 unseen people
+doing only those five scripts with every positive cross-script - constrained **0.6145** against the
+treatment's **0.6572** on the same test set and the control's **0.5060**; LSO minus treatment
+**-0.043, CI [-0.056, -0.030], the whole interval inside the registered -0.06..0.00 band**, falsifier
+(< -0.10) nowhere near; LSO minus control +0.109 with the interval straddling the +0.10 band edge,
+reported as such. So the model reads how a person moves, and tasks it never saw from anyone cost it
+about 0.04 - the cross-task claim on the target device, three seeds, nine same-device gates at <= 6e-8. **What it took to get here is on the same page**: the `dyn` index build held ten
 times its output and killed the first treatment under the memory cap (fixed bit-identical), a generator
 edit silently ran the config defaults under the arm's name (caught by Miami before a number was read), and
 three registration regions were unnamed until a peer or a landing named them.

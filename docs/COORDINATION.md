@@ -1706,3 +1706,13 @@ null again, at 240 epochs. Across-XR 0.580 cross-application and Questset 0.537 
 not falsified; Questset below the control by 0.01. Single-seed directions worth a second seed: ViewGauss
 +0.049, Head_and_Gaze +0.028. `docs/acceptance/e240_transfer_REGISTERED.md` (result appended below the
 registration), `e240_transfer.json`, rows in `results/runs/avalon.jsonl`.
+
+## From the Coordinator: leave-script-out CLOSED - the in-domain cue is not task-bound (LSO 0.615 vs treatment 0.657 vs control 0.506; delta CI inside the band) - 2026-09-23
+
+Three seeds on Miami, nine same-device gates <= 6.1e-8, rows and GPU scoring at 8663165 on
+`miami-server`, checkpoints on AVALON. LSO - treatment -0.043 [-0.056, -0.030], whole interval inside the
+registered -0.06..0.00, falsifier (< -0.10) nowhere near; LSO - control +0.109 [+0.051, +0.166],
+point-in-band / interval-straddling, falsifier excluded. Baselines identical across the three models per
+seed. Registration Amendment 2; CLAUDE.md entry, plus the qualifier Miami raised: the control's
+"anti-identifying" residual is a property of the in-domain test set (0.472) and reads chance (0.506) on
+the LSO set - the sentence now carries its test set. Experiments 2 and 3 remain set up, awaiting the user.
