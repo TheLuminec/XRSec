@@ -62,3 +62,23 @@ false, `test_dirs` = LSO_test); `gated_launch.sh`, one seed at a time, rows push
 in `model/` pulled while a run is alive. Reference scoring of the six in-domain checkpoints on LSO_test
 runs on Miami's GPU (same device as their rows) after the arm, or on AVALON's CPU with the documented
 tolerance, whichever is idle.
+
+## Amendment 1 — 2026-09-23, seed 1 launched on Miami; two unnamed regions named before any number exists
+
+Miami's launch: rebuilt LSO trees byte-identical to the committed manifest (882 lines, diff empty), all
+nine list digests reproduced, composed config asserted by the runner (`data_dirs` names
+`Nymeria_LSO_train`, `test_dirs` names `Nymeria_LSO_test`, `test_on_excluded` false), and one check this
+registration did not ask for and should have: **all 48 `exclude_users` paths resolve under
+`Nymeria_LSO_train` and none under `Nymeria_Dataset`, all 25 test people are among them, none of the 25
+is a validation user.** Had the exclusions still named the original corpus, nothing would have matched
+and the 25 test people's *training-script* recordings would have been trained on — a leak no counter
+reports. Verified on the composed config, not by reading the generator.
+
+**Two regions the registration left unnamed, named now (seed 1 has no number yet):**
+
+| quantity | region | **means** |
+|---|---|---|
+| LSO − treatment, constrained | **> 0.00** | removing five scripts acted as regularisation rather than deprivation: 15 scripts from the same people generalise to unseen tasks *at least as well* as 20. Not a gain to credit — the treatment is the like-for-like referent — but a finding that task breadth in training is not what carries the cue. Above +0.03, report it as exceeding and seed it before it is quoted. |
+| treatment on LSO_test, constrained | **> 0.72** | these five scripts are *easier* than the corpus average for the treatment; read LSO against the treatment's own figure as before, and say so. |
+
+Seeds 2–3 chained behind the same assertion gate; 2b4d7ba is pulled between seeds, never during one.
