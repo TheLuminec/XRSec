@@ -38,3 +38,4 @@ manifests_for_miami/
 
 # generated per-node by docs/acceptance/nymeria_in_domain_lists.py: absolute paths, regenerate on each node
 configs/nymeria_in_domain_*.yaml
+configs/nymeria_lso_*.yaml
