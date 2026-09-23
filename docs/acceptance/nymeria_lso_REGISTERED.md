@@ -127,3 +127,15 @@ values: control 0.5043/0.4989/0.5147 (diffs 0.0000), treatment 0.6318/0.6819/0.6
 1.4e-3** — the cross-machine agreement the in-domain arm had (1.3e-3), reproduced. The LSO rows' own
 figures (test_dirs = LSO_test, standard protocol) read 0.667 / 0.695 / 0.679 and are the gate referents
 here; `docs/acceptance/nymeria_lso_score.json`, rows in `results/runs/avalon.jsonl` (`nymeria_lso_reference`).
+
+*Second addendum to Amendment 2 — the nine-decimal comparison, Miami's GPU (`nymeria_lso_score_miami_gpu.json`)
+against AVALON's CPU (`nymeria_lso_score.json`):* control gaps 8.45e-5 / 3.89e-5 / 2.69e-5, treatment 2.20e-4 /
+**1.47e-3** / 2.87e-4, LSO 5.25e-5 / 5.52e-4 / 3.21e-4. The "identical controls" were four-decimal rounding.
+Two notes kept. **Near-chance AUC does not imply a noisier device gap** — the at-chance arm is the *quietest*
+across devices, the opposite of the intuition that overlapping score distributions flip more orderings;
+whatever governs the gap tracks the arm, and no mechanism is proposed. And **the treatment arm sits at the
+top of the cross-device distribution for the second time** (its e240 sibling gave the 2.5e-3 in-domain
+outlier; treatment_s2 here at 1.47e-3 is marginally above the documented ~1e-3 line) — not a finding,
+recorded so a third instance is read as the third. Same-device gate gaps (Miami, 0 to 6.1e-8) against
+cross-device (AVALON, 4.0e-5 to 9.5e-4) are the clean illustration that a gate gap measures the path, not
+the checkpoint.
