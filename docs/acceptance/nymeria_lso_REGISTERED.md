@@ -119,3 +119,11 @@ to every digit, a free consistency check, not ten distinct checkpoints.
 
 Three seeds, one test set of 25 people, one sitting per participant — the usual caveats. A CPU
 cross-check of the nine figures on AVALON follows for the cross-machine record.
+
+*Addendum to Amendment 2 (18:03) — the CPU cross-check on AVALON, all nine checkpoints:* gates
+4.0e-5 to 9.5e-4 (tolerance 1e-3, the documented device band); constrained figures against Miami's GPU
+values: control 0.5043/0.4989/0.5147 (diffs 0.0000), treatment 0.6318/0.6819/0.6597 (+0.0003/+0.0014/
++0.0002), LSO 0.5948/0.6341/0.6156 (+0.0001/+0.0006/+0.0003). **Two machines, two devices, largest gap
+1.4e-3** — the cross-machine agreement the in-domain arm had (1.3e-3), reproduced. The LSO rows' own
+figures (test_dirs = LSO_test, standard protocol) read 0.667 / 0.695 / 0.679 and are the gate referents
+here; `docs/acceptance/nymeria_lso_score.json`, rows in `results/runs/avalon.jsonl` (`nymeria_lso_reference`).

@@ -27,6 +27,246 @@
   },
   "same_session_fallback": null,
   "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
-  "seconds": 61.1
+  "seconds": 51.6
+ },
+ "treatment_s1": {
+  "label": "treatment_s1",
+  "checkpoint": "2026-09-21/09-16-23_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 1,
+  "row_auc": 0.7082129749986861,
+  "gate_rescored": 0.7090897427664863,
+  "gate_gap": 0.0008767677678002128,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.70952353515625,
+  "lso_eer": 0.34968750000000004,
+  "lso_acc": 0.648203125,
+  "position_lookup_auc": 0.7817267944335937,
+  "amplitude_auc": 0.5372776123046875,
+  "constrained_auc": 0.6317637252807617,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 50.5
+ },
+ "control_s2": {
+  "label": "control_s2",
+  "checkpoint": "2026-09-21/10-49-06_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 2,
+  "row_auc": 0.5269215934806399,
+  "gate_rescored": 0.5271731681293912,
+  "gate_gap": 0.00025157464875125157,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.5429004516601562,
+  "lso_eer": 0.47359375000000004,
+  "lso_acc": 0.50421875,
+  "position_lookup_auc": 0.7803012573242187,
+  "amplitude_auc": 0.54412265625,
+  "constrained_auc": 0.49887134552001955,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 47.8
+ },
+ "treatment_s2": {
+  "label": "treatment_s2",
+  "checkpoint": "2026-09-21/12-08-08_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 2,
+  "row_auc": 0.7263105014959971,
+  "gate_rescored": 0.7262707021501329,
+  "gate_gap": 3.979934586417766e-05,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.727331494140625,
+  "lso_eer": 0.33343750000000005,
+  "lso_acc": 0.66234375,
+  "position_lookup_auc": 0.7803012573242187,
+  "amplitude_auc": 0.54412265625,
+  "constrained_auc": 0.6819378089904785,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 53.3
+ },
+ "control_s3": {
+  "label": "control_s3",
+  "checkpoint": "2026-09-21/13-38-42_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 3,
+  "row_auc": 0.5385744935936398,
+  "gate_rescored": 0.5386217269632552,
+  "gate_gap": 4.723336961531821e-05,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.5619383666992187,
+  "lso_eer": 0.45140625,
+  "lso_acc": 0.502421875,
+  "position_lookup_auc": 0.780904248046875,
+  "amplitude_auc": 0.5395314208984375,
+  "constrained_auc": 0.5147002792358398,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 48.4
+ },
+ "treatment_s3": {
+  "label": "treatment_s3",
+  "checkpoint": "2026-09-21/14-57-30_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 3,
+  "row_auc": 0.7176762554380629,
+  "gate_rescored": 0.7186236878236135,
+  "gate_gap": 0.0009474323855506173,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.7164039428710938,
+  "lso_eer": 0.33890624999999996,
+  "lso_acc": 0.653984375,
+  "position_lookup_auc": 0.780904248046875,
+  "amplitude_auc": 0.5395314208984375,
+  "constrained_auc": 0.6597462844848633,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 53.2
+ },
+ "lso_s1": {
+  "label": "lso_s1",
+  "checkpoint": "2026-09-23/13-41-29_train/checkpoints/nymeria-lso_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 1,
+  "row_auc": 0.6673083984375,
+  "gate_rescored": 0.6675429931640625,
+  "gate_gap": 0.00023459472656250924,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.6675429931640625,
+  "lso_eer": 0.37609375,
+  "lso_acc": 0.616015625,
+  "position_lookup_auc": 0.7817267944335937,
+  "amplitude_auc": 0.5372776123046875,
+  "constrained_auc": 0.5947531127929687,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 37.0
+ },
+ "lso_s2": {
+  "label": "lso_s2",
+  "checkpoint": "2026-09-23/14-54-03_train/checkpoints/nymeria-lso_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 2,
+  "row_auc": 0.6950259033203126,
+  "gate_rescored": 0.6951228515625,
+  "gate_gap": 9.694824218742237e-05,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.6951228515625,
+  "lso_eer": 0.35609375,
+  "lso_acc": 0.6234375,
+  "position_lookup_auc": 0.7803012573242187,
+  "amplitude_auc": 0.54412265625,
+  "constrained_auc": 0.6340641593933105,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 35.4
+ },
+ "lso_s3": {
+  "label": "lso_s3",
+  "checkpoint": "2026-09-23/16-20-31_train/checkpoints/nymeria-lso_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "seed": 3,
+  "row_auc": 0.6786890747070312,
+  "gate_rescored": 0.6785497192382812,
+  "gate_gap": 0.00013935546874999094,
+  "gate_tol": 0.001,
+  "device": "cpu",
+  "gate_passed": true,
+  "lso_users": 25,
+  "lso_windows": 11701,
+  "lso_auc": 0.6785497192382812,
+  "lso_eer": 0.37390625,
+  "lso_acc": 0.609921875,
+  "position_lookup_auc": 0.780904248046875,
+  "amplitude_auc": 0.5395314208984375,
+  "constrained_auc": 0.6156235122680664,
+  "constrained_pairs": [
+   5120,
+   5120
+  ],
+  "skipped_users": {
+   "no_cross_script_positive": 5,
+   "no_same_script_negative": 0
+  },
+  "same_session_fallback": null,
+  "row": "/home/thelumine/Projects/XRSec/results/runs/avalon.jsonl",
+  "seconds": 35.8
  }
 }
