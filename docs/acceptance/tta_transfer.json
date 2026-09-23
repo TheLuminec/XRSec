@@ -1,0 +1,21 @@
+{
+ "control": {
+  "checkpoint": "2026-09-21/16-29-32_train/checkpoints/nymeria-in-domain_multi3_bilstm_10s_20hz_emb128_train.pth",
+  "source_windows": 15731,
+  "corpora": {
+   "NJIT_6DOF_VR_Navigation_Dataset": {
+    "users": 18,
+    "pairs": 9216,
+    "evaluate_auc": 0.5318958612135899,
+    "none": 0.5318958847611038,
+    "gate_gap": 2.3547513938737552e-08,
+    "gate_passed": true,
+    "centre": 0.5413424644941165,
+    "coral": 0.516909846553096,
+    "d_centre": 0.009446579733012661,
+    "d_coral": -0.014986038208007812,
+    "seconds": 11.1
+   }
+  }
+ }
+}

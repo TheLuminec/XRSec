@@ -52,14 +52,14 @@ def score(model, ck, dirs, seed, label, cross_session=True):
           f"pos_lookup {rec['position_lookup_auc'] or float('nan'):.4f}  amplitude {rec['amplitude_auc'] or float('nan'):.4f}", flush=True)
     return rec, ds, m, acc
 
-def log_row(ckpt, ck, seed, dirs, label, m, acc, ds):
+def log_row(ckpt, ck, seed, dirs, label, m, acc, ds, experiment="e240_transfer"):
     es = ck["eval_split"]; labels = ds.manifest["labels"].view(-1)
     history = {"selected_test_auc": m["auc"], "selected_test_eer": m["eer"], "best_test_auc": m["auc"], "best_test_eer": m["eer"],
                "selected_test_acc": acc, "lookup_auc": m.get("lookup_auc"), "position_lookup_auc": m.get("position_lookup_auc"),
                "amplitude_auc": m.get("amplitude_auc"), "selected_test_by_dataset": m.get("by_dataset") or {},
                "unseen_datasets": getattr(ds, "unseen_datasets", {}), "eval_positive_fraction": float(labels.float().mean()),
                "best_epoch": int(ck.get("epoch", 0))}
-    cfg = SimpleNamespace(mode="rescore", experiment_name="e240_transfer", extractor=ck.get("extractor"), extractor_params=None,
+    cfg = SimpleNamespace(mode="rescore", experiment_name=experiment, extractor=ck.get("extractor"), extractor_params=None,
                           objective=ck.get("objective"), identity_margin=0.35, identity_scale=30.0, balance_identities=False, balance_cap=None,
                           head=ck.get("head"), channels=ck.get("channels", "full"), encoding=es.get("encoding", "raw"), resample="nearest",
                           window_stride=es.get("window_stride"), sweep_id="", fold=label, normalize="per_dataset", within_dataset_negatives=True,
