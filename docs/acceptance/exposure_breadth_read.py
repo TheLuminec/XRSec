@@ -112,6 +112,8 @@ def main():
                                                           for r in ("17-24-33", "18-41-34", "20-05-56")])
     ap.add_argument("--out", default=str(HERE / "exposure_breadth_read.json"))
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--skip-questset", action="store_true",
+                    help="rows 1-3 only (plumbing switch; the analysis of each row is unchanged)")
     args = ap.parse_args()
     rng = np.random.default_rng(67)
 
@@ -144,13 +146,14 @@ def main():
         out["pooled"][row] = r
         out["verdicts"][row] = verdict(row, r)
 
-    qs_users, qb = questset_per_user(args.qs_breadth)
-    qz_users, qz = questset_per_user(args.qs_zeroshot)
-    assert qs_users == qz_users
-    r = {**ci(qb - qz, rng), "n_users": len(qs_users), "breadth_mean": float(qb.mean()), "zeroshot_mean": float(qz.mean())}
-    out["pooled"]["questset_breadth-zeroshot"] = r
-    out["verdicts"]["questset_breadth-zeroshot"] = verdict("questset_breadth-zeroshot", r)
-    out["questset_n17_group_means"] = {"breadth": questset_n17(args.qs_breadth), "zeroshot": questset_n17(args.qs_zeroshot)}
+    if not args.skip_questset:
+        qs_users, qb = questset_per_user(args.qs_breadth)
+        qz_users, qz = questset_per_user(args.qs_zeroshot)
+        assert qs_users == qz_users
+        r = {**ci(qb - qz, rng), "n_users": len(qs_users), "breadth_mean": float(qb.mean()), "zeroshot_mean": float(qz.mean())}
+        out["pooled"]["questset_breadth-zeroshot"] = r
+        out["verdicts"]["questset_breadth-zeroshot"] = verdict("questset_breadth-zeroshot", r)
+        out["questset_n17_group_means"] = {"breadth": questset_n17(args.qs_breadth), "zeroshot": questset_n17(args.qs_zeroshot)}
 
     print()
     for row, r in out["pooled"].items():
