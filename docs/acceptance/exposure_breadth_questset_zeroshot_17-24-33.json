@@ -1,0 +1,78 @@
+{
+ "checkpoint": "runs/2026-09-10/17-24-33_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+ "device": "cpu",
+ "encoding": "dyn",
+ "gate": {
+  "checkpoint": "runs/2026-09-10/17-24-33_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+  "run_id": "655dd23af5ed",
+  "seed": 1,
+  "device": "cpu",
+  "recorded": 0.568792534534494,
+  "rescored": 0.5688122284041144,
+  "gap": 1.9693869620418525e-05,
+  "tolerance": 0.002,
+  "eval_users": 17,
+  "position_lookup_recorded": 0.5849000607394842,
+  "position_lookup_rescored": 0.5849000607394842,
+  "passed": true
+ },
+ "unseen_policy": {
+  "Questset": "target_fit"
+ },
+ "windows": 26742,
+ "draws": 20,
+ "seed": 67,
+ "primary": "per-user mean rank-1 (Across-XR A1 rule); window_pooled reported beside it",
+ "groups": {
+  "1": {
+   "games": [
+    "beat_saber",
+    "cooking_simulator"
+   ],
+   "n_users": 30,
+   "cells": {
+    "17": {
+     "mean": 0.19900534768285727,
+     "a_to_b": 0.16032153013689843,
+     "b_to_a": 0.23768916522881608,
+     "window_pooled": 0.19666599256504674,
+     "chance": 0.058823529411764705,
+     "n_users": 30
+    },
+    "30": {
+     "mean": 0.14321373913480334,
+     "a_to_b": 0.1113864009381954,
+     "b_to_a": 0.17504107733141128,
+     "window_pooled": 0.1416286817893522,
+     "chance": 0.03333333333333333,
+     "n_users": 30
+    }
+   }
+  },
+  "2": {
+   "games": [
+    "medal_of_honor",
+    "forklift_simulator"
+   ],
+   "n_users": 30,
+   "cells": {
+    "17": {
+     "mean": 0.2153259903721773,
+     "a_to_b": 0.21777629002950513,
+     "b_to_a": 0.21287569071484946,
+     "window_pooled": 0.21418416514381783,
+     "chance": 0.058823529411764705,
+     "n_users": 30
+    },
+    "30": {
+     "mean": 0.1423580556047887,
+     "a_to_b": 0.14132763392728082,
+     "b_to_a": 0.1433884772822966,
+     "window_pooled": 0.14239347724046053,
+     "chance": 0.03333333333333333,
+     "n_users": 30
+    }
+   }
+  }
+ }
+}

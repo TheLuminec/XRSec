@@ -184,34 +184,123 @@ def gate():
     return 0
 
 
-def model_gate_certificates():
-    return sorted(HERE.glob("schach_ours_*_gate_cpu.json"))
+# The Questset registration's checkpoint gate: the checkpoint reproduces its OWN recorded figure
+# on its OWN evaluation users to < 1e-4 before any number is quoted, and the gap is written down.
+QUESTSET_GATE_TOLERANCE = 1e-4
 
 
-def run_model(checkpoint: Path, encoding: str):
-    """Score a checkpoint. Refuses without a checkpoint gate certificate."""
-    certs = model_gate_certificates()
-    if not certs:
-        print("REFUSING: no checkpoint gate certificate found in docs/acceptance/.")
-        print("A checkpoint must reproduce its OWN recorded figure to <1e-4 before any")
-        print("Questset number is quoted from it. That is the rule that voided the step-6")
-        print("columns twice.")
-        return 2
+def embed_corpus(ck: dict, model, device):
+    """Every Questset window through the PIPELINE's own sampler, encoder and normaliser at the
+    checkpoint's settings. Questset is in no checkpoint's normaliser, so the pipeline's unseen
+    policy applies (target_fit: statistics fitted on Questset itself, unsupervised) - the same
+    policy for every arm, recorded in the output."""
+    import numpy as np
+    sys.path.insert(0, str(ROOT / "model"))
+    from dataset import SampleDataset, SampleIndex
+    from normalization import ChannelNormalizer
+    from across_xr_alignment import quiet, embed
+
+    es = ck["eval_split"]
+    ds = quiet(SampleDataset, str(CORPUS / "users"), sample_time=int(es["sample_time"]),
+               sample_rate=int(es["sample_rate"]), channels=ck.get("channels", "full"),
+               resample=es.get("resample", "nearest"), window_stride=es.get("window_stride"))
+    index = SampleIndex(ds, encoding=es.get("encoding", "raw"))
+    normalizer = ChannelNormalizer.from_state(ck.get("normalizer"), unseen="target_fit")
+    if normalizer.enabled:
+        quiet(normalizer.transform, index)
+    sessions = index.window_session_ids.numpy()
+    window_user = np.empty(index.sample_count, dtype=object)
+    window_app = np.empty(index.sample_count, dtype=object)
+    for user_dir, rows in zip(ds.user_dirs, index.user_sample_indices):
+        name = Path(user_dir).name
+        csvs = sorted(f for f in (CORPUS / "users" / name).iterdir() if f.suffix == ".csv")
+        apps = [f.stem for f in csvs]
+        rows = rows.numpy()
+        assert set(sessions[rows].tolist()) <= set(range(len(apps))), (name, apps)
+        window_user[rows] = name
+        window_app[rows] = np.array(apps, dtype=object)[sessions[rows]]
+    assert len(ds.user_dirs) == 60, f"expected 60 Questset users, loaded {len(ds.user_dirs)}"
+    return embed(model, index.samples, device), window_user, window_app, dict(normalizer.unseen_datasets)
+
+
+def score_model_group(emb, window_user, window_app, users, game_a, game_b, rng):
+    """Cross-application rank-1, the Across-XR A1 rule (template = renormalised mean of L2-normalised
+    window embeddings over game A; each game-B window a probe; cosine; ties rank-averaged), over a
+    random gallery of N users drawn by THIS harness's gated draw, averaged over draws and over both
+    ordered directions.
+
+    PRIMARY, fixed 2026-09-24 before any model number existed: the mean over users of per-user
+    rank-1 (the Across-XR A1 definition). `window_pooled` (every probe window weighted equally, the
+    static lookup's weighting) is reported beside it and is not the registered figure."""
+    import numpy as np
+    from across_xr_alignment import centroids, rank1_per_user
+
+    def rows(u, g):
+        return np.flatnonzero((window_user == u) & (window_app == g))
+
+    out = {}
+    for n_gal in GALLERY_SIZES:
+        if n_gal > len(users):
+            continue
+        per_dir = []
+        for gal_game, probe_game in ((game_a, game_b), (game_b, game_a)):
+            vals, pooled = [], []
+            for _ in range(DRAWS):
+                pool = rng.sample(users, n_gal)
+                gallery = centroids(emb, [rows(u, gal_game) for u in pool])
+                p_rows = [rows(u, probe_game) for u in pool]
+                probe_user = np.concatenate([np.full(len(r), i) for i, r in enumerate(p_rows)])
+                per_user = rank1_per_user(gallery, emb[np.concatenate(p_rows)], probe_user, n_gal)
+                vals.append(float(per_user.mean()))
+                pooled.append(float(np.average(per_user, weights=[len(r) for r in p_rows])))
+            per_dir.append((float(np.mean(vals)), float(np.mean(pooled))))
+        out[n_gal] = {"mean": (per_dir[0][0] + per_dir[1][0]) / 2,
+                      "a_to_b": per_dir[0][0], "b_to_a": per_dir[1][0],
+                      "window_pooled": (per_dir[0][1] + per_dir[1][1]) / 2,
+                      "chance": 1.0 / n_gal, "n_users": len(users)}
+    return out
+
+
+def run_model(checkpoint: Path, encoding: str, device_name: str = "cpu", out: Path | None = None):
+    """Score a checkpoint. Refuses unless it first reproduces its own recorded figure to < 1e-4."""
+    import torch
+    from across_xr_alignment import gate as checkpoint_gate
+
     if not checkpoint.exists():
         print(f"CHECKPOINT NOT ON THIS MACHINE: {checkpoint}")
-        print()
-        print("The programme checkpoints live on the node that trained them and have not")
-        print("been replicated here (verified 2026-09-17). Until they are, no Questset arm")
-        print("can run anywhere but that node - which is the exposure that cost 36 hours")
-        print("when the Miami node was lost. Replicate them, then re-run this command.")
-        print()
-        print(f"Gate certificates present for: {[c.name for c in certs]}")
         return 3
-    print("Checkpoint present; model scoring path is not yet implemented.")
-    print("Implement embed_windows() against model/load_checkpoint + the pipeline's")
-    print("Sampler at the checkpoint's own sample_time/sample_rate/encoding, then")
-    print("reuse score_group() unchanged - the wiring around it is already gated.")
-    return 4
+    device = torch.device(device_name)
+    g, model, ck = checkpoint_gate(str(checkpoint), device)
+    if not g.get("passed") or g.get("gap") is None or g["gap"] >= QUESTSET_GATE_TOLERANCE:
+        print(f"REFUSING: checkpoint gate gap {g.get('gap')} on {device} is not < {QUESTSET_GATE_TOLERANCE} "
+              f"({g.get('reason', '')}). Score on the device that trained it.")
+        return 2
+    rec_enc = ck["eval_split"].get("encoding", "raw")
+    if rec_enc != encoding:
+        print(f"REFUSING: checkpoint encoding is {rec_enc}, --encoding says {encoding}")
+        return 2
+    emb, window_user, window_app, unseen = embed_corpus(ck, model, device)
+    rng = random.Random(SEED)
+    groups = {}
+    for gid, (game_a, game_b) in GROUPS.items():
+        users = sorted({u for u in set(window_user.tolist()) if u.startswith(f"g{gid}")
+                        and ((window_user == u) & (window_app == game_a)).any()
+                        and ((window_user == u) & (window_app == game_b)).any()})
+        groups[gid] = {"games": [game_a, game_b], "n_users": len(users),
+                       "cells": score_model_group(emb, window_user, window_app, users, game_a, game_b, rng)}
+    result = {"checkpoint": str(checkpoint), "device": str(device), "encoding": encoding,
+              "gate": {k: v for k, v in g.items() if k != "exclude_users_seen"},
+              "unseen_policy": unseen, "windows": int(len(emb)), "draws": DRAWS, "seed": SEED,
+              "primary": "per-user mean rank-1 (Across-XR A1 rule); window_pooled reported beside it",
+              "groups": groups}
+    out = out or HERE / f"questset_model_{checkpoint.parent.parent.name}.json"
+    Path(out).write_text(json.dumps(result, indent=1))          # artefact FIRST
+    print(f"wrote {out}")
+    for gid, r in groups.items():
+        for n, c in r["cells"].items():
+            print(f"  group {gid} {r['games'][0]}<->{r['games'][1]} N={n}: rank-1 {c['mean']:.4f} "
+                  f"(pooled {c['window_pooled']:.4f}, chance {c['chance']:.3f}, users {c['n_users']})")
+    return 0
 
 
 def main():
@@ -221,6 +310,8 @@ def main():
                     help="reproduce the committed static lookup through this harness")
     ap.add_argument("--checkpoint", type=Path)
     ap.add_argument("--encoding", default="dyn", choices=("dyn", "raw"))
+    ap.add_argument("--device", default="cpu")
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
     print(f"corpus {CORPUS}   windows {WINDOW_S}s at {RATE_HZ}Hz   seed {SEED}   draws {DRAWS}")
@@ -231,7 +322,7 @@ def main():
     if args.gate:
         return gate()
     if args.checkpoint:
-        return run_model(args.checkpoint, args.encoding)
+        return run_model(args.checkpoint, args.encoding, args.device, args.out)
     ap.print_help()
     return 0
 
