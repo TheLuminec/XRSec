@@ -1123,6 +1123,30 @@ first computed with ONE mean over all seven corpora - not what a device does - a
 literal falsifier; per-corpus centring on the same pooled loader is the registered operation and reads
 +0.018. A pooled variant of a per-target operation has to apply the per-target constant.
 
+### Exposure breadth: at scale, four applications substitute for the fifth, and it reaches an unseen corpus (2026-09-24)
+
+The Nymeria treatment (3,072 identities) with Across-XR users 0-22 swapped in for 23 BOXRR, one application X
+held out of every session, five X, one seed each (`docs/acceptance/exposure_breadth_REGISTERED.md`,
+Amendment 3; reading script committed before any number). Rank-1 on the X-cells, Schach's users 32-48, N=17:
+breadth minus P3 (the same hold-out at 495 identities) **+0.097 [+0.069, +0.126]**, which exceeds its band.
+Breadth minus the treatment is **+0.112 [+0.083, +0.144]**, in band. The unregistered diagnostic that
+matters: **breadth, which never saw X, against C2-lo, which did, is -0.007 [-0.038, +0.028]**. At 495
+identities P3 paid -0.036 for the same hold-out. **So at scale, exposure to four applications substitutes
+for the fifth within one seed's precision.** A no-cost hold-out reads exactly like a leak, so one was excluded
+from the checkpoints' own stored normaliser statistics, which match only "X removed" (`loao_leak_check.py`,
+P3 as positive control). **It carries to Questset**, titles in no training corpus: +0.062 [+0.042, +0.083]
+over zero-shot, and decomposed, **Across-XR exposure +0.056 [+0.039, +0.073] and Nymeria +0.006
+[-0.014, +0.026]**. The data-side lever that crosses activity boundaries is *other applications recorded
+the same way*, not other daily-life tasks. Beat Saber overlap with Questset group 1 is unchecked (A3).
+Questset A1 zero-shot: 0.179 / 0.217 at N=17, inside its registered band in both groups.
+
+**Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
+target-fits silently while the gate still passes. On P3 superhot that moved A1 0.283 -> 0.250 and read as
+a false alignment gain of +0.058, and the harness now refuses the case. And **a replicated checkpoint
+cannot be gated from a replica path**: the gate finds its training row by where the run was written, so
+`exchange_from_miami/...` and `runs/miami-alignment/...` both refuse. Restore the recorded layout first.
+The refusal is the right failure mode, since basename matching is what would let the wrong file through.
+
 ### Yaw canonicalisation: predicted correctly per corpus, worth nothing pooled
 
 `encoding=yawc` (gravity-preserving yaw canonicalisation) seed-paired at 419 identities:
