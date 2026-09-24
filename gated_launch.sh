@@ -83,8 +83,16 @@ one_job_only() {
   local named=0 h other
   for h in $hits; do
     case "$anc" in *" $h "*) continue;; esac
-    other="$(tr '\0' ' ' </proc/$h/cmdline 2>/dev/null)"; [ -n "$other" ] || continue   # gone already
+    other="$(tr '\0' ' ' 2>/dev/null </proc/$h/cmdline)"; [ -n "$other" ] || continue   # gone already (stderr first: redirections apply left to right)
     [ "$other" = "$me" ] && continue
+    # a bash process is a job only if it IS the queue runner; any other bash matching here is a
+    # shell that QUOTES a job's script name - e.g. the terminal wrapper that launched this very
+    # script, which is not an ancestor once setsid has forked under a job-control shell and the
+    # launcher was reparented (AVALON, 2026-09-24: refused twice on its own invoking shell)
+    # ("contains queue_runner.sh anywhere" is not enough: the wrapper that launched this script can
+    #  carry that string in a quoted heredoc - the runner is bash with the SCRIPT as first argument)
+    if [[ "$other" =~ ^(/[A-Za-z0-9_./-]*/)?bash\ [^\ ]*queue_runner\.sh(\ |$) ]]; then :; \
+    elif [[ "$other" =~ ^(/[A-Za-z0-9_./-]*/)?bash(\ |$) ]]; then continue; fi
     named=$((named+1)); [ -n "${XRSEC_DEBUG:-}" ] && echo "  by-name hit: pid $h: ${other:0:120}" >&2
   done
   [ "$named" -eq 0 ] || refuse "${named} pipeline process(es) alive by name (excluding this launcher's own ancestry and forks; XRSEC_DEBUG=1 lists them) - one job at a time"

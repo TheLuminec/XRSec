@@ -59,3 +59,62 @@ checkpoint copy, now inside the check written to catch a leak; recorded so the n
 paths. Miami's runner also refuses if any *other* LOAO tree appears in a composed config — five corpora
 differing only in which application is absent is exactly the shape where the wrong one completes with
 a plausible number for the wrong cell.
+
+## Amendment 2 — 2026-09-24, five rows landed; dose measured; the harness made to score this arm's shape
+
+Instrument facts only; no X-cell number exists yet and none has been read.
+
+**The five training rows** (Miami, `154136a`, shard rows on `origin/miami-server`, identity `af7cf72022`, all
+rc=0, 3,072 training identities, 65 excluded, one seed each):
+
+| held out X | run_id | pooled AUC | LOAO_X AUC | Nymeria AUC | best_epoch / run |
+|---|---|---|---|---|---|
+| synth_riders | 96e53d1f5b62 | 0.7068 | 0.7005 | 0.7105 | 120 / 120 |
+| social_vr | a1d8379d8ac0 | 0.7026 | 0.6889 | 0.7119 | 116 / 120 |
+| superhot_vr | 2e22f1de5aee | 0.7051 | 0.6952 | 0.7137 | 120 / 120 |
+| half_life_alyx | 530917952021 | 0.7001 | 0.7034 | 0.7048 | 113 / 120 |
+| beat_saber | a82a59857062 | 0.7030 | 0.6915 | 0.7118 | 120 / 120 |
+
+These are verification AUCs on the arm's own evaluation users, not the registered unit.
+
+**Dose, measured rather than assumed:** Across-XR supplies **16,798 of 655,247 training windows, 2.56 %**
+(Miami, through `build_sample_index` at the arm's settings). The registration said ≈ 16.7k of ≈ 780k, ≈ 2 %.
+The numerator was right and the denominator was not. Quote 2.6 %, against P3's 11.6 %.
+
+**Budget:** three of five selected epoch 120 of 120 and none stopped on patience. The P3 comparators are
+censored the same way (their rows: best_epoch 113-120 of 120, none stopped early), so the categorical
+convergence check reads *matched*: neither arm stopped early. Any breadth−P3 delta still carries a
+shared censoring term, and the registered cap companion stays the follow-up for the −0.03..0.00 region.
+
+**The alignment harness could not score this arm, and three edits make it do so** (`across_xr_alignment.py`;
+docs/acceptance only, so `code_identity` does not move):
+
+1. The gate built its evaluation set from `test_dirs` alone. This arm has none: it evaluates through
+   `test_on_excluded` over `data_dirs`. The empty list loaded 0 users and died with the bare
+   ZeroDivisionError. It now builds from `data_dirs` with the swap flipped, as the pipeline does.
+2. That path seeds the pair draw with part 2, not part 4. With part 4 the gate failed at 1.9e-3; with
+   part 2 it reproduced **0.706772 at 0.0e+00, 65 users** (Miami, both found there).
+3. The population assertion `eval_users == 17` was P3's. It now expects the excluded users that lie
+   under the evaluation directories: 17 for P3, 65 here. The 17-user guard on the *scoring*
+   population (Schach's users 32-48) is untouched.
+
+**And a fourth, found by the regression, which matters more than the three.** Omitting
+`--normalizer-dataset` on a LOAO-trained checkpoint does not fail. The gate still passes, because it
+loads the checkpoint's own corpus name, but scoring falls back to a target fit. On the P3 superhot
+checkpoint that moved **A1 0.283 → 0.250 and A2′−A1 from +0.003 to +0.058**, a false positive that
+would have read as alignment working. The harness now **refuses** a checkpoint holding Across-XR
+statistics under a name other than the one being scored, and refuses a `--normalizer-dataset` the
+checkpoint does not hold. Verified on AVALON, CPU, both directions:
+
+| case | result |
+|---|---|
+| P3 superhot, no flag | refuses, rc=1 |
+| P3 superhot, wrong LOAO name | refuses, rc=1 |
+| P3 superhot, right flag | gate 2.8e-5; output **identical** to the pre-edit harness on this machine |
+| zero-shot seed 1, no flag (stats under the scored name) | gate 2.0e-5; A0/A1/A2/A2′/A2null **digit-identical** to the committed file |
+
+Against the committed P3 file (written on Miami), every arm used here reproduces to the digit. The
+unrestricted 128-d fit (A2full) and the dimension curve at m=24/32 differ by up to 0.049 and 0.003. The
+pre-edit harness gives the same values on AVALON as the edited one, so this is a machine difference in a
+full SVD over at most 32 correspondences, where most of the basis is arbitrary. It predates this
+amendment, and no registered quantity here uses A2full.

@@ -166,12 +166,30 @@ class Corpus:
         # copy named CrossApplicationXR_LOAO_<X>; its normaliser holds statistics under that
         # name. Scoring is always on the full corpus, so the name is overridden here to apply
         # the checkpoint's OWN training-fitted statistics rather than a target fit.
+        # A checkpoint that TRAINED on Across-XR (under any name) must be scored with its own
+        # statistics for that corpus. Omitting --normalizer-dataset falls back to a target fit with
+        # no error: on the P3 superhot checkpoint that moved A1 0.283 -> 0.250 and A2'-A1 from
+        # +0.003 to +0.058 (a false positive), gate still passing, because the gate loads the
+        # checkpoint's own corpus name. Measured on AVALON 2026-09-24. So refuse, and refuse a
+        # name the checkpoint does not hold (a typo would target-fit the same way).
+        trained_names = sorted(((ck.get("normalizer") or {}).get("statistics") or {}).keys())
+        trained_axr = [n for n in trained_names if n.startswith("CrossApplicationXR")]
+        if normalizer_dataset and normalizer_dataset not in trained_names:
+            raise SystemExit(f"--normalizer-dataset {normalizer_dataset} is not in this checkpoint's "
+                             f"normaliser ({trained_names}); it would silently target-fit")
         if normalizer_dataset:
             index.dataset_names = [normalizer_dataset]
+        # the zero-shot arms hold statistics under the scored corpus's own name and need no flag
+        applied = sorted(set(index.dataset_names))
+        if trained_axr and not set(applied) <= set(trained_names):
+            raise SystemExit(f"checkpoint holds Across-XR statistics under {trained_axr} but would be scored "
+                             f"as {applied}; pass --normalizer-dataset {trained_axr[0]} or its Across-XR "
+                             f"windows are target-fitted")
         normalizer = ChannelNormalizer.from_state(ck.get("normalizer"), unseen="target_fit")
         if normalizer.enabled:
             quiet(normalizer.transform, index)
         self.unseen_policy = dict(normalizer.unseen_datasets)
+        assert not (trained_axr and self.unseen_policy), f"Across-XR-trained checkpoint target-fitted: {self.unseen_policy}"
 
         # user id from the directory name; application from the sorted CSV list, which is
         # what session_ids enumerate (only loaded files - asserted to be all five).
@@ -349,19 +367,35 @@ def gate(ckpt_path: str, device) -> dict:
         return local
     if es.get("test_dirs"):
         es["test_dirs"] = [_here(d) for d in es["test_dirs"]]
+    if es.get("data_dirs"):
+        es["data_dirs"] = [_here(d) for d in es["data_dirs"]]
     if es.get("exclude_users"):
         es["exclude_users"] = [_here(d) for d in es["exclude_users"]]
-    for d in es.get("test_dirs") or []:
+    # Two evaluation-set shapes exist and the pipeline seeds them differently (dataset.py):
+    #   test_dirs given            -> SiameseDataset(test_dirs, ..., seed part 4)        - P3 and the transfer arms
+    #   no test_dirs, test_on_excluded -> SiameseDataset(data_dirs, swap flipped, seed part 2) - the exposure-breadth arm
+    # Building the second shape from an empty test_dirs loads 0 users and dies with the bare
+    # ZeroDivisionError this repo documents; building it with seed part 4 draws different pairs and
+    # fails the gate at ~2e-3 - both found by Miami on the exposure-breadth arm, 2026-09-24.
+    on_excluded = bool(es.get("test_on_excluded", False))
+    if es.get("test_dirs"):
+        eval_dirs, seed_part = list(es["test_dirs"]), 4
+    elif on_excluded and es.get("data_dirs"):
+        eval_dirs, seed_part = list(es["data_dirs"]), 2
+    else:
+        return ({"checkpoint": rel, "passed": False, "reason": "eval_split has neither test_dirs nor test_on_excluded over data_dirs"},
+                None, None)
+    for d in eval_dirs:
         if not os.path.isdir(d):
             return ({"checkpoint": rel, "passed": False,
                      "reason": f"corpus path does not resolve on this machine after remap: {d}"},
                     None, None)
     seed = int(ck.get("seed", row["seed"]))
-    swap = (not bool(es.get("swap_data", False))) if bool(es.get("test_on_excluded", False)) else bool(es.get("swap_data", False))
-    dataset = quiet(SiameseDataset, list(es["test_dirs"]), samples_per_user=int(row.get("samples_per_user") or 512),
+    swap = (not bool(es.get("swap_data", False))) if on_excluded else bool(es.get("swap_data", False))
+    dataset = quiet(SiameseDataset, eval_dirs, samples_per_user=int(row.get("samples_per_user") or 512),
                     sample_time=int(es["sample_time"]), sample_rate=int(es["sample_rate"]),
                     exclude_users=list(es.get("exclude_users") or []), swap_data=swap,
-                    seed=_seed_value(seed, 4), within_dataset_negatives=bool(row.get("within_dataset_negatives", True)),
+                    seed=_seed_value(seed, seed_part), within_dataset_negatives=bool(row.get("within_dataset_negatives", True)),
                     channels=ck.get("channels", "full"), resample=es.get("resample", "nearest"),
                     window_stride=es.get("window_stride"), cross_session_positives=bool(row.get("cross_session_positives", True)),
                     encoding=es.get("encoding", "raw"))
@@ -376,6 +410,12 @@ def gate(ckpt_path: str, device) -> dict:
     result = {"checkpoint": rel, "run_id": row["run_id"], "seed": seed, "device": str(device),
               "recorded": row["selected_test_auc"], "rescored": metrics["auc"], "gap": gap,
               "tolerance": tol, "eval_users": dataset.num_users,
+              # the excluded users that lie UNDER the evaluation directories - the set test_on_excluded
+              # actually keeps. P3 excludes 40 paths of which 17 sit under its test_dirs (the other 23
+              # were BOXRR users excluded before drop_users existed); the exposure-breadth arm 65 of 65.
+              "exclude_users_seen": ([u for u in (es.get("exclude_users") or [])
+                                      if any(os.path.dirname(str(u).rstrip("/")) == d.rstrip("/") for d in eval_dirs)]
+                                     if on_excluded else []),
               "position_lookup_recorded": row.get("position_lookup_auc"),
               "position_lookup_rescored": metrics.get("position_lookup_auc"), "passed": gap <= tol}
     print(f"gate {rel}: recorded {row['selected_test_auc']:.6f} rescored {metrics['auc']:.6f} "
@@ -397,10 +437,14 @@ def run_seed(ckpt_path: str, device, rng: np.random.Generator, skip_gate: bool =
         g, model, ck = gate(ckpt_path, device)
         if not g["passed"]:
             return {"gate": g}
-        # test_dirs plus test_on_excluded=true keeps ONLY the excluded users under test_dirs;
-        # an exclude path that points anywhere else loads 0 users and the only tell is a
-        # stdout line Hydra does not capture. Exactly Schach's 17, or nothing is read.
-        assert g["eval_users"] == 17, f"the gate loader saw {g['eval_users']} users, not 17"
+        # The gate's population is the checkpoint's OWN evaluation set, which is the excluded
+        # users when test_on_excluded is set: exactly 17 for P3 (Schach's test users), 65 for
+        # the exposure-breadth arm (48 Nymeria + 17 Across-XR). An exclude path that points
+        # anywhere else loads fewer users, and the only other tell is a stdout line Hydra does
+        # not capture. The "exactly 17" guard on the SCORING population lives in Corpus, which
+        # asserts the test split is users 32-48 - that is where 17 belongs, not here.
+        expected = len(g.get("exclude_users_seen") or []) or 17
+        assert g["eval_users"] == expected, f"the gate loader saw {g['eval_users']} users, not the {expected} its eval_split excludes under its evaluation dirs"
     t0 = time.time()
     corpus = Corpus(ck, device, model, normalizer_dataset=normalizer_dataset)
     print(f"  embedded {len(corpus.embeddings)} windows ({corpus.encoding}, {corpus.sample_time}s, "
