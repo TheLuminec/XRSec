@@ -243,6 +243,7 @@ def score_model_group(emb, window_user, window_app, users, game_a, game_b, rng):
         if n_gal > len(users):
             continue
         per_dir = []
+        by_user = defaultdict(list)   # user -> per-user rank-1 over every draw and direction
         for gal_game, probe_game in ((game_a, game_b), (game_b, game_a)):
             vals, pooled = [], []
             for _ in range(DRAWS):
@@ -253,11 +254,17 @@ def score_model_group(emb, window_user, window_app, users, game_a, game_b, rng):
                 per_user = rank1_per_user(gallery, emb[np.concatenate(p_rows)], probe_user, n_gal)
                 vals.append(float(per_user.mean()))
                 pooled.append(float(np.average(per_user, weights=[len(r) for r in p_rows])))
+                for u, v in zip(pool, per_user):
+                    by_user[u].append(float(v))
             per_dir.append((float(np.mean(vals)), float(np.mean(pooled))))
         out[n_gal] = {"mean": (per_dir[0][0] + per_dir[1][0]) / 2,
                       "a_to_b": per_dir[0][0], "b_to_a": per_dir[1][0],
                       "window_pooled": (per_dir[0][1] + per_dir[1][1]) / 2,
                       "chance": 1.0 / n_gal, "n_users": len(users)}
+        if n_gal == len(users):
+            # the whole group is the gallery on every draw, so a per-user figure is well defined
+            # (mean over both directions); this is what a paired, user-bootstrapped comparison uses
+            out[n_gal]["per_user"] = {u: float(np.mean(by_user[u])) for u in sorted(by_user)}
     return out
 
 
