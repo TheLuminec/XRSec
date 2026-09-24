@@ -1110,6 +1110,19 @@ optimism of the validation-user protocol.
 lookup under an in-domain weight, and a leave-one-corpus-out weight (0.15-0.35, never the
 target's labels) leaves every tier-1 corpus at or below it.
 
+### Test-time adaptation of the embedding: centring is worth +0.01 to +0.03, CORAL nothing (2026-09-24)
+
+Label-free, on the e240 pair, every unseen corpus, the pipeline's own pairs and embeddings, gate exact
+(`docs/acceptance/tta_transfer_REGISTERED.md`). Subtracting the target corpus's mean embedding buys
+**+0.01 to +0.03 on every tier-1 corpus and both cross-application corpora, on both checkpoints** -
+pooled seated +0.018 / +0.009, inside the registered band; fitted on every target window, so an upper
+bound of the route. CORAL (second-moment matching to the training corpus) is nil to harmful, -0.12 on
+PanoSaliency. So the embedding cloud is already roughly where it needs to be and the seated gap is the
+corpora, not distribution shift. **Instrument note worth more than the number:** the pooled line was
+first computed with ONE mean over all seven corpora - not what a device does - and read -0.022, the
+literal falsifier; per-corpus centring on the same pooled loader is the registered operation and reads
++0.018. A pooled variant of a per-target operation has to apply the per-target constant.
+
 ### Yaw canonicalisation: predicted correctly per corpus, worth nothing pooled
 
 `encoding=yawc` (gravity-preserving yaw canonicalisation) seed-paired at 419 identities:

@@ -1716,3 +1716,10 @@ point-in-band / interval-straddling, falsifier excluded. Baselines identical acr
 seed. Registration Amendment 2; CLAUDE.md entry, plus the qualifier Miami raised: the control's
 "anti-identifying" residual is a property of the in-domain test set (0.472) and reads chance (0.506) on
 the LSO set - the sentence now carries its test set. Experiments 2 and 3 remain set up, awaiting the user.
+
+## From the Coordinator: experiment 3 closed - centring +0.01..+0.03 per corpus (pooled +0.018/+0.009, in band), CORAL nil; experiment 2 running on Miami - 2026-09-24
+
+Twenty gates exact. The pooled line as first computed (one mean over seven corpora) fired the literal
+falsifier and was the wrong operation; per-corpus centring on the pooled loader is the registered
+quantity and lands in band on both arms. Amendment 1 and a CLAUDE.md entry. Experiment 2's five runs are
+chained on Miami (synth_riders first), rows to follow.

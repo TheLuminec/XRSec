@@ -53,17 +53,26 @@ def main():
         model, ck = load_checkpoint(str(ckpt), DEVICE, 200, return_checkpoint=True); seed = int(ck.get("seed", 1))
         Es = source_embeddings(model, ck, seed); entry = results.setdefault(arm, {}); entry.update(checkpoint="/".join(ckpt.resolve().parts[-4:]), source_windows=int(Es.shape[0]), corpora={})
         corpora = [c for c in SEATED + CROSS_APP if (PD / c / "users").is_dir()]
-        targets = [(c, [PD / c / "users"]) for c in corpora if not only or c == only] + ([("SEATED_SEVEN_POOLED", [PD / c / "users" for c in SEATED])] if not only else [])
+        targets = [(c, [PD / c / "users"]) for c in corpora if not only or c == only] + ([("SEATED_SEVEN_POOLED", [PD / c / "users" for c in SEATED])] if not only or only == "SEATED_SEVEN_POOLED" else [])
         for name, dirs in targets:
             t0 = time.time(); ld = loader(ck, dirs, seed); ds = ld.dataset
             _, _, m = evaluate(model, ld, nn.BCEWithLogitsLoss(), DEVICE, return_metrics=True)
             E = embed_all(model, ds.sample_index.samples)
             none = cosine_auc(E, ds); gate_gap = abs(none - float(m["auc"]))
             centre = cosine_auc(E - E.mean(0, keepdim=True), ds); cor = cosine_auc(coral(E, Es), ds)
+            # per-corpus centring, the operation a device performs (one target corpus at a time): on a
+            # single corpus it equals `centre`; on the pooled loader it subtracts each window's OWN
+            # corpus mean rather than one mean over all seven (the registered pooled line, as first
+            # computed, applied the wrong constant to every corpus - an instrument fact, 2026-09-24)
+            ids = ds.sample_index.window_dataset_ids
+            Ec = E.clone()
+            for d_id in ids.unique().tolist():
+                sel = ids == d_id; Ec[sel] = E[sel] - E[sel].mean(0, keepdim=True)
+            centre_pc = cosine_auc(Ec, ds)
             rec = {"users": int(ds.sample_index.num_users), "pairs": int(ds.manifest["labels"].numel()), "evaluate_auc": float(m["auc"]),
-                   "none": none, "gate_gap": gate_gap, "gate_passed": gate_gap <= 1e-6, "centre": centre, "coral": cor,
-                   "d_centre": centre - none, "d_coral": cor - none, "seconds": round(time.time() - t0, 1)}
+                   "none": none, "gate_gap": gate_gap, "gate_passed": gate_gap <= 1e-6, "centre": centre, "centre_per_corpus": centre_pc, "coral": cor,
+                   "d_centre": centre - none, "d_centre_per_corpus": centre_pc - none, "d_coral": cor - none, "seconds": round(time.time() - t0, 1)}
             entry["corpora"][name] = rec; OUT.write_text(json.dumps(results, indent=1))
-            print(f"  {arm:9s} {name:44s} none {none:.4f} (gate gap {gate_gap:.1e} {'PASS' if rec['gate_passed'] else 'FAIL'}) | centre {centre:.4f} ({centre-none:+.4f}) | CORAL {cor:.4f} ({cor-none:+.4f})", flush=True)
+            print(f"  {arm:9s} {name:44s} none {none:.4f} (gate gap {gate_gap:.1e} {'PASS' if rec['gate_passed'] else 'FAIL'}) | centre {centre:.4f} ({centre-none:+.4f}) | per-corpus centre {centre_pc:.4f} ({centre_pc-none:+.4f}) | CORAL {cor:.4f} ({cor-none:+.4f})", flush=True)
 
 if __name__ == "__main__": main()
