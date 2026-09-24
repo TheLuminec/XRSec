@@ -46,3 +46,16 @@ Which outcome is strong: the second row's falsifier — it would say Nymeria's 2
 what application exposure supplies, which collapses "task breadth" into one lever with two sources; the
 first row's falsifier would say scale interferes. Five runs, one seed each (the unit is the application,
 as in P3); ~90 min each on Miami. Not launched: this registration and the generator are the setup.
+
+## Amendment 1 — 2026-09-24, launched on Miami; a leak check that was wrong on its own key
+
+Five runs chained, synth_riders first; composed config asserted before each launch; lists match on all
+five (training identities 3,072 = BOXRR 2,848 + alyx 60 + Nymeria 141 + Across-XR 23; dropB+23
+`42100430b1a7`, excl `a6db3a689da2`); LOAO corpora rebuilt with the builder's own assertions. **A leak
+check compared excluded and validation users by basename and fired on every config: the three "matches"
+were who_is_alyx users numbered 32, 33, 34 — two corpora with numeric user directories compared on the
+wrong key.** At path level there is no overlap anywhere. The same basename-collision trap that bit the
+checkpoint copy, now inside the check written to catch a leak; recorded so the next check compares
+paths. Miami's runner also refuses if any *other* LOAO tree appears in a composed config — five corpora
+differing only in which application is absent is exactly the shape where the wrong one completes with
+a plausible number for the wrong cell.
