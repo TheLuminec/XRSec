@@ -1,0 +1,167 @@
+{
+ "synth_riders": {
+  "checkpoint": "exchange_from_miami/exposure_breadth/runs/2026-09-24/00-01-39_train/checkpoints/exposure-breadth-synth-riders_multi4_bilstm_10s_20hz_emb128_train.pth",
+  "hypotheses": {
+   "none_removed": {
+    "max_abs_gap": 0.018546000123023987,
+    "windows": 20896
+   },
+   "superhot_vr": {
+    "max_abs_gap": 0.04088820517063141,
+    "windows": 16494
+   },
+   "half_life_alyx": {
+    "max_abs_gap": 0.045197680592536926,
+    "windows": 16197
+   },
+   "beat_saber": {
+    "max_abs_gap": 0.004397448152303696,
+    "windows": 16484
+   },
+   "synth_riders": {
+    "max_abs_gap": 0.0,
+    "windows": 16798
+   },
+   "social_vr": {
+    "max_abs_gap": 0.01552031934261322,
+    "windows": 17611
+   }
+  },
+  "matches": [
+   "synth_riders"
+  ],
+  "verdict": "CLEAN: matches only its own hold-out"
+ },
+ "social_vr": {
+  "checkpoint": "exchange_from_miami/exposure_breadth/runs/2026-09-24/01-35-14_train/checkpoints/exposure-breadth-social-vr_multi4_bilstm_10s_20hz_emb128_train.pth",
+  "hypotheses": {
+   "none_removed": {
+    "max_abs_gap": 0.006208330392837524,
+    "windows": 20896
+   },
+   "superhot_vr": {
+    "max_abs_gap": 0.02781173586845398,
+    "windows": 16494
+   },
+   "half_life_alyx": {
+    "max_abs_gap": 0.029677361249923706,
+    "windows": 16197
+   },
+   "beat_saber": {
+    "max_abs_gap": 0.017953112721443176,
+    "windows": 16484
+   },
+   "synth_riders": {
+    "max_abs_gap": 0.01552031934261322,
+    "windows": 16798
+   },
+   "social_vr": {
+    "max_abs_gap": 0.0,
+    "windows": 17611
+   }
+  },
+  "matches": [
+   "social_vr"
+  ],
+  "verdict": "CLEAN: matches only its own hold-out"
+ },
+ "superhot_vr": {
+  "checkpoint": "exchange_from_miami/exposure_breadth/runs/2026-09-24/03-08-54_train/checkpoints/exposure-breadth-superhot-vr_multi4_bilstm_10s_20hz_emb128_train.pth",
+  "hypotheses": {
+   "none_removed": {
+    "max_abs_gap": 0.022342205047607422,
+    "windows": 20896
+   },
+   "superhot_vr": {
+    "max_abs_gap": 0.0,
+    "windows": 16494
+   },
+   "half_life_alyx": {
+    "max_abs_gap": 0.02736518532037735,
+    "windows": 16197
+   },
+   "beat_saber": {
+    "max_abs_gap": 0.043320998549461365,
+    "windows": 16484
+   },
+   "synth_riders": {
+    "max_abs_gap": 0.04088820517063141,
+    "windows": 16798
+   },
+   "social_vr": {
+    "max_abs_gap": 0.02781173586845398,
+    "windows": 17611
+   }
+  },
+  "matches": [
+   "superhot_vr"
+  ],
+  "verdict": "CLEAN: matches only its own hold-out"
+ },
+ "half_life_alyx": {
+  "checkpoint": "exchange_from_miami/exposure_breadth/runs/2026-09-24/04-42-15_train/checkpoints/exposure-breadth-half-life-alyx_multi4_bilstm_10s_20hz_emb128_train.pth",
+  "hypotheses": {
+   "none_removed": {
+    "max_abs_gap": 0.02665168046951294,
+    "windows": 20896
+   },
+   "superhot_vr": {
+    "max_abs_gap": 0.02736518532037735,
+    "windows": 16494
+   },
+   "half_life_alyx": {
+    "max_abs_gap": 0.0,
+    "windows": 16197
+   },
+   "beat_saber": {
+    "max_abs_gap": 0.04763047397136688,
+    "windows": 16484
+   },
+   "synth_riders": {
+    "max_abs_gap": 0.045197680592536926,
+    "windows": 16798
+   },
+   "social_vr": {
+    "max_abs_gap": 0.029677361249923706,
+    "windows": 17611
+   }
+  },
+  "matches": [
+   "half_life_alyx"
+  ],
+  "verdict": "CLEAN: matches only its own hold-out"
+ },
+ "beat_saber": {
+  "checkpoint": "exchange_from_miami/exposure_breadth/runs/2026-09-24/06-15-32_train/checkpoints/exposure-breadth-beat-saber_multi4_bilstm_10s_20hz_emb128_train.pth",
+  "hypotheses": {
+   "none_removed": {
+    "max_abs_gap": 0.020978793501853943,
+    "windows": 20896
+   },
+   "superhot_vr": {
+    "max_abs_gap": 0.043320998549461365,
+    "windows": 16494
+   },
+   "half_life_alyx": {
+    "max_abs_gap": 0.04763047397136688,
+    "windows": 16197
+   },
+   "beat_saber": {
+    "max_abs_gap": 0.0,
+    "windows": 16484
+   },
+   "synth_riders": {
+    "max_abs_gap": 0.004397448152303696,
+    "windows": 16798
+   },
+   "social_vr": {
+    "max_abs_gap": 0.017953112721443176,
+    "windows": 17611
+   }
+  },
+  "matches": [
+   "beat_saber"
+  ],
+  "verdict": "CLEAN: matches only its own hold-out"
+ }
+}
