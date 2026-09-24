@@ -118,3 +118,88 @@ unrestricted 128-d fit (A2full) and the dimension curve at m=24/32 differ by up 
 pre-edit harness gives the same values on AVALON as the edited one, so this is a machine difference in a
 full SVD over at most 32 correspondences, where most of the basis is arbitrary. It predates this
 amendment, and no registered quantity here uses A2full.
+
+## Amendment 3 — 2026-09-24, the reading: exposure carries at scale, and holding an application out costs nothing measurable
+
+Read by `exposure_breadth_read.py`, committed at `35e2468` before any breadth number existed. Inputs: six
+Across-XR files (`2a5dc12`) and eight Questset files (`4e843c6`), every gate 0.0e+00 on the training GPU.
+Result: `exposure_breadth_read.json` (`7c713ca`). Rank-1, user bootstrap, scored by where the interval falls.
+One seed per X.
+
+**Regions named before reading** (the registration left them open): row 1 above +0.06 means "exceeds,
+report as such"; Questset −0.03..0 means "not resolved", and above +0.10 means "transfers, seed it".
+
+| row | measured | reading |
+|---|---|---|
+| 1. breadth-X − P3-X, X-cells, N=17 | **+0.097 [+0.069, +0.126]** | **above the +0.00..+0.06 band, whole interval**: exceeds as registered |
+| 2. breadth-X − Nymeria treatment, X-cells | **+0.112 [+0.083, +0.144]** | **in band** (≥ +0.03); the falsifier (≤ 0) is far away |
+| 3. control: breadth − C2-lo (3-seed mean), non-X cells | +0.020 [+0.003, +0.041] | mean within ±0.03, **interval straddles the +0.03 edge**: the control holds at the mean and is not fully contained |
+| 4. Questset: breadth (5 X) − zero-shot (3 seeds), 60 users, N=30 | **+0.062 [+0.042, +0.083]** | **straddles +0.05**: the mean sits in the "transfers, seed it" region, and the lower edge sits in the band. The falsifier (< −0.03) is excluded |
+
+X-cell levels per held-out X, breadth / P3 / treatment: superhot 0.336 / 0.223 / 0.237, alyx 0.337 / 0.231 /
+0.230, beat_saber 0.443 / 0.351 / 0.302, synth_riders 0.435 / 0.324 / 0.293, social_vr 0.286 / 0.224 / 0.215.
+Every X moves the same way. The smallest gains are social_vr's (+0.062 / +0.071).
+
+**Row 1 varies two things, as registered.** Breadth against P3 is 495 → 3,072 identities *and* Nymeria's 141
+together, so "exceeds" cannot be attributed to either alone. The unregistered diagnostics below are what
+bound it.
+
+**Diagnostics, unregistered and labelled so.** They were computed after the rows, from the same committed
+files, with the same bootstrap:
+
+| contrast, X-cells | measured | what it says |
+|---|---|---|
+| breadth (X never seen) − C2-lo (X seen, 3 seeds, 3,095 identities) | **−0.007 [−0.038, +0.028]** | at scale, holding the fifth application out costs nothing measurable |
+| breadth − zero-shot seed 1 (no Across-XR, no Nymeria) | +0.137 [+0.102, +0.173] | exposure to four applications carries to the fifth, at scale |
+| Nymeria treatment − zero-shot seed 1 | +0.025 [−0.007, +0.057] | Nymeria alone moves Across-XR little, consistent with arm B's null on the seated corpora |
+
+P3 at 495 identities paid **−0.036 [−0.054, −0.018]** against C2-hi for the same hold-out, pooled over the
+five X (`across_xr_alignment_p3.json`). So the
+sentence this supports is: **at 3,072 identities, exposure to four applications substitutes for the fifth
+within the precision of one seed**, and at 495 it did not. The P3 note "identity count is not flat with
+exposure" is the same mechanism, seen from the hold-out side.
+
+**A no-cost hold-out reads exactly like a leak, so a leak was excluded before this was written.** Each
+checkpoint's stored normaliser statistics were recomputed under six hypotheses: each application removed,
+or none. All five match only their own hold-out at 0.0, and every other hypothesis, "none removed"
+included, sits at 4.4e-3 or more. The P3 checkpoints were the positive control and read identically
+(`loao_leak_check.py`, `loao_leak_check_{p3,exposure_breadth}.json`). Miami's filename, session-set and
+inode checks on its own corpora agree. This rests on the checkpoints, not on either node's account.
+
+**Qualifications that travel with the rows.**
+- One seed per X, and five X.
+- 3 of 5 runs selected epoch 120 of 120, as did the P3 comparators.
+- Row 2's treatment has no Across-XR statistics and is normalised by a target fit, while breadth uses its own training statistics. This is the same convention every zero-shot comparator in the programme uses.
+- Row 4 mixes Nymeria and Across-XR exposure. The treatment's Questset score separates them; see the decomposition below.
+- Questset is one sitting per user.
+
+**The Questset A1 arm (`questset_arms_REGISTERED_miami.md`) is settled by the same files.** Zero-shot,
+three seeds, GPU, both directions:
+
+| group | N=17 (chance 0.059) | N=30 (chance 0.033) |
+|---|---|---|
+| 1, Beat Saber / Cooking | 0.179 (0.199 / 0.168 / 0.170) | 0.126 |
+| 2, Medal of Honor / Forklift | 0.217 (0.215 / 0.223 / 0.213) | 0.147 |
+
+At N=17 both groups are **inside the registered 0.15–0.40 band**, so the Across-XR zero-shot result
+survives a change of corpus. The falsifier (< 0.10) does not fire at either N. At N=30 both sit in the
+0.10–0.15 region the registration calls "weakened". That registration gave one band for both gallery sizes
+and never scaled it for the lower chance level at N=30, so the N=30 reading is reported as it falls and
+not reinterpreted. **Group 2, where every static cue is at chance** (height lookup 0.033 at N=30), reads
+3.7× chance at N=17 zero-shot. That figure is behavioural by measurement.
+
+CPU against GPU on zero-shot seeds 1 and 3: every Questset cell within 5e-4.
+
+**Row 4 decomposed: Across-XR exposure carries to a fully unseen corpus, and Nymeria does not.** This is an
+unregistered diagnostic. Nymeria treatment seed 1 was scored on Questset on Miami's GPU (gate 0.0e+00,
+`exposure_breadth_questset_treatment_s1_gpu.json`, `6f171d2`). Per user at N=30, 60 users:
+
+| contrast | measured |
+|---|---|
+| treatment − zero-shot (Nymeria's 141 identities for 141 BOXRR) | +0.006 [−0.014, +0.026] |
+| breadth − treatment (Across-XR 0–22 for 23 BOXRR, four applications, 2.6 % of windows) | **+0.056 [+0.039, +0.073]** |
+
+The second contrast swaps exactly 23 identities, so it isolates exposure to four other VR applications, and
+it moves Questset titles that appear in no training corpus. Qualifications: one treatment seed, and four of
+the five breadth checkpoints include Beat Saber in their exposure, which Questset group 1 also contains. The
+A3 covered/uncovered split is the check for that and has not been run.
