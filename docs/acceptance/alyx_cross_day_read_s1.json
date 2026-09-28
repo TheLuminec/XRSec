@@ -1,0 +1,58 @@
+{
+ "refused": [
+  [
+   "breadth_synth-riders",
+   null,
+   "gate gap 0.001739274425619497 > 0.001 on cpu ()"
+  ],
+  [
+   "breadth_social-vr",
+   null,
+   "gate gap 0.0015718484912398134 > 0.001 on cpu ()"
+  ]
+ ],
+ "treatment": {
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "units": 43,
+  "cross_day": {
+   "mean": 0.4825710855320792,
+   "lo": 0.41479497756602024,
+   "hi": 0.5505207394123169
+  },
+  "same_day": {
+   "mean": 0.7425162414597152,
+   "lo": 0.7007415227476356,
+   "hi": 0.7832866649524196
+  },
+  "cost": {
+   "mean": -0.2599451559276361,
+   "lo": -0.34497987525851176,
+   "hi": -0.18095822542908568
+  },
+  "verdict_level": "BAND: the learned component identifies people across days",
+  "verdict_cost": "interval spans regions (lo -0.345, hi -0.181); the mean sits in the partial region"
+ },
+ "breadth_minus_treatment_descriptive": {
+  "seed1": {
+   "checkpoints_per_user": [
+    3
+   ],
+   "breadth_cross_day": 0.40791802169883334,
+   "breadth_same_day": 0.7621010901389751,
+   "breadth_cost": {
+    "mean": -0.35418306844014175,
+    "lo": -0.5216474550035831,
+    "hi": -0.19480477991829875
+   },
+   "cross_day_breadth_minus_treatment": {
+    "mean": -0.018157171864375425,
+    "lo": -0.04590992622865985,
+    "hi": 0.008028619914831147
+   }
+  }
+ }
+}
