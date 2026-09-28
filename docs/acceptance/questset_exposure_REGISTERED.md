@@ -1,0 +1,43 @@
+# Reverse-direction exposure: does multi-application exposure from Questset carry to Across-XR? — REGISTERED 2026-09-28, Coordinator; not run
+
+**Question.** Exposure to four Across-XR applications carried to Questset titles in no training
+corpus: +0.056 [+0.039, +0.073] over the Nymeria treatment (`exposure_breadth_REGISTERED.md`,
+Amendment 3). If the lever is "people recorded in several applications" rather than something specific
+to Across-XR (its lab, rig, population or application mix), exposure from another corpus should carry
+the other way. User decision, 2026-09-28.
+
+**Arm Q2.** The Nymeria treatment, seed-matched, with Questset group 2 swapped in for the last 30 BOXRR
+training users, post-draw. Group 2 is 30 people × Medal of Honor + Forklift Simulator, titles in no
+corpus we train on.
+- Validation users and the evaluation set (48 held-out Nymeria) are the treatment's own, so the epoch is selected on the same people.
+- Training identities stay 3,072.
+- Questset group 1 is in no training set.
+- Generator: `questset_exposure_lists.py`. Corpus: `build_questset_subset.py`, which builds `Questset_g2` as symlinks, so its normaliser statistics sit under their own name.
+- Seeds 1, 2 and 3: three runs on Miami under `gated_launch.sh`, code identity `af7cf72022`.
+- Dose: 13,412 windows, about 2.1 % of training windows, against breadth's 2.56 %. The exact figure comes from Miami's loader.
+
+**Differences from the breadth arm, all stated before the run.** Each person here contributes 2
+applications, not 4. There are 30 people, not 23, from a different lab. So even if the lever is general,
+a smaller effect than breadth's is expected. **The falsifier is "no effect", not "smaller".**
+
+**Scoring,** on the training GPU:
+- Across-XR: the alignment harness on all 20 ordered cross-application cells, Schach's users 32-48, N=17. No normaliser flag: Q2 holds no Across-XR statistics, so Across-XR is target-fitted exactly as for the treatment.
+- Questset group 1: the Questset harness at N=30, per user. Q2's statistics sit under `Questset_g2`, so `Questset` is target-fitted, as for the treatment.
+- Every checkpoint gate must pass first, on its own 48 Nymeria users.
+
+**Registered outcomes.** Seed-paired against the treatment, per-user differences averaged over seeds,
+user bootstrap. Each row is scored by where the interval falls.
+
+| row | band | falsifier | landing between means |
+|---|---|---|---|
+| 1 (primary): Q2 − treatment, Across-XR A1, all 20 cells, N=17 | +0.02..+0.08: exposure carries across corpora in both directions | whole interval < 0: Questset exposure does not carry; the Across-XR result is specific to that corpus | 0..+0.02 or straddling 0: not resolved; above +0.08: exceeds, report as such |
+| 2: Q2 − treatment, Questset group 1, N=30 (unseen people and titles, same rig) | +0.02..+0.10 | whole interval < 0 | 0..+0.02: not resolved; above +0.10: exceeds |
+| 3 (control): Q2 − treatment, the run's own 48 Nymeria users (`selected_test_auc`) | within ±0.02 in every seed: the swap left in-domain alone | outside ±0.02 in 2 or 3 seeds: the swap moved in-domain, so read row 1 with that | outside in exactly 1 of 3: noted as seed noise at that level, row 1 read as is |
+
+**Which outcome is strong.** Row 1's falsifier. It would say the breadth result belongs to Across-XR,
+and that changes what any acquisition, OpenNEEDS included, should be argued on. The band holding is
+weaker: it is also what "any 30 new people from a new corpus help Across-XR" predicts. That reading has
+one measured point against it: Nymeria's 141 people alone moved Across-XR by +0.025 [−0.007, +0.057].
+
+**Convergence check:** categorical against the treatment's own seeds. If Q2 stops on patience where the
+treatment did not, or the reverse, the difference carries a budget term.

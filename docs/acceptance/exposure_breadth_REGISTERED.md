@@ -203,3 +203,48 @@ The second contrast swaps exactly 23 identities, so it isolates exposure to four
 it moves Questset titles that appear in no training corpus. Qualifications: one treatment seed, and four of
 the five breadth checkpoints include Beat Saber in their exposure, which Questset group 1 also contains. The
 A3 covered/uncovered split is the check for that and has not been run.
+
+## Amendment 4 — 2026-09-28, registered before any new run: seeds 2 and 3, and the Beat Saber split
+
+The Questset row landed in the registered "seed it" region, and every row is one seed per X. User
+decision, 2026-09-28: seed it, and run the covered/uncovered split. Nothing below has been computed.
+
+**Seeds.** Breadth seeds 2 and 3 for all five X (`exposure_breadth_lists.py --seed 2|3`: the in-domain
+lists of that seed, the same +23 swap rule). Ten runs on Miami under `gated_launch.sh`, code identity
+`af7cf72022`. Each is scored like seed 1, on the training GPU: the alignment harness with
+`--normalizer-dataset CrossApplicationXR_LOAO_<X>`, then the Questset harness. The Nymeria treatment's
+seeds 2 and 3 are scored on Questset too, so every breadth-minus-treatment row is seed-paired.
+
+**The three-seed reading is the one quoted from here on.** The seed-1 reading in Amendment 3 stays in
+the file as it was. Aggregation: per X, the three seeds' per-user values are averaged, then the reading
+proceeds as `exposure_breadth_read.py` already does. The comparators are:
+- P3: seed 1 for every X, the only seed all five X have.
+- Treatment: seed-paired.
+- C2-lo: the three-seed mean.
+- Zero-shot: its three seeds.
+
+Rows and regions are those of Amendment 3, with one row added:
+
+| row | band | falsifier | landing between means |
+|---|---|---|---|
+| hold-out cost: breadth − C2-lo on the X-cells (C2-lo saw X) | −0.03..+0.03: at scale, four applications substitute for the fifth | whole interval < −0.05: holding X out does cost at scale, and one seed hid it | −0.05..−0.03: a small cost; above +0.03: breadth beats the arm that saw X, so read composition (Nymeria) first |
+
+**What seeds can and cannot buy.** On Across-XR the intervals are limited by 17 users, not by seeds
+(seed range 0.010 on C2-lo against user half-widths of about 0.03). So three seeds remove seed variance
+and will not narrow the Across-XR intervals much. Questset (60 users) is where they help. This is stated
+now so a still-straddling Across-XR row is not read as the seeds failing.
+
+**Beat Saber split (A3).** CPU only, from committed files: seed 1 now, and the three-seed files when they
+land. Breadth − treatment on Questset, per user at N=30, per group. The treatment is the comparator
+because it isolates the Across-XR exposure (Amendment 3's decomposition). Beat Saber reaches every arm
+through BOXRR, so what differs is Across-XR's Beat Saber sessions: four of five breadth checkpoints
+include them, and Questset group 1 contains the title.
+
+| row | band | falsifier | landing between means |
+|---|---|---|---|
+| group 2 gain (Medal of Honor / Forklift, in no training corpus) | whole interval > 0: exposure carries to titles no corpus covers | whole interval ≤ 0: the Questset gain is coverage | interval straddles 0: not resolved |
+| group 1 gain − group 2 gain (the A3 line) | interval upper ≤ +0.05: coverage adds at most +0.05 | interval lower > +0.05: coverage drives it | straddles +0.05: not resolved |
+
+The group-2 row is the decisive one, because the two groups also differ in people and posture. The
+beat_saber-held-out checkpoint (no Across-XR Beat Saber) against the other four on group 1 is reported
+descriptively. It is one checkpoint, so no band.
