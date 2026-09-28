@@ -1,0 +1,32 @@
+{
+ "seeds": [
+  1
+ ],
+ "groups": {
+  "1": {
+   "mean": 0.06297526001578836,
+   "lo": 0.041543056786157134,
+   "hi": 0.08555987955411137
+  },
+  "2": {
+   "mean": 0.04894574073673346,
+   "lo": 0.02338236226894004,
+   "hi": 0.07463703254737791
+  },
+  "1-2": {
+   "mean": 0.014029519279054901,
+   "lo": -0.020198288028058033,
+   "hi": 0.04688344444941216
+  }
+ },
+ "verdicts": {
+  "group2_gain": "BAND: whole interval > 0, exposure carries to titles no corpus covers",
+  "group1_minus_group2": "holds: interval upper <= +0.05, coverage adds at most +0.05"
+ },
+ "descriptive_beat_saber_heldout": {
+  "seed1": {
+   "beat_saber_heldout_gain": 0.057294749167321496,
+   "other_four_gain": 0.06439538772790508
+  }
+ }
+}
