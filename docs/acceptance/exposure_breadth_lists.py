@@ -44,6 +44,14 @@ def main():
         n_train = len(b_train) - len(drop_more) + len([u for u in users(CORPORA["who_is_alyx"]) if u not in set(V)]) \
                   + (236 - 48 - len(nym_val)) + len(AXR_TRAIN)
         assert len(w["exclude_users"]) == 48 + 17 and len(w["validation_users"]) == 1071 + 9 and len(w["drop_users"]) == 141 + 23
+        # the loader's own resolution (the check whose absence let Q2's 8-user draw through)
+        sys.path.insert(0, str(ROOT / "model")); from dataset import select_validation_users
+        resolved = select_validation_users(w["data_dirs"], list(w["exclude_users"]) + list(w["drop_users"]),
+                                           w["val_user_fraction"], a.seed, explicit=w["validation_users"])
+        assert sorted(resolved) == sorted(w["validation_users"]), f"loader draws {len(resolved)} validation users"
+        kept = [u for d in w["data_dirs"] for u in users(Path(d))
+                if u not in set(w["exclude_users"]) | set(w["drop_users"]) | set(resolved)]
+        assert len(kept) == 3072, f"{g}: loader would train on {len(kept)} identities"
         print(f"{g:16s} wrote {out.relative_to(ROOT)} | training identities {n_train} (BOXRR {len(b_train)-len(drop_more)}, alyx {len([u for u in users(CORPORA["who_is_alyx"]) if u not in set(V)])}, Nymeria {236 - 48 - len(nym_val)}, Across-XR 23) | dropB+23 {digest(dropB + drop_more)} | excl {digest(held + ax(AXR_TEST))}")
 
 if __name__ == "__main__": main()

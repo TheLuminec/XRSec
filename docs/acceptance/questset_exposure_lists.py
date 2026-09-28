@@ -30,7 +30,12 @@ def main():
     drop_more = b_train[-N_SWAP:]                                  # last 30 in sorted order, post-draw
     qs = PD / "Questset_g2" / "users"; assert qs.is_dir(), f"build_questset_subset.py first: {qs}"
     qs_users = users(qs); assert len(qs_users) == N_SWAP and all(Path(u).name.startswith("g2") for u in qs_users)
-    fixed = dict(FIXED, experiment_name="questset_exposure_g2")
+    # val_user_fraction=0: Questset_g2 has no explicit validation user, so at 0.25 the loader's
+    # fractional draw took 8 of its 30 people (Miami, 2026-09-28: trained on 3,064, selected on 1,079).
+    # Validation is built from the explicit list whenever it is non-empty (dataset.py), and the
+    # treatment never drew anything either (every corpus it trains on is covered), so 0 reproduces the
+    # treatment's 1,071 validation users exactly. The recorded fraction differs; it is inert there.
+    fixed = dict(FIXED, experiment_name="questset_exposure_g2", val_user_fraction=0.0)
     out = ROOT / "configs" / f"questset_exposure_g2_s{a.seed}.yaml"
     body = "defaults:\n  - config\n  - _self_\n\n" + f"seed: {a.seed}\n"
     for k, v in fixed.items():
@@ -43,6 +48,16 @@ def main():
     assert w["seed"] == a.seed and w["data_dirs"] == data_dirs
     assert len(w["exclude_users"]) == 48 and len(w["validation_users"]) == 1071 and len(w["drop_users"]) == 141 + N_SWAP
     assert not set(w["exclude_users"]) & set(w["validation_users"]) and not set(w["drop_users"]) & set(w["validation_users"])
+    # Resolve the split the way the LOADER does, not by this file's arithmetic (which is what missed
+    # the draw above): the validation set must be exactly V + nym_val and nothing may be drawn.
+    sys.path.insert(0, str(ROOT / "model"))
+    from dataset import select_validation_users
+    resolved = select_validation_users(w["data_dirs"], list(w["exclude_users"]) + list(w["drop_users"]),
+                                       w["val_user_fraction"], a.seed, explicit=w["validation_users"])
+    assert sorted(resolved) == sorted(V + nym_val), f"loader draws {len(resolved)} validation users, not 1071"
+    kept = [u for d in w["data_dirs"] for u in users(Path(d))
+            if u not in set(w["exclude_users"]) | set(w["drop_users"]) | set(resolved)]
+    assert len(kept) == 3072, f"loader would train on {len(kept)} identities"
     alyx_train = [u for u in users(CORPORA["who_is_alyx"]) if u not in set(V)]
     n_train = len(b_train) - len(drop_more) + len(alyx_train) + (236 - 48 - len(nym_val)) + len(qs_users)
     assert n_train == 3072, n_train

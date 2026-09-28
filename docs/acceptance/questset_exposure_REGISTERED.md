@@ -41,3 +41,29 @@ one measured point against it: Nymeria's 141 people alone moved Across-XR by +0.
 
 **Convergence check:** categorical against the treatment's own seeds. If Q2 stops on patience where the
 treatment did not, or the reverse, the difference carries a budget term.
+
+## Amendment 1 — 2026-09-28, an instrument fact found before any row existed: the loader drew 8 validation users from Questset_g2
+
+Miami stopped seed 1 at 40 minutes and voided it: no row written, marker `.void` with the reason. The
+loader printed 3,064 training identities and 1,079 validation users, against the treatment's 3,072 and
+1,071. Mechanism (`dataset.select_validation_users`): a corpus with no explicit validation user enters the
+`val_user_fraction` draw. This generator pinned the treatment's 1,071, all BOXRR, alyx and Nymeria, and
+named none from Questset_g2. So at 0.25 the loader drew round(30 × 0.25) = 8 of the 30: g2o1u10, g2o1u11,
+g2o2u01, g2o2u03, g2o2u06, g2o2u08, g2o2u12, g2o2u14. The same 8 were drawn at every seed. Reproduced on
+AVALON from the composed config.
+
+**Fix: `val_user_fraction=0` in this arm's configs.** The validation set is built from the explicit list
+whenever that list is non-empty, and the fractional draw only runs above 0. So the arm now validates on
+exactly the treatment's 1,071 and trains on all 30 Questset people, 3,072 in total. The treatment never
+drew anything either, because every corpus it trains on is covered by its explicit list. The recorded
+`val_user_fraction` therefore differs from the treatment's 0.25, and it is inert there.
+
+**Why the registration's own check missed it:** the generator asserted counts from its own list
+arithmetic, and that arithmetic never passes through the loader's function. Both generators, this one
+and `exposure_breadth_lists.py`, now resolve the split with `select_validation_users` itself. They assert
+the validation set equals the pinned list and the training count is 3,072. The check was verified both
+ways: at 0.25 it reports the 8 drawn users and 3,064; at 0 it reports none and 3,072. All ten breadth
+configs pass unchanged, which confirms the breadth arm was never affected. Miami's chain now runs the
+same resolution before each launch. **The general form: a count asserted by the code that wrote the
+config is a claim about the writer, not about the reader.** Only the loader's own function says what the
+run will train on.
