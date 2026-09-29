@@ -248,3 +248,49 @@ include them, and Questset group 1 contains the title.
 The group-2 row is the decisive one, because the two groups also differ in people and posture. The
 beat_saber-held-out checkpoint (no Across-XR Beat Saber) against the other four on group 1 is reported
 descriptively. It is one checkpoint, so no band.
+
+## Amendment 5 — 2026-09-29, the three-seed reading, and a correction to Amendment 3's decomposition
+
+`exposure_breadth_read3.py` imports the regions, verdicts and bootstrap of the committed seed-1 script.
+It was verified to reproduce all four seed-1 means exactly before use. Its first attempt did not: the
+seed restriction under test also restricted C2-lo's seeds, which are fixed at three. That coupling was
+found and removed. 15 breadth checkpoints, every gate 0.0e+00 on the training GPU. Treatment seeds 2 and
+3 were scored on Across-XR on AVALON's CPU, with gates at 4.0e-5 and 9.5e-4 under the harness's 2e-3; the
+registration asked for them on Questset only, which is recorded as my omission. Result
+`exposure_breadth_read3.json` (`93eac4b`).
+
+| row | seed 1 | **three seeds** | reading |
+|---|---|---|---|
+| breadth − P3, X-cells | +0.097 [+0.069, +0.126] | **+0.088 [+0.064, +0.113]** | above the +0.00..+0.06 band, whole interval: exceeds |
+| breadth − treatment (seed-paired), X-cells | +0.112 [+0.083, +0.144] | **+0.108 [+0.081, +0.136]** | band |
+| control: breadth − C2-lo, non-X cells | +0.020 [+0.003, +0.041] | +0.015 [−0.002, +0.033] | mean within ±0.03; interval still reaches the +0.03 edge |
+| hold-out cost: breadth − C2-lo, X-cells (new) | −0.007 | **−0.016 [−0.043, +0.014]** | falsifier (< −0.05) excluded; interval spans "small cost" and the band, mean in the band |
+| Questset: breadth (15) − zero-shot (3) | +0.062 [+0.042, +0.083] | **+0.056 [+0.037, +0.076]** | still straddles +0.05: band at the lower edge, "seed it" at the mean |
+
+Per X, three seeds: synth_riders 0.435 / 0.368 / 0.369. Its seed-1 value was the high draw, which is why
+the seed-1 hold-out cost read smaller.
+
+**Beat Saber split, three seeds (`exposure_breadth_a3_s123.json`):**
+- Group 2 (titles no corpus covers): breadth − treatment **+0.020 [+0.003, +0.038]**. Whole interval above 0, so **band**: the gain is not coverage.
+- Group 1 minus group 2: +0.016 [−0.019, +0.052]. It straddles +0.05, so **not resolved** (at seed 1 it held).
+- The beat_saber-held-out checkpoint gains no less than the other four at seeds 2 and 3 (descriptive).
+
+**CORRECTION to Amendment 3's decomposition, which rested on one treatment seed.** Amendment 3 read the
+Questset gain as Across-XR exposure +0.056 and Nymeria +0.006, and CLAUDE.md turned that into "the lever
+that crosses activity boundaries is other applications, not other daily-life tasks". **Treatment seed 1
+was the lowest of three on Questset** (0.142 against 0.184 and 0.165). Over three seeds
+(`exposure_breadth_questset_decomposition_s123.json`):
+
+| part of the Questset gain | seed 1 | three seeds |
+|---|---|---|
+| Nymeria alone (treatment − zero-shot) | +0.006 | **+0.027 [+0.008, +0.047]** |
+| Across-XR exposure on top (breadth − treatment, seed-paired) | +0.056 | **+0.029 [+0.011, +0.047]** |
+
+So on Questset the gain **splits about evenly** between Nymeria's daily-life breadth and exposure to
+other VR applications. On Across-XR's held-out applications it does not split: Across-XR exposure adds
++0.108, and Nymeria alone is about +0.02. That is an unpaired contrast of the treatment's three-seed A1
+(0.251) against the zero-shot's (0.234), and seed 1 paired gave +0.025 [−0.007, +0.057]. **The
+supportable sentence: exposure to other applications of the same kind is the large lever on those
+applications; on a fully unseen corpus both kinds of breadth carry, by similar small amounts.** The
+seed-1 sentence was a reading of n=1 that looked like a mechanism, which is the error CLAUDE.md records
+as "take the run". The run was taken here and it moved the claim.

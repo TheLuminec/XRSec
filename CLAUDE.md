@@ -1135,10 +1135,24 @@ identities P3 paid -0.036 for the same hold-out. **So at scale, exposure to four
 for the fifth within one seed's precision.** A no-cost hold-out reads exactly like a leak, so one was excluded
 from the checkpoints' own stored normaliser statistics, which match only "X removed" (`loao_leak_check.py`,
 P3 as positive control). **It carries to Questset**, titles in no training corpus: +0.062 [+0.042, +0.083]
-over zero-shot, and decomposed, **Across-XR exposure +0.056 [+0.039, +0.073] and Nymeria +0.006
-[-0.014, +0.026]**. The data-side lever that crosses activity boundaries is *other applications recorded
-the same way*, not other daily-life tasks. Beat Saber overlap with Questset group 1 is unchecked (A3).
-Questset A1 zero-shot: 0.179 / 0.217 at N=17, inside its registered band in both groups.
+over zero-shot. ~~Decomposed, Across-XR exposure +0.056 and Nymeria +0.006, so "the lever is other
+applications, not other daily-life tasks".~~ **CORRECTED on three seeds (2026-09-29, Amendment 5):
+treatment seed 1 was the lowest of three on Questset, and the gain splits about evenly - Nymeria
++0.027 [+0.008, +0.047], Across-XR exposure +0.029 [+0.011, +0.047].** Exposure to other applications
+of the same kind is the large lever *on those applications* (+0.108 on the Across-XR X-cells, three
+seeds, against about +0.02 for Nymeria alone); on a fully unseen corpus both kinds of breadth carry, by
+similar small amounts. The seed-1 sentence was n=1 read as a mechanism. **Three-seed rows:** breadth - P3
++0.088 [+0.064, +0.113] (exceeds), breadth - treatment +0.108 [+0.081, +0.136], hold-out cost against
+C2-lo -0.016 [-0.043, +0.014] (falsifier excluded), Questset +0.056 [+0.037, +0.076]. Beat Saber split:
+titles no corpus covers still gain, +0.020 [+0.003, +0.038]. Questset A1 zero-shot: 0.179 / 0.217 at
+N=17, inside its registered band in both groups.
+
+**And the one-sitting caveat now has a size (alyx cross-day, 2026-09-28,
+`docs/acceptance/alyx_cross_day_REGISTERED.md`).** The Nymeria treatment identifies unseen alyx players
+across days at rank-1 **0.483 [0.415, 0.551]** (N 12-17, three seeds), against **0.743** within one
+session - a cost of **-0.260 [-0.345, -0.181]**, "modest" excluded. So every Nymeria, Across-XR and
+Questset figure is a same-session figure, and about a third of what a model identifies within a session
+does not persist to another day on this corpus.
 
 **Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
 target-fits silently while the gate still passes. On P3 superhot that moved A1 0.283 -> 0.250 and read as
