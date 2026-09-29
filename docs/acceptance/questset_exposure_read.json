@@ -1,0 +1,84 @@
+{
+ "per_seed": {
+  "1": {
+   "axr_A1_q2": 0.2513477017069956,
+   "axr_A1_treatment": 0.2555139283981331,
+   "axr_diff": -0.0041662266911374835,
+   "questset_g1_diff": 0.006082728158279004,
+   "control_selected_auc_diff": -0.014726102352142334,
+   "treatment_axr_device": "cuda",
+   "convergence": {
+    "q2": [
+     112,
+     120
+    ],
+    "treatment": [
+     118,
+     120
+    ]
+   }
+  },
+  "2": {
+   "axr_A1_q2": 0.2770359923440205,
+   "axr_A1_treatment": 0.24309952168576743,
+   "axr_diff": 0.03393647065825308,
+   "questset_g1_diff": -0.014366909660749255,
+   "control_selected_auc_diff": -0.020627939038806442,
+   "treatment_axr_device": "cpu",
+   "convergence": {
+    "q2": [
+     120,
+     120
+    ],
+    "treatment": [
+     120,
+     120
+    ]
+   }
+  },
+  "3": {
+   "axr_A1_q2": 0.268252934980537,
+   "axr_A1_treatment": 0.2551069764345719,
+   "axr_diff": 0.01314595854596505,
+   "questset_g1_diff": -0.008319681743449851,
+   "control_selected_auc_diff": -0.018930498096678017,
+   "treatment_axr_device": "cpu",
+   "convergence": {
+    "q2": [
+     118,
+     120
+    ],
+    "treatment": [
+     118,
+     120
+    ]
+   }
+  }
+ },
+ "pooled": {
+  "q2-treatment_axr": {
+   "mean": 0.014305400837693551,
+   "lo": -0.006109043989620188,
+   "hi": 0.035370407763207
+  },
+  "q2-treatment_questset_g1": {
+   "mean": -0.0055346210819733664,
+   "lo": -0.024235257850020852,
+   "hi": 0.013609533253473298
+  },
+  "control_own_users": {
+   "per_seed": [
+    -0.014726102352142334,
+    -0.020627939038806442,
+    -0.018930498096678017
+   ],
+   "outside_0.02": 1
+  }
+ },
+ "verdicts": {
+  "q2-treatment_axr": "interval spans 3 regions (FALSIFIER: Questset exposure does not carry; the Across-XR result is corpus-specific | not resolved | BAND: exposure carries across corpora in both directions); the mean sits in: not resolved",
+  "q2-treatment_questset_g1": "interval spans 2 regions (FALSIFIER | not resolved); the mean sits in: FALSIFIER",
+  "control_own_users": "noted: outside in exactly 1 of 3",
+  "convergence": "patience stops: Q2 seeds [], treatment seeds []"
+ }
+}
