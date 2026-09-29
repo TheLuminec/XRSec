@@ -1154,6 +1154,15 @@ session - a cost of **-0.260 [-0.345, -0.181]**, "modest" excluded. So every Nym
 Questset figure is a same-session figure, and about a third of what a model identifies within a session
 does not persist to another day on this corpus.
 
+**The reverse direction is not resolved (2026-09-29, `docs/acceptance/questset_exposure_REGISTERED.md`).**
+Questset group 2 (30 people, 2 applications, 2.06 % of windows) swapped into the Nymeria treatment moves
+Across-XR by **+0.014 [-0.006, +0.035]**, three seeds, and Questset's own unseen group 1 by -0.006. So
+"exposure carries across corpora in both directions" is not earned, and neither is "it is Across-XR-
+specific". Measured: exposure is a large lever on the applications you were exposed to (+0.108) and a
+small or unresolved one on another corpus (+0.03 forward, at most +0.035 back). The swap also cost the
+treatment about 0.02 on its own Nymeria users in all three seeds, which the breadth swap did not. Breadth
+exposure does not change cross-day persistence on alyx either (-0.013 / -0.039 / -0.002 by seed, GPU).
+
 **Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
 target-fits silently while the gate still passes. On P3 superhot that moved A1 0.283 -> 0.250 and read as
 a false alignment gain of +0.058, and the harness now refuses the case. And **a replicated checkpoint

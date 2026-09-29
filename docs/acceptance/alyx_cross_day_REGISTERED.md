@@ -82,3 +82,19 @@ others sat at 8.5e-4–9.5e-4. The breadth checkpoints diverge CPU-to-GPU by mor
 project documented for earlier checkpoints. As registered, all 18 checkpoints are re-scored on Miami's
 GPU at the end of its chain (1e-4). That run supersedes this CPU reading for the breadth row and
 cross-checks the treatment rows.
+
+## Result 2 — 2026-09-29, GPU re-score of all 18 checkpoints (Miami, `alyx_cross_day_gpu.json`, 18/18 gates 0.0e+00)
+
+The treatment rows reproduce the CPU reading within 1e-3: cross-day **0.483 [0.415, 0.550]**, same-day
+0.743, cost **−0.261 [−0.345, −0.182]**. So Result 1's verdicts stand: the cross-day level is in the band,
+and the cost sits in the partial region, excluding "modest". The two breadth checkpoints that refused on
+CPU gate exactly on GPU. Breadth, five checkpoints per seed, descriptive:
+
+| seed | cross-day | same-day | cost | cross-day, breadth − treatment |
+|---|---|---|---|---|
+| 1 | 0.413 | 0.759 | −0.346 [−0.511, −0.189] | −0.013 [−0.035, +0.011] |
+| 2 | 0.430 | 0.723 | −0.293 [−0.435, −0.153] | −0.039 [−0.078, −0.003] |
+| 3 | 0.566 | 0.807 | −0.241 [−0.398, −0.107] | −0.002 [−0.014, +0.009] |
+
+**Multi-application exposure does not improve cross-day persistence;** it reads equal or slightly lower in
+every seed. Result 2 supersedes Result 1 for the breadth row (Result 1 used 3 of 5 checkpoints at seed 1).

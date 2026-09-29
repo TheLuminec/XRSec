@@ -67,3 +67,38 @@ configs pass unchanged, which confirms the breadth arm was never affected. Miami
 same resolution before each launch. **The general form: a count asserted by the code that wrote the
 config is a claim about the writer, not about the reader.** Only the loader's own function says what the
 run will train on.
+
+## Result — 2026-09-29, three seeds: not resolved, and at most small
+
+`questset_exposure_read.py`, `questset_exposure_read.json` (`07a57ce`), committed before interpretation.
+- Every Q2 gate is 0.0e+00 on the training GPU. The treatment's Across-XR files are GPU for seed 1 and AVALON CPU for seeds 2-3, with gates at 4.0e-5 and 9.5e-4.
+- Dose, measured: 13,412 / 650,777 = **2.06 %** (Miami, seed 1's loader).
+- The validation windows equal the treatment's to the window (216,884 from 1,071), so epoch selection ran on the treatment's own people.
+- Convergence: neither arm stopped on patience, so the arms are matched.
+
+| row | three seeds | reading |
+|---|---|---|
+| 1 (primary): Q2 − treatment, Across-XR A1, all 20 cells | **+0.014 [−0.006, +0.035]** (seeds −0.004 / +0.034 / +0.013) | **spans the falsifier, not-resolved and band regions; mean in "not resolved"** |
+| 2: Q2 − treatment, Questset group 1, N=30 | **−0.006 [−0.024, +0.014]** | spans the falsifier and not-resolved regions; mean just below 0 |
+| 3 (control): own 48 Nymeria users, `selected_test_auc` | −0.015 / −0.021 / −0.019 | registered rule: one seed of three outside ±0.02, "noted" |
+
+**What it says.** Neither the strong outcome (the falsifier) nor the band is established. Exposure from 30
+Questset people in 2 applications carries to Across-XR by **at most about +0.035**. The forward direction
+onto Questset read +0.029 [+0.011, +0.047] (breadth − treatment, three seeds), so the two directions'
+intervals overlap. **"Exposure carries across corpora in both directions" is not earned, and neither is
+"it is Across-XR-specific."** The design differences registered beforehand (2 applications against 4, 30
+people against 23, 2.06 % against 2.56 %) all push towards a smaller effect, and this design cannot
+separate them. Row 2 is the surprise: within Questset itself (same rig, unseen people), group-2 exposure
+does nothing for group 1's titles.
+
+**Row 3 carries a pattern the registered rule does not name, so it is stated rather than absorbed into
+"noted".** All three seeds are negative by a similar amount (mean −0.018). So swapping 30 BOXRR identities
+for these 30 Questset people **systematically costs about 0.02 on the treatment's own in-domain Nymeria
+users.** The breadth arm's 23-person Across-XR swap did not (its Nymeria figures sit at the treatment's).
+It is one-directional at every seed, and it is the only row here that is.
+
+**Consequence for the acquisition argument (OpenNEEDS).** The measured lever is large on the applications
+you are exposed to: +0.108 on Across-XR's held-out applications, at scale. It is small or unresolved on
+another corpus: +0.03 forward, at most +0.035 reverse. An acquisition argued on "its applications will then
+be covered" has a measured basis. One argued on "it will improve transfer to unseen corpora" has a small
+one at best.
