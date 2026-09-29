@@ -1,0 +1,223 @@
+{
+ "per_x": {
+  "superhot_vr": {
+   "breadth_x_per_seed": [
+    0.3357482772438064,
+    0.3484043638676954,
+    0.29655586268768486
+   ],
+   "breadth_x": 0.3269028345997289,
+   "P3_x": 0.22273691966368342,
+   "C2lo_x": 0.3650643943295444,
+   "breadth-P3_x": {
+    "mean": 0.10416591493604552,
+    "lo": 0.08056479507664906,
+    "hi": 0.1276248025298186
+   },
+   "breadth-treatment_x": {
+    "mean": 0.09600094291592609,
+    "lo": 0.06630763820954429,
+    "hi": 0.12894250812465857
+   },
+   "control_breadth-C2lo_nonx": {
+    "mean": 0.008441326974297433,
+    "lo": -0.0074216508582174885,
+    "hi": 0.02445839144048907
+   },
+   "holdout_cost_breadth-C2lo_x": {
+    "mean": -0.03816155972981554,
+    "lo": -0.07982217717635097,
+    "hi": 0.006071599219755005
+   }
+  },
+  "half_life_alyx": {
+   "breadth_x_per_seed": [
+    0.3373909732035446,
+    0.3251032226551275,
+    0.3240248097127756
+   ],
+   "breadth_x": 0.3288396685238159,
+   "P3_x": 0.23127945053360893,
+   "C2lo_x": 0.3597524832724928,
+   "breadth-P3_x": {
+    "mean": 0.09756021799020698,
+    "lo": 0.057588598420190526,
+    "hi": 0.13855117533535483
+   },
+   "breadth-treatment_x": {
+    "mean": 0.09431194835169879,
+    "lo": 0.06407892347774706,
+    "hi": 0.12709562448242565
+   },
+   "control_breadth-C2lo_nonx": {
+    "mean": 0.013198750624420039,
+    "lo": -0.005927468065771617,
+    "hi": 0.03439607253397849
+   },
+   "holdout_cost_breadth-C2lo_x": {
+    "mean": -0.030912814748676902,
+    "lo": -0.058614786933365644,
+    "hi": -0.0020172362075041145
+   }
+  },
+  "beat_saber": {
+   "breadth_x_per_seed": [
+    0.4429827034207214,
+    0.44107942283746093,
+    0.4541440075615406
+   ],
+   "breadth_x": 0.44606871127324094,
+   "P3_x": 0.35142323145954435,
+   "C2lo_x": 0.4229388675076105,
+   "breadth-P3_x": {
+    "mean": 0.09464547981369664,
+    "lo": 0.06206517251340265,
+    "hi": 0.12533246229039807
+   },
+   "breadth-treatment_x": {
+    "mean": 0.15132950278999263,
+    "lo": 0.11627244712859836,
+    "hi": 0.18515384441969307
+   },
+   "control_breadth-C2lo_nonx": {
+    "mean": 0.02713395605800148,
+    "lo": 0.0017895615230244704,
+    "hi": 0.053141485631861045
+   },
+   "holdout_cost_breadth-C2lo_x": {
+    "mean": 0.02312984376563041,
+    "lo": -0.005457329582836086,
+    "hi": 0.053598649660771554
+   }
+  },
+  "synth_riders": {
+   "breadth_x_per_seed": [
+    0.4349562204416262,
+    0.36767459094645333,
+    0.3693378084271818
+   ],
+   "breadth_x": 0.39065620660508715,
+   "P3_x": 0.3240081335572489,
+   "C2lo_x": 0.403229276660322,
+   "breadth-P3_x": {
+    "mean": 0.06664807304783824,
+    "lo": 0.031744726263306884,
+    "hi": 0.10309097252950745
+   },
+   "breadth-treatment_x": {
+    "mean": 0.11313725258264758,
+    "lo": 0.07985677213385692,
+    "hi": 0.14630445243989318
+   },
+   "control_breadth-C2lo_nonx": {
+    "mean": 0.008472159268130138,
+    "lo": -0.011432902071930201,
+    "hi": 0.031638848412846664
+   },
+   "holdout_cost_breadth-C2lo_x": {
+    "mean": -0.012573070055234876,
+    "lo": -0.04051278657427991,
+    "hi": 0.018048924131558446
+   }
+  },
+  "social_vr": {
+   "breadth_x_per_seed": [
+    0.28620973969237656,
+    0.3092395289660219,
+    0.3085086922722515
+   ],
+   "breadth_x": 0.30131932031021663,
+   "P3_x": 0.22414861338767345,
+   "C2lo_x": 0.32166401350878643,
+   "breadth-P3_x": {
+    "mean": 0.0771707069225432,
+    "lo": 0.0393580275095181,
+    "hi": 0.12116245375834324
+   },
+   "breadth-treatment_x": {
+    "mean": 0.08280638380770368,
+    "lo": 0.042686580909208925,
+    "hi": 0.12498223590282469
+   },
+   "control_breadth-C2lo_nonx": {
+    "mean": 0.016552824493709536,
+    "lo": -0.007586197812846043,
+    "hi": 0.042358189730654104
+   },
+   "holdout_cost_breadth-C2lo_x": {
+    "mean": -0.02034469319856977,
+    "lo": -0.05321364914491523,
+    "hi": 0.012476179628420373
+   }
+  }
+ },
+ "pooled": {
+  "breadth-P3_x": {
+   "mean": 0.08803807854206612,
+   "lo": 0.06379609453640499,
+   "hi": 0.11322018677391199,
+   "n_x": 5
+  },
+  "breadth-treatment_x": {
+   "mean": 0.10751720608959377,
+   "lo": 0.08047979624081802,
+   "hi": 0.13592001307760432,
+   "n_x": 5
+  },
+  "control_breadth-C2lo_nonx": {
+   "mean": 0.014759803483711727,
+   "lo": -0.001998823778545416,
+   "hi": 0.0331550112347708,
+   "n_x": 5
+  },
+  "holdout_cost_breadth-C2lo_x": {
+   "mean": -0.015772458793333333,
+   "lo": -0.04294946060186022,
+   "hi": 0.013489341446220326,
+   "n_x": 5
+  },
+  "questset_breadth-zeroshot": {
+   "mean": 0.055769864358506026,
+   "lo": 0.03664755235549509,
+   "hi": 0.0757246639132243,
+   "n_users": 60,
+   "breadth_mean": 0.19230391298950578,
+   "zeroshot_mean": 0.1365340486309998,
+   "n_breadth_checkpoints": 15
+  }
+ },
+ "verdicts": {
+  "breadth-P3_x": "interval inside one region: above band: breadth adds more than registered; report as exceeding",
+  "breadth-treatment_x": "interval inside one region: BAND: exposure to four applications carries on top of Nymeria breadth",
+  "control_breadth-C2lo_nonx": "interval spans 2 regions (within +-0.03: the control holds | outside: removing one application moved the seen ones); the mean sits in: within +-0.03: the control holds",
+  "holdout_cost_breadth-C2lo_x": "interval spans 2 regions (a small cost | BAND: at scale, four applications substitute for the fifth); the mean sits in: BAND: at scale, four applications substitute for the fifth",
+  "questset_breadth-zeroshot": "interval spans 2 regions (BAND | breadth transfers to a fully unseen corpus: seed it); the mean sits in: breadth transfers to a fully unseen corpus: seed it"
+ },
+ "gates": {
+  "superhot_vr": {
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0
+  },
+  "half_life_alyx": {
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0
+  },
+  "beat_saber": {
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0
+  },
+  "synth_riders": {
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0
+  },
+  "social_vr": {
+   "1": 0.0,
+   "2": 0.0,
+   "3": 0.0
+  }
+ }
+}
