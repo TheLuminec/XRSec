@@ -1,0 +1,81 @@
+{
+ "refused": [],
+ "treatment": {
+  "seeds": [
+   1,
+   2,
+   3
+  ],
+  "units": 43,
+  "cross_day": {
+   "mean": 0.4824631386321353,
+   "lo": 0.41466770083698745,
+   "hi": 0.5502949534514322
+  },
+  "same_day": {
+   "mean": 0.7430269942708708,
+   "lo": 0.7015259336269928,
+   "hi": 0.7837097068788579
+  },
+  "cost": {
+   "mean": -0.2605638556387356,
+   "lo": -0.3449183272537558,
+   "hi": -0.18214686174530031
+  },
+  "verdict_level": "BAND: the learned component identifies people across days",
+  "verdict_cost": "interval spans regions (lo -0.345, hi -0.182); the mean sits in the partial region"
+ },
+ "breadth_minus_treatment_descriptive": {
+  "seed1": {
+   "checkpoints_per_user": [
+    5
+   ],
+   "breadth_cross_day": 0.41309606187975634,
+   "breadth_same_day": 0.7587981311523884,
+   "breadth_cost": {
+    "mean": -0.345702069272632,
+    "lo": -0.5112984956298522,
+    "hi": -0.18863243287934103
+   },
+   "cross_day_breadth_minus_treatment": {
+    "mean": -0.012548023042961213,
+    "lo": -0.034715152402486064,
+    "hi": 0.011467417548747565
+   }
+  },
+  "seed2": {
+   "checkpoints_per_user": [
+    5
+   ],
+   "breadth_cross_day": 0.42978902475627745,
+   "breadth_same_day": 0.723285279447916,
+   "breadth_cost": {
+    "mean": -0.29349625469163865,
+    "lo": -0.4347053158464538,
+    "hi": -0.15313805870863717
+   },
+   "cross_day_breadth_minus_treatment": {
+    "mean": -0.03900264578166085,
+    "lo": -0.07844521522794384,
+    "hi": -0.0027907926141643195
+   }
+  },
+  "seed3": {
+   "checkpoints_per_user": [
+    5
+   ],
+   "breadth_cross_day": 0.5660855735555075,
+   "breadth_same_day": 0.8066618144428269,
+   "breadth_cost": {
+    "mean": -0.24057624088731944,
+    "lo": -0.39786084153899576,
+    "hi": -0.10718528325801979
+   },
+   "cross_day_breadth_minus_treatment": {
+    "mean": -0.0020343742043940887,
+    "lo": -0.013756605317600139,
+    "hi": 0.0089663231940724
+   }
+  }
+ }
+}
