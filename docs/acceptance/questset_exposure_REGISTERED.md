@@ -94,7 +94,7 @@ does nothing for group 1's titles.
 **Row 3 carries a pattern the registered rule does not name, so it is stated rather than absorbed into
 "noted".** All three seeds are negative by a similar amount (mean −0.018). So swapping 30 BOXRR identities
 for these 30 Questset people **systematically costs about 0.02 on the treatment's own in-domain Nymeria
-users.** The breadth arm's 23-person Across-XR swap did not (its Nymeria figures sit at the treatment's).
+users.** The breadth arm's 23-person Across-XR swap shows no such cost: its seed-1 Nymeria figures read 0.705-0.714 against the treatment's 0.708. That comparison is approximate, not like-for-like: the breadth figure is a per-dataset AUC from its 65-user evaluation, whose pooled pair draw differs.
 It is one-directional at every seed, and it is the only row here that is.
 
 **Consequence for the acquisition argument (OpenNEEDS).** The measured lever is large on the applications

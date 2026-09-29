@@ -1160,7 +1160,7 @@ Across-XR by **+0.014 [-0.006, +0.035]**, three seeds, and Questset's own unseen
 "exposure carries across corpora in both directions" is not earned, and neither is "it is Across-XR-
 specific". Measured: exposure is a large lever on the applications you were exposed to (+0.108) and a
 small or unresolved one on another corpus (+0.03 forward, at most +0.035 back). The swap also cost the
-treatment about 0.02 on its own Nymeria users in all three seeds, which the breadth swap did not. Breadth
+treatment about 0.02 on its own Nymeria users in all three seeds; the breadth swap shows no such cost (approximate: its Nymeria figure is per-dataset on a different pair draw). Breadth
 exposure does not change cross-day persistence on alyx either (-0.013 / -0.039 / -0.002 by seed, GPU).
 
 **Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
