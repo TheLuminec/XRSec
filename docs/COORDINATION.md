@@ -1743,3 +1743,46 @@ new results bear on sections they contain, and I am not editing the drafts mysel
    (+0.029). A seed-1 reading that credited it all to Across-XR was corrected in Amendment 5. The
    reverse direction (Questset exposure onto Across-XR) is not resolved: +0.014 [-0.006, +0.035].
    Sources: `exposure_breadth_REGISTERED.md` Amendments 3-5, and `questset_exposure_REGISTERED.md`.
+
+## From the Coordinator: VR.net acquisition AUTHORISED by the user - brief for XRSec Data - 2026-09-30
+
+**Authorisation.** The user agreed on 2026-09-30: *"Have data go ahead with VR.net."* This entry is
+the record the download rule asks for. It covers **VR.net only**. MooreCrossDomain23, the other
+catalogue entries, Stanford Longitudinal and the ball-throwing corpus are **not** authorised; the user
+is looking into the last two themselves.
+
+**What and why.** VR.net: 21 participants, 7 applications (Beat Saber, Carton Network, Monster Awaken,
+Pottery, Traffic Cop, VR ROME, Voxel Shot VR). It becomes a third cross-application **test** corpus,
+never training. Source: the XR Motion Dataset Catalogue,
+`huggingface.co/datasets/cschell/xr-motion-dataset-catalogue`, `vr.net` subset; cite arXiv:2306.03381.
+
+**Rules for the fetch:**
+1. **Licence first.** Read the catalogue's dataset card and VR.net's own licence before downloading
+   anything, and record them in `PROVENANCE.md`.
+2. **If a gated click-through or account is required, stop and report back.** Terms are the user's to
+   accept, never a session's.
+3. **Do not run `load_dataset(..., trust_remote_code=True)`.** It executes code from the repository.
+   Fetch the raw files, for example with `huggingface_hub.snapshot_download` restricted to the vr.net
+   paths, and read them with our own converter.
+4. Head track only: `head` / HMD rows. Controllers stay unconverted, per the head-only scope.
+
+**Conversion to `processed_datasets/VRNet/users/<user>/<application>[_<n>].csv`.** Standard columns:
+`SessionTime` in seconds; `UnitQuaternion.x/y/z/w`, read by name and reordered if scalar-first;
+`HmdPosition.x/y/z` in metres (the catalogue stores centimetres). `CITATION.txt` and `PROVENANCE.md` go
+at the dataset root.
+
+**Corpus gate, committed as `docs/acceptance/vrnet_corpus_gate.json` before anyone scores anything:**
+- counts per user and per application, computed independently of any displayed table;
+- **identity key**: confirm a user id means the same person across applications (the Questset trap -
+  its `User` column restarted per block);
+- mean |q| after reordering;
+- **the up-axis invariant per application** (local +Y to world, expect about 0.9 or above), quoted per
+  application, never pooled;
+- mean head height per application in metres (standing about 1.6, seated about 1.15);
+- native rate per session, with outliers listed in full, never through `head` or `tail`;
+- **session structure**: whether each person's applications fall in one sitting or on different days,
+  from timestamps or metadata. This decides whether VR.net adds anything on persistence.
+
+**Deliverables:** the converter at the repo root (`prepare_vrnet.py`, with `--inspect` first), the gate
+JSON, a catalogue update, and a message to the Coordinator. No model scoring: the Coordinator registers
+that before any number exists.
