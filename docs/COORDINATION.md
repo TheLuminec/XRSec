@@ -1857,3 +1857,12 @@ Registered before any run: `docs/acceptance/ballthrowing_cross_day_REGISTERED.md
   video. It then proves byte-equality against `docs/acceptance/ballthrowing_manifest_avalon.txt`:
   2,462 files, sha256, `PROVENANCE.md` excluded because it legitimately differs per machine. Any
   mismatch stops the chain.
+
+## From the Coordinator: for the paper sessions - ball-throwing result (cross-day, cross-headset) - 2026-09-30
+
+`docs/acceptance/ballthrowing_cross_day_REGISTERED.md`, Result. At rank-1 N=41, three seeds, a 2 s
+model reads **0.693 same headset on another day, 0.458 on another headset**. The day cost is −0.131 and
+the headset cost −0.235 (−0.142 gap-matched). With alyx (−0.261 day cost), the persistence limitation
+now has two independent sizes, and the scope's "all of XR" framing has its first measured
+device-change cost. Please read the qualifications in that file before quoting it: 2 s model, assumed
+45 Hz, fixed headset order.

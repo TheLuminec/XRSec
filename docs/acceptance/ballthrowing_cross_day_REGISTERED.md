@@ -58,3 +58,46 @@ resolves the −0.30 and −0.20 lines and may not resolve −0.15 or −0.10.
 **Which outcome is strong.** The headset falsifier. It would say the learned signature is tied to a tracking
 system, which matters directly for the "all of XR" scope. A band holding on the headset row is weaker: it is
 also what "everything is at chance anyway" predicts if C1 is weak. So the C1 level row is read first.
+
+## Result — 2026-09-30, three seeds, GPU
+
+The treatment_2s arm, 3 seeds, all gates 0.0e+00 on its 48 Nymeria users; each scoring asserted 41 users
+and 2,460 windows. Read by the pre-committed `ballthrowing_cross_day_read.py` (`c7653c2`), result
+`ballthrowing_cross_day_read.json` (`0d3d9b8`). Rank-1 at N=41, chance 0.024.
+
+| quantity | measured | reading |
+|---|---|---|
+| C0, same session | 0.824 [0.784, 0.857] | — |
+| **C1, same headset, other day** | **0.693 [0.649, 0.735]** | **band**: about 28× chance, from single 2 s throws |
+| C2, other headset, other day | 0.458 [0.409, 0.509] | — |
+| **day cost, C1 − C0** | **−0.131 [−0.172, −0.089]** | the interval spans "modest" and "partial"; the mean sits in "modest" |
+| **headset cost, C2 − C1** | **−0.235 [−0.282, −0.191]** | the interval spans "substantial" and the falsifier region; the mean sits in the falsifier region. The band (≥ −0.10) is excluded |
+| gap-matched headset cost, C2 pairs ≤ 3 days apart − C1 (38 users; descriptive) | −0.142 [−0.206, −0.082] | about 0.09 of the unmatched cost is the longer day gap |
+| height-only lookup (training-free; descriptive) | C1 0.099, C2 0.095 | about 4× chance, and unaffected by the headset change once each session type is standardised |
+
+Per session pair (seed means): the same-headset pairs read 0.665-0.722, Quest-Vive 0.478-0.587,
+Vive-Cosmos 0.463-0.511, and Quest-Cosmos 0.341-0.379. The ordering also follows the day gap
+(Quest-Cosmos pairs are the furthest apart, about 15 days on average), which is why the gap-matched row
+exists.
+
+**What it says.**
+1. **People are identified across days from a single 2-second throw**, at 0.69 among 41. That is a
+   second corpus, after alyx, where the learned `dyn` component persists across days. The day cost here
+   (−0.13) is about half of alyx's (−0.26), on a far more stereotyped task.
+2. **Changing headset costs substantially more than changing day.** About −0.24 unmatched and −0.14
+   gap-matched, so identity survives a headset change well above chance (0.46) but not intact. The
+   falsifier ("does not survive") is not met: its line sits inside the interval, and the level stays at
+   19× chance.
+3. The static height cue is weak here (0.10) but device-robust once standardised. The model's
+   device-sensitivity is in the dynamics it reads, not in a static offset. **One mechanism hypothesis, not
+   tested:** `dyn` keeps absolute pitch and roll (gravity), and how a headset sits on the head differs by
+   model, so part of the headset cost may be fit rather than behaviour.
+
+**Qualifications.**
+- The model is a 2 s model that reads only 0.55 AUC in domain on Nymeria, against 0.708 at 10 s. These
+  figures are from a weaker model and a highly stereotyped, phase-aligned task: each window is one whole
+  throw.
+- The 45 Hz rate is assumed.
+- The headset order was fixed (Quest, then Vive, then Cosmos), so headset and elapsed time are not fully
+  separable even gap-matched.
+- 41 people.

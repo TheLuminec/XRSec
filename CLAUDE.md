@@ -1163,6 +1163,21 @@ small or unresolved one on another corpus (+0.03 forward, at most +0.035 back). 
 treatment about 0.02 on its own Nymeria users in all three seeds; the breadth swap shows no such cost (approximate: its Nymeria figure is per-dataset on a different pair draw). Breadth
 exposure does not change cross-day persistence on alyx either (-0.013 / -0.039 / -0.002 by seed, GPU).
 
+**A second cross-day corpus, and the first cross-headset one (2026-09-30,
+`docs/acceptance/ballthrowing_cross_day_REGISTERED.md`).** Ball-throwing (Li et al. 2025, Apache-2.0):
+41 people, Quest / Vive / Cosmos, two days each, sessions 1-30 days apart, ~3 s throws. It was scored
+with a 2 s version of the Nymeria treatment (three seeds; 0.55 AUC in domain against 0.708 at 10 s), at
+rank-1 N=41 (chance 0.024):
+- same session 0.824;
+- **same headset, other day 0.693 [0.649, 0.735]**;
+- other headset, other day 0.458;
+- **day cost -0.131 [-0.172, -0.089]**, about half of alyx's;
+- **headset cost -0.235 [-0.282, -0.191]** (-0.142 gap-matched).
+
+So the learned component persists across days on a second corpus, and **a headset change costs more
+than a day** without destroying identity. The hypothesis that `dyn`'s retained pitch and roll carry
+headset fit is untested. Headset order was fixed, so device and elapsed time are not fully separable.
+
 **Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
 target-fits silently while the gate still passes. On P3 superhot that moved A1 0.283 -> 0.250 and read as
 a false alignment gain of +0.058, and the harness now refuses the case. And **a replicated checkpoint
