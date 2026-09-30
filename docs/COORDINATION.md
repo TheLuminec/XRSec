@@ -1786,3 +1786,61 @@ at the dataset root.
 **Deliverables:** the converter at the repo root (`prepare_vrnet.py`, with `--inspect` first), the gate
 JSON, a catalogue update, and a message to the Coordinator. No model scoring: the Coordinator registers
 that before any number exists.
+
+## From the Coordinator: ball-throwing corpus AUTHORISED by the user - brief for XRSec Data - 2026-09-30
+
+**Authorisation.** The user wrote on 2026-09-30: *"You are now authorized to use the ball throwing dataset
+as well"*, pointing to
+`github.com/Terascale-All-sensing-Research-Studio/MultiModal_VR_BallThrowing_Dataset`. The repository
+states its licence as **Apache-2.0**, and its citation is Li, Banerjee & Banerjee, *Data in Brief* 2025,
+111827. That is the copy the catalogue's dead-link entry was looking for.
+
+**Fetch only what the head-only pipeline uses, about 30 MB.** Use a sparse checkout, or raw downloads
+of:
+- `vrmotions/*.npy`: six arrays, one per headset and day, each (41, 10, 135, 21);
+- `capturetimedata/capturetimedata.csv`: days between sessions;
+- `demographics/demographics.csv`: **height only** is used, as an anthropometric check on the head
+  channel, the way Nymeria's height was used. Its other columns are not read.
+- the README and LICENSE files.
+
+**Do NOT fetch `croppedvideos/`, `openpose_results/` or `mmpose_results/`.** They are identifiable video
+of participants, and body pose is outside the head-only scope. Load the arrays with
+`np.load(..., allow_pickle=False)`.
+
+**Corpus facts from the repository's own READMEs, and the traps in them:**
+1. **Features per time step: right controller, headset, left controller**, each as position (x, y, z),
+   Euler angles (x, y, z) and trigger. **Headset trigger is always 0.** Assert that on the block you
+   take, because it identifies the head block from the data rather than from the README's word order.
+2. **Orientation is EULER ANGLES.** Order, degrees or radians, and handedness are undocumented. Unity's
+   `eulerAngles` is Z, then X, then Y, in degrees, left-handed, and the task was built in Unity, but that
+   is an inference. **Choose the convention by the up-axis invariant** (local +Y to world, expect about
+   0.9 or above), trying every candidate and recording all of them in the gate, as was done for NJIT.
+   Convert to x,y,z,w quaternions, renormalised.
+3. **The index-to-participant mapping.** The arrays are indexed 0-40. The ids are 100-148 with gaps (41
+   ids; `capturetimedata.csv` lists them). Establish the mapping from documentation, for example by
+   array order against the sorted id list, and **say how it was established**. If it cannot be
+   established, stop and report back. A wrong mapping pairs the wrong people across days silently.
+4. **Time base.** 135 samples per throw on all three headsets, while the catalogue (from the paper)
+   says 225 / 135 / 135 frames at about 75 / 45 / 45 Hz. Determine the actual rate per headset from
+   the data or the Data in Brief text, and record how it was determined.
+5. **Structure: 41 people, 3 headsets (Quest, Vive, Cosmos), 2 days each, 6 sessions at least a day
+   apart** (1-30 days; played Quest, then Vive, then Cosmos). 10 throws of about 3 s per session.
+6. Units: positions presumably metres; check head height against demographic height.
+
+**Conversion:** `processed_datasets/BallThrowing/users/<id>/<headset><day>_throw<k>.csv` in standard
+columns, with `CITATION.txt` and `PROVENANCE.md`. Carry the day gaps into provenance or a sidecar, so
+the scoring can use them.
+
+**Gate: `docs/acceptance/ballthrowing_corpus_gate.json`**, before any scoring. It records:
+- counts;
+- the head-block trigger assertion;
+- the up-axis invariant for every candidate Euler convention, per headset;
+- mean |q|;
+- head height per headset against demographic height, as a correlation (for Nymeria the same check
+  read 0.057, which is what exposed its position channel as a map offset);
+- the rate determination;
+- the id mapping evidence.
+
+**Known design issue, the Coordinator's:** every checkpoint we hold uses 10-second windows, and a throw
+is about 3 s. How this corpus gets scored (shorter-window checkpoints, or something registered to
+bridge throws) is decided in a registration after the gate, not in the conversion.
