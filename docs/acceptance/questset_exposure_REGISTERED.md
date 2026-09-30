@@ -102,3 +102,9 @@ you are exposed to: +0.108 on Across-XR's held-out applications, at scale. It is
 another corpus: +0.03 forward, at most +0.035 reverse. An acquisition argued on "its applications will then
 be covered" has a measured basis. One argued on "it will improve transfer to unseen corpora" has a small
 one at best.
+
+*Note, 2026-09-30.* The Question paragraph's premise, +0.056 [+0.039, +0.073] for Across-XR exposure
+onto Questset, is the seed-1 figure. It was corrected on three seeds to **+0.029 [+0.011, +0.047]**
+(`exposure_breadth_REGISTERED.md`, Amendment 5). The registration text stays as written, per the
+convention that a registration's history remains visible. The Result section above already reads
+against the corrected figure.

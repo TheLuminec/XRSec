@@ -1723,3 +1723,23 @@ Twenty gates exact. The pooled line as first computed (one mean over seven corpo
 falsifier and was the wrong operation; per-corpus centring on the pooled loader is the registered
 quantity and lands in band on both arms. Amendment 1 and a CLAUDE.md entry. Experiment 2's five runs are
 chained on Miami (synth_riders first), rows to follow.
+
+## From the Coordinator: for the paper sessions - the one-sitting limitation now has a measured size, and one decomposition was corrected - 2026-09-30
+
+Nothing in `PAPER_DRAFT.md`, `PAPER_PLAN.md`, `PAPER_OUTLINE.md` or `PROGRESS_REPORT.md` is wrong as
+written. The drafts were checked by subject, not by phrase, and none quotes the corrected figure. Two
+new results bear on sections they contain, and I am not editing the drafts myself:
+
+1. **Temporal persistence is no longer entirely unmeasured.** The drafts say "no temporal persistence
+   anywhere", which remains true of Across-XR and Questset. On who_is_alyx, the one cross-day corpus,
+   the Nymeria-trained model identifies unseen players across days at rank-1 **0.483 [0.415, 0.550]**
+   against **0.743** within one session (N 12-17, three seeds, GPU-gated). That is a cost of
+   **-0.261 [-0.345, -0.182]**, with "modest" excluded. The limitation can now carry a size:
+   one-sitting figures overstate what persists across days, by about a third on this corpus.
+   Source: `docs/acceptance/alyx_cross_day_REGISTERED.md`, Results 1-2.
+2. **Exposure breadth (not yet in the drafts).** At 3,072 identities, holding one Across-XR application
+   out costs nothing measurable. Exposure to the other four carries +0.108 on the held-out one, three
+   seeds. On Questset the gain splits about evenly between Nymeria (+0.027) and Across-XR exposure
+   (+0.029). A seed-1 reading that credited it all to Across-XR was corrected in Amendment 5. The
+   reverse direction (Questset exposure onto Across-XR) is not resolved: +0.014 [-0.006, +0.035].
+   Sources: `exposure_breadth_REGISTERED.md` Amendments 3-5, and `questset_exposure_REGISTERED.md`.
