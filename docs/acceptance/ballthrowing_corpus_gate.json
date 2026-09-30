@@ -1,0 +1,128 @@
+{
+  "euler_convention": "radians, order zyx (R = Rz @ Ry @ Rx), established empirically -- see module docstring",
+  "head_block": "columns 7-13 of 21 (right controller 0-6, headset 7-13, left controller 14-20), established empirically -- see module docstring",
+  "height_correlation_by_file": {
+    "Cosmos1": 0.8217813293749502,
+    "Cosmos2": 0.8667266335193953,
+    "Quest1": 0.9299530070990344,
+    "Quest2": 0.9434071366138771,
+    "Vive1": 0.9436311428920022,
+    "Vive2": 0.9043611353758908
+  },
+  "id_mapping": "array index i == i-th row of demographics.csv / capturetimedata.csv, both already sorted ascending by ID; verified by the height correlation below, not merely assumed",
+  "mean_head_height_m_by_file": {
+    "Cosmos1": 1.9709503523594858,
+    "Cosmos2": 1.952248889239069,
+    "Quest1": 2.0748241712407367,
+    "Quest2": 2.085386657475779,
+    "Vive1": 2.1607972469390138,
+    "Vive2": 2.1561197997539456
+  },
+  "native_hz_assumed": 45.0,
+  "native_hz_note": "NOT MEASURED -- no per-sample timestamp exists in this release. All six files are uniformly (41,10,135,21); the paper's 225/135/135-frame (75/45/45 Hz) claim does not match. Assumed from a ~3s throw duration.",
+  "num_files_written": 2460,
+  "num_participants": 41,
+  "quat_norm_mean_by_file": {
+    "Cosmos1": 1.0,
+    "Cosmos2": 1.0,
+    "Quest1": 1.0,
+    "Quest2": 1.0,
+    "Vive1": 1.0,
+    "Vive2": 1.0
+  },
+  "session_structure": "REAL cross-day corpus -- day gaps per participant read directly from capturetimedata.csv, carried into PROVENANCE.md in full",
+  "trigger_min_max_by_block_file": {
+    "Cosmos1": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.15565429627895355
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    },
+    "Cosmos2": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.1063477024435997
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    },
+    "Quest1": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.0
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    },
+    "Quest2": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        1.0
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    },
+    "Vive1": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.7411764860153198
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    },
+    "Vive2": {
+      "headset": [
+        0.0,
+        0.0
+      ],
+      "left": [
+        0.0,
+        0.12156859785318375
+      ],
+      "right": [
+        0.0,
+        1.0
+      ]
+    }
+  },
+  "up_axis_invariant_by_file": {
+    "Cosmos1": 0.9433607410401228,
+    "Cosmos2": 0.9463867930483012,
+    "Quest1": 0.9263808847887565,
+    "Quest2": 0.9247359676697137,
+    "Vive1": 0.9356604234569322,
+    "Vive2": 0.9342303068597378
+  }
+}

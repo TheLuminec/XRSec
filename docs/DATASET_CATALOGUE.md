@@ -34,7 +34,8 @@ access routes.
 | **Across XR Applications** | 49 | 5 applications, **one sitting**, one unbroken recording each | Superhot, Half-Life: Alyx, Beat Saber, Synth Riders, Social VR | VR |
 | **Questset** | 60 | 2 titles of 4, **one sitting** | Beat Saber, Cooking Sim, Medal of Honor, Forklift Sim | VR |
 | **VRNet** | 21 identified + 5 unidentified | 1-2 of 8 applications, **NOT fully crossed** (3 disjoint groups) | Beat Saber, Monster Awaken, Traffic Cop, VR ROME, Carton Network, Voxel Shot VR, Pottery, Mini Racing | VR |
-| **total** | **4,823** (26 VRNet directories; see the VRNet caveat block below before counting the 5 unidentified as identities) | | **~5 activity types plus daily life** | |
+| **BallThrowing** | 41 | **6, >=1 day apart** (real, from source), 10 throws/session, **~3s each** | ball throwing on **3 headsets** | VR x3 (Quest, Vive, Cosmos) |
+| **total** | **4,864** (26 VRNet directories; see the VRNet caveat block below before counting the 5 unidentified as identities) | | **~5 activity types plus daily life** | |
 
 *Regenerated 2026-09-21 from `processed_datasets/` on AVALON, counting **directories** under each
 `users/` (never `ls | wc -l`, which over-counts by one wherever a `CITATION.txt` sits inside
@@ -521,42 +522,49 @@ the papers and lab pages linked, and are deliberately not guessed here.**
 | # | Dataset | Identities | Sessions/user | Task | Head 6DoF | How to get it |
 |---|---|---|---|---|---|---|
 | 10 | Stanford Longitudinal Social VR [S1] | **232** | **8, weekly** | social VR | yes, confirmed | **not obtainable for now: the request requires the user's own IRB approval (user, 2026-09-30)** |
-| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 75/45/45Hz | **found: `github.com/Terascale-All-sensing-Research-Studio/MultiModal_VR_BallThrowing_Dataset`, Apache-2.0 — replaces the dead link below; acquisition authorised by the user 2026-09-30, in progress** |
+| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 45Hz assumed (see below) | **acquired and converted, 2026-09-30 — see below** |
 | 12 | OpenNEEDS [O1] | 44 | 2 | reading, drawing, shooting, manipulation | yes | **not obtained (user, 2026-09-30)** |
 | 13 | mmWave XR Mobility [M1] | not stated | 45h total | Alyx, Wrench, Pistol Whip | yes, 500Hz | contact authors |
 | 14 | NTHU 6-DoF Privacy [N1] | not stated | not stated | 3D virtual world | yes | contact authors |
 | 15 | Cognitive-State XR Motion [G1] | not stated | not stated | reading/confusion/hesitation tasks | yes, 72Hz | release pending publication |
 
-### 16. Cross-system VR ball throwing — the second priority request
+### 16. Cross-system VR ball throwing — ACQUIRED and converted, 2026-09-30
 
-**The only multi-headset dataset found, and one of only two with genuine day-scale session
-separation.** Verified from an open-access paper using it [P1], since the Data in Brief
-article itself is behind a CAPTCHA:
+**The only multi-headset dataset acquired, and the only confirmed cross-day corpus in the
+project besides Who Is Alyx.** Fetched from `github.com/Terascale-All-sensing-Research-Studio/
+MultiModal_VR_BallThrowing_Dataset` (**Apache-2.0** per the repository's own LICENSE; the
+version-of-record paper is CC BY-NC 4.0 per Crossref, a different license for a different
+object) — only `vrmotions/*.npy`, `capturetimedata.csv` and `demographics.csv` (~27MB); no
+video, no body-pose keypoints, both outside head-only scope. Full structure, PROVENANCE and
+gate on AVALON (`docs/acceptance/ballthrowing_corpus_gate.json`).
 
-- **41 participants**, right-handed, ball-throwing task in Unity
-- **6 sessions per participant, separated by at least one day** — 2 sessions on each of
-  **Meta Quest, HTC Vive, HTC Vive Cosmos**, covering both lighthouse and camera-based
-  tracking
-- HMD **and** two controllers recorded; we take the head track only
-- 10 trials per session, **fixed 3-second recordings**, 225 / 135 / 135 frames per device
-  (~75Hz / 45Hz / 45Hz)
+- **41 participants, 6 sessions each** (2 per headset on Meta Quest, HTC Vive, HTC Vive
+  Cosmos), **10 throws per session, 135 samples per throw** — 2,460 CSVs total, loader-verified
+  at 4,920 windows (`sample_time=1`).
+- **Day gaps are real and directly readable** from `capturetimedata.csv` (1-30 days per
+  participant), carried into `PROVENANCE.md`/`day_gaps.csv` in full rather than summarised.
+- **Neither the head block, the Euler convention, the id mapping, nor the actual sample count
+  could be taken from the README or the paper — all four were established empirically:**
+  head is columns 7-13 of 21 (trigger exactly 0 only there, across all 6 files); orientation
+  is Euler **radians**, order **zyx** (a brute-force search found the "degrees" reading
+  degenerate — the raw values are too small to distinguish orders under that interpretation);
+  the array-index-to-id mapping is confirmed by a height correlation of **r=0.82-0.94** across
+  all six files (the opposite of Nymeria's r=0.057 — this corpus's head height is real); and
+  **the paper's stated 225/135/135-frame (75/45/45Hz) claim does not match what ships** — all
+  six files are uniformly 135 samples, so the converted `SessionTime` uses an *assumed* 45Hz,
+  flagged as assumed rather than measured.
+- **Mean head height (1.95-2.16m) is a per-scene vertical offset, not eye height** — but it
+  preserves the real relative signal (the height correlation above), unlike VR.net's
+  Pottery/Mini_Racing where the same class of offset destroys the signal entirely.
+- 10 throws of ~3s each per session — well below the pipeline's standard window length.
+  **Test set only, at short window lengths; the scoring design is the Coordinator's to
+  register, not decided in conversion.**
 
-**Why it matters for our scope specifically.** The user's stated goal is all of XR
-including glasses, so device-independence is part of the claim, not a footnote. This is the
-only dataset found that can test it: if identity transfers across Quest, Vive and Cosmos, that
-is direct evidence the model is not learning a tracking-system artefact. Combined with
-6 sessions a day or more apart, it answers *two* questions nothing else here can.
-
-**The limitation is severe and bounds its use.** 3-second recordings mean roughly 30 seconds
-of motion per session and ~180s per user in total. At `sample_time=2` that is about 90
-windows per user; at `sample_time=5` it yields almost nothing. **Test set only, and only at
-short window lengths.**
-
-- **Access**: the original repository, `github.com/Terascale-All-sensing-Research-Studio/VR-Biometric-Authentication`, now returns **404** — the catalogue entry [R1] is a dead link and this Data in Brief release supersedes it.
-- Data in Brief is normally open access with a named repository; the article is
-  S2352340925005542 [T1]. **Someone with institutional access should read its Data
-  Availability statement** — that names the current host.
-- The group is Wright State University's Terascale All-sensing Research Studio (TARS).
+**Why it matters for our scope specifically.** The user's stated goal is all of XR including
+glasses, so device-independence is part of the claim, not a footnote. This is the only dataset
+acquired that can test it directly: if identity transfers across Quest, Vive and Cosmos, that
+is evidence the model is not learning a tracking-system artefact — combined with a genuine
+day-scale gap, the only instrument in the project that can ask both questions at once.
 
 ### 10. Stanford Longitudinal Social VR — the priority request
 
