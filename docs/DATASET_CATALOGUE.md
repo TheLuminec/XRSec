@@ -33,7 +33,8 @@ access routes.
 | **Nymeria** | 236 | 1-8 sequences (median 5; 1,100 in all), **one sitting** | unscripted daily life, 20 scripts | **real AR glasses** (Project Aria) |
 | **Across XR Applications** | 49 | 5 applications, **one sitting**, one unbroken recording each | Superhot, Half-Life: Alyx, Beat Saber, Synth Riders, Social VR | VR |
 | **Questset** | 60 | 2 titles of 4, **one sitting** | Beat Saber, Cooking Sim, Medal of Honor, Forklift Sim | VR |
-| **total** | **4,797** (4,784 with windows at `channels=full`) | | **~5 activity types plus daily life** | |
+| **VRNet** | 21 identified + 5 unidentified | 1-2 of 8 applications, **NOT fully crossed** (3 disjoint groups) | Beat Saber, Monster Awaken, Traffic Cop, VR ROME, Carton Network, Voxel Shot VR, Pottery, Mini Racing | VR |
+| **total** | **4,823** (26 VRNet directories; see the VRNet caveat block below before counting the 5 unidentified as identities) | | **~5 activity types plus daily life** | |
 
 *Regenerated 2026-09-21 from `processed_datasets/` on AVALON, counting **directories** under each
 `users/` (never `ls | wc -l`, which over-counts by one wherever a `CITATION.txt` sits inside
@@ -519,9 +520,9 @@ the papers and lab pages linked, and are deliberately not guessed here.**
 
 | # | Dataset | Identities | Sessions/user | Task | Head 6DoF | How to get it |
 |---|---|---|---|---|---|---|
-| 10 | Stanford Longitudinal Social VR [S1] | **232** | **8, weekly** | social VR | yes, confirmed | corresponding author |
-| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 75/45/45Hz | via the Data in Brief article — see below |
-| 12 | OpenNEEDS [O1] | 44 | 2 | reading, drawing, shooting, manipulation | yes | signed data-use agreement |
+| 10 | Stanford Longitudinal Social VR [S1] | **232** | **8, weekly** | social VR | yes, confirmed | **not obtainable for now: the request requires the user's own IRB approval (user, 2026-09-30)** |
+| 16 | **Cross-system VR ball throwing** [T1] | **41** | **6, >=1 day apart** | ball throwing on **3 headsets** | yes, 75/45/45Hz | **found: `github.com/Terascale-All-sensing-Research-Studio/MultiModal_VR_BallThrowing_Dataset`, Apache-2.0 — replaces the dead link below; acquisition authorised by the user 2026-09-30, in progress** |
+| 12 | OpenNEEDS [O1] | 44 | 2 | reading, drawing, shooting, manipulation | yes | **not obtained (user, 2026-09-30)** |
 | 13 | mmWave XR Mobility [M1] | not stated | 45h total | Alyx, Wrench, Pistol Whip | yes, 500Hz | contact authors |
 | 14 | NTHU 6-DoF Privacy [N1] | not stated | not stated | 3D virtual world | yes | contact authors |
 | 15 | Cognitive-State XR Motion [G1] | not stated | not stated | reading/confusion/hesitation tasks | yes, 72Hz | release pending publication |
@@ -941,3 +942,60 @@ corroboration of the collapse our paper is about, from a group with no stake in 
 **Cost:** 3 GB, CC BY 4.0, direct download, **no agreement to sign, no account, no request**. The
 cheapest acquisition ever assessed in this file, and the only one that addresses a constraint the
 paper actually names. **Not fetched** - acquisition is the user's decision, per the standing rule.
+
+## VRNet (2026-09-30) - a third cross-application corpus, and NOT fully crossed
+
+`huggingface.co/datasets/cschell/xr-motion-dataset-catalogue`, `vr_net` subset -- fetched via
+`huggingface_hub.snapshot_download` restricted to `vr_net/*` (never `trust_remote_code=True`, which
+would execute the catalogue's own loading script). Dataset paper: Wen et al., *VR.net: A Real-world
+Dataset for Virtual Reality Motion Sickness Research*, arXiv:2306.03381. **Acquisition authorised by
+the user, 2026-09-30.** Full assessment, gate and PROVENANCE are on AVALON
+(`processed_datasets/VRNet/PROVENANCE.md`, `docs/acceptance/vrnet_corpus_gate.json`).
+
+**Licence: CC BY-NC-SA 4.0**, per the catalogue's own loading script (a blanket declaration across
+all 8 of its configs; `vr_net` is not permission-gated the way RMillerBall22 is in the same script).
+The primary project page (`vrnet.ahlab.org`) did not resolve when checked, so this rests on the
+catalogue's declaration and a correctly matching citation rather than independent confirmation from
+the authors. Not the same object as BOXRR-23 licence-wise; treat separately.
+
+**21 participants, but four disjoint groups, not one fully-crossed 21-way corpus.** The acquisition
+brief said "7 applications"; there are 8, and no participant plays more than 2 of them:
+
+| group | users | applications |
+| --- | --- | --- |
+| A | P1, P2, P4, P5, P6 (P3: Beat Saber only) | Beat_saber + Monster_awaken |
+| B | P7, P8, P9, P10, P11 | Traffic_Cop + VR_ROME |
+| C | P12-P16 | Carton_Network + Voxel_Shot_VR |
+| D | P22-P26 | Pottery only |
+
+**This is the Questset trap in a narrower form than Questset itself** - Questset is 2 disjoint
+2-application groups of ~30; VR.net is 3 disjoint 2-application groups of 5-6 plus 2
+single-application ones (P3, group D). A cross-application arm here compares only **within** one of
+groups A/B/C (25 people with a real pair), never all 8 applications or all 21 people. **Across-XR
+remains the only fully-crossed corpus in the project.**
+
+**Five sessions (`Mini_Racing`) carry no participant id at all** - the upstream recording folder had
+no `P<n>` prefix, so the catalogue's own converter took the whole timestamp string as "user". Written
+to disk (`unknown_VRLOG-<n>`) but excluded from every identity count and never paired with anything.
+
+**Two of the eight applications' position channel is not head height.** `Pottery` and `Mini_Racing`
+read mean `HmdPosition.y` of -0.05 to +0.23 m against 1.36-1.66 m on the other six; orientation
+(|q| and the up-axis invariant) is unaffected on all eight, so this is specifically those two
+engines tracking the player relative to an in-game object rather than the room floor. Do not read
+height on these two applications; do not include them in a cross-application height-cue claim.
+
+**Native rate: `VR_ROME` is a large, consistent outlier** - 11.8-18.2 Hz across all 5 of its
+sessions against 35.7-71.4 Hz on the other seven applications, a genuine per-application rate rather
+than a corrupted file.
+
+**Session structure (one sitting or different days) is UNRESOLVED, not guessed.** The only
+per-session time signal is an undocumented `VRLOG-<digits>` filename suffix, and no source reached
+(catalogue, loading script, conversion-scripts repo, arXiv paper, or the unreachable project page)
+documents its format. Treat VR.net as one-sitting-or-unknown until this is resolved from the
+original raw data or the authors - it is not currently evidence of cross-day persistence.
+
+**What survives all of that:** 26 real CSVs, loader-verified at 5s@20Hz to 26 users / 6,171 windows,
+|q| = 1.0 throughout, and a genuine third instrument for the within-group cross-application question
+on groups A (10 people), B (10 people) and C (10 people) - 30 people total with a usable pair, on
+three application-pairs none of Across-XR or Questset cover. Not a 21-person, 8-application corpus;
+report it as three separate 2-application cells, each its own small instrument.

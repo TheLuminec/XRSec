@@ -1,0 +1,183 @@
+{
+  "applications": {
+    "Beat_saber": 6,
+    "Carton_Network": 5,
+    "Mini_Racing": 5,
+    "Monster_awaken": 5,
+    "Pottery": 5,
+    "Traffic_Cop": 5,
+    "VR_ROME": 5,
+    "Voxel_Shot_VR": 5
+  },
+  "counts_per_user_application": {
+    "P1": {
+      "Beat_saber": 31087,
+      "Monster_awaken": 24332
+    },
+    "P10": {
+      "Traffic_Cop": 28422,
+      "VR_ROME": 11631
+    },
+    "P11": {
+      "Traffic_Cop": 28091,
+      "VR_ROME": 9715
+    },
+    "P12": {
+      "Carton_Network": 28219,
+      "Voxel_Shot_VR": 57752
+    },
+    "P13": {
+      "Carton_Network": 26595,
+      "Voxel_Shot_VR": 51832
+    },
+    "P14": {
+      "Carton_Network": 28060,
+      "Voxel_Shot_VR": 52749
+    },
+    "P15": {
+      "Carton_Network": 28645,
+      "Voxel_Shot_VR": 53079
+    },
+    "P16": {
+      "Carton_Network": 27443,
+      "Voxel_Shot_VR": 49540
+    },
+    "P2": {
+      "Beat_saber": 33363,
+      "Monster_awaken": 24761
+    },
+    "P22": {
+      "Pottery": 38581
+    },
+    "P23": {
+      "Pottery": 36138
+    },
+    "P24": {
+      "Pottery": 43147
+    },
+    "P25": {
+      "Pottery": 32604
+    },
+    "P26": {
+      "Pottery": 33130
+    },
+    "P3": {
+      "Beat_saber": 31583
+    },
+    "P4": {
+      "Beat_saber": 29736,
+      "Monster_awaken": 21258
+    },
+    "P5": {
+      "Beat_saber": 28655,
+      "Monster_awaken": 25083
+    },
+    "P6": {
+      "Beat_saber": 30846,
+      "Monster_awaken": 22854
+    },
+    "P7": {
+      "Traffic_Cop": 28781,
+      "VR_ROME": 8607
+    },
+    "P8": {
+      "Traffic_Cop": 27461,
+      "VR_ROME": 8870
+    },
+    "P9": {
+      "Traffic_Cop": 28622,
+      "VR_ROME": 8683
+    },
+    "unknown_VRLOG-6061345": {
+      "Mini_Racing": 31083
+    },
+    "unknown_VRLOG-6061400": {
+      "Mini_Racing": 30571
+    },
+    "unknown_VRLOG-6061651": {
+      "Mini_Racing": 29159
+    },
+    "unknown_VRLOG-6061738": {
+      "Mini_Racing": 31621
+    },
+    "unknown_VRLOG-6062028": {
+      "Mini_Racing": 31532
+    }
+  },
+  "mean_head_height_m": {
+    "Beat_saber": 1.5019,
+    "Carton_Network": 1.5016,
+    "Mini_Racing": -0.0289,
+    "Monster_awaken": 1.4135,
+    "Pottery": 0.0549,
+    "Traffic_Cop": 1.5665,
+    "VR_ROME": 1.575,
+    "Voxel_Shot_VR": 1.5156
+  },
+  "native_hz_by_session": {
+    "P1/Beat_saber": 38.462,
+    "P1/Monster_awaken": 35.714,
+    "P10/Traffic_Cop": 35.714,
+    "P10/VR_ROME": 18.182,
+    "P11/Traffic_Cop": 35.714,
+    "P11/VR_ROME": 12.987,
+    "P12/Carton_Network": 37.037,
+    "P12/Voxel_Shot_VR": 71.429,
+    "P13/Carton_Network": 37.037,
+    "P13/Voxel_Shot_VR": 71.429,
+    "P14/Carton_Network": 37.037,
+    "P14/Voxel_Shot_VR": 71.429,
+    "P15/Carton_Network": 38.462,
+    "P15/Voxel_Shot_VR": 71.429,
+    "P16/Carton_Network": 38.462,
+    "P16/Voxel_Shot_VR": 71.429,
+    "P2/Beat_saber": 37.037,
+    "P2/Monster_awaken": 35.714,
+    "P22/Pottery": 62.5,
+    "P23/Pottery": 50.0,
+    "P24/Pottery": 37.037,
+    "P25/Pottery": 38.462,
+    "P26/Pottery": 37.037,
+    "P3/Beat_saber": 38.462,
+    "P4/Beat_saber": 37.037,
+    "P4/Monster_awaken": 35.714,
+    "P5/Beat_saber": 38.462,
+    "P5/Monster_awaken": 35.714,
+    "P6/Beat_saber": 38.462,
+    "P6/Monster_awaken": 35.714,
+    "P7/Traffic_Cop": 35.714,
+    "P7/VR_ROME": 12.048,
+    "P8/Traffic_Cop": 35.714,
+    "P8/VR_ROME": 11.765,
+    "P9/Traffic_Cop": 35.714,
+    "P9/VR_ROME": 12.195,
+    "unknown_VRLOG-6061345/Mini_Racing": 37.037,
+    "unknown_VRLOG-6061400/Mini_Racing": 37.037,
+    "unknown_VRLOG-6061651/Mini_Racing": 37.037,
+    "unknown_VRLOG-6061738/Mini_Racing": 38.462,
+    "unknown_VRLOG-6062028/Mini_Racing": 37.037
+  },
+  "num_identified_users": 21,
+  "num_unidentified_sessions": 5,
+  "quat_norm_mean": {
+    "Beat_saber": 0.999999,
+    "Carton_Network": 1.0,
+    "Mini_Racing": 1.0,
+    "Monster_awaken": 1.0,
+    "Pottery": 1.0,
+    "Traffic_Cop": 1.0,
+    "VR_ROME": 1.0,
+    "Voxel_Shot_VR": 1.0
+  },
+  "session_structure": "UNRESOLVED -- see prepare_vrnet.py module docstring",
+  "up_axis_invariant": {
+    "Beat_saber": 0.9753,
+    "Carton_Network": 0.9386,
+    "Mini_Racing": 0.9193,
+    "Monster_awaken": 0.8777,
+    "Pottery": 0.9407,
+    "Traffic_Cop": 0.9741,
+    "VR_ROME": 0.9259,
+    "Voxel_Shot_VR": 0.9664
+  }
+}
