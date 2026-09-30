@@ -1844,3 +1844,16 @@ the scoring can use them.
 **Known design issue, the Coordinator's:** every checkpoint we hold uses 10-second windows, and a throw
 is about 3 s. How this corpus gets scored (shorter-window checkpoints, or something registered to
 bridge throws) is decided in a registration after the gate, not in the conversion.
+
+## From the Coordinator: ball-throwing scoring registered; Miami rebuilds the corpus from source - 2026-09-30
+
+Registered before any run: `docs/acceptance/ballthrowing_cross_day_REGISTERED.md` (`f388fbf`).
+- Harness: `ballthrowing_cross_day.py`, fixture-tested. A perfect embedding scores 1.0 and a constant
+  one 0.0; with day-2 identities shifted, same-session reads 1.0 and same-headset cross-day reads 0.0.
+- Miami trains the short-window treatment arm (`treatment_short_lists.py`, 2 s windows at stride 5,
+  three seeds) and scores it on GPU.
+- **Miami gets the corpus by rebuilding it** with Data's `prepare_ballthrowing.py`, which fetches the
+  same public, user-authorised files: about 30 MB, motion arrays, capture times and demographics, no
+  video. It then proves byte-equality against `docs/acceptance/ballthrowing_manifest_avalon.txt`:
+  2,462 files, sha256, `PROVENANCE.md` excluded because it legitimately differs per machine. Any
+  mismatch stops the chain.
