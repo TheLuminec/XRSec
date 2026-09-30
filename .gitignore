@@ -41,3 +41,4 @@ configs/nymeria_in_domain_*.yaml
 configs/nymeria_lso_*.yaml
 configs/exposure_breadth_*.yaml
 configs/questset_exposure_*.yaml
+configs/treatment_*s_*.yaml
