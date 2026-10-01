@@ -1,0 +1,248 @@
+{
+ "refused": [],
+ "levels": {
+  "br": {
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "C0": {
+    "mean": 0.7219512195121952,
+    "lo": 0.6662567750677507,
+    "hi": 0.7757452574525745
+   },
+   "C1": {
+    "mean": 0.5497289972899729,
+    "lo": 0.4830623306233063,
+    "hi": 0.6154471544715447
+   },
+   "C2": {
+    "mean": 0.3421070460704607,
+    "lo": 0.28922425474254737,
+    "hi": 0.3984103997289972
+   },
+   "best_epochs": {
+    "1": null,
+    "2": null,
+    "3": null
+   }
+  },
+  "control": {
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "C0": {
+    "mean": 0.8280487804878047,
+    "lo": 0.7907859078590787,
+    "hi": 0.8601659891598917
+   },
+   "C1": {
+    "mean": 0.6914634146341463,
+    "lo": 0.6521680216802168,
+    "hi": 0.7306266937669377
+   },
+   "C2": {
+    "mean": 0.4452913279132791,
+    "lo": 0.39498475609756095,
+    "hi": 0.4976287262872628
+   },
+   "best_epochs": {
+    "1": null,
+    "2": null,
+    "3": null
+   }
+  },
+  "raw": {
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "C0": {
+    "mean": 0.9163956639566396,
+    "lo": 0.8944444444444444,
+    "hi": 0.9360433604336043
+   },
+   "C1": {
+    "mean": 0.5447154471544715,
+    "lo": 0.48671747967479684,
+    "hi": 0.5987838753387533
+   },
+   "C2": {
+    "mean": 0.13275745257452576,
+    "lo": 0.10420054200542005,
+    "hi": 0.16321222899728996
+   },
+   "best_epochs": {
+    "1": null,
+    "2": null,
+    "3": null
+   }
+  },
+  "treatment": {
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "C0": {
+    "mean": 0.824119241192412,
+    "lo": 0.7844173441734418,
+    "hi": 0.8573204607046071
+   },
+   "C1": {
+    "mean": 0.6932249322493226,
+    "lo": 0.6485094850948511,
+    "hi": 0.7364498644986449
+   },
+   "C2": {
+    "mean": 0.4580623306233062,
+    "lo": 0.4098568766937669,
+    "hi": 0.5087737127371273
+   },
+   "best_epochs": {
+    "1": null,
+    "2": null,
+    "3": null
+   }
+  }
+ },
+ "rows": {
+  "nym_C1": {
+   "mean": 0.0017615176151761739,
+   "lo": -0.016531165311653086,
+   "hi": 0.01991869918699189,
+   "seeds": [
+    1,
+    2,
+    3
+   ]
+  },
+  "nym_persistence": {
+   "mean": 0.005691056910569111,
+   "lo": -0.015040650406504088,
+   "hi": 0.02682926829268297,
+   "seeds": [
+    1,
+    2,
+    3
+   ]
+  },
+  "raw_C1": {
+   "mean": -0.14850948509485098,
+   "lo": -0.21003048780487812,
+   "hi": -0.08956639566395665,
+   "seeds": [
+    1,
+    2,
+    3
+   ]
+  },
+  "raw_headset": {
+   "mean": -0.17679539295392954,
+   "lo": -0.2365870596205962,
+   "hi": -0.110737635501355,
+   "seeds": [
+    1,
+    2,
+    3
+   ]
+  },
+  "br_rho": {
+   "mean": -0.038450685048458166,
+   "lo": -0.08206052812166462,
+   "hi": 0.008689433378859409,
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "rho_br": 0.6223194478678826,
+   "rho_dyn": 0.6607701329163408
+  },
+  "tilt_headset": {
+   "mean": -0.05518292682926827,
+   "lo": -0.1018292682926829,
+   "hi": -0.014631605691056941
+  },
+  "alyx_rho_2s": {
+   "mean": 0.5275731838785911,
+   "lo": 0.4055764785488591,
+   "hi": 0.6594685544243486,
+   "units": 43
+  }
+ },
+ "verdicts": {
+  "nym_C1": "interval spans 2 regions (FALSIFIER: Nymeria training does not help cross-day identification on an unseen corpus | not resolved); the mean sits in: not resolved",
+  "nym_persistence": "interval inside one region: BAND: no change in persistence",
+  "raw_C1": "interval inside one region: raw does not add across days within a headset",
+  "raw_headset": "interval inside one region: BAND: a headset change scrambles the static frame raw relies on",
+  "br_rho": "interval spans 2 regions (FALSIFIER: removing absolute tilt does not reduce the proportional headset cost | not resolved); the mean sits in: not resolved",
+  "tilt_headset": "interval spans 2 regions (BAND: tilt identity is headset-bound | weak); the mean sits in: BAND: tilt identity is headset-bound",
+  "alyx_rho_2s": "interval inside one region: BAND: alyx stays costly at 2 s; ball-throwing's smaller day cost is the corpus/task"
+ },
+ "preconditions": {
+  "br_C1_lo>=0.15": {
+   "C1": {
+    "mean": 0.5497289972899729,
+    "lo": 0.4823848238482385,
+    "hi": 0.6186991869918699
+   },
+   "met": true
+  },
+  "tilt_C1_lo>=0.049": {
+   "C1": {
+    "mean": 0.1516260162601626,
+    "lo": 0.10975609756097561,
+    "hi": 0.19674796747967482
+   },
+   "C2": {
+    "mean": 0.09644308943089433,
+    "lo": 0.07702997967479674,
+    "hi": 0.1183968495934959
+   },
+   "met": true
+  },
+  "alyx_2s_same_day_lo>=0.15": {
+   "same_day": {
+    "mean": 0.4577815477959609,
+    "lo": 0.39805608637369994,
+    "hi": 0.5205748913743615
+   },
+   "cross_day": {
+    "mean": 0.24151326869158454,
+    "lo": 0.19237294659484297,
+    "hi": 0.2923259413467343
+   },
+   "met": true
+  }
+ },
+ "descriptive": {
+  "raw_C0-dyn_C0": {
+   "mean": 0.09227642276422765,
+   "lo": 0.06151761517615178,
+   "hi": 0.12493224932249326
+  },
+  "raw_C2-dyn_C2": {
+   "mean": -0.32530487804878044,
+   "lo": -0.3764913617886179,
+   "hi": -0.2765243902439025
+  },
+  "alyx_cost_2s-10s_paired": {
+   "mean": 0.04429557653435923,
+   "lo": 0.005410166622411784,
+   "hi": 0.08221326720897361,
+   "units": 43,
+   "rho_10s": 0.649321144927681
+  },
+  "alyx_cross_day_treatment_2s-control_2s": {
+   "mean": 0.010136825032203114,
+   "lo": -0.0013110157884582742,
+   "hi": 0.02236911932089653,
+   "units": 43
+  }
+ }
+}
