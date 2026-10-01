@@ -209,3 +209,69 @@ expectation for `raw_C1`, and it has to hold over three seeds before it is said.
 Two convergence facts to carry into the three-seed reading:
 - **br s1 selected epoch 120 of 120.** It is censored and was still improving when stopped.
 - **raw s1 selected epoch 2** and stopped on patience at 17.
+
+## Result, three seeds (2026-10-01): two predictions held, one failed, one was not supported
+
+**Provenance.**
+- 15 gates passed at 0.0e+00: 9 ball-throwing and 6 alyx.
+- The files came from `origin/miami-server` 474eefd and were propagated to main before reading (reading output committed at `7b7d1da` before interpretation).
+- The reading is `broad_2s_read.json`, produced by the registered script.
+- The nine checkpoints are on AVALON, count 9, sha256 9/9.
+
+Levels, rank-1 at N=41 (chance 0.024):
+
+| arm | C0 same session | C1 same headset, other day | C2 other headset | best_epoch |
+| --- | --- | --- | --- | --- |
+| treatment_2s (dyn) | 0.824 | 0.693 | 0.458 | |
+| control_2s (no Nymeria) | 0.828 | 0.691 | 0.445 | 107 / 118 / 117 |
+| raw | **0.916** | **0.545** | **0.133** | **2 / 2 / 2** |
+| br (no absolute tilt) | 0.722 | 0.550 | 0.342 | 120 (censored) / 115 / 94 |
+
+| row | three seeds | verdict |
+| --- | --- | --- |
+| nym_C1 | +0.002 [-0.017, +0.020] | spans falsifier and "not resolved"; the mean is in "not resolved"; the BAND is excluded (upper edge +0.0199 against +0.02) |
+| nym_persistence | +0.006 [-0.015, +0.027] | **BAND**: no change in persistence |
+| raw_C1 | **-0.149 [-0.210, -0.090]** | inside "raw does not add across days within a headset"; the registered BAND (+0.05 and above) **failed** |
+| raw_headset | **-0.177 [-0.237, -0.111]** | **BAND** |
+| br_rho | -0.038 [-0.082, +0.009] (rho 0.622 against 0.661) | spans falsifier and "not resolved"; the mean is in "not resolved"; the BAND is excluded |
+| tilt_headset (Q3b) | -0.055 [-0.102, -0.015] | spans BAND and weak (see Q3b) |
+| alyx_rho_2s | **0.528 [0.406, 0.660]** | **BAND** |
+
+**Q1: Nymeria training buys nothing measurable here.**
+- Treatment and control are equal on every ball-throwing condition.
+- Identification persists across days equally in both.
+- Alyx at 2 s agrees descriptively: +0.010 [-0.001, +0.022].
+- The upper edge, +0.0199, misses the band edge of +0.02 by 0.0001. By the near-miss rule that point is not
+  argued. The substance is that Nymeria's effect on an unseen corpus is bounded at about +0.02, consistent with
+  Questset's +0.027.
+
+**Q2: the static cue is session-bound, and the registered expectation was wrong in sign.**
+- Raw is +0.092 [+0.062, +0.125] better within a session.
+- Raw is 0.149 worse across days on the same headset.
+- Raw collapses to 0.133 across headsets: -0.325 against dyn.
+- So a model allowed absolute pose reads something that belongs to the session, such as where the person stood
+  that day, and that cue does not persist.
+- This contrasts with Across-XR, where raw added +0.117 across applications **inside one sitting**. The static
+  cue rides on the sitting, as the placement findings in CLAUDE.md say.
+- **Confound, stated:** raw selected epoch 2 in every seed. Part of its cross-day deficit may be behaviour it
+  never learned, not the static cue alone. Both readings give the same audit conclusion: on a cross-day corpus,
+  `dyn` is not understating what a pose-reading model identifies.
+
+**Q3: the tilt account is not supported by the model-side test.**
+- Removing absolute tilt (`br`) does not reduce the proportional headset cost. rho 0.622 against 0.661; the
+  point estimate goes the wrong way and the BAND is excluded.
+- Tilt is a real cue that is partly headset-bound (Q3b: 0.152 across days, -0.055 across headsets).
+- But it is not what drives the model's -0.235.
+- Caveats:
+  - br changes more than tilt (first-frame reference, rotated position);
+  - br seed 1 was censored at 120;
+  - br sits lower overall (C1 0.550).
+- The headset cost stays unexplained.
+
+**Q4: ball-throwing's smaller day cost is the corpus or task, not the window.**
+- At 2 s, alyx's persistence ratio is 0.528: same-day 0.458, cross-day 0.242.
+- That is no better than 10 s (0.650) and well below ball-throwing's 0.841.
+- The absolute alyx cost is somewhat smaller at 2 s (-0.216 against -0.261, paired +0.044 [+0.005, +0.082]),
+  but only because the level is lower.
+- So "about half alyx's day cost" compares two corpora fairly. What differs is the activity: one repetitive
+  2 s throw against free locomotion. That is the reading to carry, not an artefact of window length.

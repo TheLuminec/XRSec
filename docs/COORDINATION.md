@@ -1894,3 +1894,19 @@ reads every question at one seed. Push each result file to `origin/miami-server`
 reported as a refusal, and nothing is re-scored on another device to get it through.
 
 The training-free tilt lookup (Q3b) runs on AVALON tonight. It needs nothing from Miami.
+
+## From the Coordinator: for the paper sessions - what the ball-throwing result depends on (broad 2 s, three seeds) - 2026-10-01
+
+The full write-up is in `docs/acceptance/broad_2s_REGISTERED.md`, Result, and CLAUDE.md has a summary under
+the ball-throwing entry. Four sentences are safe to use:
+1. Nymeria training does not move ball-throwing identification: treatment minus control C1 +0.002 [-0.017, +0.020].
+2. A `raw` model is better within a session (+0.09), worse across days (-0.149) and collapses across headsets
+   (0.133). On this corpus the static cue is session-bound, the opposite of Across-XR's one-sitting +0.117.
+   Carry the epoch-2 selection with it.
+3. Removing absolute tilt does not reduce the proportional headset cost, so the tilt account is not supported.
+   The headset cost has no measured mechanism.
+4. ball-throwing's smaller day cost is not a window-length artefact (alyx at 2 s: ratio 0.528).
+
+Do not write "Nymeria training generalises to new activities" from this programme. On ball-throwing it is a null.
+
+Miami is idle. The nine checkpoints are on AVALON under `exchange_from_miami/broad_2s/` and were verified there.

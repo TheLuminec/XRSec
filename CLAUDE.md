@@ -1175,8 +1175,30 @@ rank-1 N=41 (chance 0.024):
 - **headset cost -0.235 [-0.282, -0.191]** (-0.142 gap-matched).
 
 So the learned component persists across days on a second corpus, and **a headset change costs more
-than a day** without destroying identity. The hypothesis that `dyn`'s retained pitch and roll carry
-headset fit is untested. Headset order was fixed, so device and elapsed time are not fully separable.
+than a day** without destroying identity. Headset order was fixed, so device and elapsed time are not fully
+separable.
+
+**What that result depends on (broad 2 s programme, 2026-10-01, `docs/acceptance/broad_2s_REGISTERED.md`,
+three seeds, 15 gates at 0.0e+00).**
+- **Nymeria training buys nothing measurable on it.** The control without Nymeria matches the treatment on
+  every condition (C1 +0.002 [-0.017, +0.020], persistence unchanged). Nymeria's reach to unseen corpora is
+  about +0.02 at most here, consistent with Questset.
+- **The static-cue audit came out opposite to Across-XR, and opposite to my registered prediction.**
+  - `raw` is +0.09 within a session and -0.149 across days on the same headset.
+  - Across headsets it collapses to 0.133.
+  - So absolute pose here is a session cue that does not persist. On Across-XR, inside one sitting, raw added
+    +0.117. **The static cue rides on the sitting.**
+  - raw selected epoch 2 in all seeds, so part of the deficit may be unlearned behaviour.
+  - Either way, on a cross-day corpus `dyn` does not understate what a pose model identifies.
+- **The tilt account of the headset cost is not supported.**
+  - A training-free tilt lookup identifies across days at 0.152 (N=41) and loses 0.055 across headsets, so tilt
+    is real and partly headset-bound.
+  - But `br`, which removes absolute tilt, keeps the same proportional headset cost: rho 0.622 against 0.661,
+    with the band excluded.
+  - The -0.235 stays unexplained.
+- **The half-size day cost is the corpus, not the window.** At 2 s, alyx's persistence ratio is 0.528,
+  against 0.650 at 10 s and ball-throwing's 0.841. The difference is the activity (one repetitive throw
+  against free locomotion), not window length.
 
 **Two instrument facts from getting there.** Omitting `--normalizer-dataset` on a LOAO checkpoint
 target-fits silently while the gate still passes. On P3 superhot that moved A1 0.283 -> 0.250 and read as
