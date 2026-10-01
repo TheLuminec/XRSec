@@ -31,7 +31,7 @@ gallery/training and probe/test. This table is the organising object for thesis 
 | unseen users **and unseen tasks**, AR glasses | Nymeria LSO (25 users, 5 scripts) | 0.6145; LSO - treatment **-0.043 [-0.056, -0.030]** | - | `nymeria_lso_REGISTERED.md` |
 | unseen users, **unseen application** (same sitting) | Across-XR, users 32-48 | zero-shot 0.234; exposed (C2-lo) 0.375; **+0.119 [+0.050, +0.192]** vs Schach's 0.180 on their metric | `raw` adds **+0.117** at epoch 1 | `across_xr_alignment_RESULTS.md` |
 | application held out of training, at scale | Across-XR breadth | hold-out cost **-0.016 [-0.043, +0.014]**; breadth - treatment +0.108 | - | `exposure_breadth_REGISTERED.md` Am. 5 |
-| unseen corpus, second cross-application set | Questset | +0.056 [+0.037, +0.076] over zero-shot from breadth | height lookup at chance where posture changes | `questset_exposure_REGISTERED.md`, `questset_*.json` |
+| unseen corpus, second cross-application set | Questset | +0.056 [+0.037, +0.076] over zero-shot from breadth | height lookup at chance where posture changes | `exposure_breadth_REGISTERED.md` (Am. 4-5), `questset_geometry.py` / `questset_static_lookup.py` |
 | **different day**, same headset | alyx (N 12-17) | 0.483 vs 0.743 same day: **-0.261 [-0.345, -0.182]** | lateral lookup collapses (0.539), height holds (0.661) | `alyx_cross_day_REGISTERED.md` |
 | **different day**, same headset | ball-throwing (N=41, 2 s model) | 0.693 vs 0.824: **-0.131 [-0.172, -0.089]** | `raw` -0.149 across days | `ballthrowing_cross_day_REGISTERED.md`, `broad_2s_REGISTERED.md` |
 | **different headset**, different day | ball-throwing | 0.458: **-0.235 [-0.282, -0.191]**; tilt removal does not reduce it | `raw` collapses to 0.133 | same |
@@ -39,7 +39,7 @@ gallery/training and probe/test. This table is the organising object for thesis 
 Three structural nulls sit beside the table, all registered: identity count does not cross an
 activity boundary (0.672/0.672/0.671 raw; dyn saturates after 1000); activity diversity does not
 either (-0.0012 [-0.0045, +0.0020], 5 seeds); Nymeria training buys nothing on ball-throwing
-(+0.002 [-0.017, +0.020]) or the seated corpora (+0.003). Exposure to other people in the target
+(+0.002 [-0.017, +0.020], three seeds) or the seated corpora (+0.003, one seed at 240 epochs, `e240_transfer_REGISTERED.md`). Exposure to other people in the target
 application family is the only data-side lever measured to cross an application boundary.
 
 ## Candidate theses
@@ -57,7 +57,7 @@ unseen-application carry; alignment A2-A1 +0.011 [-0.020, +0.041] with band excl
 per-user range 0.068-0.371.
 
 **Strongest objection.** Everything is one sitting and seventeen people, and the project's own
-newer data say roughly a third of same-session identification does not survive a day and that the
+newer data say a sixth to a third of same-session identification does not survive a day and that the
 +0.117 static term is *session-bound* on a cross-day corpus. A reviewer who knows the field asks
 what 0.375 is worth next week, and the draft currently answers "unknown". Also: the beat requires
 training on their 23 users (the draft handles this honestly, but it is the attack that matters).
@@ -100,9 +100,10 @@ under-anchored.
 **Sentence.** A head-motion biometric is the sum of three components - placement in the tracking
 space, head height and posture, and a learned movement signature - and each travels a different
 distance: placement dies at the end of the sitting, height survives a day but not a change of
-posture, and the learned signature crosses people, applications and tasks, pays about a third of
-its value across a day and more across a headset. Published same-sitting figures, including the
-SOTA's, measure a mixture and cannot say which part they are reporting.
+posture, and the learned signature crosses people, applications and tasks, pays a sixth to a third
+of its value across a day depending on the activity, and more across a headset. Published
+same-sitting figures cannot say how much of what they report persists, and where position reaches
+the model they also mix placement in without saying so.
 
 **Carried by.** The boundary table above, in full: A supplies the external anchor (one row of the
 table, measured against a released model, paired), B supplies the rows the field has never
@@ -116,7 +117,7 @@ methodological claim - a mandatory training-free baseline beside every model fig
 the column split possible, so it stops being a side note and becomes the method. And the privacy
 reading sharpens: a behaviour-only assessment (Schach's) understates *same-sitting* risk by the
 static term, and a same-sitting assessment (everyone's, ours included) overstates *persistent*
-risk by about a third. Both halves are measured.
+risk by a sixth to a third. Both halves are measured.
 
 **Strongest objection.** Breadth over depth: a reviewer can say each row is a different corpus,
 window, metric and model, so the "table" is an assembly rather than one experiment. The defence is
@@ -181,5 +182,27 @@ activities" (null on ball-throwing); no mechanism for the headset cost (tilt tes
 supported; device confounded with elapsed time); no `raw` figure on Nymeria or the seated corpora
 without the placement caveat; no "more correspondences would fix alignment" (unearned); Nymeria
 row figures 0.717/0.726 are never quoted - the constrained 0.669 is; margin 0.1/15 reverses at
-scale; every one-sitting figure carries the cross-day cost of roughly a third when read as
-persistence; the `raw` cross-day deficit is not a mechanism (epoch 2 selected).
+scale; every one-sitting figure carries the cross-day cost (a sixth to a third: ball-throwing
+0.131/0.824, alyx 0.261/0.743) when read as persistence; the `raw` cross-day deficit is not a mechanism (epoch 2 selected).
+
+## Coordinator review (2026-10-01), applied at merge
+
+Five corrections. Every number was checked against its source; the rest of the document stands.
+
+1. **"About a third" overgeneralised one corpus, and the phrase was mine.** I gave it in my consultation
+   answer. The measured cross-day costs are 0.261 of 0.743 on alyx (35%) and 0.131 of 0.824 on
+   ball-throwing (16%). Every instance now reads "a sixth to a third, depending on the activity".
+2. **"Published same-sitting figures, including the SOTA's, measure a mixture" was false of Schach et al.**
+   Their BRV encoding discards head position by construction, which thesis E already says. What their
+   figure cannot say is how much of it persists. The sentence now says that, and confines the placement
+   mixture to models whose input contains position.
+3. **The Questset row's source is now right.** +0.056 [+0.037, +0.076] is breadth minus zero-shot from
+   `exposure_breadth_REGISTERED.md` (Amendments 4-5), not from the reverse-direction arm.
+4. **"Nymeria training buys nothing on the seated corpora (+0.003)" is one seed at 240 epochs.** It is now
+   marked as such; the ball-throwing null is the three-seed one.
+5. **Order the "placement dies at the end of the sitting" evidence.** Lead with the training-free legs:
+   alyx lateral 0.539 against height 0.661, and the co-location geometry. The `raw` model's cross-day
+   deficit carries the epoch-2 confound and is corroboration, not the premise.
+
+On metric mixing in the boundary table: give every row its own metric and N column. The cheapest fix is
+Nymeria rank-1 on the 48 held-out users, which needs CPU only. The choice of thesis remains the user's.
