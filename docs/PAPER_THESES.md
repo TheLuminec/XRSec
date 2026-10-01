@@ -31,8 +31,8 @@ gallery/training and probe/test. This table is the organising object for thesis 
 | unseen users **and unseen tasks**, AR glasses | Nymeria LSO (25 users, 5 scripts) | verification AUC, 25 users | 0.6145; LSO - treatment **-0.043 [-0.056, -0.030]** | - | `nymeria_lso_REGISTERED.md` |
 | unseen users, **unseen application** (same sitting) | Across-XR, users 32-48 | rank-1 @N=17 | zero-shot 0.234; exposed (C2-lo) 0.375; **+0.119 [+0.050, +0.192]** vs Schach's 0.180 on their metric | `raw` adds **+0.117** at epoch 1 | `across_xr_alignment_RESULTS.md` |
 | application held out of training, at scale | Across-XR breadth | rank-1 @N=17 | hold-out cost **-0.016 [-0.043, +0.014]**; breadth - treatment +0.108 | - | `exposure_breadth_REGISTERED.md` Am. 5 |
-| unseen corpus, second cross-application set | Questset | rank-1 @N=17 (also N=30) | +0.056 [+0.037, +0.076] over zero-shot from breadth | height lookup at chance where posture changes | `exposure_breadth_REGISTERED.md` (Am. 4-5), `questset_geometry.py` / `questset_static_lookup.py` |
-| **different day**, same headset | alyx (N 12-17) | rank-1, N 12-17 per seed | 0.483 vs 0.743 same day: **-0.261 [-0.345, -0.182]** | lateral lookup collapses (0.539), height holds (0.661) | `alyx_cross_day_REGISTERED.md` |
+| unseen corpus, second cross-application set | Questset | rank-1 @N=30, per user | +0.056 [+0.037, +0.076] over zero-shot from breadth | height lookup at chance where posture changes | `exposure_breadth_REGISTERED.md` (Am. 4-5), `questset_geometry.py` / `questset_static_lookup.py` |
+| **different day**, same headset | alyx (N 12-17) | rank-1, N 12-17 per seed | 0.483 vs 0.743 same day: **-0.261 [-0.345, -0.182]** | lateral lookup collapses (0.539), height holds (0.661) - lookup verification AUC, not rank-1 | `alyx_cross_day_REGISTERED.md` |
 | **different day**, same headset | ball-throwing (N=41, 2 s model) | rank-1 @N=41 | 0.693 vs 0.824: **-0.131 [-0.172, -0.089]** | `raw` -0.149 across days | `ballthrowing_cross_day_REGISTERED.md`, `broad_2s_REGISTERED.md` |
 | **different headset**, different day | ball-throwing | rank-1 @N=41 | 0.458: **-0.235 [-0.282, -0.191]**; tilt removal does not reduce it | `raw` collapses to 0.133 | same |
 
@@ -204,5 +204,5 @@ Five corrections. Every number was checked against its source; the rest of the d
    alyx lateral 0.539 against height 0.661, and the co-location geometry. The `raw` model's cross-day
    deficit carries the epoch-2 confound and is corroboration, not the premise.
 
-On metric mixing in the boundary table: give every row its own metric and N column. The cheapest fix is
+On metric mixing in the boundary table: give every row its own metric and N column (done in 2c25588; at merge, the Questset row was corrected to N=30, which is what the +0.056 reading uses, and the alyx static cell was marked as AUC). The cheapest fix is
 Nymeria rank-1 on the 48 held-out users, which needs CPU only. The choice of thesis remains the user's.
