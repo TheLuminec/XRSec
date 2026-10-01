@@ -155,3 +155,36 @@ contrast), and the paired 2 s minus 10 s difference in alyx cost on the same uni
 - Each result file is pushed to `origin/miami-server` as it lands.
 - A gate refusal is reported as a refusal and is never read. A refused checkpoint is never re-scored on a
   different device to get it through.
+
+## Result, Q3b (AVALON, 2026-10-01): tilt carries identity across days, and partly loses it across headsets
+
+Artefact `ballthrowing_tilt_lookup.json`, committed before it was read. Reading `broad_2s_read_tilt.json`.
+
+**Gate.** The lookup's code path, run on head height, reproduces the recorded `C1_height` and `C2_height` for
+all 41 users. The gap is exactly 0 on both its own path and the harness's.
+
+| tilt lookup, rank-1 N=41 (chance 0.024) | value |
+| --- | --- |
+| C1, same headset, other day | **0.152** [lower edge above 0.049, so the precondition is met] |
+| C2, other headset, other day | 0.096 |
+| `tilt_headset` (C2 - C1) | **-0.055 [-0.101, -0.014]** |
+| roll only / pitch only, C1 (descriptive) | 0.080 / 0.071 |
+
+**Verdict.**
+- The interval spans BAND and "weak". The mean sits in BAND.
+- The falsifier is excluded: the whole interval lies below zero.
+
+**Reading.**
+- Mean head tilt is a persistent cue on its own, at about 6 times chance across days and above the
+  height lookup (0.10).
+- A headset change costs it about a third of its value. So tilt identity is at least partly
+  headset-bound, as the fit account requires.
+- The account is supported, not shown. The model-side test is Q3a (`br`).
+
+**Scale.** Even if tilt explained all of the model's headset cost, tilt alone would lose 0.055 on a cue worth
+0.15. The model loses 0.235. So tilt can be at most part of the headset cost unless the model reads tilt
+far more sharply than a two-number lookup does.
+
+**Descriptive.** Each headset has its own common pitch offset: Quest about -8 degrees, Vive about -6, and
+Cosmos about -1. The per-session-type standardisation removes it. Under `dyn`, which keeps gravity, a model
+sees it, but the offset is common to everyone on a headset, so it carries no identity by itself.

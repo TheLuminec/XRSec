@@ -1,0 +1,58 @@
+{
+ "refused": [],
+ "levels": {
+  "treatment": {
+   "seeds": [
+    1,
+    2,
+    3
+   ],
+   "C0": {
+    "mean": 0.824119241192412,
+    "lo": 0.7841463414634148,
+    "hi": 0.8571815718157182
+   },
+   "C1": {
+    "mean": 0.6932249322493226,
+    "lo": 0.6490514905149052,
+    "hi": 0.7348238482384825
+   },
+   "C2": {
+    "mean": 0.4580623306233062,
+    "lo": 0.4094495257452575,
+    "hi": 0.50911331300813
+   },
+   "best_epochs": {
+    "1": null,
+    "2": null,
+    "3": null
+   }
+  }
+ },
+ "rows": {
+  "tilt_headset": {
+   "mean": -0.05518292682926827,
+   "lo": -0.10111788617886178,
+   "hi": -0.014225101626016288
+  }
+ },
+ "verdicts": {
+  "tilt_headset": "interval spans 2 regions (BAND: tilt identity is headset-bound | weak); the mean sits in: BAND: tilt identity is headset-bound"
+ },
+ "preconditions": {
+  "tilt_C1_lo>=0.049": {
+   "C1": {
+    "mean": 0.1516260162601626,
+    "lo": 0.10894308943089431,
+    "hi": 0.19634146341463415
+   },
+   "C2": {
+    "mean": 0.09644308943089433,
+    "lo": 0.07703252032520326,
+    "hi": 0.11778709349593494
+   },
+   "met": true
+  }
+ },
+ "descriptive": {}
+}
