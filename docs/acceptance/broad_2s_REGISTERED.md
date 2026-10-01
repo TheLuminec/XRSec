@@ -188,3 +188,24 @@ far more sharply than a two-number lookup does.
 **Descriptive.** Each headset has its own common pitch offset: Quest about -8 degrees, Vive about -6, and
 Cosmos about -1. The per-session-type standardisation removes it. Under `dyn`, which keeps gravity, a model
 sees it, but the offset is common to everyone on a headset, so it carries no identity by itself.
+
+## Interim, seed 1 only (2026-10-01 ~02:00): a progress note, not a result
+
+`broad_2s_read_s1_interim.json` was read with the registered script, on one seed per arm against
+treatment_2s seed 1. The registration reads three seeds, so nothing below is a verdict.
+
+| row | seed 1 | regions the interval touches |
+| --- | --- | --- |
+| nym_C1 | -0.021 [-0.051, +0.011] | falsifier and not resolved |
+| nym_persistence | +0.006 [-0.033, +0.044] | all three |
+| raw_C1 | -0.132 [-0.195, -0.069] | "raw does not add across days" |
+| raw_headset | -0.178 [-0.250, -0.104] | BAND |
+| br_rho | -0.008 [-0.073, +0.061] | falsifier and not resolved |
+
+Raw's levels are C0 0.914, C1 0.554 and C2 0.125, against dyn's 0.811, 0.686 and 0.436. On these levels the
+static cue raw reads helps within a session and hurts across a day. That is the opposite of the registered
+expectation for `raw_C1`, and it has to hold over three seeds before it is said.
+
+Two convergence facts to carry into the three-seed reading:
+- **br s1 selected epoch 120 of 120.** It is censored and was still improving when stopped.
+- **raw s1 selected epoch 2** and stopped on patience at 17.

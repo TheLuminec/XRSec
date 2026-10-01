@@ -1,0 +1,170 @@
+{
+ "refused": [],
+ "levels": {
+  "br": {
+   "seeds": [
+    1
+   ],
+   "C0": {
+    "mean": 0.7642276422764228,
+    "lo": 0.7117886178861789,
+    "hi": 0.8146341463414634
+   },
+   "C1": {
+    "mean": 0.5971544715447155,
+    "lo": 0.526829268292683,
+    "hi": 0.6658536585365853
+   },
+   "C2": {
+    "mean": 0.37428861788617884,
+    "lo": 0.3121951219512195,
+    "hi": 0.43922764227642275
+   },
+   "best_epochs": {
+    "1": null
+   }
+  },
+  "control": {
+   "seeds": [
+    1
+   ],
+   "C0": {
+    "mean": 0.8373983739837398,
+    "lo": 0.7979573170731706,
+    "hi": 0.8715447154471545
+   },
+   "C1": {
+    "mean": 0.7069105691056911,
+    "lo": 0.6646341463414634,
+    "hi": 0.7491869918699188
+   },
+   "C2": {
+    "mean": 0.4302845528455284,
+    "lo": 0.3763185975609756,
+    "hi": 0.4863821138211382
+   },
+   "best_epochs": {
+    "1": null
+   }
+  },
+  "raw": {
+   "seeds": [
+    1
+   ],
+   "C0": {
+    "mean": 0.9142276422764228,
+    "lo": 0.8918699186991871,
+    "hi": 0.9345528455284552
+   },
+   "C1": {
+    "mean": 0.5540650406504065,
+    "lo": 0.4947154471544716,
+    "hi": 0.6101626016260162
+   },
+   "C2": {
+    "mean": 0.1253048780487805,
+    "lo": 0.0967479674796748,
+    "hi": 0.15579268292682927
+   },
+   "best_epochs": {
+    "1": null
+   }
+  },
+  "treatment": {
+   "seeds": [
+    1
+   ],
+   "C0": {
+    "mean": 0.8105691056910569,
+    "lo": 0.7670731707317073,
+    "hi": 0.8467479674796748
+   },
+   "C1": {
+    "mean": 0.6861788617886179,
+    "lo": 0.6451219512195122,
+    "hi": 0.7260162601626017
+   },
+   "C2": {
+    "mean": 0.43567073170731707,
+    "lo": 0.389329268292683,
+    "hi": 0.4823170731707317
+   },
+   "best_epochs": {
+    "1": null
+   }
+  }
+ },
+ "rows": {
+  "nym_C1": {
+   "mean": -0.020731707317073158,
+   "lo": -0.05121951219512194,
+   "hi": 0.0105691056910569,
+   "seeds": [
+    1
+   ]
+  },
+  "nym_persistence": {
+   "mean": 0.006097560975609766,
+   "lo": -0.03292682926829268,
+   "hi": 0.04390243902439025,
+   "seeds": [
+    1
+   ]
+  },
+  "raw_C1": {
+   "mean": -0.13211382113821138,
+   "lo": -0.1951219512195122,
+   "hi": -0.06910569105691061,
+   "seeds": [
+    1
+   ]
+  },
+  "raw_headset": {
+   "mean": -0.1782520325203252,
+   "lo": -0.25040650406504067,
+   "hi": -0.10406250000000002,
+   "seeds": [
+    1
+   ]
+  },
+  "br_rho": {
+   "mean": -0.0081360558977156,
+   "lo": -0.07302882372759897,
+   "hi": 0.06143856125047026,
+   "seeds": [
+    1
+   ],
+   "rho_br": 0.626786929884275,
+   "rho_dyn": 0.6349229857819906
+  }
+ },
+ "verdicts": {
+  "nym_C1": "interval spans 2 regions (FALSIFIER: Nymeria training does not help cross-day identification on an unseen corpus | not resolved); the mean sits in: FALSIFIER: Nymeria training does not help cross-day identification on an unseen corpus",
+  "nym_persistence": "interval spans 3 regions (Nymeria training makes identification less persistent | BAND: no change in persistence | Nymeria training makes identification more persistent); the mean sits in: BAND: no change in persistence",
+  "raw_C1": "interval inside one region: raw does not add across days within a headset",
+  "raw_headset": "interval inside one region: BAND: a headset change scrambles the static frame raw relies on",
+  "br_rho": "interval spans 2 regions (FALSIFIER: removing absolute tilt does not reduce the proportional headset cost | not resolved); the mean sits in: not resolved"
+ },
+ "preconditions": {
+  "br_C1_lo>=0.15": {
+   "C1": {
+    "mean": 0.5971544715447155,
+    "lo": 0.5268191056910568,
+    "hi": 0.6683028455284552
+   },
+   "met": true
+  }
+ },
+ "descriptive": {
+  "raw_C0-dyn_C0": {
+   "mean": 0.10365853658536583,
+   "lo": 0.07073170731707316,
+   "hi": 0.13902439024390245
+  },
+  "raw_C2-dyn_C2": {
+   "mean": -0.31036585365853653,
+   "lo": -0.3601626016260162,
+   "hi": -0.2619867886178862
+  }
+ }
+}
