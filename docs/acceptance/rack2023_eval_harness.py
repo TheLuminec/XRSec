@@ -83,10 +83,15 @@ def embed(module, loader, device) -> dict:
     for i, batch in enumerate(loader):
         h = module(batch["data"].to(device)).cpu()
         embs.append(h)
-        ys.append(batch["targets"].cpu())
-        sess.append(batch["session_idx"].cpu())
-        frames.append(batch["frame_id"].cpu() if "frame_id" in batch
-                      else torch.full_like(batch["targets"].cpu(), -1))
+        # .clone(), not .cpu(): on a CPU tensor .cpu() returns the SAME object, so keeping it kept the
+        # worker's whole shared-memory batch alive (~14 MB/batch). Measured 2026-10-02 on the seed-42
+        # gate: 18.7 GB at 72 s and OOM at the 32 GB cap unpatched, against 3.0 GB flat with .clone()
+        # (no_grad was tested separately and is not needed). Values are copied, not changed, so the
+        # embeddings and every metric are unaffected; the gate's exact reproduction is the proof.
+        ys.append(batch["targets"].clone())
+        sess.append(batch["session_idx"].clone())
+        frames.append(batch["frame_id"].clone() if "frame_id" in batch
+                      else torch.full_like(batch["targets"], -1))
         if i % 200 == 0:
             print(f"    batch {i}: {sum(e.shape[0] for e in embs):,} windows", flush=True)
     return {"emb": torch.cat(embs), "y": torch.cat(ys),
