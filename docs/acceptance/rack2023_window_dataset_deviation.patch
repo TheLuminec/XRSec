@@ -1,0 +1,31 @@
+diff --git a/machine_learning/src/datamodules/datasets/window_dataset.py b/machine_learning/src/datamodules/datasets/window_dataset.py
+index 406449a..0e6f5b5 100644
+--- a/machine_learning/src/datamodules/datasets/window_dataset.py
++++ b/machine_learning/src/datamodules/datasets/window_dataset.py
+@@ -20,7 +20,25 @@ class WindowDataset(BaseDataset):
+ 
+         self._set_or_load_data_stats()
+ 
+-        self.frames = self._scale_data(self.frames)
++        # DEVIATION (Miami server, 2026-09-10). THE REASON IS FIDELITY, NOT SPEED.
++        # `WindowMaker.to_windows` (window_maker.py:58) already accepts either a DataFrame or
++        # an ndarray. Handed a DataFrame it calls `.values`, which pandas 1.5.3 returns as a
++        # VIEW (0.015 ms/item) and pandas 2.0.3 as a COPY OF THE WHOLE FRAME (7.873 ms/item,
++        # measured on an identical 18-block frame). The authors pinned no versions, so their
++        # 2023 stack gave them the view: the slow path is an artefact of OUR dependency
++        # version, not of their protocol. Running on it would faithfully reproduce pandas
++        # 2.0.3 and unfaithfully reproduce Rack et al. This line restores the access
++        # behaviour their environment provided, and is the more faithful choice at ANY
++        # wall-clock figure.
++        # Context, not justification: unpatched cost is ~4-12 s/batch wall clock => 12-35
++        # days at min_epochs=100 with the GPU idle. (An earlier note here said 124 days; that
++        # came from tqdm's CUMULATIVE average read over the first eight batches and was an
++        # overstatement of 4-10x.)
++        # Equivalence: output bit-identical on sampled windows; loss-trajectory and per-step
++        # timing recorded in docs/acceptance/ (NOT yet run when this line was written).
++        # Scope: WindowDataset only. BinDataset still receives a DataFrame and needs one
++        # (bin_maker.py:38 calls .rolling()), so it stays bit-identical to shipped.
++        self.frames = self._scale_data(self.frames).values
+ 
+     def _load_window_maker(self):
+         change_idxs = compute_change_idxs(self.take_id)
