@@ -77,5 +77,16 @@
   "sequence_top_3_accuracy_15_mins": 1.0,
   "sequence_top_3_accuracy_1_mins": 0.9545010662926282,
   "sequence_top_3_accuracy_5_mins": 0.9810572687224669
+ },
+ "regate_after_enrolment_fix": {
+  "written": "2026-10-02T01:13:26-04:00",
+  "why": "harness changed after the original gate: enrolment-limited galleries counted frames globally (their WindowMaker numbers frames with np.arange over the concatenated dataset), so --enrol-minutes N kept only the first subject. Fixed to count from each subject's own session-0 start, plus a guard refusing a gallery with fewer subjects than the probe. Found on the first enrolment-limited TEST run (gallery 60 windows / 1 subject at 10 min); no enrolment-limited number had ever been produced. Fixture-tested both ways (fixed 60/60/60; pre-fix 60 for one subject; guard refuses an unenrolled subject).",
+  "full_enrolment_path": "unchanged by construction (the branch runs only for enrol_minutes > 0); re-gated anyway because the certificate names the harness by sha256",
+  "harness_sha256": "5a15a4e633ea8b19faeffcb99762d9c6f9c2cfbb863b05fc32bb8b02c275d0aa",
+  "reproduced": 0.9227739722096133,
+  "gap": 0.0,
+  "verdict": "PASS - exact (gap 0.0)",
+  "gallery": "2,343 windows / 9 subjects (guard satisfied)",
+  "marker": "rc=0 oom_kill=0 peak_mb=9358 cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/xrsec-rack2023_gate_seed42_h3.scope start=2026-10-02T01:09:28-04:00 end=2026-10-02T01:13:13-04:00 elapsed_s=225 cap_gb=32 cmd=.venv_sota38/bin/python eval_harness.py --checkpoint Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/checkpoints/epoch_052_sequence_top_1_accuracy_5_mins.ckpt --stats Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/train_stats.json --split validation --enrol-minutes 0 --gate 0.9227739722096133 --out /run/media/feng/Data/CalebProject/scratch/rack_gate_seed42/harness_out_h3.json"
  }
 }
