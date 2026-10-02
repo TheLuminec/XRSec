@@ -975,3 +975,14 @@ a reproduction of their environment, and it must not be called one.
 - Statistics: each run writes its own `train_stats.json` into its output directory, and nothing reads a
   cached copy during fit. The "statistics overwritten" hazard does not exist.
 - Running: seed-42 test scoring, then seeds 43 and 44, with a curve pushed every 6 h.
+- **A second harness defect was caught before any affected number existed (2026-10-02).** The enrolment
+  limit counted frames from a *global* frame_id, so "10 min" kept only the first subject's session-0
+  windows: "gallery 60 windows / 1 subject". Harness 2ad59d8 counts from each subject's own session-0
+  start and refuses a gallery with fewer subjects than the probe. A fixture tests it in both directions,
+  and the gate was re-run exact. The broken runs were voided, never published, and the chain restarted.
+  Full-enrolment and gate paths were unaffected.
+- **Their use-time sequences never span a subject.** `_perform_sequence_calculations` masks by class before
+  calling `sliding_window_view`, and the probe is session 1 only. A fixture spying on their unmodified
+  calculator saw one call per subject (1,000 / 2,000 rows) and got the expected sequence counts.
+  One within-person property is noted but not measured: a sequence bridges any windows WindowMaker
+  dropped inside a session. That holds identically for every seed.
