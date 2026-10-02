@@ -1,0 +1,81 @@
+{
+ "registration": "docs/acceptance/sota_rack2023_reproduction_REGISTERED.md, Amendment 8, Step 1",
+ "written": "2026-10-02T00:42:58-04:00",
+ "host": "feng-MS-7B51",
+ "criterion": "exact reproduction on the same device (cuda, the device seed 42 trained on); no tolerance",
+ "referent": 0.9227739722096133,
+ "reproduced": 0.9227739722096133,
+ "gap": 0.0,
+ "verdict": "PASS - exact (gap 0.0)",
+ "harness_label": "PASS",
+ "metric": "sequence_top_1_accuracy_5_mins/validation/mean, their [::150] enrolment (--enrol-minutes 0)",
+ "split": "validation",
+ "validation_subject_ids": [
+  "18",
+  "28",
+  "30",
+  "31",
+  "35",
+  "36",
+  "60",
+  "64",
+  "65"
+ ],
+ "checkpoint": {
+  "path": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/checkpoints/epoch_052_sequence_top_1_accuracy_5_mins.ckpt",
+  "sha256": "0b663f91f819057ba4320e0aad132d65a02961bf989ee1def9847fd0e0b3509c",
+  "size_bytes": 37932867
+ },
+ "stats": {
+  "path": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/train_stats.json",
+  "sha256": "b0aa2f2c464abf06cf1f04da1194ae37bcad4c55de3ee282ba6d5933c6aaf68f",
+  "mtime": "2026-09-15T21:02:30-04:00",
+  "note": "seed 42's own run-directory copy, written at launch 2026-09-15 21:02; byte-identical to machine_learning/train_stats.json (mtime 2026-09-10)"
+ },
+ "interpreter": "code/sota/.venv_sota38 (Python 3.8.20, pml 1.7.3, PL 1.9.5, pandas 2.0.3, torch 2.0.1+cu118)",
+ "harness": {
+  "committed": "docs/acceptance/rack2023_eval_harness.py",
+  "sha256": "003eb9d1b6d98cde656e5c00de3b016eddc81a1f2e0cace45c517f9e4dfb0040",
+  "runnable_identical": true,
+  "change_since_814f8ff": "embed(): .cpu() -> .clone() on the kept targets/session_idx/frame_id. .cpu() on a CPU tensor is a no-op alias, so each kept tensor held the worker's whole shared-memory batch alive. Values copied, not changed."
+ },
+ "launch": {
+  "marker": "rc=0 oom_kill=0 peak_mb=9335 cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/xrsec-rack2023_gate_seed42.scope start=2026-10-02T00:38:54-04:00 end=2026-10-02T00:42:39-04:00 elapsed_s=225 cap_gb=32 cmd=.venv_sota38/bin/python eval_harness.py --checkpoint Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/checkpoints/epoch_052_sequence_top_1_accuracy_5_mins.ckpt --stats Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/train_stats.json --split validation --enrol-minutes 0 --gate 0.9227739722096133 --out /run/media/feng/Data/CalebProject/scratch/rack_gate_seed42/harness_out.json"
+ },
+ "void_attempt": {
+  "marker": "rc=137 oom_kill=2 peak_mb=32768 cgroup=/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/xrsec-rack2023_gate_seed42.scope start=2026-10-02T00:31:09-04:00 end=2026-10-02T00:33:15-04:00 elapsed_s=126 cap_gb=32 cmd=.venv_sota38/bin/python eval_harness.py --checkpoint Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/checkpoints/epoch_052_sequence_top_1_accuracy_5_mins.ckpt --stats Versatile-XR-User-Identification/machine_learning/outputs/2026-09-15/21-02-02/train_stats.json --split validation --enrol-minutes 0 --gate 0.9227739722096133 --out /run/media/feng/Data/CalebProject/scratch/rack_gate_seed42/harness_out.json",
+  "cause": "OOM-killed at the 32 GB cap at 126 s, during embedding (past 320,400 windows); no gate number produced. Diagnosed by sampling the cgroup: anon flat ~2.2 GB, file/shmem growing ~3 GB per 10 s (18.7 GB at 72 s). A probe with .clone() alone held 3.0 GB flat at 72 s; no_grad alone was not needed. The cap was not raised.",
+  "consistent_with": "the 2026-09-20 attempt reading 18 GB at 79 s before its SIGTERM"
+ },
+ "validation_metrics_all_use_times": {
+  "AMI": 0.45684526432552397,
+  "NMI": 0.4568686030109599,
+  "majority_vote_at_1": 0.5324577630515975,
+  "majority_vote_at_10": 0.6083964594724333,
+  "majority_vote_at_20": 0.6168994625984944,
+  "majority_vote_at_30": 0.6196596457130814,
+  "majority_vote_at_40": 0.6220334617320954,
+  "majority_vote_at_50": 0.6231691468312044,
+  "mean_average_precision": 0.16238855196899166,
+  "mean_average_precision_at_r": 0.1578331616760265,
+  "mean_reciprocal_rank": 0.6602010130882263,
+  "precision_at_1": 0.5324577630515975,
+  "r_precision": 0.32178156889873344,
+  "sequence_mrr_at_10_mins": 0.9660368490317729,
+  "sequence_mrr_at_15_mins": 0.9608782435129741,
+  "sequence_mrr_at_1_mins": 0.8648116503237838,
+  "sequence_mrr_at_5_mins": 0.9551333687034962,
+  "sequence_top_1_accuracy_10_mins": 0.9340665538635081,
+  "sequence_top_1_accuracy_15_mins": 0.9217564870259481,
+  "sequence_top_1_accuracy_1_mins": 0.7712938071260483,
+  "sequence_top_1_accuracy_5_mins": 0.9227739722096133,
+  "sequence_top_2_accuracy_10_mins": 0.9940214326001128,
+  "sequence_top_2_accuracy_15_mins": 1.0,
+  "sequence_top_2_accuracy_1_mins": 0.9057495196375389,
+  "sequence_top_2_accuracy_5_mins": 0.9721552412602725,
+  "sequence_top_3_accuracy_10_mins": 1.0,
+  "sequence_top_3_accuracy_15_mins": 1.0,
+  "sequence_top_3_accuracy_1_mins": 0.9545010662926282,
+  "sequence_top_3_accuracy_5_mins": 0.9810572687224669
+ }
+}
