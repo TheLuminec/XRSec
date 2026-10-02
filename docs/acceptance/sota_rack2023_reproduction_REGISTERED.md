@@ -953,3 +953,25 @@ N=27 and the environment deviations above.
 **What this buys the paper.** A second external baseline (`PAPER_THESES.md`, thesis C: optional). It is a
 reproduction of the paper's *protocol*, scored by our harness on pins the authors never gave. It is not
 a reproduction of their environment, and it must not be called one.
+
+## Progress, 2026-10-02 (Coordinator, from artefacts on origin)
+
+- **Step 0 is done.** Artefacts: `rack2023_inventory.json` and the harness (`rack2023_eval_harness.py`,
+  current at 410793f). The deviation patch is `rack2023_window_dataset_deviation.patch` (sha256
+  b204d482…f872); it reverse-applies to 97f054b.
+- **Seed 42's outputs survived.** All 9 checkpoints are there with sha256, and the HDF5 holds exactly the
+  registered 63. So the salvage record now has artefacts behind it: `rack2023_seed42_outcome.json` gives
+  100 epochs, argmax epoch 52 = 0.92277.
+- **Step 1 PASSES exactly.** `rack2023_gate_seed42.json` reproduces 0.9227739722096133 on cuda with a gap
+  of 0.0. It was pushed before any test number existed.
+- **The first gate attempt was void.** It was OOM-killed at the cap. The harness kept `.cpu()` aliases of
+  shared-memory batches, so each kept tensor held a whole batch alive. Copying the values fixed it; the
+  exact gate is the proof. The cap was not raised.
+- **The split is fixed, not seeded.** `datamodule.seed: 42` is a literal in their config, so seeds 43/44
+  change only training; validation and test subjects are identical. **The three-seed reading therefore
+  averages three trainings over ONE test set of 27.** The spread it measures is training variance, not
+  split variance. That is what "their configuration unchanged" means, and it is stated here before any
+  test number exists.
+- Statistics: each run writes its own `train_stats.json` into its output directory, and nothing reads a
+  cached copy during fit. The "statistics overwritten" hazard does not exist.
+- Running: seed-42 test scoring, then seeds 43 and 44, with a curve pushed every 6 h.
