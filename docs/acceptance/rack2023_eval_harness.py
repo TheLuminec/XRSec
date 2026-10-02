@@ -107,7 +107,14 @@ def score(packed: dict, enrol_minutes: float, use_time_minutes: list[int]) -> di
         if int(frame.max()) < 0:
             raise SystemExit("enrolment limiting needs frame_id, which this split did not return")
         limit = int(round(enrol_minutes * 60 * FPS))
-        g_mask = g_mask & (frame < limit)
+        # frame_id is GLOBAL: their WindowMaker numbers frames with np.arange over the whole concatenated
+        # dataset, so `frame < limit` kept only the FIRST subject's session (found 2026-10-02: gallery
+        # 60 windows / 1 subject at 10 min). Count each subject's enrolment from its own session-0 start.
+        rel = torch.full_like(frame, -1)
+        for subj in torch.unique(y[g_mask]):
+            m = g_mask & (y == subj)
+            rel[m] = frame[m] - frame[m].min()
+        g_mask = g_mask & (rel >= 0) & (rel < limit)
 
     g_idx = torch.nonzero(g_mask).flatten()[::THEIR_GALLERY_SPACING_FRAMES]
     p_idx = torch.nonzero(sess == 1).flatten()
@@ -124,6 +131,9 @@ def score(packed: dict, enrol_minutes: float, use_time_minutes: list[int]) -> di
 
     print(f"    gallery {gallery.shape[0]:,} windows / {len(torch.unique(gallery_y))} subjects"
           f"   probe {probe.shape[0]:,} / {len(uniq)} subjects", flush=True)
+    # guard: every probe subject must be enrolled, or rank-1 is computed against a partial gallery
+    if len(torch.unique(gallery_y)) != len(uniq):
+        raise SystemExit(f"REFUSE: gallery holds {len(torch.unique(gallery_y))} subjects, probe {len(uniq)}")
 
     evaluator = MotionAccuracyCalculator(
         sequence_lengths_minutes=list(use_time_minutes),
