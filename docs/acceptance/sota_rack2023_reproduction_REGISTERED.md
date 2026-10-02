@@ -886,3 +886,70 @@ interpreted and argued about while living in exactly one place. A one-line JSON 
 window means and the checkpoint epochs, pushed at 11:20, would have cost a minute and would have
 survived. **Every long run should write its result artefact to `origin` before anyone reasons about
 it** — the reasoning is what takes the time, and it is the window in which the disk can die.
+
+---
+
+# AMENDMENT 8 — 2026-10-02: the re-run, authorised by the user while Miami is idle
+
+**Written on AVALON before anything is launched or read.**
+
+**The salvage record's premise has changed.** Miami was not lost. It came back on 2026-09-20 with its data
+volume, and a Rack seed-1 validation gate was started there that day, then SIGTERMed 79 s in (rc=143,
+unfinished). So seed 1's outputs (`outputs/2026-09-15/21-02-02/`) and the evaluation harness probably
+still exist on Miami. **Probably is not a fact. Step 0 settles it, and nothing below assumes it.**
+
+## Step 0: inventory, committed before anything runs (minutes, no GPU)
+
+Miami pushes one JSON to `origin/miami-server` (`docs/acceptance/rack2023_inventory.json`) recording:
+- the Rack interpreter and the installed versions of every pin in the table above, including
+  `pytorch-metric-learning==1.7.3` and pandas;
+- both clones at the registered commits (`97f054b…`, `b8189e6…`) and a clean `git status`;
+- the training HDF5's path, size and sha256, and the 63 subject ids it holds, checked against the list
+  in this file;
+- the seed-1 output directory: every checkpoint with its sha256 and size, and whether the offline wandb
+  history is present;
+- **the evaluation harness source, committed to the repo** (`docs/acceptance/rack2023_eval_harness.py` or
+  similar). It lived only on Miami, which is the same exposure that lost the seed-1 numbers last time.
+
+If the seed-1 checkpoints are absent, seed 1 is retrained under the same seed (42) and the salvage record
+stays second-hand.
+
+## Step 1: the validation gate on seed 1 (the referent in the salvage record)
+
+`epoch_052_sequence_top_1_accuracy_5_mins.ckpt` must reproduce **0.9227739722096133**,
+`sequence_top_1_accuracy_5_mins/validation/mean`, under the authors' `[::150]` enrolment, using our
+harness. The certificate is `docs/acceptance/rack2023_gate_seed42.json`, pushed before any test-split
+number exists. The run goes under `gated_launch.sh`; the harness peaked at 18 GB including page cache on
+09-20, so `peak_mb` and `oom_kill` are read from the marker. **A gap is reported as a gap.** The registered
+tolerance is exact reproduction on the same device, and no tolerance is invented after the fact.
+
+## Step 2: seeds 2 and 3, launched regardless of seed 1's test reading
+
+Amendment 7 staged seeds 2-3 on seed 1 "reproducing the curve". That made spending three days depend on a
+one-seed reading, and one seed cannot test a criterion defined as "inside the measured seed spread". The
+seed-1 validation plateau (~0.905, a plateau rather than a spike) already shows the port trains. So the
+staging rule is **withdrawn before any test number exists**:
+- seeds **43** and **44** run, with `max_epochs=100`, their configuration unchanged and the same pins;
+- each run takes about 36 h, sequentially, under `gated_launch.sh`;
+- a watcher fires on the `.failed` marker as well as on completion;
+- **the watcher is a process with a recorded pid, not a sentence** (Amendment 7's correction).
+
+## Commit cadence: the rule the salvage record wrote, applied to a 36-hour run
+
+- When each seed finishes: push `docs/acceptance/rack2023_seed{N}_outcome.json` (rc, epochs, the decoded
+  validation curve, every checkpoint's epoch and sha256) **before anyone reads or discusses it**.
+- During each seed: push the decoded validation curve to date at least every 6 h, so a dead disk costs at
+  most 6 h of record rather than the whole run.
+- Test-split scoring of each seed (enrolment sweep, 5-min and 1-min use-time, all 27 test subjects) goes
+  to `rack2023_test_seed{N}.json` and is pushed as it lands.
+
+## Reading
+
+The **gate verdict is read once, on three seeds**, under the PASS / falsifier rule registered at the top of
+this file (each cell inside the measured seed spread, ordering, dynamic range, with 1-min/1-min primary).
+Per-seed test files are committed as they land and are not interpreted before then. Every figure carries
+N=27 and the environment deviations above.
+
+**What this buys the paper.** A second external baseline (`PAPER_THESES.md`, thesis C: optional). It is a
+reproduction of the paper's *protocol*, scored by our harness on pins the authors never gave. It is not
+a reproduction of their environment, and it must not be called one.
