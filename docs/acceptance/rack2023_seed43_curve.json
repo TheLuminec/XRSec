@@ -1,16 +1,16 @@
 {
  "registration": "docs/acceptance/sota_rack2023_reproduction_REGISTERED.md, Amendment 8",
  "mode": "interim",
- "written": "2026-10-02T14:06:37-04:00",
+ "written": "2026-10-02T20:06:45-04:00",
  "host": "feng-MS-7B51",
  "seed": 43,
  "run_dir": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-10-02/02-06-32",
  "rc": null,
  "run_log_last_line": "[2026-10-02 02:07:03,700][src.train][INFO] - starting training",
- "epochs_logged": 32,
+ "epochs_logged": 48,
  "argmax_5min": [
-  30,
-  0.872307552703941
+  43,
+  0.8911825969766832
  ],
  "selection_note": "argmax over ~100 noisy points on a flat curve is optimistic; quote the plateau, not the max",
  "curves": {
@@ -142,6 +142,70 @@
    [
     31,
     0.8545657014882378
+   ],
+   [
+    32,
+    0.8444983507440298
+   ],
+   [
+    33,
+    0.8672710374400568
+   ],
+   [
+    34,
+    0.8542242222157576
+   ],
+   [
+    35,
+    0.8583094954612835
+   ],
+   [
+    36,
+    0.8738233980019475
+   ],
+   [
+    37,
+    0.861427145175657
+   ],
+   [
+    38,
+    0.8780731927968439
+   ],
+   [
+    39,
+    0.8822183702303853
+   ],
+   [
+    40,
+    0.8657530410636762
+   ],
+   [
+    41,
+    0.8470652617399144
+   ],
+   [
+    42,
+    0.8438730947671154
+   ],
+   [
+    43,
+    0.8911825969766832
+   ],
+   [
+    44,
+    0.8849542306344037
+   ],
+   [
+    45,
+    0.8785725010694125
+   ],
+   [
+    46,
+    0.8734916324680232
+   ],
+   [
+    47,
+    0.8736591353101425
    ]
   ],
   "sequence_top_1_accuracy_10_mins/validation/mean": [
@@ -272,6 +336,70 @@
    [
     31,
     0.8838372660594548
+   ],
+   [
+    32,
+    0.8568526183810553
+   ],
+   [
+    33,
+    0.8801721349924373
+   ],
+   [
+    34,
+    0.9007583019904365
+   ],
+   [
+    35,
+    0.8942489987919332
+   ],
+   [
+    36,
+    0.9097511534499271
+   ],
+   [
+    37,
+    0.9035447664780243
+   ],
+   [
+    38,
+    0.9148809658498076
+   ],
+   [
+    39,
+    0.9123475320607641
+   ],
+   [
+    40,
+    0.9175597754775767
+   ],
+   [
+    41,
+    0.8564401710230822
+   ],
+   [
+    42,
+    0.8762244085740474
+   ],
+   [
+    43,
+    0.914542196477695
+   ],
+   [
+    44,
+    0.9134794442068315
+   ],
+   [
+    45,
+    0.9130253461316289
+   ],
+   [
+    46,
+    0.9139726537847955
+   ],
+   [
+    47,
+    0.9120302138147832
    ]
   ],
   "sequence_top_1_accuracy_15_mins/validation/mean": [
@@ -402,6 +530,70 @@
    [
     31,
     0.8973648978947283
+   ],
+   [
+    32,
+    0.8619983547685002
+   ],
+   [
+    33,
+    0.8937848571035454
+   ],
+   [
+    34,
+    0.896150069455814
+   ],
+   [
+    35,
+    0.8945973963310395
+   ],
+   [
+    36,
+    0.9072521623419827
+   ],
+   [
+    37,
+    0.9135728542914171
+   ],
+   [
+    38,
+    0.9053892215568862
+   ],
+   [
+    39,
+    0.9113772455089821
+   ],
+   [
+    40,
+    0.9048569527611444
+   ],
+   [
+    41,
+    0.8535584166888132
+   ],
+   [
+    42,
+    0.8764161949943361
+   ],
+   [
+    43,
+    0.9043912175648702
+   ],
+   [
+    44,
+    0.907185628742515
+   ],
+   [
+    45,
+    0.9144377910844977
+   ],
+   [
+    46,
+    0.9073186959414505
+   ],
+   [
+    47,
+    0.9105123087159015
    ]
   ]
  },
@@ -491,44 +683,44 @@
    "sha256": null
   },
   {
-   "name": "epoch_025_sequence_mrr_at_10_mins.ckpt",
-   "epoch": 25,
-   "size_bytes": 37932803,
-   "sha256": null
-  },
-  {
-   "name": "epoch_030_majority_vote_at_30.ckpt",
-   "epoch": 30,
+   "name": "epoch_038_majority_vote_at_30.ckpt",
+   "epoch": 38,
    "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_030_majority_vote_at_50.ckpt",
-   "epoch": 30,
+   "name": "epoch_038_majority_vote_at_50.ckpt",
+   "epoch": 38,
    "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_030_sequence_mrr_at_5_mins.ckpt",
-   "epoch": 30,
+   "name": "epoch_043_max_r_precision.ckpt",
+   "epoch": 43,
    "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_030_sequence_top_1_accuracy_5_mins.ckpt",
-   "epoch": 30,
+   "name": "epoch_043_sequence_mrr_at_10_mins.ckpt",
+   "epoch": 43,
    "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_031_max_r_precision.ckpt",
-   "epoch": 31,
+   "name": "epoch_043_sequence_mrr_at_5_mins.ckpt",
+   "epoch": 43,
    "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_031_min_loss.ckpt",
-   "epoch": 31,
+   "name": "epoch_043_sequence_top_1_accuracy_5_mins.ckpt",
+   "epoch": 43,
+   "size_bytes": 37932867,
+   "sha256": null
+  },
+  {
+   "name": "epoch_046_min_loss.ckpt",
+   "epoch": 46,
    "size_bytes": 37932867,
    "sha256": null
   },
@@ -541,6 +733,6 @@
  ],
  "wandb_history": {
   "path": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-10-02/02-06-32/wandb/offline-run-20261002_020633-uuow9rvq/run-uuow9rvq.wandb",
-  "size_bytes": 48824320
+  "size_bytes": 73531392
  }
 }
