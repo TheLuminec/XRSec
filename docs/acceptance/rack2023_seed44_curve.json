@@ -1,13 +1,13 @@
 {
  "registration": "docs/acceptance/sota_rack2023_reproduction_REGISTERED.md, Amendment 8",
  "mode": "interim",
- "written": "2026-10-03T21:58:04-04:00",
+ "written": "2026-10-04T03:58:11-04:00",
  "host": "feng-MS-7B51",
  "seed": 44,
  "run_dir": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-10-03/15-58-04",
  "rc": null,
  "run_log_last_line": "[2026-10-03 15:58:33,899][src.train][INFO] - starting training",
- "epochs_logged": 16,
+ "epochs_logged": 32,
  "argmax_5min": [
   13,
   0.9194641647743383
@@ -78,6 +78,70 @@
    [
     15,
     0.9158911755390581
+   ],
+   [
+    16,
+    0.9102477347278616
+   ],
+   [
+    17,
+    0.8992100737607333
+   ],
+   [
+    18,
+    0.8939506412518985
+   ],
+   [
+    19,
+    0.8879745556271209
+   ],
+   [
+    20,
+    0.8845806309282562
+   ],
+   [
+    21,
+    0.89013744825831
+   ],
+   [
+    22,
+    0.890300279494143
+   ],
+   [
+    23,
+    0.8870387469089557
+   ],
+   [
+    24,
+    0.8841320185375269
+   ],
+   [
+    25,
+    0.8725433949996145
+   ],
+   [
+    26,
+    0.8752198002701392
+   ],
+   [
+    27,
+    0.8851637972444417
+   ],
+   [
+    28,
+    0.888259873812603
+   ],
+   [
+    29,
+    0.8910922003847315
+   ],
+   [
+    30,
+    0.8759874703507804
+   ],
+   [
+    31,
+    0.8738354303059671
    ]
   ],
   "sequence_top_1_accuracy_10_mins/validation/mean": [
@@ -144,6 +208,70 @@
    [
     15,
     0.9321489001692047
+   ],
+   [
+    16,
+    0.932712915961647
+   ],
+   [
+    17,
+    0.9279751833051324
+   ],
+   [
+    18,
+    0.9252115059221659
+   ],
+   [
+    19,
+    0.924478285391991
+   ],
+   [
+    20,
+    0.911193520550819
+   ],
+   [
+    21,
+    0.9232938522278624
+   ],
+   [
+    22,
+    0.9267439304050886
+   ],
+   [
+    23,
+    0.9230682459108854
+   ],
+   [
+    24,
+    0.9210686697832595
+   ],
+   [
+    25,
+    0.9066935938722414
+   ],
+   [
+    26,
+    0.8956570783981951
+   ],
+   [
+    27,
+    0.9161872532430908
+   ],
+   [
+    28,
+    0.9192329385222787
+   ],
+   [
+    29,
+    0.9088062681971311
+   ],
+   [
+    30,
+    0.9142695995487874
+   ],
+   [
+    31,
+    0.8891367706334139
    ]
   ],
   "sequence_top_1_accuracy_15_mins/validation/mean": [
@@ -210,6 +338,70 @@
    [
     15,
     0.9290751829673984
+   ],
+   [
+    16,
+    0.9272787757817699
+   ],
+   [
+    17,
+    0.9204923486360612
+   ],
+   [
+    18,
+    0.9103792415169661
+   ],
+   [
+    19,
+    0.9123087159015303
+   ],
+   [
+    20,
+    0.9018629407850965
+   ],
+   [
+    21,
+    0.9107784431137724
+   ],
+   [
+    22,
+    0.9188955422488356
+   ],
+   [
+    23,
+    0.9081170991350631
+   ],
+   [
+    24,
+    0.9103127079174984
+   ],
+   [
+    25,
+    0.8912840984697272
+   ],
+   [
+    26,
+    0.8902195608782435
+   ],
+   [
+    27,
+    0.9007318695941451
+   ],
+   [
+    28,
+    0.9059880239520959
+   ],
+   [
+    29,
+    0.9014637391882901
+   ],
+   [
+    30,
+    0.898270126413839
+   ],
+   [
+    31,
+    0.8904191616766466
    ]
   ]
  },
@@ -293,12 +485,6 @@
  },
  "checkpoints": [
   {
-   "name": "epoch_011_max_mean_precision_at_1.ckpt",
-   "epoch": 11,
-   "size_bytes": 37932803,
-   "sha256": null
-  },
-  {
    "name": "epoch_013_sequence_mrr_at_10_mins.ckpt",
    "epoch": 13,
    "size_bytes": 37932803,
@@ -317,38 +503,44 @@
    "sha256": null
   },
   {
-   "name": "epoch_015_majority_vote_at_30.ckpt",
-   "epoch": 15,
+   "name": "epoch_021_majority_vote_at_50.ckpt",
+   "epoch": 21,
    "size_bytes": 37932803,
    "sha256": null
   },
   {
-   "name": "epoch_015_majority_vote_at_50.ckpt",
-   "epoch": 15,
+   "name": "epoch_021_max_mean_precision_at_1.ckpt",
+   "epoch": 21,
    "size_bytes": 37932803,
    "sha256": null
   },
   {
-   "name": "epoch_015_max_r_precision.ckpt",
-   "epoch": 15,
-   "size_bytes": 37932803,
+   "name": "epoch_028_max_r_precision.ckpt",
+   "epoch": 28,
+   "size_bytes": 37932867,
    "sha256": null
   },
   {
-   "name": "epoch_015_min_loss.ckpt",
-   "epoch": 15,
-   "size_bytes": 37932803,
+   "name": "epoch_029_majority_vote_at_30.ckpt",
+   "epoch": 29,
+   "size_bytes": 37932867,
+   "sha256": null
+  },
+  {
+   "name": "epoch_031_min_loss.ckpt",
+   "epoch": 31,
+   "size_bytes": 37932867,
    "sha256": null
   },
   {
    "name": "last.ckpt",
    "epoch": null,
-   "size_bytes": 37932803,
+   "size_bytes": 37932867,
    "sha256": null
   }
  ],
  "wandb_history": {
   "path": "/run/media/feng/Data/CalebProject/code/sota/Versatile-XR-User-Identification/machine_learning/outputs/2026-10-03/15-58-04/wandb/offline-run-20261003_155805-cjoyyybp/run-cjoyyybp.wandb",
-  "size_bytes": 24215552
+  "size_bytes": 48824320
  }
 }
