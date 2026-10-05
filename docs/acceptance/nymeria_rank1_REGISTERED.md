@@ -302,3 +302,68 @@ Amendments go below this line, dated. The text above is not edited once the Coor
 - Then pull, run the fixture on the node, and run the three seed launches above.
 - Push each JSON before anything reads it.
 - The Coordinator propagates the six files to main and runs `read`.
+
+## RESULT, 2026-10-05: the control's falsifier fired and the treatment exceeds its band. Neither prediction held, mine included
+
+**Provenance.**
+- Six checkpoints, each gated on cuda at gap 0.0. The fixture passed on Miami before scoring.
+- The files were propagated to main before reading.
+- The output is `nymeria_rank1_read.json`, committed (a57a96e) before this section was written.
+- Statistic: constrained protocol, N=17, cell-balanced, 115 cells, 46 users, three seeds.
+
+| quantity | measured | region |
+| --- | --- | --- |
+| 1. treatment rank-1 | **0.555 [0.508, 0.599]** | **ABOVE** (above 0.45), whole interval |
+| 2. treatment - control | **+0.383 [+0.335, +0.429]** | spans BAND and ABOVE; the mean sits above +0.38 |
+| 3. control rank-1 | **0.172 [0.138, 0.207]** | **FALSIFIER** (above 0.12), whole interval |
+
+Chance is 0.059.
+
+**Per the registration's own clauses:**
+- **The control falsifier is the strong outcome, and it fired.** The zero-shot model (BOXRR + alyx, never
+  trained on Nymeria) identifies across activities on glasses at about 3x chance. Its sub-chance
+  constrained *verification* figure (0.47) came from the pairing, with same-script negatives, and not from
+  an absent person cue. On this score set the control's AUC is 0.55-0.58, not 0.47.
+  - This agrees with an existing measurement: the same kind of zero-shot `dyn` model identifies across
+    applications on Across-XR at 0.234 (N=17).
+  - So "the zero-shot residual on Nymeria is anti-identifying once activity is matched" (CLAUDE.md) is
+    scoped to that verification pairing. It is not a statement about the model's person signal, which the
+    entry already said.
+- **The treatment exceeds, and is NOT credited as exceeding.** The ABOVE clause requires the control inside
+  its band, and it is not. Reported: treatment 0.555, clearly far above chance and far above the control.
+  Do not report it as a credited result above the band.
+- **The delta spans BAND and ABOVE.** Its lower edge is +0.335, so in-domain training buys a large
+  identification gain across activities. Its size against +0.38 is not resolved, and the ABOVE clause's
+  caution about the control applies.
+
+**Why the predictions missed. These are instrument facts read off the output, not reasons to move a line:**
+- Same score set: the treatment's probe-pooled AUC is 0.88 (0.877-0.889). The registered implication took
+  the constrained verification AUC (0.668) and assumed gallery averaging at most d'·2.
+- Averaging a person's ~1 h of other-script windows into one template paid far more than that. Implied
+  rank-1 from 0.88 is 0.46-0.49, measured is 0.555-0.574, an offset of +0.09. That matches the non-Gaussian
+  offset this project measures for learned `dyn` everywhere (+0.05 to +0.11).
+- The control shows the same offset (+0.08).
+- So the mechanism is enrolment averaging plus the usual offset. The band's upper edge was too low, and
+  the control band was derived from an AUC that was not the relevant one.
+
+**What also produces a high control and a high treatment, stated in the registration before running and
+still open:** a person-constant cue of the *sitting*. Every Nymeria person is one sitting, with one device
+(8 serials shared across 48 people) and one location (25 locations, 11 used by one person only). The
+protocol denies activity, not the sitting. Across-XR is also one sitting, so the 0.234 agreement does not
+separate the two either. On alyx the same treatment model identifies across days at 0.483, which shows its
+learned cue is not only a sitting cue. **But the share of this 0.555 that is the sitting is not measured.**
+A device-matched or location-matched impostor draw would measure it, and it would have to be registered
+first.
+
+**Secondary rows, reported and not registered:**
+- `unconstrained` N=17: treatment 0.530, control 0.166.
+- `pair` N=17: treatment 0.509, control 0.153.
+- `fallback_all48` N=17: treatment 0.534, control 0.172.
+- The secondary rows move with the primary.
+- The per-user means are 0.507 (treatment) and 0.168 (control).
+
+**How to quote it:**
+- Nymeria, AR glasses, unseen people, activity-matched rank-1 at N=17: **treatment 0.555, zero-shot control
+  0.172**, chance 0.059.
+- Enrolment is about 1 h of the person's other activities. Probes are single 10 s windows. One sitting.
+- Never set it beside an Across-XR row without the enrolment caveat.

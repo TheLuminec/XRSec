@@ -620,7 +620,20 @@ leave-script-out test set** (25 people, 5 held-out scripts), so the residual is 
 construction, not a constant of the model - carry the test set with the sentence. So ~0.04-0.05
 of the row figures was activity and the rest is how the person moves; quote the constrained figure,
 never 0.7263. Three seeds and the 240-epoch pair, all credited; one sitting per participant, so this cannot pay
-the cross-session cost. **And it is not task-bound (leave-script-out, 2026-09-23,
+the cross-session cost. **On the rank-1 axis (2026-10-05, `docs/acceptance/nymeria_rank1_REGISTERED.md`, Result):**
+- Activity-matched, N=17: **treatment 0.555 [0.508, 0.599]**, zero-shot **control 0.172 [0.138, 0.207]**,
+  chance 0.059. That is three seeds and six exact gates.
+- Enrolment is ~1 h of the person's other scripts, and probes are single 10 s windows.
+- **The control's falsifier fired.** The zero-shot model identifies across activities at ~3x chance, so its
+  sub-chance verification figure above was the same-script pairing, not an absent person cue.
+- The treatment exceeds its band but is not credited above it, because the control missed its band.
+- What the score set says about the size:
+  - the treatment's AUC on this score set is 0.88, not 0.67;
+  - enrolment averaging plus the usual +0.09 non-Gaussian offset account for the level.
+- Still open: how much of either figure is the one-sitting cue (device and location are constant per
+  person).
+
+**And it is not task-bound (leave-script-out, 2026-09-23,
 `docs/acceptance/nymeria_lso_REGISTERED.md`)**: five scripts removed from every training identity
 (25 % of sequences, chosen by rule), the same 3,072 identities retrained, scored on 25 unseen people
 doing only those five scripts with every positive cross-script - constrained **0.6145** against the

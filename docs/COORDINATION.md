@@ -1927,3 +1927,17 @@ Every cell is outside the seed spread, so the verdict is FAIL. The ordering and 
 **Never write "reproduced" or "replicated".** If draft C keeps a Rack row, it carries the sentence from the
 Result section: the levels, our harness, and the four unresolved candidate causes. Thesis C does not depend
 on this row, and draft C does not need it.
+
+## From the Coordinator: for the paper sessions - Nymeria rank-1 landed - 2026-10-05
+
+`docs/acceptance/nymeria_rank1_REGISTERED.md`, Result. Activity-matched rank-1 at N=17, cell-balanced, three
+seeds, six exact gates:
+
+| arm | rank-1 | registered outcome |
+| --- | --- | --- |
+| treatment | 0.555 [0.508, 0.599] | above the band, NOT credited above it |
+| control | 0.172 [0.138, 0.207] | falsifier fired |
+| delta | +0.383 [+0.335, +0.429] | spans band and above |
+
+Quote both arms together. State k (~1 h of other-script enrolment), single 10 s probes and one sitting.
+The sitting share of either figure is unmeasured.
