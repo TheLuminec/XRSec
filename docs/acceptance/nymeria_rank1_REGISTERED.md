@@ -259,3 +259,46 @@ scale on synthetic embeddings). Index-build peak should match `nymeria_script_pa
 Amendments go below this line, dated. The text above is not edited once the Coordinator has accepted it.
 
 ---
+
+## ACCEPTED by the Coordinator, 2026-10-05, before any rank-1 number exists. This is now a registration
+
+**Checked before accepting:**
+- The six run directories, run_ids, seeds and `selected_test_auc` gate targets match `feng-ms-7b51.jsonl` on
+  origin/miami-server exactly. Controls drop 188 Nymeria users and treatments drop 141 BOXRR users.
+- The fixture passes on AVALON (`.venv`, `ALL FIXTURES PASS`).
+- `REGIONS` in the harness equals the three tables above, and each line is partitioned.
+
+**Decisions:**
+1. **The script-matched constrained protocol is primary.** `fallback_all48` is a diagnostic only, never
+   quoted.
+2. **The cell-balanced statistic is the registered one**, a departure from the brief that is accepted
+   explicitly. Under an activity-only embedding the cell mean is chance by construction and the per-user
+   mean is not (+0.057 on this script table). The per-user mean is reported beside it.
+3. **Settings:**
+   - N=17 uses the five scripts with at least 17 people: 115 cells, 46 users, 200 draws at seed 67,
+     identical across arms.
+   - N=all covers 18 scripts and is secondary.
+4. **Enrolment stays as all of a person's other-script windows (~1 h).**
+   - No capped-enrolment variant is registered.
+   - The paper states k beside the row, and never puts this row next to Across-XR A1 (one-application
+     gallery) without that caveat.
+5. **The bands are accepted as written.** My own expectation before reading, recorded here: treatment
+   rank-1 about 0.25-0.40, control at chance. Both sit inside the registered bands, so a landing outside
+   is a surprise to me as well.
+6. **Tie convention.**
+   - Every rank-1 row in the paper's cross-application, cross-day and Nymeria tables imports
+     `rank1_per_user` (A1, tie = miss).
+   - The BOXRR identification rows (0.862 / 0.948) come from the step-6 harness, which uses
+     1/(better+tied).
+   - With continuous cosine scores on trained embeddings, exact ties are vanishingly rare, so the two
+     conventions agree to rounding there. They differ materially only for constant or near-constant
+     scorers.
+   - Table 2 should name the harness per row. That is a note for the paper session, not an amendment to
+     this protocol.
+
+**Run order on Miami:**
+- Run only after the Rack 2023 chain (seed 44, its test scoring and the sha256 sweep) has finished and
+  `systemctl --user list-units 'xrsec-*.scope'` is empty.
+- Then pull, run the fixture on the node, and run the three seed launches above.
+- Push each JSON before anything reads it.
+- The Coordinator propagates the six files to main and runs `read`.
