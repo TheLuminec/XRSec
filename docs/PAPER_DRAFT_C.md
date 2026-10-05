@@ -264,7 +264,12 @@ and probe (or test), each column a component. Sections 5.1–5.4 take it row by 
 | **another headset**, another day | ball-throwing | rank-1, N=41 | **0.458** (−0.235 vs same headset) | `raw` collapses to 0.133 |
 
 *Table 2. What travels across which boundary. Rank-1 chance is 1/N. AUC rows are verification
-(chance 0.50) and are not comparable in level to rank-1 rows. All rows three seeds.*
+(chance 0.50) and are not comparable in level to rank-1 rows. All rows three seeds. Every rank-1 row
+uses one decision rule (A1): a template is the renormalised mean of a person's gallery window
+embeddings, a probe window goes to the nearest template by cosine, and a tie counts as a miss.
+Enrolment amount differs by row and is stated beside it: one application on Across-XR, one session on
+who-is-alyx, five throws on ball-throwing, and all of a person's other-script windows (about an hour) on
+Nymeria. The Nymeria rank-1 is therefore not set against the Across-XR rows without that caveat.*
 
 `[FIGURE 1: Table 2 drawn as a two-column chart, one row per boundary ordered from "same sitting" to
 "another headset", learned and static components side by side, each as a fraction of its own
@@ -376,7 +381,9 @@ activity detector scores below chance on these pairs, and one appears: the contr
 Nymeria, reads **0.472** AUC. The treatment reads **0.669**, a paired gain whose 95% interval is
 [+0.164, +0.231]. So a model that has seen other people on the device separates unseen people by how they
 move, with the activity cue removed. `[NYMERIA RANK-1: replace or add the rank-1 at N=17 and N=48 here,
-treatment and control, from nymeria_rank1_REGISTERED.md.]`
+treatment and control, from nymeria_rank1_REGISTERED.md. Registered statistic: script-matched gallery,
+cell-balanced mean over (person, script) cells. State k (all other-script windows, about an hour)
+beside the figure.]`
 
 **It is not tied to the tasks it was trained on.** Removing five scripts (a quarter of the sequences)
 from every training identity and scoring 25 unseen people doing only those five scripts, the model reads
