@@ -9,7 +9,10 @@ Scope decisions taken with the user on 2026-10-05:
 - Included beyond the core: the reference study's self-match structure (one paragraph), the per-user
   distribution, and the Questset posture finding.
 - Left out: the orthogonal-alignment negative, the identity-count and dose arms, the leave-one-application-
-  out table, test-time adaptation, the margin reversal, the Rack et al. reproduction.
+  out table, test-time adaptation, the margin reversal, the Rack et al. reproduction. (The Rack re-run
+  read FAIL under its registered rule on 2026-10-05, cause not established; see `docs/COORDINATION.md`.
+  Rack et al. 2024 is cited only as related work, and the word "reproduced" must never be attached to
+  it. If a Rack row is ever added, it carries the Result section's sentence verbatim.)
 - Nymeria is reported as verification AUC until the registered rank-1 run lands
   (`docs/acceptance/nymeria_rank1_REGISTERED.md`). Every slot that changes when it does is marked
   `[NYMERIA RANK-1]`.
