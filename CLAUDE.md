@@ -4278,6 +4278,27 @@ recorded *as* an amendment with its reason, and **the original registration stay
 rather than being edited away**. A registration whose history is not visible is not a
 registration.
 
+**THE RE-RUN FAILED ITS REGISTERED GATE (2026-10-05, `sota_rack2023_reproduction_REGISTERED.md`, Result).**
+Three seeds of their code and configuration were scored by our harness on their 27 test subjects. The
+harness was gated exactly (gap 0.0) on their own validation metric, and every subject was on one fixed
+split.
+
+| cell | ours | published |
+| --- | --- | --- |
+| all enrolment / 5 min | **0.850** | 0.99 |
+| 10 min / 5 min | **0.566** | 0.89 |
+| 1 min / 1 min (primary) | **0.174** | 0.25 |
+
+Every cell lies outside the seed spread, so the verdict is FAIL. The curve's shape holds: the ordering and
+the ~0.7 dynamic range both reproduce. There are four candidate causes and none is established:
+- our harness implements their unpublished evaluation from prose, and the limited-enrolment window is an
+  inference;
+- the checkpoint choice;
+- 100 epochs against their shipped 500;
+- pins they never gave.
+
+**The paper may not say "reproduced".** It may report the three numbers with that sentence attached.
+
 **And a published Dockerfile is not a reproducible environment.** Theirs pins Python 3.8 and
 CUDA 11.4 and then installs **unpinned** requirements, while the config passes `gpus: 1` and
 `auto_scale_batch_size`, both removed in PL 2.0 - so it does not build a working environment

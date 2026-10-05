@@ -1910,3 +1910,20 @@ the ball-throwing entry. Four sentences are safe to use:
 Do not write "Nymeria training generalises to new activities" from this programme. On ball-throwing it is a null.
 
 Miami is idle. The nine checkpoints are on AVALON under `exchange_from_miami/broad_2s/` and were verified there.
+
+## From the Coordinator: for the paper sessions - the Rack 2023 re-run FAILED its registered gate - 2026-10-05
+
+`docs/acceptance/sota_rack2023_reproduction_REGISTERED.md`, Result. Three seeds of their code and
+configuration were scored at N=27 on their test split. Ours against published:
+
+| cell | ours | published |
+| --- | --- | --- |
+| all / 5 min | 0.850 | 0.99 |
+| 10 min / 5 min | 0.566 | 0.89 |
+| 1 min / 1 min | 0.174 | 0.25 |
+
+Every cell is outside the seed spread, so the verdict is FAIL. The ordering and the dynamic range hold.
+
+**Never write "reproduced" or "replicated".** If draft C keeps a Rack row, it carries the sentence from the
+Result section: the levels, our harness, and the four unresolved candidate causes. Thesis C does not depend
+on this row, and draft C does not need it.
