@@ -1,0 +1,135 @@
+{
+ "seeds": [
+  42,
+  43,
+  44
+ ],
+ "n_test_subjects": 27,
+ "cells": {
+  "all enrolment / 5 min": {
+   "per_seed": [
+    0.8558241211736262,
+    0.8639645555803661,
+    0.8307994976018175
+   ],
+   "mean": 0.8501960581186032,
+   "range": 0.03316505797854863,
+   "sd": 0.01728399803267775,
+   "published": 0.99,
+   "inside_mean_pm_range": 0.0,
+   "inside_min_max": 0.0,
+   "inside_mean_pm_sd": 0.0
+  },
+  "10 min / 5 min": {
+   "per_seed": [
+    0.5464728936613097,
+    0.5863132449907396,
+    0.5658859086438343
+   ],
+   "mean": 0.5662240157652945,
+   "range": 0.03984035132942987,
+   "sd": 0.019922327570650163,
+   "published": 0.89,
+   "inside_mean_pm_range": 0.0,
+   "inside_min_max": 0.0,
+   "inside_mean_pm_sd": 0.0
+  },
+  "1 min / 1 min": {
+   "per_seed": [
+    0.18979893808818424,
+    0.14508649145399855,
+    0.18829806505275465
+   ],
+   "mean": 0.17439449819831246,
+   "range": 0.04471244663418569,
+   "sd": 0.025392569768746983,
+   "published": 0.25,
+   "inside_mean_pm_range": 0.0,
+   "inside_min_max": 0.0,
+   "inside_mean_pm_sd": 0.0
+  }
+ },
+ "verdicts": {
+  "each_cell": "FAIL: all enrolment / 5 min, 10 min / 5 min, 1 min / 1 min",
+  "primary_1min_1min": "OUTSIDE",
+  "ordering": "PASS",
+  "dynamic_range": "PASS",
+  "overall": "FAIL: the reproduction does not hold under the registered rule"
+ },
+ "dynamic_range": {
+  "per_seed": [
+   0.6660251830854419,
+   0.7188780641263676,
+   0.6425014325490628
+  ],
+  "mean": 0.6758015599202908,
+  "range": 0.07637663157730479,
+  "published": [
+   0.73,
+   0.75
+  ],
+  "inside_mean_pm_range": 1.0
+ },
+ "table": {
+  "all": {
+   "sequence_top_1_accuracy_1_mins": [
+    0.6392121015813068,
+    0.6208353038804096,
+    0.6077635683888
+   ],
+   "sequence_top_1_accuracy_5_mins": [
+    0.8558241211736262,
+    0.8639645555803661,
+    0.8307994976018175
+   ]
+  },
+  "10.0": {
+   "sequence_top_1_accuracy_1_mins": [
+    0.43471814378995105,
+    0.4613497793347196,
+    0.4180219626460135
+   ],
+   "sequence_top_1_accuracy_5_mins": [
+    0.5464728936613097,
+    0.5863132449907396,
+    0.5658859086438343
+   ]
+  },
+  "5.0": {
+   "sequence_top_1_accuracy_1_mins": [
+    0.34735621045821397,
+    0.35359120963110474,
+    0.349789443648505
+   ],
+   "sequence_top_1_accuracy_5_mins": [
+    0.4432553684115113,
+    0.45199830003441704,
+    0.4920103204161101
+   ]
+  },
+  "2.0": {
+   "sequence_top_1_accuracy_1_mins": [
+    0.2625207815951968,
+    0.23178887665319936,
+    0.24724684372383926
+   ],
+   "sequence_top_1_accuracy_5_mins": [
+    0.3113749560365022,
+    0.2789672807808747,
+    0.3291648076864004
+   ]
+  },
+  "1.0": {
+   "sequence_top_1_accuracy_1_mins": [
+    0.18979893808818424,
+    0.14508649145399855,
+    0.18829806505275465
+   ],
+   "sequence_top_1_accuracy_5_mins": [
+    0.24527164514401922,
+    0.1620501767838014,
+    0.24667100471915776
+   ]
+  }
+ }
+}
