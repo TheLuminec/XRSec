@@ -986,3 +986,54 @@ a reproduction of their environment, and it must not be called one.
   calculator saw one call per subject (1,000 / 2,000 rows) and got the expected sequence counts.
   One within-person property is noted but not measured: a sequence bridges any windows WindowMaker
   dropped inside a session. That holds identically for every seed.
+
+---
+
+# RESULT — 2026-10-05: the reproduction FAILS under the registered rule. The shape holds and every level is lower
+
+The reading script `rack2023_read.py` was committed (e5863ff, selftest passing) before any test number was
+read. Its output, `rack2023_read.json`, was committed before interpretation. Three seeds (42 / 43 / 44) were
+trained with their code and their configuration, and scored by our harness under their stated protocol. All
+three are on one test set of 27 subjects.
+
+| cell | seeds | mean ± range | published | inside? |
+| --- | --- | --- | --- | --- |
+| all enrolment / 5 min | 0.856 / 0.864 / 0.831 | 0.850 ± 0.033 | 0.99 | **no** |
+| 10 min / 5 min | 0.546 / 0.586 / 0.566 | 0.566 ± 0.040 | 0.89 | **no** |
+| **1 min / 1 min (primary)** | 0.190 / 0.145 / 0.188 | **0.174 ± 0.045** | 0.25 | **no** |
+| ordering all > 10 > 1 | | holds | | PASS |
+| dynamic range, all/5 minus 1/1 | 0.666 / 0.719 / 0.643 | 0.676 ± 0.076 | 0.74 | PASS |
+
+**Verdict: FAIL.** Every cell lies outside the measured spread under all three readings of "spread" (mean ±
+range, min-max, mean ± sd). The primary cell is outside. Per the registered falsifier, the reproduction does
+not hold, and it is reported as failed, as prominently as a pass would have been.
+
+**What did hold, kept separate from the verdict.** The curve's *shape* reproduces: the ordering holds, and
+so does the ~0.7 drop from full enrolment to 1 min / 1 min. Every level is lower, by 0.14, 0.32 and 0.08.
+The 10-minute cell is furthest off.
+
+**What could produce this outcome. These are candidates, none is established, and none licenses re-reading
+the verdict:**
+1. **The evaluation is ours, not theirs.** Their evaluation code is unpublished (Amendment 1), and our
+   harness implements their prose.
+   - The full-enrolment cell uses their own `[::150]` enrolment exactly. It is gated on validation to
+     0.0, and it is still 0.14 low.
+   - The limited-enrolment cells rest on a labelled *inference*: a first-N-minutes window at fixed gallery
+     density. The 10-minute cell, the furthest off, is the one most exposed to that inference.
+2. **Checkpoint choice.** We scored each run's validation-selected `sequence_top_1_accuracy_5_mins`
+   checkpoint. The paper does not say which of the nine monitored checkpoints its figures come from.
+3. **Training budget.** We ran `max_epochs=100`, which is their `min_epochs`; their config ships 500 with
+   early stopping commented out. The validation curve was a plateau from about epoch 40 (seed 42), which
+   argues against this but does not exclude it on the test metric.
+4. **Environment.** These are pins they never gave: PL 1.9.5, torch 2.0.1, pml 1.7.3, pandas 2.0.3 with the
+   bit-identical `.values` hoist. The registration says the pins are a candidate cause to rule out before
+   concluding the port is wrong. They have not been ruled out.
+
+**What this means for the paper.**
+- It cannot say "we reproduced Rack et al. 2023", in any form.
+- What it can say: their released code and configuration, trained three times and scored under their
+  stated protocol by a harness gated on their own validation metric, reach 0.85 / 0.57 / 0.17 at N=27,
+  below the published 0.99 / 0.89 / 0.25, with the curve's shape intact.
+- It is a second reference only with that sentence attached.
+- It is the same gap this file has documented since Amendment 1: "their code is public" is a different
+  claim from "their numbers are reachable from their code".
