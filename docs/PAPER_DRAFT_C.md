@@ -13,9 +13,10 @@ Scope decisions taken with the user on 2026-10-05:
   read FAIL under its registered rule on 2026-10-05, cause not established; see `docs/COORDINATION.md`.
   Rack et al. 2024 is cited only as related work, and the word "reproduced" must never be attached to
   it. If a Rack row is ever added, it carries the Result section's sentence verbatim.)
-- Nymeria is reported as verification AUC until the registered rank-1 run lands
-  (`docs/acceptance/nymeria_rank1_REGISTERED.md`). Every slot that changes when it does is marked
-  `[NYMERIA RANK-1]`.
+- The Nymeria row is rank-1 from the registered run of 2026-10-05
+  (`docs/acceptance/nymeria_rank1_REGISTERED.md`, Result; read output `nymeria_rank1_read.json`). It is
+  always quoted with the control, k (about an hour of other-script enrolment), single 10 s probes and
+  one sitting. The leave-script-out row stays as verification AUC; no rank-1 was computed for it.
 
 Every number below is quoted from a registered, gated result. The source file is given in a comment at
 the end of each results subsection, for checking; comments are removed before submission.
@@ -99,7 +100,9 @@ handicap.
    across days at 0.483 (N=12–17) and 0.693 (N=41), losing 35% and 16% of its same-session value. A
    change of headset costs a further −0.235. On the cross-day corpus the static cue that helped within a
    sitting reverses: absolute pose costs −0.149 across days and collapses to 0.133 across headsets. On
-   real AR glasses the signature identifies unseen people across tasks no training identity performed,
+   real AR glasses, within one sitting, it identifies 46 unseen people across activities at 0.555 rank-1
+   (N=17) against 0.172 for a model that never saw the device, and across tasks no training identity
+   performed,
    at a cost of −0.043.
 4. **Consequences for risk assessment.** A behaviour-only figure, such as the reference study's,
    understates same-sitting risk by the static term. A same-sitting figure, which is nearly every
@@ -258,8 +261,8 @@ and probe (or test), each column a component. Sections 5.1–5.4 take it row by 
 | boundary | corpus | metric, N | learned (`dyn`) | static (`raw` / lookup) |
 | --- | --- | --- | --- | --- |
 | unseen people, same sitting, seated video | VR_User_Behavior, Head_and_Gaze | lookup AUC | — | placement carries the lookup (xz 0.70, 0.87) |
-| unseen people **and unseen tasks**, AR glasses | Nymeria | AUC, 25 users `[NYMERIA RANK-1]` | 0.615; −0.043 against seen tasks | lookup reads the shared map, not the person |
-| unseen people, activity matched, AR glasses | Nymeria | AUC, 48 users `[NYMERIA RANK-1]` | **0.669**; control 0.472 | as above |
+| unseen people, other activity, AR glasses | Nymeria | rank-1, N=17; k ≈ 1 h other-script, single 10 s probe | **0.555**; control 0.172 | lookup reads the shared map, not the person |
+| unseen people **and unseen tasks**, AR glasses | Nymeria | AUC, 25 users | 0.615; −0.043 against seen tasks | as above |
 | unseen people, **unseen application**, one sitting | Across-XR | rank-1, N=17 | zero-shot 0.234; exposed **0.375** (0.299 on the reference metric vs 0.180) | `raw` **+0.117** at epoch 1 |
 | application held out of training | Across-XR | rank-1, N=17 | −0.016 [−0.043, +0.014] vs exposure to all five | — |
 | **another day**, same headset | who-is-alyx | rank-1, N=12–17 | **0.483** vs 0.743 same day (−35%) | lateral lookup at chance (0.539 AUC); height holds (0.661 AUC) |
@@ -378,27 +381,47 @@ the same recipe with 141 Nymeria identities among 3,072 (the treatment) and, as 
 non-held-out Nymeria identity swapped out for BOXRR-23 at the same count, and scored both on the same 48
 Nymeria people neither saw.
 
-To deny the model the activity cue, the test pairs are constrained: every positive pair is one person
-across **two different scripts**, and every negative pair is two people in the **same script**. An
-activity detector scores below chance on these pairs, and one appears: the control, which never saw
-Nymeria, reads **0.472** AUC. The treatment reads **0.669**, a paired gain whose 95% interval is
-[+0.164, +0.231]. So a model that has seen other people on the device separates unseen people by how they
-move, with the activity cue removed. `[NYMERIA RANK-1: replace or add the rank-1 at N=17 and N=48 here,
-treatment and control, from nymeria_rank1_REGISTERED.md. Registered statistic: script-matched gallery,
-cell-balanced mean over (person, script) cells. State k (all other-script windows, about an hour)
-beside the figure.]`
+The evaluation denies the model the activity cue. For each script, the gallery is only the people who
+recorded it; every template, the true person's and every impostor's, is built from that person's
+*other* scripts, and the probe is a single 10 s window of the script. Enrolment is therefore all of a
+person's other-script windows, about an hour, which is far more than one Across-XR application, and the
+Nymeria figure is not set against the Across-XR rows without that caveat. We average over
+(person, script) cells, which reads exactly at chance for an embedding that encodes only the activity.
+
+At N=17 (chance 0.059, 115 cells over 46 people), the treatment identifies unseen people at **0.555
+[0.508, 0.599]** and the control at **0.172 [0.138, 0.207]**, a paired gain of **+0.383
+[+0.335, +0.429]**. With all 48 people as candidates the figures are 0.553 and 0.197 (+0.356
+[+0.311, +0.402]). A model that has seen other people on the device identifies unseen people by how they
+move, across activities, at more than nine times chance from a single 10 s window.
+
+**The control is not at chance, and that is a finding.** A model that never saw the device identifies
+across activities at about three times chance, which agrees with its zero-shot 0.234 on Across-XR. Its
+verification figure on the same people, 0.472, reads below chance only because that test's negatives are
+same-script pairs: a model whose scores partly encode activity rates two strangers doing the same thing
+as more alike than one person doing two things. So that verification figure measures the pairing, not
+an absence of person signal.
+
+**Against the registration.** The registered band for the treatment was 0.20–0.45 and for the control
+0.03–0.08, both derived from the verification AUC of 0.67. The treatment's AUC on this score set is
+0.88, because each template averages about an hour of enrolment, and the usual non-Gaussian offset of
+about +0.09 accounts for the rest; the control shows the same offset. The treatment lands above its band
+and is not credited as exceeding it, because the control's falsifier fired. The gain spans the band and
+the region above it, so its size relative to +0.38 is not resolved.
 
 **It is not tied to the tasks it was trained on.** Removing five scripts (a quarter of the sequences)
 from every training identity and scoring 25 unseen people doing only those five scripts, the model reads
 0.615 against the full treatment's 0.657 on the same people, a cost of **−0.043 [−0.056, −0.030]**, inside
 the registered band of −0.06 to 0. The control reads 0.506 on this set.
 
-Two limits travel with this row. Nymeria records one sitting per person, so this is a same-session figure
-and the persistence costs of Section 5.4 apply to it. And Nymeria training does not carry beyond the
+Three limits travel with this row. Nymeria records one sitting per person, so this is a same-session
+figure and the persistence costs of Section 5.4 apply to it. Within that sitting, the device and the
+location are constant per person: the protocol removes the activity cue, not the sitting, and how much
+of the 0.555 the sitting carries is unmeasured. And Nymeria training does not carry beyond the
 device's own population measurably: on ball-throwing, a control without Nymeria matches the treatment
 within +0.002 [−0.017, +0.020].
 
-<!-- sources: nymeria_in_domain_REGISTERED.md (constrained protocol, 3 seeds);
+<!-- sources: nymeria_rank1_REGISTERED.md Result and nymeria_rank1_read.json (rank-1, six gates at 0.0);
+nymeria_in_domain_REGISTERED.md (constrained verification protocol, 3 seeds);
 nymeria_lso_REGISTERED.md; broad_2s_REGISTERED.md Q1. -->
 
 ### 5.4 Across days and headsets
@@ -518,6 +541,9 @@ most direct open question this paper leaves.
   it was taken later.
 - **The AR-glasses contrast is not perfectly symmetric.** The Nymeria treatment selects its epoch
   partly on Nymeria validation users and the control cannot, and the 48 held-out people are one draw.
+  The protocol removes the activity cue but not the sitting: device and location are constant per
+  person, and their share of the rank-1 is unmeasured. Its registered bands were missed in both arms
+  (Section 5.3).
 - **The headset cost has no measured mechanism**, and the `raw` arms selected their epoch at 1 or 2, so
   the static audit's cross-day reading carries a convergence confound.
 - **The architecture is not novel.** This is a measurement paper.
