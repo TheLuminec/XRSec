@@ -1,0 +1,22 @@
+{
+ "registration": "docs/acceptance/nymeria_gnn_REGISTERED.md (1134a3a)",
+ "seed": 2,
+ "rc": 0,
+ "written": "2026-10-06T07:35:29-04:00",
+ "row_found": true,
+ "row_checks_pass": true,
+ "run_dir": "runs/2026-10-06/04-16-09_train",
+ "run_id": "16fc74687b4b",
+ "checkpoint": "runs/2026-10-06/04-16-09_train/checkpoints/treatment-10s-gnn_multi3_paper-gnn-bilstm_10s_20hz_emb128_train.pth",
+ "best_epoch": 117,
+ "epochs_run": 120,
+ "epochs": 120,
+ "early_stopping_patience": 15,
+ "extractor": "paper_gnn_bilstm",
+ "encoding": "dyn",
+ "num_train_identities": 3072,
+ "num_excluded_users": 48,
+ "num_drop_users": 141,
+ "code_identity": "af7cf72022",
+ "eval_split_digest": "6a46dcadfe2d"
+}
