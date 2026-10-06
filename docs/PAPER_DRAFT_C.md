@@ -596,4 +596,8 @@ the distribution over people rather than the mean alone.
 12. M. R. Miller et al. *Personal identifiability of user tracking data during observation of 360-degree
     VR video.* Scientific Reports, 2020. **[VERIFY.]**
 13. K. Rogers et al. Identification from head and hand motion, 2015. **[TO BE COMPLETED.]**
-14. VR_User_Behavior and Head_and_Gaze corpus citations. **[TO BE COMPLETED from DATASET_CATALOGUE.md.]**
+14. C. Wu, Z. Tan, Z. Wang, S. Yang. *A Dataset for Exploring User Behaviors in VR Spherical Video
+    Streaming.* ACM MMSys, 2017. doi:10.1145/3083187.3083210. *(VR_User_Behavior.)*
+15. Y. Jin, J. Liu, F. Wang, S. Cui. *Where Are You Looking? A Large-Scale Dataset of Head and Gaze
+    Behavior for 360-Degree Videos and a Pilot Study.* ACM Multimedia, 2022, pp. 1025–1034.
+    *(Head_and_Gaze.)*
