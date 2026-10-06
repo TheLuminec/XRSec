@@ -85,3 +85,20 @@ and bilstm did not, that is a convergence difference, and it is reported beside 
   than 12 h per seed, the session reports and waits.
 - Push each result file to `origin/miami-server` as it lands. A gate refusal is reported, never re-scored on
   another device.
+
+## Amendment 1, 2026-10-06: an instrument fact, found by the harness refusing; no measurement is involved
+
+The script-pair harness filtered shard rows to `experiment == "nymeria_in_domain"`. The GNN arm's rows carry
+`treatment_10s_gnn`, the generator's arm name, so seed 1's script-pair found no row and asserted (rc 1, no
+output). This could have been known by reading the harness, so the amendment is legitimate.
+
+The fix accepts `treatment_10s_gnn` as well. `gnn_pilot` rows stay excluded. Rows are still matched to a
+checkpoint by its own path, and the gate is unchanged. The file is under `docs/acceptance`, so
+`code_identity` does not move.
+
+Nothing was read from the refused run. Rank-1 seed 1 was unaffected; it gated at 9.6e-8 on cuda.
+
+**Run order:**
+- Miami does not pull while the chain is live.
+- When the chain ends, it pulls and runs the per-seed script-pairs and the final six-checkpoint pass, with
+  the cross-check against the per-seed files as agreed.

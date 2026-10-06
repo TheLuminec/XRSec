@@ -47,7 +47,9 @@ def load_rows(shards) -> list[dict]:
     rows = []
     for s in shards:
         rows += [json.loads(l) for l in Path(s).read_text().splitlines() if l.strip()]
-    return [r for r in rows if r.get("experiment") == "nymeria_in_domain" and int(r.get("sample_time", 0)) == 10
+    # "treatment_10s_gnn": the paper_gnn_bilstm arm (nymeria_gnn_REGISTERED.md, Amendment 1); its generator names runs
+    # by arm. "gnn_pilot" timing rows stay excluded. Rows are still matched to a checkpoint by its own path below.
+    return [r for r in rows if r.get("experiment") in ("nymeria_in_domain", "treatment_10s_gnn") and int(r.get("sample_time", 0)) == 10
             and r.get("encoding") == "dyn"]
 
 def match_row(ckpt: Path, rows: list[dict]) -> dict:
