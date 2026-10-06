@@ -36,7 +36,7 @@ DEVICE = torch.device(os.environ.get("DEVICE", "cpu"))
 GATE_TOL = {"cuda": 1e-4, "cpu": 1e-3}[DEVICE.type]
 PAIRS_PER_USER = 256           # per class per anchor user; the pipeline's manifest is 512 at 0.5
 SCRIPTS = ROOT / "docs" / "acceptance" / "nymeria_sequence_scripts.csv"
-OUT = ROOT / "docs" / "acceptance" / "nymeria_script_pair.json"
+OUT = Path(os.environ.get("SCRIPT_PAIR_OUT", str(ROOT / "docs" / "acceptance" / "nymeria_script_pair.json")))
 BAND, FALSIFIER = 0.65, 0.58   # registered: >= band credited; < falsifier activity-mix; between: partly
 
 def _here(p: str) -> str:
@@ -152,6 +152,8 @@ def main() -> int:
         ckpt = Path(c); row = match_row(ckpt, rows); t0 = time.time()
         arm = "treatment" if int(row.get("num_drop_users", 0)) == 141 else "control"
         model, ck = load_checkpoint(str(ckpt), DEVICE, 200, return_checkpoint=True)
+        if ck.get("extractor", "bilstm") != "bilstm":      # nymeria_gnn_REGISTERED.md: name the backbone, never relabel it
+            arm += "_" + ck["extractor"]
         ds = build_eval(ck, int(ck.get("seed", row["seed"])))
         _, _, m = evaluate(model, DataLoader(ds, batch_size=256, shuffle=False), nn.BCEWithLogitsLoss(), DEVICE, return_metrics=True)
         gap = abs(float(m["auc"]) - float(row["selected_test_auc"]))
@@ -172,7 +174,7 @@ def main() -> int:
             rec.update(constrained_auc=constrained, constrained_pairs=[len(pos), len(neg)], skipped_users=skipped,
                        unconstrained_auc_same_embeddings=auc_of(model, E, upos, uneg), unconstrained_pairs=[len(upos), len(uneg)],
                        scripts_per_user_min=min(len({scripts[w] for w in idx.tolist()}) for idx in ds.sample_index.user_sample_indices),
-                       verdict=verdict(constrained) if arm == "treatment" else "control: < 0.50 activity-reversed / 0.50-0.56 band / 0.56-0.60 between / > 0.60 falsifier")
+                       verdict=verdict(constrained) if arm.startswith("treatment") else "control: < 0.50 activity-reversed / 0.50-0.56 band / 0.56-0.60 between / > 0.60 falsifier")
             print(f"  constrained AUC (cross-script pos / same-script neg) {rec['constrained_auc']:.4f} on {len(pos)}+{len(neg)} pairs | "
                   f"unconstrained on the same embeddings {rec['unconstrained_auc_same_embeddings']:.4f} | {rec['verdict']}", flush=True)
         rec["seconds"] = round(time.time() - t0, 1); results[rec["checkpoint"]] = rec

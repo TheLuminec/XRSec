@@ -6,6 +6,7 @@ windows so that a ~3 s ball throw yields a window: sample_time=2, window_stride=
 stride, so the number of training windows and the epoch cost stay close to the 10 s arm's.
 
     .venv/bin/python docs/acceptance/treatment_short_lists.py --seed 1 [--sample-time 2] [--arm control] [--encoding raw]
+        [--extractor paper_gnn_bilstm]
 
 --arm control is the Nymeria control composition (every non-held-out Nymeria user dropped, the control's own
 1,024 validation users, 3,072 BOXRR+alyx identities). --encoding changes only the encoding; the name gains
@@ -27,6 +28,7 @@ def main():
     ap.add_argument("--sample-time", type=int, default=2)
     ap.add_argument("--arm", choices=("treatment", "control"), default="treatment")
     ap.add_argument("--encoding", choices=("dyn", "raw", "br"), default="dyn")
+    ap.add_argument("--extractor", choices=("bilstm", "paper_gnn_bilstm"), default="bilstm")
     a = ap.parse_args()
     ref = json.loads((ROOT / "docs/acceptance" / f"nymeria_in_domain_lists_s{a.seed}.json").read_text())
     held = paths_of(ref["held_out"]); V = paths_of(ref["validation_control"])
@@ -35,8 +37,10 @@ def main():
         val, drop, n_drop = V + nym_val, dropB, 141
     else:
         val, drop, n_drop = V, paths_of(ref["drop_control_nymeria"]), 188
-    name = f"{a.arm}_{a.sample_time}s" + ("" if a.encoding == "dyn" else f"_{a.encoding}")
-    fixed = dict(FIXED, experiment_name=name, sample_time=a.sample_time, window_stride=5, encoding=a.encoding)
+    name = f"{a.arm}_{a.sample_time}s" + ("" if a.encoding == "dyn" else f"_{a.encoding}") \
+           + ("" if a.extractor == "bilstm" else "_gnn")
+    fixed = dict(FIXED, experiment_name=name, sample_time=a.sample_time, window_stride=5, encoding=a.encoding,
+                 extractor=a.extractor)
     out = ROOT / "configs" / f"{name}_s{a.seed}.yaml"
     body = "defaults:\n  - config\n  - _self_\n\n" + f"seed: {a.seed}\n"
     for k, v in fixed.items():
@@ -57,7 +61,7 @@ def main():
     kept = [u for d in w["data_dirs"] for u in users(Path(d))
             if u not in set(w["exclude_users"]) | set(w["drop_users"]) | set(resolved)]
     assert len(kept) == 3072, f"loader would train on {len(kept)} identities"
-    print(f"wrote {out.relative_to(ROOT)} | {a.arm} {a.encoding} | sample_time {a.sample_time} stride 5 | training identities {len(kept)} | "
+    print(f"wrote {out.relative_to(ROOT)} | {a.arm} {a.encoding} {a.extractor} | sample_time {a.sample_time} stride 5 | training identities {len(kept)} | "
           f"drop {digest(drop)} | excl {digest(held)} | val {digest(val)}")
 
 

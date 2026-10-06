@@ -482,7 +482,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("score")
-    s.add_argument("--checkpoints", nargs="+", required=True, help="SEED=ARM=path (ARM in treatment, control)")
+    s.add_argument("--checkpoints", nargs="+", required=True, help="SEED=ARM=path (ARM in treatment, control, gnn)")
     s.add_argument("--device", default="cuda")
     s.add_argument("--out-dir", default=str(ROOT / "docs" / "acceptance"))
     r = sub.add_parser("read")
@@ -498,7 +498,7 @@ def main() -> int:
     rc = 0
     for item in a.checkpoints:
         seed, arm, path = item.split("=", 2)
-        assert arm in ("treatment", "control"), arm
+        assert arm in ("treatment", "control", "gnn"), arm     # gnn: nymeria_gnn_REGISTERED.md
         res = score_checkpoint(path, int(seed), arm, device)
         res["registered"] = "docs/acceptance/nymeria_rank1_REGISTERED.md"
         out = pathlib.Path(a.out_dir) / f"nymeria_rank1_{arm}_s{seed}_{device.type}.json"

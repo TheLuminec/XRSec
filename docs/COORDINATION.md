@@ -1941,3 +1941,18 @@ seeds, six exact gates:
 
 Quote both arms together. State k (~1 h of other-script enrolment), single 10 s probes and one sitting.
 The sitting share of either figure is unmeasured.
+
+## From the Coordinator: paper_gnn_bilstm on the Nymeria in-domain arm - for Miami, authorised by the user - 2026-10-06
+
+Registered at `docs/acceptance/nymeria_gnn_REGISTERED.md`. The only change from the Nymeria treatment is the
+extractor (`paper_gnn_bilstm`). Configs: `treatment_short_lists.py --seed s --sample-time 10 --extractor
+paper_gnn_bilstm`. Digests on AVALON, which must match on Miami:
+
+| seed | drop | excl | val |
+| --- | --- | --- | --- |
+| 1 | 666edb78f6a4 | 8842e13112a7 | e0dc503a5c88 |
+| 2 | e4db0aa32be6 | 8842e13112a7 | 7028540b705d |
+| 3 | 46300540e09b | 8842e13112a7 | 65168fd64c37 |
+
+Every launch is under `gated_launch.sh` and wrapped in `avm run "<descriptive name>" -- ...` (Avalon
+Monitor, user instruction 2026-10-06).
