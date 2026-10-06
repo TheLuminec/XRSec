@@ -633,6 +633,17 @@ the cross-session cost. **On the rank-1 axis (2026-10-05, `docs/acceptance/nymer
 - Still open: how much of either figure is the one-sitting cue (device and location are constant per
   person).
 
+**Dr. Feng's `paper_gnn_bilstm` loses badly on this arm (2026-10-06, `docs/acceptance/nymeria_gnn_REGISTERED.md`).**
+The test changed only the extractor (three seeds, all gates on cuda).
+- Constrained AUC: **0.522** against bilstm's 0.668, **-0.146 [-0.159, -0.133]**.
+- Activity-matched rank-1 at N=17: **0.309** against 0.555, **-0.246 [-0.279, -0.216]**.
+- The registered prediction was ~0 (BAND), following the pooled `raw` sweep where three extractors tied
+  within 0.002. It failed decisively.
+- Both arms ran to the same 120-epoch cap, so there is no convergence asymmetry.
+- So "the extractor is not the constraint" holds on the pooled `raw` corpus and is **false under `dyn` on
+  AR glasses**. Keep `bilstm`.
+- Why the graph branches cost this much is not established.
+
 **And it is not task-bound (leave-script-out, 2026-09-23,
 `docs/acceptance/nymeria_lso_REGISTERED.md`)**: five scripts removed from every training identity
 (25 % of sequences, chosen by rule), the same 3,072 identities retrained, scored on 25 unseen people

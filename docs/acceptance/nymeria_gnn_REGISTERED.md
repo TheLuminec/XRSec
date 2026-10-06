@@ -102,3 +102,52 @@ Nothing was read from the refused run. Rank-1 seed 1 was unaffected; it gated at
 - Miami does not pull while the chain is live.
 - When the chain ends, it pulls and runs the per-seed script-pairs and the final six-checkpoint pass, with
   the cross-check against the per-seed files as agreed.
+
+## RESULT, 2026-10-06: the GNN is decisively WORSE on both registered measures. The prediction (BAND) failed
+
+**Provenance.**
+- Three seeds per arm, every gate passed on cuda:
+  - rank-1 9.6e-8 / 2.0e-8 / 5.3e-8;
+  - script-pair GNN 2.7e-7 / 9.3e-8 / 3.3e-7, bilstm 9.9e-9 / 0 / 3.3e-9.
+- The files were propagated to main before reading.
+- The read output is `nymeria_gnn_read.json`, committed (c26801d) before this section was written.
+
+| measure | bilstm (s1 / s2 / s3) | paper_gnn_bilstm (s1 / s2 / s3) | gnn - bilstm | region |
+| --- | --- | --- | --- | --- |
+| **constrained AUC** (registered) | 0.661 / 0.678 / 0.665 | **0.520 / 0.528 / 0.518** | **-0.146 [-0.159, -0.133]** | **GNN WORSE**, whole interval |
+| **rank-1 N=17, constrained, cell-balanced** (registered) | 0.555 [0.507, 0.600] | **0.309 [0.259, 0.360]** | **-0.246 [-0.279, -0.216]** | **GNN WORSE**, whole interval |
+| row AUC (`selected_test_auc`, descriptive) | 0.708 / 0.726 / 0.718 | 0.577 / 0.586 / 0.580 | -0.137 [-0.147, -0.126] | |
+| unconstrained AUC on the same embeddings (descriptive) | 0.712 / 0.721 / 0.712 | 0.576 / 0.585 / 0.575 | | |
+| best_epoch / epochs_run | 118 / 120, 120 / 120, 118 / 120 | 120 / 120, 117 / 120, 115 / 120 | | |
+
+**Reading:**
+- Both registered intervals lie wholly in "GNN WORSE", far beyond the resolution stated before running
+  (±0.03). The prediction that architecture is worth about 0 here (BAND) **failed**, and it is reported
+  as failed.
+- On the same data, users and pairs, Dr. Feng's published architecture retains little of the
+  activity-matched motion signature: constrained AUC 0.52 against chance 0.50.
+- It still identifies well above chance (0.309 at N=17, chance 0.059) and above the zero-shot bilstm
+  control (0.172). But it sits 0.25 below `bilstm`.
+
+**Convergence check (registered).** Neither arm stopped on patience. Both ran to the 120 cap, with best
+epochs of 115-120. So there is no categorical convergence difference. Both arms are censored alike. "The
+GNN needs a longer budget" is therefore **not excluded**, but nothing here points to it: two of three GNN
+seeds peaked before the cap, against one of three bilstm seeds.
+
+**Scope:**
+- This holds under `dyn`, 10 s, `identity_softmax`, 3,072 identities, on Nymeria (AR glasses), in domain.
+- It does **not** contradict the earlier pooled-corpus result (three extractors within 0.002). That was
+  `raw`, verification, on a different corpus. The two together say the extractor is ~irrelevant there and
+  matters a great deal here.
+- **Why the graph branches cost so much under `dyn` is not established.**
+  - One untested candidate: the fixed 10-node graph was designed around absolute channels
+    (orientation / position / root aggregate nodes), and `dyn` removes exactly those static components.
+  - That is a hypothesis for a registered follow-up, not a finding.
+
+**Instrument note: the GNN is not bit-reproducible on cuda.**
+- Scoring the same GNN checkpoint twice on the same device and the same pairs gave constrained AUCs
+  differing by 2e-8 to 1.4e-7.
+- The bilstm entries reproduced exactly.
+- The likely cause is non-deterministic atomic scatter in the graph layers. That is unverified.
+- At 1e-7 it is five orders below every band and below every gate tolerance. Re-scored GNN figures should
+  be expected to agree to about 1e-7, not to the bit.

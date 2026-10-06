@@ -1956,3 +1956,17 @@ paper_gnn_bilstm`. Digests on AVALON, which must match on Miami:
 
 Every launch is under `gated_launch.sh` and wrapped in `avm run "<descriptive name>" -- ...` (Avalon
 Monitor, user instruction 2026-10-06).
+
+## From the Coordinator: paper_gnn_bilstm on Nymeria - result - 2026-10-06
+
+The `nymeria_gnn_REGISTERED.md` result: paper_gnn_bilstm is decisively worse than bilstm on the
+Nymeria in-domain arm.
+
+| measure | paper_gnn_bilstm - bilstm |
+| --- | --- |
+| constrained AUC | -0.146 [-0.159, -0.133] (0.522 against 0.668) |
+| rank-1 N=17 | -0.246 [-0.279, -0.216] (0.309 against 0.555) |
+
+Both arms ran to the 120-epoch cap. The prediction (~0) failed. For the paper sessions: the "extractor is
+~irrelevant" sentence must be scoped to the pooled `raw` verification sweep. Nymeria rows stay `bilstm`.
+Miami is idle.
