@@ -168,17 +168,17 @@ def schach(out: pathlib.Path):
 
 # ---------------------------------------------------------------- template verification
 def template_verification(out: pathlib.Path):
-    files = sorted(A.glob("tv_*_cuda.json"))
+    files = sorted(A.glob("tv_*_c*.json"))         # cuda and cpu: each is scored on its committed figures' device
     lines = ["# Template verification (template_verification_PROTOCOL.md)", ""]
     if not files:
-        (out / "template_verification.md").write_text("\n".join(lines + ["MISSING: no tv_*_cuda.json on main yet."]) + "\n")
+        (out / "template_verification.md").write_text("\n".join(lines + ["MISSING: no tv_*.json on main yet."]) + "\n")
         return
     lines += ["| corpus | arm | seed | condition | users | EER | FAR / FRR at cross-fitted EER threshold | balanced accuracy | TAR at FAR 1 % (realised FAR) | per-user FRR p10 / p50 / p90 | plumbing |",
               "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     strips = {}
     for f in files:
         r = json.loads(f.read_text())
-        corpus = f.name.split("_")[1]
+        corpus = f.name.split("_")[1] + (" (cpu)" if f.name.endswith("_cpu.json") else "")
         if "refused" in r:
             lines.append(f"| {corpus} | {r.get('arm')} | {r.get('seed')} | REFUSED: {r['refused']} | | | | | | | |")
             continue
