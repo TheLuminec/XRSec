@@ -122,3 +122,60 @@ loader expects a result dict. The fixture had no gate files, so it never reprodu
   - all six outcomes show `row_checks_pass`, with 3,015 / 3,038 identities at `af7cf72022`.
 - **Pending from Miami:** the config diff, which must show only `data_dirs` and `experiment_name` differ.
   The Result is recorded as conditional on it.
+
+## Result, 2026-10-13: the BAND prediction FAILED. Who-is-Alyx in pretraining contributes, in both arms
+
+Read with `alyx_axr_overlap_read.py` after Amendment 2; output `alyx_axr_overlap_read.json` (2950cdd),
+committed before this text. **Conditional on the config diff from Miami** (Amendment 2), which is pending.
+
+| arm | A1 with alyx (re-scored) | A1 without alyx | no-alyx minus with-alyx, per user (N=17) | region |
+| --- | --- | --- | --- | --- |
+| zero-shot | 0.234 | **0.168** | **-0.066 [-0.101, -0.034]** | below -0.03: alyx contributes |
+| C2-lo | 0.375 | **0.323** | **-0.052 [-0.064, -0.040]** | below -0.03: alyx contributes |
+
+**Both intervals lie wholly below the band. The registered prediction (BAND) failed in both arms.**
+- **Seeds.** Every no-alyx seed is below every with-alyx seed in both arms:
+  - zero-shot: 0.182 / 0.161 / 0.160 against 0.231 / 0.230 / 0.240;
+  - C2-lo: 0.329 / 0.339 / 0.301 against 0.368 / 0.379 / 0.378.
+
+  The interval is per-user with seeds averaged. The seed spread does not reach across the gap.
+- **Instrument.** The re-scored originals reproduce their committed figures within 4.1e-4 (cuda against the
+  committed CPU scoring, inside the recorded 7e-4). All 12 gates were 0.0.
+
+**What this means, as registered.** Who-is-Alyx in pretraining contributes to both Across-XR figures.
+**Participant overlap is not excluded as the reason, and neither is content.** The registration named
+three explanations for a drop and this result does not choose between them:
+1. shared participants;
+2. Half-Life: Alyx content;
+3. the 57 fewer training identities.
+
+On (3), the project's own record is that identity count is saturated at this scale (CLAUDE.md:
+1,535 → 3,072 moved transfer by 0.001). That is recorded here, not argued.
+
+**Descriptive per-cell split (not registered; it does not move the verdict).**
+
+| arm | cells involving Half-Life | cells not involving Half-Life |
+| --- | --- | --- |
+| zero-shot | -0.080 [-0.127, -0.035] | -0.057 [-0.089, -0.028] |
+| C2-lo | -0.066 [-0.079, -0.053] | -0.043 [-0.059, -0.027] |
+
+- The drop is larger where Half-Life is involved, but it is clearly present where it is not.
+- So Half-Life content alone does not account for it.
+- A broad drop does not separate people from content, as registered.
+
+**An explanation the registration did not list.** Who-is-Alyx is the only multi-session corpus in this
+pretraining pool. Its cross-session positives (`cross_session_positives`) may teach session invariance that
+helps every cross-application pair. This is untested and is recorded as an omission in the registration's
+"what else" list, not as an account of the result.
+
+**Consequences for what may be quoted.**
+- **The overlap-free Across-XR figures are the no-alyx ones:** zero-shot **0.168** and C2-lo **0.323**
+  (N=17, rank-1, single window). No Würzburg corpus is in their training.
+- Zero-shot without alyx is **below** Schach et al.'s published 0.180 (head + controllers). The
+  with-alyx 0.234 may be quoted only with this result beside it, until the authors answer the overlap question.
+- The paired comparison against Schach (+0.119 for C2-lo) has **not** been recomputed for the no-alyx arm.
+  Until it is, it carries the same condition.
+- **The author question (COORDINATION) is now decision-relevant.**
+  - If no Across-XR test user (32-48) took part in Who-is-Alyx, the with-alyx figures are users-unseen.
+    The drop is then a content or data effect, and they stand.
+  - Otherwise the no-alyx figures replace them.
