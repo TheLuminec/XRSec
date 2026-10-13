@@ -1,0 +1,111 @@
+defaults:
+  - config
+  - _self_
+
+mode: train
+curve_k:
+- 1
+- 2
+- 4
+- 8
+- 16
+seed: 2
+epochs: 120
+lr: 0.001
+weight_decay: 0.0
+objective: identity_softmax
+identity_margin: 0.35
+identity_scale: 30.0
+balance_identities: false
+balance_cap: null
+early_stopping_patience: 15
+head: diff_linear
+channels: full
+center_position: false
+encoding: dyn
+resample: nearest
+window_stride: 5
+gallery_k: 8
+probe_k: 1
+probes_per_user: 16
+gallery_sizes:
+- 17
+- 48
+- 100
+use_checkpoint_split: true
+max_users: null
+val_user_fraction: 0.25
+validation_users:
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/23
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/24
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/25
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/26
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/27
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/28
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/29
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/30
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/31
+drop_users: []
+batch_size: 1024
+num_workers: 0
+embedding_dim: 128
+sample_time: 10
+sample_rate: 20
+samples_per_user: 512
+normalize: per_dataset
+eval_normalize: target_fit
+within_dataset_negatives: true
+cross_session_positives: true
+extractor: bilstm
+extractor_params: null
+data_dirs:
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users
+test_dirs:
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users
+exclude_users:
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/32
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/33
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/34
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/35
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/36
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/37
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/38
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/39
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/40
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/41
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/42
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/43
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/44
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/45
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/46
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/47
+- /run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/48
+swap_data: false
+test_on_excluded: true
+experiment_name: across_xr_matched_c2lo_dyn10s_noalyx
+save_path: auto
+model_path: auto
+graph: true
+graph_path: auto
+boosting:
+  enabled: false
+  rounds: 10
+  round_epochs: 20
+  hard_fraction: 0.6
+  refresh_fraction: 0.4
+  candidate_pairs_per_user: 1024
+  match_ratio: 0.5
+  artifact_root: boosting
+  resume: auto
+sweep:
+  extractors: config
+  grid: auto
+  strategy: grid
+  folds: null
+  max_runs: null
+  seed: null
+  epochs: null
+  dry_run: false
+  artifact_root: sweeps
+  resume: true

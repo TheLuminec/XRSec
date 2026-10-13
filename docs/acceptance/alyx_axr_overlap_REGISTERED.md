@@ -120,13 +120,16 @@ loader expects a result dict. The fixture had no gate files, so it never reprodu
 - **Acceptance evidenced before reading:**
   - all 12 checkpoint gates are cuda, gap 0.0, 17 users each;
   - all six outcomes show `row_checks_pass`, with 3,015 / 3,038 identities at `af7cf72022`.
-- **Pending from Miami:** the config diff, which must show only `data_dirs` and `experiment_name` differ.
-  The Result is recorded as conditional on it.
+- **Config diff:** delivered after the read; see the Result.
 
 ## Result, 2026-10-13: the BAND prediction FAILED. Who-is-Alyx in pretraining contributes, in both arms
 
 Read with `alyx_axr_overlap_read.py` after Amendment 2; output `alyx_axr_overlap_read.json` (2950cdd),
-committed before this text. **Conditional on the config diff from Miami** (Amendment 2), which is pending.
+committed before this text. **Run acceptance met** (`alyx_axr_overlap_config_diff.json`, from Miami): in all six
+pairs the composed `.hydra/config.yaml` differs from its original only in `data_dirs` (`who_is_alyx` removed, the other
+entries unchanged and in order) and `experiment_name` (`_noalyx` appended). The Coordinator re-checked this against
+the outcome files' run dirs and experiment names, 6 of 6. The zero-shot originals' configs were read from their
+`runs/miami-alignment` copies; the run is the same, and that volume carries the known ntfs3 damage, but these files opened.
 
 | arm | A1 with alyx (re-scored) | A1 without alyx | no-alyx minus with-alyx, per user (N=17) | region |
 | --- | --- | --- | --- | --- |
