@@ -195,11 +195,14 @@ def template_verification(out: pathlib.Path):
     keys = sorted(strips)
     fig, ax = plt.subplots(figsize=(7, 0.45 * len(keys) + 1.2))
     for i, k in enumerate(keys):
-        v = np.mean(strips[k], axis=0)            # seeds averaged per user
+        arrs = strips[k]
+        # seeds averaged per user where the users are the same (axr, ballthrowing); alyx draws different users
+        # per seed, so there each (seed, user) is a unit, as in alyx_cross_day_read.py
+        v = np.mean(arrs, axis=0) if len({len(x) for x in arrs}) == 1 and k[0] != "alyx" else np.concatenate(arrs)
         ax.scatter(v, np.full(len(v), i) + np.random.default_rng(i).uniform(-0.15, 0.15, len(v)), s=12, color="#2a78d6", alpha=0.7)
         ax.plot([np.median(v)] * 2, [i - 0.3, i + 0.3], color="#0b0b0b", lw=1.5)
     ax.set_yticks(range(len(keys)), [" / ".join(k) for k in keys], fontsize=7)
-    ax.set_xlabel("per-user false-reject rate at the cross-fitted EER threshold (seeds averaged)")
+    ax.set_xlabel("per-user false-reject rate at the cross-fitted EER threshold (seeds averaged; alyx: seed-user units)")
     ax.grid(axis="x", color="#e6e5e1"); fig.tight_layout()
     fig.savefig(out / "tv_per_user_frr.png", dpi=160); plt.close(fig)
 

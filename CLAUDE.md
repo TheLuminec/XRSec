@@ -120,6 +120,16 @@ number to beat, not the model's previous score. The open problem is not accuracy
 building a learned component that transfers - which is what
 `docs/GENERALISATION_PROPOSAL.md` is for.
 
+**The deployment decision has its own scale too (2026-10-12, `docs/acceptance/template_verification_PROTOCOL.md`).**
+Stored template against single probe windows, with a threshold fitted on other people:
+- at 1 % false accepts, a genuine user is accepted about half the time across days on ball-throwing, 17 % on
+  alyx, and 6 % across applications zero-shot;
+- the balanced accuracy at the equal-error point is 0.78-0.83 across days and 0.59 cross-application
+  zero-shot;
+- the per-user false-reject rate at the 90th percentile is 0.37-0.64 in every cross-session condition.
+
+Quote rank-1 *and* this table; the first flatters the decision.
+
 **Identification is a separate scale.** rank-1 **0.570** at a 17-user gallery (chance
 0.059), against a published 0.785 at the same gallery size. Never compare a verification
 figure to a published rank-1; they are different tasks.
