@@ -329,7 +329,11 @@ def main():
     template_verification(out)
     dashboard(out)
     if a.push:
-        subprocess.run(["avm", "results", "push", "xrsec", str(out / "dashboard.json")], check=True)
+        # AVM_CLI overrides the command, e.g. "python3 ~/Projects/System_Monitor/agent/avm.py" until the installed
+        # avm has the results subcommand
+        import os, shlex
+        cli = shlex.split(os.path.expanduser(os.environ.get("AVM_CLI", "avm")))
+        subprocess.run(cli + ["results", "push", "xrsec", str(out / "dashboard.json")], check=True)
     for r in rows:
         print(f"  {r[0]:42s} {r[3]:>14s}  {r[6]}")
     print(f"wrote {out}")
