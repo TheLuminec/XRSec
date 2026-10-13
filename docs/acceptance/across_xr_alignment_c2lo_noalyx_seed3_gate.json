@@ -1,0 +1,35 @@
+[
+ {
+  "checkpoint": "runs/2026-10-13/03-37-25_train/checkpoints/across-xr-matched-c2lo-dyn10s-noalyx_multi2_bilstm_10s_20hz_emb128_train.pth",
+  "run_id": "e183d0e45344",
+  "seed": 3,
+  "device": "cuda",
+  "recorded": 0.6494978010448205,
+  "rescored": 0.6494978010448205,
+  "gap": 0.0,
+  "tolerance": 0.0001,
+  "eval_users": 17,
+  "exclude_users_seen": [
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/32",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/33",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/34",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/35",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/36",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/37",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/38",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/39",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/40",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/41",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/42",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/43",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/44",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/45",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/46",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/47",
+   "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users/48"
+  ],
+  "position_lookup_recorded": 0.5977019999678984,
+  "position_lookup_rescored": 0.5977019999678984,
+  "passed": true
+ }
+]
