@@ -290,10 +290,10 @@ def dashboard(out: pathlib.Path):
     if tv:
         lab = lambda k: f"{k[0]} {k[1]}: {k[2]}"
         keys = sorted(tv)
-        for bid, title, get in (("tv_far1", "Template decision: genuine accept rate at 1 % false accept", lambda c: c["crossfit_far1pct"]["tar"]),
-                                ("tv_bacc", "Template decision: balanced accuracy at a cross-fitted threshold", lambda c: c["crossfit_eer_threshold"]["balanced_accuracy"]),
-                                ("tv_eer", "Template decision: equal error rate (lower is better)", lambda c: c["eer"])):
-            bars.append({"id": bid, "title": title, "unit": "rate",
+        for bid, title, get, better in (("tv_far1", "Template decision: genuine accept rate at 1 % false accept", lambda c: c["crossfit_far1pct"]["tar"], "higher"),
+                                ("tv_bacc", "Template decision: balanced accuracy at a cross-fitted threshold", lambda c: c["crossfit_eer_threshold"]["balanced_accuracy"], "higher"),
+                                ("tv_eer", "Template decision: equal error rate", lambda c: c["eer"], "lower")):
+            bars.append({"id": bid, "title": title, "unit": "rate", "better": better,
                          "rows": [{"label": lab(k), "value": round(float(np.mean([get(c) for c in tv[k]])), 4), "n_seeds": len(tv[k])} for k in keys]})
         dists.append({"id": "tv_frr", "title": "Per-user false-reject rate at the cross-fitted threshold (seeds pooled)",
                       "series": [{"label": lab(k), "values": [round(float(x), 4) for c in tv[k] for x in c["per_user_frr"]]} for k in keys]})
