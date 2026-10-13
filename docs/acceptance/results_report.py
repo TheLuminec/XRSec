@@ -3,7 +3,7 @@ Results report: one command regenerates every summary table and figure from the 
 (Dr. Feng, email 2026-10-12, point 3). Nothing is recomputed from checkpoints; it only reads JSON already on
 main. Run it after any new result lands, and attach `docs/results/` to the progress update.
 
-    .venv/bin/python docs/acceptance/results_report.py [--out docs/results]
+    .venv/bin/python docs/acceptance/results_report.py [--out docs/results] [--push]
 
 Writes:
   summary.md / summary.csv   headline rows, each with metric, N, users-unseen, content-unseen and compliance
@@ -13,6 +13,7 @@ Writes:
   schach_cells.png / .svg    per-user comparison figure for the six compliant pairs
   template_verification.md   the deployment decision (template_verification_PROTOCOL.md), every tv_*.json
   tv_per_user_frr.png        per-user false-reject distributions, one strip per arm and condition
+  dashboard.json             the feed Avalon Monitor's results page renders (schema xrsec-results/1); --push sends it
 Sections whose inputs do not exist yet are reported as missing, never filled in.
 """
 from __future__ import annotations
@@ -21,6 +22,8 @@ import argparse
 import csv
 import json
 import pathlib
+import re
+import subprocess
 
 import numpy as np
 
@@ -161,8 +164,9 @@ def schach(out: pathlib.Path):
         ax.set_yticks(y, [str(32 + i) for i in order]); ax.set_xlabel("rank-1 per user, template metric, 6 uncovered app pairs")
         ax.set_ylabel("test user"); ax.axvline(1 / 17, color="#999", lw=0.8, ls=":"); ax.grid(axis="x", color="#e6e5e1")
         ax.legend(frameon=False, fontsize=8, loc="lower right"); fig.tight_layout()
-        for ext in ("png", "svg"):
-            fig.savefig(out / f"schach_cells.{ext}", dpi=160)
+        plt.rcParams["svg.hashsalt"] = "xrsec"          # deterministic ids, so a regeneration is not a diff
+        fig.savefig(out / "schach_cells.png", dpi=160)
+        fig.savefig(out / "schach_cells.svg", dpi=160, metadata={"Date": None})
         plt.close(fig)
 
 
@@ -207,14 +211,125 @@ def template_verification(out: pathlib.Path):
     fig.savefig(out / "tv_per_user_frr.png", dpi=160); plt.close(fig)
 
 
+# ---------------------------------------------------------------- dashboard feed
+# dashboard.json (schema xrsec-results/1) is what Avalon Monitor's results page renders. Aggregate metrics and
+# statuses only: no windows, embeddings or checkpoints, and per-user values only by public test-user ID.
+def _ci(path, *keys):
+    d = jget(path, *keys)
+    lo, hi = d.get("ci95") or d.get("ci95_boot") or (d.get("lo"), d.get("hi"))
+    return float(d["mean"]), [float(lo), float(hi)] if lo is not None else None
+
+
+# (id, group, label, metric, n, chance, value -> (mean, ci|None), comparator|None, compliance)
+SCHACH = {"label": "Schach et al. 2025 (head + controllers)", "value": 0.180}
+DASH = [
+    ("axr_zeroshot", "Across-XR", "zero-shot, all 20 app pairs", "rank-1, single window", 17, 1 / 17,
+     lambda: _ci("across_xr_alignment_aggregate.json", "zero_shot", "arms", "A1"), SCHACH, "users only"),
+    ("axr_zeroshot_uncovered", "Across-XR", "zero-shot, 6 uncovered app pairs", "rank-1, single window", 17, 1 / 17,
+     lambda: (_mean_seeds([f"across_xr_alignment_seed{s}.json" for s in (1, 2, 3)], "seeds", 0, "arms", "A1", "unseen_activity_cells"), None),
+     None, "compliant (overlap pending)"),
+    ("axr_c2lo", "Across-XR", "C2-lo (also trained on Across-XR users 0-22)", "rank-1, single window", 17, 1 / 17,
+     lambda: _ci("across_xr_alignment_aggregate.json", "C2lo", "arms", "A1"), SCHACH, "users only"),
+    ("nymeria_rank1", "Nymeria (AR glasses)", "in-domain, activity hidden", "rank-1, cell-balanced", 17, 1 / 17,
+     lambda: _ci("nymeria_rank1_read.json", "registered", "treatment_constrained_n17"), None, "users only"),
+    ("nymeria_auc", "Nymeria (AR glasses)", "in-domain, activity hidden", "verification AUC (constrained)", None, 0.5,
+     lambda: (float(np.mean([0.6609, 0.6782, 0.6649])), None), None, "users only"),
+    ("nymeria_lso_auc", "Nymeria (AR glasses)", "leave-script-out", "verification AUC (constrained)", None, 0.5,
+     lambda: (0.6145, None), None, "compliant"),
+    ("bt_c1", "Ball-throwing", "same headset, other day", "rank-1, single 2 s throw", 41, 1 / 41,
+     lambda: _ci("ballthrowing_cross_day_read.json", "levels", "C1"), None, "compliant"),
+    ("bt_c2", "Ball-throwing", "other headset", "rank-1, single 2 s throw", 41, 1 / 41,
+     lambda: _ci("ballthrowing_cross_day_read.json", "levels", "C2"), None, "compliant"),
+    ("alyx_xday", "Who-is-Alyx", "cross-day", "rank-1, single window", 17, 1 / 17,
+     lambda: _ci("alyx_cross_day_read_gpu.json", "treatment", "cross_day"), None, "users only"),
+]
+NOTES = [
+    "All figures: users never seen in training, three seeds, gated. Head motion only (comparators use head + both controllers).",
+    "Across-XR 0.234 vs Schach 0.180 is a placement, not a beat: Beat Saber and Half-Life content is pretrained.",
+    "Across-XR results are pending the Who-is-Alyx participant-overlap check (no-alyx retrains running on Miami).",
+    "Rack et al. 2023 re-run FAILED its gate (0.850 / 0.566 / 0.174 vs published 0.99 / 0.89 / 0.25): never write 'reproduced'.",
+    "Verification AUC, rank-1 and the template accept/reject decision are three different numbers; never compare across them.",
+]
+
+
+def _programmes():
+    rows = []
+    for line in (A / "INDEX.md").read_text().splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) != 5 or cells[0] in ("programme",) or set(cells[0]) <= {"-", " "}:
+            continue
+        title, reg, status, key, _ = cells
+        s = status.lower().replace("*", "")
+        kind = ("fail" if "fail" in s else "running" if "running" in s else "reference" if "reference" in s
+                else "partial" if "first results" in s else "closed")
+        rows.append({"id": re.sub(r"[^a-z0-9]+", "_", title.lower()).strip("_")[:60], "title": title, "status": kind,
+                     "status_text": status.replace("*", ""), "key_result": key, "registration": reg.replace("`", "")})
+    return rows
+
+
+def dashboard(out: pathlib.Path):
+    import datetime
+    headline_rows = []
+    for hid, group, label, metric, n, chance, fn, comp, compliance in DASH:
+        try:
+            v, ci = fn()
+        except (FileNotFoundError, KeyError, IndexError):
+            v, ci = None, None
+        headline_rows.append({"id": hid, "group": group, "result": label, "metric": metric, "n": n, "chance": round(chance, 4),
+                              "value": None if v is None else round(v, 4), "ci": None if ci is None else [round(x, 4) for x in ci],
+                              "comparator": comp, "compliance": compliance})
+    bars, dists = [], []
+    tv = {}
+    for f in sorted(A.glob("tv_*_c*.json")):
+        r = json.loads(f.read_text())
+        if "refused" in r or (f.name.startswith("tv_axr") and f.name.endswith("_cuda.json")):
+            continue                                  # axr cuda was refused on plumbing; cpu is the scored set
+        for cname, c in r["conditions"].items():
+            k = (f.name.split("_")[1], r["arm"], cname)
+            tv.setdefault(k, []).append(c)
+    if tv:
+        lab = lambda k: f"{k[0]} {k[1]}: {k[2]}"
+        keys = sorted(tv)
+        for bid, title, get in (("tv_far1", "Template decision: genuine accept rate at 1 % false accept", lambda c: c["crossfit_far1pct"]["tar"]),
+                                ("tv_bacc", "Template decision: balanced accuracy at a cross-fitted threshold", lambda c: c["crossfit_eer_threshold"]["balanced_accuracy"]),
+                                ("tv_eer", "Template decision: equal error rate (lower is better)", lambda c: c["eer"])):
+            bars.append({"id": bid, "title": title, "unit": "rate",
+                         "rows": [{"label": lab(k), "value": round(float(np.mean([get(c) for c in tv[k]])), 4), "n_seeds": len(tv[k])} for k in keys]})
+        dists.append({"id": "tv_frr", "title": "Per-user false-reject rate at the cross-fitted threshold (seeds pooled)",
+                      "series": [{"label": lab(k), "values": [round(float(x), 4) for c in tv[k] for x in c["per_user_frr"]]} for k in keys]})
+    try:
+        d = json.loads((A / "schach_paired.json").read_text())
+        th = np.array(d["theirs_D2"]["p1_per_cell_user"]).mean(axis=0)
+        ours = {arm: np.mean([np.array(d["ours"][arm][f"seed{s}"]["D2_p1_per_cell_user"]).mean(axis=0) for s in (1, 2, 3)], axis=0)
+                for arm in ("zero_shot", "c2lo")}
+        dists.append({"id": "schach_per_user", "title": "Across-XR rank-1 per test user (32-48), all 20 pairs, template metric",
+                      "series": [{"label": "Schach et al.", "values": [round(float(x), 4) for x in th]},
+                                 {"label": "ours, zero-shot", "values": [round(float(x), 4) for x in ours["zero_shot"]]},
+                                 {"label": "ours, C2-lo", "values": [round(float(x), 4) for x in ours["c2lo"]]}],
+                      "point_labels": [str(32 + i) for i in range(len(th))]})
+    except (FileNotFoundError, KeyError):
+        pass
+    commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
+    feed = {"schema": "xrsec-results/1", "project": "xrsec",
+            "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
+            "commit": commit, "headline": headline_rows, "programmes": _programmes(), "bars": bars,
+            "distributions": dists, "notes": NOTES}
+    (out / "dashboard.json").write_text(json.dumps(feed, indent=1) + "\n")
+    return feed
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "docs" / "results"))
+    ap.add_argument("--push", action="store_true", help="push dashboard.json to Avalon Monitor (avm results push xrsec)")
     a = ap.parse_args()
     out = pathlib.Path(a.out); out.mkdir(parents=True, exist_ok=True)
     rows = headline(out)
     schach(out)
     template_verification(out)
+    dashboard(out)
+    if a.push:
+        subprocess.run(["avm", "results", "push", "xrsec", str(out / "dashboard.json")], check=True)
     for r in rows:
         print(f"  {r[0]:42s} {r[3]:>14s}  {r[6]}")
     print(f"wrote {out}")
