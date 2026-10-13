@@ -94,3 +94,15 @@ cells that do not.
 - Output names:
   - `across_xr_alignment_{zeroshot,c2lo}_noalyx_seed{n}.json` for the new arms;
   - `across_xr_alignment_{zeroshot,c2lo}_rescored_seed{n}.json` for the six original re-scores.
+
+## Amendment 1, 2026-10-12: code identity, an instrument fact raised by Miami before any number exists
+
+The originals were trained at `517cdaa57b`; the no-alyx runs train at `af7cf72022`. The two steps between
+them are both recorded in CLAUDE.md:
+- `03ea8e2376`: the `dyn` index is built in blocks, with output and every metadata tensor hash-identical.
+- `af7cf72022`: logging only, accepted by a control seed reproducing digit-identical.
+
+So the arms differ in identity but not in training numerics, by recorded acceptance rather than by
+argument. Both sides are scored by the same current harness, as registered. The split guard
+(`alyx_axr_overlap_split_guard.json`) reproduces the originals' 3,072 / 3,095 training identities and gives
+3,015 / 3,038 for the no-alyx arms, with no held-out or validation Across-XR user in any training list.
