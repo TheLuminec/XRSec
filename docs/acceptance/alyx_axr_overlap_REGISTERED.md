@@ -106,3 +106,19 @@ So the arms differ in identity but not in training numerics, by recorded accepta
 argument. Both sides are scored by the same current harness, as registered. The split guard
 (`alyx_axr_overlap_split_guard.json`) reproduces the originals' 3,072 / 3,095 training identities and gives
 3,015 / 3,038 for the no-alyx arms, with no held-out or validation Across-XR user in any training list.
+
+## Amendment 2, 2026-10-13: the reader's file glob, an instrument fact found before any number was read
+
+The first run of `alyx_axr_overlap_read.py` on the propagated files (dcac5ac) crashed before printing
+anything. Its glob `across_xr_alignment_{arm}_{noalyx,rescored}_seed*.json` also matches the gate
+certificates `*_seed{n}_gate.json` that Miami writes beside each result. Those certificates are lists, and the
+loader expects a result dict. The fixture had no gate files, so it never reproduced that condition.
+- **Fix:** the reader excludes `*_gate.json` and nothing else. The arithmetic, regions and bootstrap are
+  unchanged.
+- **Fixture:** it now writes gate files beside every result and asserts 3 + 3 seeds are read per arm. It
+  fails against the old reader (rc 1) and passes against the fixed one.
+- **Acceptance evidenced before reading:**
+  - all 12 checkpoint gates are cuda, gap 0.0, 17 users each;
+  - all six outcomes show `row_checks_pass`, with 3,015 / 3,038 identities at `af7cf72022`.
+- **Pending from Miami:** the config diff, which must show only `data_dirs` and `experiment_name` differ.
+  The Result is recorded as conditional on it.

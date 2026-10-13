@@ -13,11 +13,14 @@ for arm, shift in (("zeroshot", 0.0), ("c2lo", 0.10)):
         for c, v in sh["seeds"][0]["arms"]["A1"]["per_cell_user"].items():
             sh["seeds"][0]["arms"]["A1"]["per_cell_user"][c] = [x + shift for x in v]
         (tmp / f"across_xr_alignment_{arm}_noalyx_seed{s}.json").write_text(json.dumps(sh))
+        for kind in ("rescored", "noalyx"):              # gate certificates sit beside results on main (Amendment 2)
+            (tmp / f"across_xr_alignment_{arm}_{kind}_seed{s}_gate.json").write_text(json.dumps([{"gap": 0.0, "passed": True}]))
 out = tmp / "read.json"
 p = subprocess.run([sys.executable, str(A / "alyx_axr_overlap_read.py"), "--dir", str(tmp), "--out", str(out)], capture_output=True, text=True)
 print(p.stdout, p.stderr); assert p.returncode == 0
 o = json.loads(out.read_text())
 z, c = o["rows"]["zeroshot_noalyx-withalyx"], o["rows"]["c2lo_noalyx-withalyx"]
 assert z["mean"] == 0 and z["lo"] == 0 and z["hi"] == 0 and "BAND" in o["verdicts"]["zeroshot_noalyx-withalyx"], z
+assert z["seeds"] == [3, 3] and c["seeds"] == [3, 3], (z["seeds"], c["seeds"])
 assert abs(c["mean"] - 0.10) < 1e-9 and "HELPS" in o["verdicts"]["c2lo_noalyx-withalyx"], c
-print("FIXTURE PASSES: identical arms read 0 (BAND); a +0.10 shift reads +0.10 (above the band)")
+print("FIXTURE PASSES: identical arms read 0 (BAND); a +0.10 shift reads +0.10 (above the band); gate files beside results are ignored, 3 + 3 seeds read")

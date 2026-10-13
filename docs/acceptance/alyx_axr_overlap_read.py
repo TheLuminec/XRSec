@@ -40,6 +40,11 @@ def ci(v, rng):
     return {"mean": m, "lo": lo, "hi": hi}
 
 
+def result_files(d, arm, kind):
+    # gate certificates (*_gate.json) sit beside the results and match the same glob (Amendment 2)
+    return sorted(f for f in d.glob(f"across_xr_alignment_{arm}_{kind}_seed*.json") if not f.name.endswith("_gate.json"))
+
+
 def arm_vectors(seeds, cells):
     return np.mean([mean_over(s, "A1", cells) for s in seeds], axis=0)
 
@@ -53,8 +58,8 @@ def main():
     rng = np.random.default_rng(67)
     out = {"rows": {}, "verdicts": {}, "descriptive": {}, "levels": {}}
     for arm in ("zeroshot", "c2lo"):
-        no = load(sorted(d.glob(f"across_xr_alignment_{arm}_noalyx_seed*.json")))
-        wi = load(sorted(d.glob(f"across_xr_alignment_{arm}_rescored_seed*.json")))
+        no = load(result_files(d, arm, "noalyx"))
+        wi = load(result_files(d, arm, "rescored"))
         assert no and wi, f"{arm}: missing files ({len(no)} no-alyx, {len(wi)} rescored)"
         assert len(no) == len(wi), f"{arm}: {len(no)} no-alyx seeds against {len(wi)} rescored"
         for s in no + wi:
