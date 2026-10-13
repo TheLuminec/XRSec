@@ -63,13 +63,19 @@ def _mean_seeds(files, *keys):
 HEADLINE = [
     ("Across-XR zero-shot, all 20 pairs", "rank-1, single window", "17 / 0.059",
      lambda: _mean_seeds([f"across_xr_alignment_seed{s}.json" for s in (1, 2, 3)], "seeds", 0, "arms", "A1", "mean"),
-     "yes (overlap pending)", "partly (Beat Saber, Half-Life pretrained)", "users only", "across_xr_alignment_seed*.json"),
+     "not excluded (alyx overlap)", "partly (Beat Saber, Half-Life pretrained)", "users only; depends on alyx (-0.066)", "across_xr_alignment_seed*.json"),
     ("Across-XR zero-shot, 6 uncovered pairs", "rank-1, single window", "17 / 0.059",
      lambda: _mean_seeds([f"across_xr_alignment_seed{s}.json" for s in (1, 2, 3)], "seeds", 0, "arms", "A1", "unseen_activity_cells"),
-     "yes (overlap pending)", "yes", "compliant (pending overlap)", "across_xr_alignment_seed*.json"),
+     "not excluded (alyx overlap)", "yes", "content compliant; alyx overlap not excluded", "across_xr_alignment_seed*.json"),
     ("Across-XR C2-lo (exposure arm)", "rank-1, single window", "17 / 0.059",
      lambda: _mean_seeds([f"across_xr_alignment_c2lo_seed{s}.json" for s in (1, 2, 3)], "seeds", 0, "arms", "A1", "mean"),
-     "yes (overlap pending)", "no (all apps seen via users 0-22)", "users only", "across_xr_alignment_c2lo_seed*.json"),
+     "not excluded (alyx overlap)", "no (all apps seen via users 0-22)", "users only; depends on alyx (-0.052)", "across_xr_alignment_c2lo_seed*.json"),
+    ("Across-XR zero-shot, no Who-is-Alyx in training", "rank-1, single window", "17 / 0.059",
+     lambda: jget("alyx_axr_overlap_read.json", "levels", "zeroshot", "no_alyx"),
+     "yes (no Würzburg corpus in training)", "partly (Beat Saber pretrained)", "users only, overlap-free", "alyx_axr_overlap_read.json"),
+    ("Across-XR C2-lo, no Who-is-Alyx in training", "rank-1, single window", "17 / 0.059",
+     lambda: jget("alyx_axr_overlap_read.json", "levels", "c2lo", "no_alyx"),
+     "yes (no Würzburg corpus in training)", "no (all apps seen via users 0-22)", "users only, overlap-free", "alyx_axr_overlap_read.json"),
     ("Nymeria in-domain, activity hidden", "rank-1 N=17, cell-balanced", "17 / 0.059",
      lambda: jget("nymeria_rank1_read.json", "registered", "treatment_constrained_n17", "mean"),
      "yes", "no (scripts in training)", "users only", "nymeria_rank1_read.json"),
@@ -224,12 +230,16 @@ def _ci(path, *keys):
 SCHACH = {"label": "Schach et al. 2025 (head + controllers)", "value": 0.180}
 DASH = [
     ("axr_zeroshot", "Across-XR", "zero-shot, all 20 app pairs", "rank-1, single window", 17, 1 / 17,
-     lambda: _ci("across_xr_alignment_aggregate.json", "zero_shot", "arms", "A1"), SCHACH, "users only"),
+     lambda: _ci("across_xr_alignment_aggregate.json", "zero_shot", "arms", "A1"), SCHACH, "with Who-is-Alyx pretrained; depends on it"),
+    ("axr_zeroshot_noalyx", "Across-XR", "zero-shot, no Who-is-Alyx in training (overlap-free)", "rank-1, single window", 17, 1 / 17,
+     lambda: (jget("alyx_axr_overlap_read.json", "levels", "zeroshot", "no_alyx"), None), SCHACH, "users only, overlap-free"),
     ("axr_zeroshot_uncovered", "Across-XR", "zero-shot, 6 uncovered app pairs", "rank-1, single window", 17, 1 / 17,
      lambda: (_mean_seeds([f"across_xr_alignment_seed{s}.json" for s in (1, 2, 3)], "seeds", 0, "arms", "A1", "unseen_activity_cells"), None),
-     None, "compliant (overlap pending)"),
+     None, "content compliant; alyx overlap not excluded"),
     ("axr_c2lo", "Across-XR", "C2-lo (also trained on Across-XR users 0-22)", "rank-1, single window", 17, 1 / 17,
-     lambda: _ci("across_xr_alignment_aggregate.json", "C2lo", "arms", "A1"), SCHACH, "users only"),
+     lambda: _ci("across_xr_alignment_aggregate.json", "C2lo", "arms", "A1"), SCHACH, "with Who-is-Alyx pretrained; depends on it"),
+    ("axr_c2lo_noalyx", "Across-XR", "C2-lo, no Who-is-Alyx in training (overlap-free)", "rank-1, single window", 17, 1 / 17,
+     lambda: (jget("alyx_axr_overlap_read.json", "levels", "c2lo", "no_alyx"), None), SCHACH, "users only, overlap-free"),
     ("nymeria_rank1", "Nymeria (AR glasses)", "in-domain, activity hidden", "rank-1, cell-balanced", 17, 1 / 17,
      lambda: _ci("nymeria_rank1_read.json", "registered", "treatment_constrained_n17"), None, "users only"),
     ("nymeria_auc", "Nymeria (AR glasses)", "in-domain, activity hidden", "verification AUC (constrained)", None, 0.5,
@@ -246,7 +256,7 @@ DASH = [
 NOTES = [
     "All figures: users never seen in training, three seeds, gated. Head motion only (comparators use head + both controllers).",
     "Across-XR 0.234 vs Schach 0.180 is a placement, not a beat: Beat Saber and Half-Life content is pretrained.",
-    "Across-XR results are pending the Who-is-Alyx participant-overlap check (no-alyx retrains running on Miami).",
+    "Across-XR figures DEPEND on Who-is-Alyx in pretraining (zero-shot -0.066, C2-lo -0.052; registered BAND failed). Participant overlap is not excluded until the authors answer: quote the overlap-free no-alyx rows beside the others.",
     "Rack et al. 2023 re-run FAILED its gate (0.850 / 0.566 / 0.174 vs published 0.99 / 0.89 / 0.25): never write 'reproduced'.",
     "Verification AUC, rank-1 and the template accept/reject decision are three different numbers; never compare across them.",
 ]
@@ -297,6 +307,19 @@ def dashboard(out: pathlib.Path):
                          "rows": [{"label": lab(k), "value": round(float(np.mean([get(c) for c in tv[k]])), 4), "n_seeds": len(tv[k])} for k in keys]})
         dists.append({"id": "tv_frr", "title": "Per-user false-reject rate at the cross-fitted threshold (seeds pooled)",
                       "series": [{"label": lab(k), "values": [round(float(x), 4) for c in tv[k] for x in c["per_user_frr"]]} for k in keys]})
+    try:
+        o = json.loads((A / "alyx_axr_overlap_read.json").read_text())
+        r = lambda x: {"value": round(x["mean"], 4), "ci": [round(x["lo"], 4), round(x["hi"], 4)]}
+        bars.append({"id": "alyx_overlap", "title": "Across-XR rank-1 without minus with Who-is-Alyx in training (band ±0.03 predicted; failed)",
+                     "unit": "difference", "domain": [-0.15, 0.05], "better": "higher",
+                     "rows": [{"label": "zero-shot, all pairs (registered)", **r(o["rows"]["zeroshot_noalyx-withalyx"])},
+                              {"label": "C2-lo, all pairs (registered)", **r(o["rows"]["c2lo_noalyx-withalyx"])},
+                              {"label": "zero-shot, Half-Life cells (descriptive)", **r(o["descriptive"]["zeroshot_halflife_cells"])},
+                              {"label": "zero-shot, other cells (descriptive)", **r(o["descriptive"]["zeroshot_other_cells"])},
+                              {"label": "C2-lo, Half-Life cells (descriptive)", **r(o["descriptive"]["c2lo_halflife_cells"])},
+                              {"label": "C2-lo, other cells (descriptive)", **r(o["descriptive"]["c2lo_other_cells"])}]})
+    except (FileNotFoundError, KeyError):
+        pass
     try:
         d = json.loads((A / "schach_paired.json").read_text())
         th = np.array(d["theirs_D2"]["p1_per_cell_user"]).mean(axis=0)

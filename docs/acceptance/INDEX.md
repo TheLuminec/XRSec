@@ -24,7 +24,7 @@ here, because registrations cite them.
 | Rack et al. 2023 re-run | `sota_rack2023_reproduction_REGISTERED.md` | closed, **FAIL** | 0.850 / 0.566 / 0.174 against 0.99 / 0.89 / 0.25 | `rack2023_read.json` |
 | Template verification (deployment decision) | `template_verification_PROTOCOL.md` | first results in | TAR at 1 % FAR: 0.50 / 0.17 / 0.06 | `tv_*.json`, `docs/results/template_verification.md` |
 | Split audit (users + content unseen) | `split_audit_2026-10-12.md` | reference | compliant rows listed | — |
-| Who-is-Alyx / Across-XR overlap | `alyx_axr_overlap_REGISTERED.md` | **running on Miami** | — | `alyx_axr_overlap_read.json` (pending) |
+| Who-is-Alyx / Across-XR overlap | `alyx_axr_overlap_REGISTERED.md` | closed, **BAND failed** | alyx contributes: zero-shot −0.066 (0.234 → 0.168), C2-lo −0.052 (0.375 → 0.323) | `alyx_axr_overlap_read.json` |
 | Numerics-touching code changes | `README.md` | reference | dyn float64, line endings, amplitude baselines | per-change files |
 
 Everything else here is a harness, a fixture, a gate certificate (`*_gate.json`), a manifest or a list file

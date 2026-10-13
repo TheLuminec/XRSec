@@ -4,9 +4,11 @@ Compliance follows docs/acceptance/split_audit_2026-10-12.md: users and content 
 
 | result | metric | N / chance | value | users unseen | content unseen | compliance | source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Across-XR zero-shot, all 20 pairs | rank-1, single window | 17 / 0.059 | 0.234 | yes (overlap pending) | partly (Beat Saber, Half-Life pretrained) | users only | across_xr_alignment_seed*.json |
-| Across-XR zero-shot, 6 uncovered pairs | rank-1, single window | 17 / 0.059 | 0.191 | yes (overlap pending) | yes | compliant (pending overlap) | across_xr_alignment_seed*.json |
-| Across-XR C2-lo (exposure arm) | rank-1, single window | 17 / 0.059 | 0.375 | yes (overlap pending) | no (all apps seen via users 0-22) | users only | across_xr_alignment_c2lo_seed*.json |
+| Across-XR zero-shot, all 20 pairs | rank-1, single window | 17 / 0.059 | 0.234 | not excluded (alyx overlap) | partly (Beat Saber, Half-Life pretrained) | users only; depends on alyx (-0.066) | across_xr_alignment_seed*.json |
+| Across-XR zero-shot, 6 uncovered pairs | rank-1, single window | 17 / 0.059 | 0.191 | not excluded (alyx overlap) | yes | content compliant; alyx overlap not excluded | across_xr_alignment_seed*.json |
+| Across-XR C2-lo (exposure arm) | rank-1, single window | 17 / 0.059 | 0.375 | not excluded (alyx overlap) | no (all apps seen via users 0-22) | users only; depends on alyx (-0.052) | across_xr_alignment_c2lo_seed*.json |
+| Across-XR zero-shot, no Who-is-Alyx in training | rank-1, single window | 17 / 0.059 | 0.168 | yes (no Würzburg corpus in training) | partly (Beat Saber pretrained) | users only, overlap-free | alyx_axr_overlap_read.json |
+| Across-XR C2-lo, no Who-is-Alyx in training | rank-1, single window | 17 / 0.059 | 0.323 | yes (no Würzburg corpus in training) | no (all apps seen via users 0-22) | users only, overlap-free | alyx_axr_overlap_read.json |
 | Nymeria in-domain, activity hidden | rank-1 N=17, cell-balanced | 17 / 0.059 | 0.555 | yes | no (scripts in training) | users only | nymeria_rank1_read.json |
 | Nymeria in-domain, activity hidden | verification AUC (constrained) | pairs / 0.50 | 0.668 | yes | no (scripts in training) | users only | nymeria_in_domain_REGISTERED.md Amendment 17 (GPU) |
 | Nymeria leave-script-out | verification AUC (constrained) | pairs / 0.50 | 0.615 | yes | yes (5 scripts held out) | compliant | nymeria_lso_REGISTERED.md |

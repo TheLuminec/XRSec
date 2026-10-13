@@ -42,11 +42,11 @@ Address peers by bare name. Re-run `ListAgents` when a send fails.
 ### The Who-is-Alyx / Across-XR overlap (opened 2026-10-12)
 
 - **Registration:** `docs/acceptance/alyx_axr_overlap_REGISTERED.md`, with Amendment 1 on code identity.
-- **On Miami:** queue11 is running six no-alyx retrains (zero-shot and C2-lo, seeds 1-3), then scoring,
-  then the six originals re-scored with the same harness.
-  - The split guard passed: 3,015 / 3,038 training identities, with no Across-XR 23-48 in training.
-- **On delivery:** the Coordinator propagates the files and runs `alyx_axr_overlap_read.py`.
-- **For the user to send (no session sends it):**
+- **Retrain done (Result 2026-10-13):** the figures depend on Who-is-Alyx (zero-shot 0.234 → 0.168, C2-lo
+  0.375 → 0.323), and participant overlap is not excluded. The authors' answer now decides which figures
+  the paper quotes.
+- **Not yet done:** the Schach paired comparison for the no-alyx C2-lo arm (descriptive; no GPU needed).
+- **For the user to send (no session sends it), now decision-relevant:**
 
 > Dear Dr. Schach and Dr. Rack, we use both the Across XR Applications dataset and the Who Is Alyx dataset
 > in our work on user identification with unseen users, and want to make sure no participant appears on

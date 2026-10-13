@@ -1,8 +1,8 @@
 {
  "schema": "xrsec-results/1",
  "project": "xrsec",
- "generated_at": "2026-10-13T06:01:36+00:00",
- "commit": "2f6cf57",
+ "generated_at": "2026-10-13T08:56:18+00:00",
+ "commit": "0cab49b",
  "headline": [
   {
    "id": "axr_zeroshot",
@@ -20,7 +20,22 @@
     "label": "Schach et al. 2025 (head + controllers)",
     "value": 0.18
    },
-   "compliance": "users only"
+   "compliance": "with Who-is-Alyx pretrained; depends on it"
+  },
+  {
+   "id": "axr_zeroshot_noalyx",
+   "group": "Across-XR",
+   "result": "zero-shot, no Who-is-Alyx in training (overlap-free)",
+   "metric": "rank-1, single window",
+   "n": 17,
+   "chance": 0.0588,
+   "value": 0.1676,
+   "ci": null,
+   "comparator": {
+    "label": "Schach et al. 2025 (head + controllers)",
+    "value": 0.18
+   },
+   "compliance": "users only, overlap-free"
   },
   {
    "id": "axr_zeroshot_uncovered",
@@ -32,7 +47,7 @@
    "value": 0.191,
    "ci": null,
    "comparator": null,
-   "compliance": "compliant (overlap pending)"
+   "compliance": "content compliant; alyx overlap not excluded"
   },
   {
    "id": "axr_c2lo",
@@ -50,7 +65,22 @@
     "label": "Schach et al. 2025 (head + controllers)",
     "value": 0.18
    },
-   "compliance": "users only"
+   "compliance": "with Who-is-Alyx pretrained; depends on it"
+  },
+  {
+   "id": "axr_c2lo_noalyx",
+   "group": "Across-XR",
+   "result": "C2-lo, no Who-is-Alyx in training (overlap-free)",
+   "metric": "rank-1, single window",
+   "n": 17,
+   "chance": 0.0588,
+   "value": 0.3228,
+   "ci": null,
+   "comparator": {
+    "label": "Schach et al. 2025 (head + controllers)",
+    "value": 0.18
+   },
+   "compliance": "users only, overlap-free"
   },
   {
    "id": "nymeria_rank1",
@@ -261,9 +291,9 @@
   {
    "id": "who_is_alyx_across_xr_overlap",
    "title": "Who-is-Alyx / Across-XR overlap",
-   "status": "running",
-   "status_text": "running on Miami",
-   "key_result": "\u2014",
+   "status": "fail",
+   "status_text": "closed, BAND failed",
+   "key_result": "alyx contributes: zero-shot \u22120.066 (0.234 \u2192 0.168), C2-lo \u22120.052 (0.375 \u2192 0.323)",
    "registration": "alyx_axr_overlap_REGISTERED.md"
   },
   {
@@ -432,6 +462,66 @@
      "label": "ballthrowing treatment_2s: C2_other_headset",
      "value": 0.2441,
      "n_seeds": 3
+    }
+   ]
+  },
+  {
+   "id": "alyx_overlap",
+   "title": "Across-XR rank-1 without minus with Who-is-Alyx in training (band \u00b10.03 predicted; failed)",
+   "unit": "difference",
+   "domain": [
+    -0.15,
+    0.05
+   ],
+   "better": "higher",
+   "rows": [
+    {
+     "label": "zero-shot, all pairs (registered)",
+     "value": -0.066,
+     "ci": [
+      -0.1007,
+      -0.0338
+     ]
+    },
+    {
+     "label": "C2-lo, all pairs (registered)",
+     "value": -0.052,
+     "ci": [
+      -0.0642,
+      -0.0402
+     ]
+    },
+    {
+     "label": "zero-shot, Half-Life cells (descriptive)",
+     "value": -0.0801,
+     "ci": [
+      -0.1265,
+      -0.0351
+     ]
+    },
+    {
+     "label": "zero-shot, other cells (descriptive)",
+     "value": -0.0566,
+     "ci": [
+      -0.0887,
+      -0.0284
+     ]
+    },
+    {
+     "label": "C2-lo, Half-Life cells (descriptive)",
+     "value": -0.0656,
+     "ci": [
+      -0.0787,
+      -0.0525
+     ]
+    },
+    {
+     "label": "C2-lo, other cells (descriptive)",
+     "value": -0.043,
+     "ci": [
+      -0.059,
+      -0.0272
+     ]
     }
    ]
   }
@@ -1242,7 +1332,7 @@
  "notes": [
   "All figures: users never seen in training, three seeds, gated. Head motion only (comparators use head + both controllers).",
   "Across-XR 0.234 vs Schach 0.180 is a placement, not a beat: Beat Saber and Half-Life content is pretrained.",
-  "Across-XR results are pending the Who-is-Alyx participant-overlap check (no-alyx retrains running on Miami).",
+  "Across-XR figures DEPEND on Who-is-Alyx in pretraining (zero-shot -0.066, C2-lo -0.052; registered BAND failed). Participant overlap is not excluded until the authors answer: quote the overlap-free no-alyx rows beside the others.",
   "Rack et al. 2023 re-run FAILED its gate (0.850 / 0.566 / 0.174 vs published 0.99 / 0.89 / 0.25): never write 'reproduced'.",
   "Verification AUC, rank-1 and the template accept/reject decision are three different numbers; never compare across them."
  ]
