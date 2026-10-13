@@ -1,0 +1,58 @@
+{
+ "rows": {
+  "zeroshot_noalyx-withalyx": {
+   "mean": -0.06604170347922453,
+   "lo": -0.10070973646104552,
+   "hi": -0.033817149050558666,
+   "seeds": [
+    3,
+    3
+   ]
+  },
+  "c2lo_noalyx-withalyx": {
+   "mean": -0.052014711090852456,
+   "lo": -0.06418000585394351,
+   "hi": -0.04023601198300457,
+   "seeds": [
+    3,
+    3
+   ]
+  }
+ },
+ "verdicts": {
+  "zeroshot_noalyx-withalyx": "interval inside one region: alyx pretraining CONTRIBUTES: overlap not excluded, nor content (Half-Life); read the per-cell split",
+  "c2lo_noalyx-withalyx": "interval inside one region: alyx pretraining CONTRIBUTES: overlap not excluded, nor content (Half-Life); read the per-cell split"
+ },
+ "descriptive": {
+  "zeroshot_halflife_cells": {
+   "mean": -0.08014100438044243,
+   "lo": -0.12654014476317835,
+   "hi": -0.03511493935711772
+  },
+  "zeroshot_other_cells": {
+   "mean": -0.05664216954507926,
+   "lo": -0.08867586825702477,
+   "hi": -0.028420819593769728
+  },
+  "c2lo_halflife_cells": {
+   "mean": -0.06561082951916918,
+   "lo": -0.07874294053133524,
+   "hi": -0.05252873996285702
+  },
+  "c2lo_other_cells": {
+   "mean": -0.04295063213864136,
+   "lo": -0.058962790544129465,
+   "hi": -0.027157505808136313
+  }
+ },
+ "levels": {
+  "zeroshot": {
+   "with_alyx": 0.2336161267798904,
+   "no_alyx": 0.1675744233006659
+  },
+  "c2lo": {
+   "with_alyx": 0.37480969951529625,
+   "no_alyx": 0.3227949884244439
+  }
+ }
+}
