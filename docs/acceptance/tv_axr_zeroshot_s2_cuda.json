@@ -1,0 +1,12 @@
+{
+ "checkpoint": "runs/2026-09-10/18-41-34_train/checkpoints/across-xr-zero-shot-dyn10s_multi2_bilstm_10s_20hz_emb128_train.pth",
+ "seed": 2,
+ "arm": "zeroshot",
+ "device": "cuda",
+ "plumbing": {
+  "checked": true,
+  "max_abs_gap": 0.001881209718815946,
+  "passed": false
+ },
+ "refused": "plumbing: rank-1 differs from committed by 1.88e-03"
+}
