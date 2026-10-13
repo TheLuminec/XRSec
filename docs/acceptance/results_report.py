@@ -312,6 +312,7 @@ def dashboard(out: pathlib.Path):
         r = lambda x: {"value": round(x["mean"], 4), "ci": [round(x["lo"], 4), round(x["hi"], 4)]}
         bars.append({"id": "alyx_overlap", "title": "Across-XR rank-1 without minus with Who-is-Alyx in training (band ±0.03 predicted; failed)",
                      "unit": "difference", "domain": [-0.15, 0.05], "better": "higher",
+                     "band": [-0.03, 0.03], "band_label": "registered prediction ±0.03",
                      "rows": [{"label": "zero-shot, all pairs (registered)", **r(o["rows"]["zeroshot_noalyx-withalyx"])},
                               {"label": "C2-lo, all pairs (registered)", **r(o["rows"]["c2lo_noalyx-withalyx"])},
                               {"label": "zero-shot, Half-Life cells (descriptive)", **r(o["descriptive"]["zeroshot_halflife_cells"])},

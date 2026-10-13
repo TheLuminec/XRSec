@@ -1,8 +1,8 @@
 {
  "schema": "xrsec-results/1",
  "project": "xrsec",
- "generated_at": "2026-10-13T08:56:18+00:00",
- "commit": "0cab49b",
+ "generated_at": "2026-10-13T08:58:28+00:00",
+ "commit": "1a971ab",
  "headline": [
   {
    "id": "axr_zeroshot",
@@ -474,6 +474,11 @@
     0.05
    ],
    "better": "higher",
+   "band": [
+    -0.03,
+    0.03
+   ],
+   "band_label": "registered prediction \u00b10.03",
    "rows": [
     {
      "label": "zero-shot, all pairs (registered)",
