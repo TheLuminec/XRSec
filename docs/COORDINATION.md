@@ -1970,3 +1970,36 @@ Nymeria in-domain arm.
 Both arms ran to the 120-epoch cap. The prediction (~0) failed. For the paper sessions: the "extractor is
 ~irrelevant" sentence must be scoped to the pooled `raw` verification sweep. Nymeria rows stay `bilstm`.
 Miami is idle.
+
+## From the Coordinator: after Dr. Feng's email - two Miami jobs - 2026-10-12
+
+**Job A: template verification of existing checkpoints.** This is scoring only, minutes per checkpoint.
+- Protocol: `docs/acceptance/template_verification_PROTOCOL.md`. Harness: `template_verification.py`
+  (fixture-tested; smoke-tested on AVALON with plumbing gap 0.0).
+- Run on cuda, each launch under `avm` and `gated_launch.sh`, with `--committed` pointing at the matching
+  committed result for the plumbing gate:
+  - axr: zero-shot (`2026-09-10/{17-24-33,18-41-34,20-05-56}`, committed `across_xr_alignment_seed{n}.json`);
+  - axr: C2-lo (`2026-09-10/22-01-22`, `2026-09-10/23-44-03`, `2026-09-11/02-21-10`, committed
+    `across_xr_alignment_c2lo_seed{n}.json`);
+  - ballthrowing: treatment_2s (`2026-09-30/{17-48-47,18-19-57,18-49-44}`, committed
+    `ballthrowing_cross_day_s{n}.json`);
+  - alyx: the Nymeria treatment (`2026-09-21/{09-16-23,12-08-08,14-57-30}`, committed
+    `alyx_cross_day_gpu.json`, arm treatment).
+- Outputs: `tv_{corpus}_{arm}_s{n}_cuda.json`. Push each as it lands.
+
+**Job B: the Who-is-Alyx overlap test.** Six trainings plus six re-scores.
+- Registered at `docs/acceptance/alyx_axr_overlap_REGISTERED.md`, with its reading script fixture-tested.
+- For each original zero-shot and C2-lo run directory, copy its `.hydra/config.yaml`, change only
+  `data_dirs` (drop who_is_alyx) and `experiment_name`, and show the diff.
+- Train three seeds of each. Score them, and re-score the six originals, with `across_xr_alignment.py` on
+  cuda.
+- Outputs: `across_xr_alignment_{zeroshot,c2lo}_{noalyx,rescored}_seed{n}.json`.
+
+**Draft question for the Würzburg authors, for the user to send (not sent by any session):**
+
+> Dear Dr. Schach and Dr. Rack, we use both the Across XR Applications dataset and the Who Is Alyx dataset
+> in our work on user identification with unseen users, and want to make sure no participant appears on
+> both sides of our splits. Both were recruited through the University of Würzburg's participant
+> system. Could you tell us whether any Across-XR participant also took part in the Who Is Alyx study, and
+> if so which Across-XR user IDs (we care most about users 32-48, your test split)? A yes or no for the
+> test users would already help. Thank you for releasing both datasets and the code.
