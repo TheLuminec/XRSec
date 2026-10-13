@@ -230,6 +230,7 @@ for d in processed_datasets/*/users; do echo "$(find "$d" -mindepth 1 -maxdepth 
 | --- | --- |
 | a registration, its result and its harness | `docs/acceptance/<name>_REGISTERED.md`, `<name>.py`, `<name>_read.py`; index in `docs/acceptance/INDEX.md` |
 | regenerated tables and figures (headline, Schach per user, template verification) | `docs/results/`, via `python docs/acceptance/results_report.py` |
+| the live results page (Avalon Monitor, Research tab, `#/research/xrsec`) | after every propagation to main: `results_report.py --push` (feed `docs/results/dashboard.json`, aggregate metrics only; keep headline `id`s stable, they key the history) |
 | the current paper draft | `docs/PAPER_DRAFT_C.md` (thesis C, chosen by the user) |
 | dataset assessments, literature | `docs/DATASET_CATALOGUE.md`, `docs/LITERATURE_BRIEFING.md` |
 | everything superseded | `docs/archive/`: the full old CLAUDE.md and COORDINATION, the earlier draft, outline, plan, theses, progress report, generalisation proposal |
