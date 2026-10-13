@@ -1,0 +1,227 @@
+{
+ "registration": "docs/acceptance/alyx_axr_overlap_REGISTERED.md (Run acceptance: each config differs from its original only in data_dirs and experiment_name)",
+ "written": "2026-10-13T04:53:59-04:00",
+ "allowed_keys": [
+  "data_dirs",
+  "experiment_name"
+ ],
+ "pairs": {
+  "zeroshot_1": {
+   "original_run": "2026-09-10/17-24-33",
+   "original_config_read_from": "runs/miami-alignment/2026-09-10_17-24-33_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-10/17-24-33_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-12/21-40-24_train",
+   "new_config_read_from": "runs/2026-10-12/21-40-24_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_zeroshot_noalyx_s1.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_zero_shot_dyn10s",
+     "new": "across_xr_zero_shot_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  },
+  "zeroshot_2": {
+   "original_run": "2026-09-10/18-41-34",
+   "original_config_read_from": "runs/miami-alignment/2026-09-10_18-41-34_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-10/18-41-34_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-12/22-51-32_train",
+   "new_config_read_from": "runs/2026-10-12/22-51-32_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_zeroshot_noalyx_s2.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_zero_shot_dyn10s",
+     "new": "across_xr_zero_shot_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  },
+  "zeroshot_3": {
+   "original_run": "2026-09-10/20-05-56",
+   "original_config_read_from": "runs/miami-alignment/2026-09-10_20-05-56_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-10/20-05-56_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-13/00-01-57_train",
+   "new_config_read_from": "runs/2026-10-13/00-01-57_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_zeroshot_noalyx_s3.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_zero_shot_dyn10s",
+     "new": "across_xr_zero_shot_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  },
+  "c2lo_1": {
+   "original_run": "2026-09-10/22-01-22",
+   "original_config_read_from": "runs/miami-alignment/2026-09-10_22-01-22_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-10/22-01-22_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-13/01-12-16_train",
+   "new_config_read_from": "runs/2026-10-13/01-12-16_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_c2lo_noalyx_s1.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_matched_c2lo_dyn10s",
+     "new": "across_xr_matched_c2lo_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  },
+  "c2lo_2": {
+   "original_run": "2026-09-10/23-44-03",
+   "original_config_read_from": "runs/miami-alignment/2026-09-10_23-44-03_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-10/23-44-03_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-13/02-24-56_train",
+   "new_config_read_from": "runs/2026-10-13/02-24-56_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_c2lo_noalyx_s2.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_matched_c2lo_dyn10s",
+     "new": "across_xr_matched_c2lo_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  },
+  "c2lo_3": {
+   "original_run": "2026-09-11/02-21-10",
+   "original_config_read_from": "runs/miami-alignment/2026-09-11_02-21-10_train/.hydra/config.yaml",
+   "original_note": "runs/2026-09-11/02-21-10_train/ has no .hydra here; the identical-run config was read from the runs/miami-alignment copy",
+   "new_run_dir": "runs/2026-10-13/03-37-25_train",
+   "new_config_read_from": "runs/2026-10-13/03-37-25_train/.hydra/config.yaml",
+   "generated_yaml": "configs/alyx_axr_overlap_c2lo_noalyx_s3.yaml",
+   "differing_keys": {
+    "data_dirs": {
+     "old": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/who_is_alyx/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ],
+     "new": [
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/BOXRR-23_Dataset/users",
+      "/run/media/feng/Data/CalebProject/XRSec/processed_datasets/CrossApplicationXR_Dataset/users"
+     ]
+    },
+    "experiment_name": {
+     "old": "across_xr_matched_c2lo_dyn10s",
+     "new": "across_xr_matched_c2lo_dyn10s_noalyx"
+    }
+   },
+   "differing_key_count": 2,
+   "independent_checks": {
+    "alyx_in_original_data_dirs_exactly_once": true,
+    "alyx_absent_from_new_data_dirs": true,
+    "data_dirs_length_dropped_by_exactly_1": true,
+    "other_data_dirs_entries_unchanged_and_in_order": true,
+    "experiment_name_is_original_plus_noalyx": true,
+    "same_key_sets": true,
+    "seed_unchanged": true,
+    "diff_count_is_2": true
+   },
+   "only_allowed_keys": true
+  }
+ },
+ "all_only_allowed_keys": true
+}
