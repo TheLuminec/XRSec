@@ -65,7 +65,7 @@ All figures are leave-users-out, **three seeds, gated**, and registered before r
 
 | result | figure | compliance |
 | --- | --- | --- |
-| Across-XR cross-application rank-1, zero-shot `dyn` 10 s, Schach test users 32-48, N=17 | **0.234** [0.181, 0.292] with Who-is-Alyx pretrained; **0.168 without it** (overlap-free). Schach published 0.180, controllers | **depends on Who-is-Alyx: -0.066 [-0.101, -0.034]**, participant overlap not excluded; quote 0.234 only beside 0.168. Six uncovered app pairs (with alyx): 0.191 |
+| Across-XR cross-application rank-1, zero-shot `dyn` 10 s, Schach test users 32-48, N=17 | **0.234** [0.181, 0.292] with Who-is-Alyx pretrained; **0.168 without it** (overlap-free). Schach et al. (controllers): published 0.180 on *their* metric; **0.199 on our template metric**, the like-for-like one. No large pretraining at all (C1-full, 23 Across-XR identities, seed 1): 0.164 | **depends on Who-is-Alyx: -0.066 [-0.101, -0.034]**, participant overlap not excluded; quote 0.234 only beside 0.168. Six uncovered app pairs (with alyx): 0.191 |
 | Across-XR, C2-lo (trained also on Across-XR users 0-22) | **0.375** with alyx, **0.323 without** (-0.052 [-0.064, -0.040]); paired against Schach on their metric **+0.119 [+0.050, +0.192]** (with alyx; not recomputed without) | users only by design; six uncovered pairs +0.090 [+0.017, +0.163] (descriptive) |
 | Exposure breadth: one application held out at scale | breadth minus treatment +0.108; hold-out cost against C2-lo -0.016 [-0.043, +0.014] | compliant for Superhot, Synth Riders, Social VR |
 | Questset (unseen titles), breadth minus zero-shot, N=30 | +0.056 [+0.037, +0.076]; splits ~evenly, Nymeria +0.027 / Across-XR +0.029 | 3 of 4 titles compliant |
