@@ -227,7 +227,10 @@ def _ci(path, *keys):
 
 
 # (id, group, label, metric, n, chance, value -> (mean, ci|None), comparator|None, compliance)
-SCHACH = {"label": "Schach et al. 2025 (head + controllers)", "value": 0.180}
+# their model scored on OUR template metric (schach_paired.json theirs_D2), the like-for-like comparator for A1 rows;
+# their published 0.180 is on their nearest-reference metric (theirs_D1)
+SCHACH = {"label": "Schach et al. on our template metric (head + controllers; published 0.180 is their metric)",
+          "value": round(json.loads((A / "schach_paired.json").read_text())["theirs_D2"]["level"]["mean"], 4)}
 DASH = [
     ("axr_zeroshot", "Across-XR", "zero-shot, all 20 app pairs", "rank-1, single window", 17, 1 / 17,
      lambda: _ci("across_xr_alignment_aggregate.json", "zero_shot", "arms", "A1"), SCHACH, "with Who-is-Alyx pretrained; depends on it"),
@@ -255,7 +258,7 @@ DASH = [
 ]
 NOTES = [
     "All figures: users never seen in training, three seeds, gated. Head motion only (comparators use head + both controllers).",
-    "Across-XR 0.234 vs Schach 0.180 is a placement, not a beat: Beat Saber and Half-Life content is pretrained.",
+    "Schach et al. ticks are their model on OUR template metric (0.199); their published 0.180 is on their own metric. Zero-shot with alyx (0.234) is a placement, not a beat: Beat Saber and Half-Life content is pretrained.",
     "Across-XR figures DEPEND on Who-is-Alyx in pretraining (zero-shot -0.066, C2-lo -0.052; registered BAND failed). Participant overlap is not excluded until the authors answer: quote the overlap-free no-alyx rows beside the others.",
     "Rack et al. 2023 re-run FAILED its gate (0.850 / 0.566 / 0.174 vs published 0.99 / 0.89 / 0.25): never write 'reproduced'.",
     "Verification AUC, rank-1 and the template accept/reject decision are three different numbers; never compare across them.",
